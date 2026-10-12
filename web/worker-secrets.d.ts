@@ -1,6 +1,8 @@
 // Secrets are not emitted by `wrangler types`; only their names belong here.
 // Values are set with `wrangler secret put <NAME>` (never committed).
 interface Env {
+  /** HMAC secret for the repository issues webhook; never committed. */
+  DISCORD_GITHUB_WEBHOOK_SECRET?: string;
   /**
    * GitHub token for star-history refresh and Discord `/bug` / `/feature` issues.
    * Set with `npx wrangler secret put GITHUB_TOKEN` (never commit the value).
@@ -26,7 +28,7 @@ interface Env {
   /** Discord application id (also set via wrangler `[vars]`). */
   DISCORD_APPLICATION_ID?: string;
   /**
-   * Bot token used only to post Android release announcements.
+   * Bot token for release announcements and issue-closure replies.
    * Set with `npx wrangler secret put DISCORD_BOT_TOKEN`.
    */
   DISCORD_BOT_TOKEN?: string;

@@ -23,7 +23,7 @@ Slash commands **`/ask`**, **`/bug`**, and **`/feature`** are handled by the mai
 - Blocked commands receive a wait message without calling Gemini or GitHub. If cooldown storage is unavailable, Fuddy asks users to try again later instead of processing an unmetered command.
 - Failed reads release provisional local reservations. Failed or timed-out writes trigger attempt-specific cancellation after all writes settle, including late writes; pending cleanup returns unavailable rather than a normal cooldown. Cleanup is best effort during KV outages and propagation delays, with KV TTLs as the final fallback. Pending local guards remain until write settlement and cancellation finish; they are not evicted to admit new commands. Cancellation writes an immutable per-attempt marker instead of deleting shared keys. Cooldown values stay numeric for older deployed readers, with ownership stored in KV metadata.
 - Storage warnings identify the failing stage and timeout/operation-failure category without logging raw errors or credentials.
-- KV stores hashed identifiers, random reservation ownership tokens, and expiry timestamps: 60 seconds for questions, 300 seconds for reports, and 15 minutes for interaction replay markers. No prompts, API keys, or interaction tokens are stored there.
+- KV stores hashed identifiers, random reservation ownership tokens, and expiry timestamps: 60 seconds for questions, 300 seconds for reports, and 15 minutes for interaction replay markers. No prompts, API keys, or interaction tokens are stored there. Private issue-closure routing also uses this namespace with the separate retention described below.
 - Local reservations guard concurrent requests in one Worker instance. KV is eventually consistent, so cooldowns and replay protection across instances are best effort.
 
 ### One-time Discord portal steps
@@ -77,3 +77,16 @@ In Discord: `/feature report: Show remaining calories on the home widget.`
 ## Optional local gateway bot (`@mention`)
 
 The Python gateway bot under `~/Documents/fud-ai-discord-bot` (or a future `gateway/` folder) is **optional** and **not** required for `/ask`. Do not leave it running on a laptop if Cloudflare `/ask` is enough — sleep/offline kills mentions only; `/ask` stays online on Cloudflare.
+
+## GitHub issue closure replies
+
+New `/bug` and `/feature` submissions privately map the GitHub issue number to the Discord submitter, channel, and original bot response. When that issue closes, the bot replies to that response and mentions only the submitter. It distinguishes completed, not planned, duplicate, and unspecified closure reasons; it never claims an app update has shipped. No mobile update is required.
+
+- Webhook: `https://fud-ai.app/api/discord/github-issues`, JSON, GitHub **issues** events only, active, TLS verification enabled.
+- Set a unique random `DISCORD_GITHUB_WEBHOOK_SECRET` in the Worker and the repository webhook's secret field. The handler validates SHA-256 HMAC before parsing, restricts the repository, and ignores pull requests/non-closure events. Bot token and KV must also be configured.
+- Give the bot View Channel, Send Messages, and Read Message History in report channels (and Send Messages in Threads where applicable). If the original response was deleted, delivery falls back to a normal message in the same channel. Missing channel/access leaves the notification queued; it does not DM the user or post elsewhere.
+- The private mapping and closure deduplication markers expire after two years. No interaction tokens, credentials, or report text are stored. Existing unmapped reports do not notify; no public-text inference or automatic historical backfill is performed.
+- Webhooks enqueue before acknowledging. Discord failures retry every five minutes in bounded batches for up to seven days, independently of the hourly release checks. `issue-close:link:NUMBER` holds the private mapping; `issue-close:pending:NUMBER:TIMESTAMP` holds an unsent event; `issue-close:sent:NUMBER:TIMESTAMP` is the completion marker. Remove a mapping to stop future notifications for that report.
+- Persistent completion markers, local in-flight guards, and Discord's deterministic message nonce suppress repeat deliveries. KV is eventually consistent and Discord nonce deduplication has a limited time window: this is best-effort delivery, not an exactly-once guarantee across crashes/outages. Reopened issues can notify on a later distinct closure.
+- If enqueueing fails, the webhook returns 503. Inspect failed GitHub webhook deliveries and redeliver after recovery; GitHub does not automatically redeliver failed deliveries. If mapping persistence fails, a safe operational warning is emitted; issue creation is not retried.
+- Test with a clearly labeled report, close its GitHub issue, and verify the response reference, mention, outcome, and no duplicate on webhook redelivery. Keep test messages/reports free of private data. Use the automated closure tests for invalid signatures, wrong repositories, unmapped issues, replay, retry, and privacy.

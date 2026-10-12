@@ -71,7 +71,7 @@ namespace_id = "61002"
   period = 60
 
 [triggers]
-crons = ["17 * * * *"]
+crons = ["17 * * * *", "*/5 * * * *"]
 
 [[routes]]
 pattern = "fud-ai.app"
