@@ -1,3 +1,4 @@
+import { rememberDiscordIssue } from "./discord-issue-closures";
 /**
  * Discord HTTP interactions for `/ask`, `/bug`, and `/feature` (Cloudflare Worker).
  *
@@ -70,7 +71,7 @@ type DiscordEnv = {
   DISCORD_GEMINI_API_KEY?: string;
   /** Shared with star history; `/bug` and `/feature` need `issues:write` on apoorvdarshan/fud-ai. */
   GITHUB_TOKEN?: string;
-  /** Dedicated short-lived cooldown/replay state; never store prompts or credentials. */
+  /** Private report routing plus cooldown/replay state; never store prompts or credentials. */
   DISCORD_STATE?: DiscordState;
 };
 
@@ -313,9 +314,6 @@ function formatDiscordIssueFooter(
     "",
     intro,
     "",
-    `- **User:** ${report.username} (\`${report.userId}\`)`,
-    `- **Channel:** \`${report.channelId || "unknown"}\``,
-    `- **Guild:** \`${report.guildId || "unknown"}\``,
   ];
   if (report.platform) {
     lines.push(`- **Platform:** ${report.platform}`);
@@ -481,18 +479,20 @@ async function editInteractionReply(
   applicationId: string,
   interactionToken: string,
   content: string,
-): Promise<void> {
+): Promise<{ id: string; channel_id: string } | null> {
   const url =
     `https://discord.com/api/v10/webhooks/${applicationId}/${interactionToken}/messages/@original`;
   const resp = await fetch(url, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, allowed_mentions: { parse: [], replied_user: false } }),
   });
   if (!resp.ok) {
-    const detail = await resp.text();
-    console.error("discord_followup_failed", resp.status, detail.slice(0, 200));
+    await resp.body?.cancel();
+    console.error("discord_followup_failed", resp.status);
+    return null;
   }
+  try { return await resp.json() as { id: string; channel_id: string }; } catch { return null; }
 }
 
 async function fulfillBug(
@@ -527,11 +527,17 @@ async function fulfillBug(
       fallbackLabels: ["bug"],
       userAgent: "fud-ai-discord-bug",
     });
-    await editInteractionReply(
+    const message = await editInteractionReply(
       applicationId,
       interactionToken,
       `Opened ${issue.htmlUrl}`,
     );
+    if (message?.channel_id === report.channelId) {
+      const saved = await rememberDiscordIssue(env, issue.number, {
+        userId: report.userId, channelId: report.channelId, messageId: message.id,
+      });
+      if (!saved) console.warn("discord_issue_closure_tracking_unavailable");
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown_error";
     console.error("discord_bug_github_failed", msg.slice(0, 200));
@@ -572,11 +578,17 @@ async function fulfillFeature(
       labels: labelsForFeatureRequest(),
       userAgent: "fud-ai-discord-feature",
     });
-    await editInteractionReply(
+    const message = await editInteractionReply(
       applicationId,
       interactionToken,
       `Opened ${issue.htmlUrl}`,
     );
+    if (message?.channel_id === report.channelId) {
+      const saved = await rememberDiscordIssue(env, issue.number, {
+        userId: report.userId, channelId: report.channelId, messageId: message.id,
+      });
+      if (!saved) console.warn("discord_issue_closure_tracking_unavailable");
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown_error";
     console.error("discord_feature_github_failed", msg.slice(0, 200));

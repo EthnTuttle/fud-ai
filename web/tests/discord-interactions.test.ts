@@ -326,7 +326,7 @@ describe("discord interactions", () => {
     expect(discordCall?.[1]).toEqual({
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ content: "Add your key in Settings → AI Access." }),
+      body: JSON.stringify({ content: "Add your key in Settings → AI Access.", allowed_mentions: { parse: [], replied_user: false } }),
     });
   });
 
@@ -381,13 +381,13 @@ describe("discord interactions", () => {
     expect(created.body).toContain("iPhone 15, 7.1 (38)");
     expect(created.body).toContain("**Platform:** iOS");
     expect(created.body).toContain("Reported via Discord `/bug`");
-    expect(created.body).toContain("Reporter");
-    expect(created.body).toContain("`user-1`");
-    expect(created.body).toContain(IOS_BUG_CHANNEL_ID);
-    expect(created.body).toContain(GUILD_ID);
+    expect(created.body).not.toContain("Reporter");
+    expect(created.body).not.toContain("`user-1`");
+    expect(created.body).not.toContain(IOS_BUG_CHANNEL_ID);
+    expect(created.body).not.toContain(GUILD_ID);
 
     const discordCall = fetch.mock.calls.find(([url]) => String(url).includes("discord.com/api/v10/webhooks"));
-    expect(requestBody(discordCall?.[1])).toBe(JSON.stringify({ content: `Opened ${ISSUE_URL}` }));
+    expect(requestBody(discordCall?.[1])).toBe(JSON.stringify({ content: `Opened ${ISSUE_URL}`, allowed_mentions: { parse: [], replied_user: false } }));
   });
 
   it("labels Android when the report says Pixel even in the iOS bug channel", async () => {
@@ -411,7 +411,7 @@ describe("discord interactions", () => {
     const created = githubPayload(fetch);
     expect(created.labels).toEqual(["bug", "android"]);
     expect(created.body).toContain("**Platform:** Android");
-    expect(created.body).toContain(IOS_BUG_CHANNEL_ID);
+    expect(created.body).not.toContain(IOS_BUG_CHANNEL_ID);
   });
 
   it("labels iOS when the report says iPhone even in the Android bug channel", async () => {
@@ -437,7 +437,7 @@ describe("discord interactions", () => {
     const created = githubPayload(fetch);
     expect(created.labels).toEqual(["bug", "ios"]);
     expect(created.body).toContain("**Platform:** iOS");
-    expect(created.body).toContain(ANDROID_BUG_CHANNEL_ID);
+    expect(created.body).not.toContain(ANDROID_BUG_CHANNEL_ID);
   });
 
   it("uses the channel when the report mentions both platforms", async () => {
@@ -486,7 +486,7 @@ describe("discord interactions", () => {
     const created = githubPayload(fetch);
     expect(created.labels).toEqual(["bug", "android"]);
     expect(created.body).toContain("**Platform:** Android");
-    expect(created.body).toContain(IOS_BUG_CHANNEL_ID);
+    expect(created.body).not.toContain(IOS_BUG_CHANNEL_ID);
   });
 
   it("labels only bug when there is no channel and no platform signal", async () => {
@@ -636,15 +636,15 @@ describe("discord interactions", () => {
     expect(created.body).toContain("## Summary");
     expect(created.body).toContain("Show leftover calories on the home-screen widget.");
     expect(created.body).toContain("Opened via Discord `/feature`");
-    expect(created.body).toContain("Reporter");
-    expect(created.body).toContain("`user-1`");
-    expect(created.body).toContain(IOS_BUG_CHANNEL_ID);
-    expect(created.body).toContain(GUILD_ID);
+    expect(created.body).not.toContain("Reporter");
+    expect(created.body).not.toContain("`user-1`");
+    expect(created.body).not.toContain(IOS_BUG_CHANNEL_ID);
+    expect(created.body).not.toContain(GUILD_ID);
     expect(created.body).not.toContain("**Platform:**");
     expect(created.body).not.toContain("ios");
 
     const discordCall = fetch.mock.calls.find(([url]) => String(url).includes("discord.com/api/v10/webhooks"));
-    expect(requestBody(discordCall?.[1])).toBe(JSON.stringify({ content: `Opened ${ISSUE_URL}` }));
+    expect(requestBody(discordCall?.[1])).toBe(JSON.stringify({ content: `Opened ${ISSUE_URL}`, allowed_mentions: { parse: [], replied_user: false } }));
   });
 
   it("leaves /feature platform unspecified when omitted, even in a platform channel", async () => {
@@ -676,7 +676,7 @@ describe("discord interactions", () => {
     expect(created.labels).toEqual(["enhancement"]);
     expect(created.body).toContain("Dark mode for widgets");
     expect(created.body).toContain("Match system appearance.");
-    expect(created.body).toContain(ANDROID_BUG_CHANNEL_ID);
+    expect(created.body).not.toContain(ANDROID_BUG_CHANNEL_ID);
     expect(created.body).not.toContain("**Platform:**");
     expect(created.body).not.toMatch(/## Platform\n\nAndroid/);
   });
@@ -730,7 +730,7 @@ describe("discord interactions", () => {
     expect(created.body).toContain("**Platform:** iOS");
     expect(created.body).toContain("Reported via Discord `/bug`");
     const discordCall = fetch.mock.calls.find(([url]) => String(url).includes("discord.com/api/v10/webhooks"));
-    expect(requestBody(discordCall?.[1])).toBe(JSON.stringify({ content: `Opened ${ISSUE_URL}` }));
+    expect(requestBody(discordCall?.[1])).toBe(JSON.stringify({ content: `Opened ${ISSUE_URL}`, allowed_mentions: { parse: [], replied_user: false } }));
   });
 
   it("routes the live interactions path on the Worker", async () => {
