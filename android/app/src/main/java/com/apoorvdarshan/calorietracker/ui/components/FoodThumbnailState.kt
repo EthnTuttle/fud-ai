@@ -31,11 +31,26 @@ fun rememberFoodThumbnail(
     imageStore: FoodImageStore,
     filenames: List<String>,
 ): Bitmap? {
-    val bitmap by produceState<Bitmap?>(initialValue = null, filenames, imageStore) {
+    return rememberFoodThumbnailCandidate(imageStore, filenames)?.second
+}
+
+/** Loads the first available thumbnail and its filename, preserving candidate order. */
+@Composable
+fun rememberFoodThumbnailCandidate(
+    imageStore: FoodImageStore,
+    filenames: List<String>,
+): Pair<String, Bitmap>? {
+    val candidate by produceState<Pair<String, Bitmap>?>(initialValue = null, filenames, imageStore) {
         value = null
         value = withContext(Dispatchers.IO) {
-            filenames.firstNotNullOfOrNull { imageStore.loadThumbnail(it) }
+            filenames.firstNotNullOfOrNull { filename ->
+                imageStore.loadThumbnail(filename)?.let { filename to it }
+            }
         }
     }
-    return bitmap
+    return candidate
 }
+
+/** Returns the viewer index for the thumbnail among successfully loaded viewer photos. */
+fun foodPhotoViewerInitialIndex(loadedFilenames: List<String>, thumbnailFilename: String?): Int =
+    thumbnailFilename?.let(loadedFilenames::indexOf)?.takeIf { it >= 0 } ?: 0
