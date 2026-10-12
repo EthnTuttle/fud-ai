@@ -12,6 +12,9 @@ import RevenueCat
 
 @main
 struct calorietrackerApp: App {
+    // Keep this before every store/AppStorage initializer so reset launches do
+    // not retain values loaded from the previous UI test's defaults.
+    private let simulatorTestPreparation: Void = SimulatorTestEnvironment.prepare()
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var foodStore = FoodStore()
     @State private var weightStore = WeightStore()
@@ -44,9 +47,11 @@ struct calorietrackerApp: App {
 
     init() {
         // Tip-jar IAPs are tracked through RevenueCat (public SDK key, safe to ship).
-        Purchases.logLevel = .warn
-        Purchases.configure(withAPIKey: "appl_kOERxwXPyEUPZVCKhuuuNnUuGUZ")
-        Task { @MainActor in RevenueCatManager.shared.configure() }
+        if !SimulatorTestEnvironment.isRunningTests {
+            Purchases.logLevel = .warn
+            Purchases.configure(withAPIKey: "appl_kOERxwXPyEUPZVCKhuuuNnUuGUZ")
+            Task { @MainActor in RevenueCatManager.shared.configure() }
+        }
         // Derive the split height/weight unit prefs from the legacy useMetric flag
         // before any view reads them.
         UnitPreferenceMigration.runIfNeeded()
@@ -96,9 +101,11 @@ struct calorietrackerApp: App {
             .tint(AppThemeColor.color(for: appThemeColorRaw).color)
             .preferredColorScheme(colorScheme)
             .onAppear {
+                guard !SimulatorTestEnvironment.isRunningTests else { return }
                 AppThemeColor.applyAppIconIfNeeded(for: AppThemeColor.color(for: appThemeColorRaw))
             }
             .onChange(of: appThemeColorRaw) { _, newValue in
+                guard !SimulatorTestEnvironment.isRunningTests else { return }
                 AppThemeColor.applyAppIconIfNeeded(for: AppThemeColor.color(for: newValue))
             }
             .onOpenURL { url in
@@ -126,22 +133,25 @@ struct calorietrackerApp: App {
                 refreshWidgetSnapshot()
             }
             .task {
+                guard !SimulatorTestEnvironment.isRunningTests else { return }
                 await cloudBackupService.runSmokeTestIfRequested()
                 await weeklyChallengeStore.retryPendingDeletionIfNeeded()
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .background {
+            if newPhase == .background && !SimulatorTestEnvironment.isRunningTests {
                 Task { await cloudBackupService.autoBackupIfNeeded() }
             }
             if newPhase == .active {
-                Task {
-                    await notificationManager.refreshAuthorizationStatus()
-                }
-                if notificationsEnabled, let profile = UserProfile.load() {
-                    notificationManager.rescheduleDataDependentNotifications(
-                        foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
-                    )
+                if !SimulatorTestEnvironment.isRunningTests {
+                    Task {
+                        await notificationManager.refreshAuthorizationStatus()
+                    }
+                    if notificationsEnabled, let profile = UserProfile.load() {
+                        notificationManager.rescheduleDataDependentNotifications(
+                            foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
+                        )
+                    }
                 }
                 if hasCompletedOnboarding {
                     wireUpHealthKit()
@@ -191,6 +201,7 @@ struct calorietrackerApp: App {
     }
 
     private func wireUpHealthKit() {
+        guard !SimulatorTestEnvironment.isRunningTests else { return }
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
 
         // Re-request authorization if new HealthKit types were added since last auth.
@@ -437,6 +448,7 @@ struct calorietrackerApp: App {
 
     @MainActor
     private func refreshAdaptiveGoalsIfNeeded() {
+        guard !SimulatorTestEnvironment.isRunningTests else { return }
         guard !isAutoRefreshingAdaptiveGoals else { return }
         guard AdaptiveGoalSettings.isEnabled else { return }
         guard AdaptiveGoalSettings.shouldCheckThisWeek() else { return }

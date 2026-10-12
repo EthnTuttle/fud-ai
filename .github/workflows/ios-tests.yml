@@ -1,0 +1,86 @@
+name: iOS tests
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'shared/workout-vectors/**'
+      - 'local-models/legal/**'
+      - 'scripts/test-ios.sh'
+      - '.github/workflows/ios-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'shared/workout-vectors/**'
+      - 'local-models/legal/**'
+      - 'scripts/test-ios.sh'
+      - '.github/workflows/ios-tests.yml'
+  schedule:
+    - cron: '43 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-tests:
+    # LiteRT-LM ships an arm64 simulator library, not an Intel simulator library.
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      IOS_TEST_RESULTS: ${{ runner.temp }}/ios-test-results
+      IOS_TEST_DERIVED_DATA: ${{ runner.temp }}/ios-test-build
+      IOS_TEST_PACKAGES: ${{ github.workspace }}/.ios-test-packages
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /ios/
+            /local-models/legal/
+            /scripts/test-ios.sh
+            /shared/workout-vectors/sample-pack.txt
+            /shared/workout-vectors/exercise-visual-manifest.json
+      - name: Check out only the workout sample frames
+        # Keep the 1.2 GB full image corpus out of the runner checkout.
+        run: |
+          python3 - <<'PY'
+          import pathlib, re, subprocess
+          patterns = []
+          for line in pathlib.Path('shared/workout-vectors/sample-pack.txt').read_text().splitlines():
+              exercise = line.split('#', 1)[0].strip()
+              if not exercise:
+                  continue
+              if not re.fullmatch(r'[A-Za-z0-9_-]+', exercise):
+                  raise SystemExit('Invalid exercise name in sample pack')
+              for gender in ('male', 'female'):
+                  for frame in range(4):
+                      patterns.append(f'/shared/workout-vectors/{exercise}_{gender}_v2_{frame}.png')
+          if not patterns:
+              raise SystemExit('Workout sample pack must not be empty')
+          subprocess.run(['git', 'sparse-checkout', 'add', '--no-cone', '--stdin'],
+                         input='\n'.join(patterns) + '\n', text=True, check=True)
+          PY
+      - name: Cache pinned Swift packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .ios-test-packages
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-xcode26.6-${{ hashFiles('ios/**/Package.resolved', 'ios/Packages/**/Package.swift') }}
+      - name: Build and run unit and UI tests
+        run: bash scripts/test-ios.sh
+      - name: Retain test results and failure screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ios-test-results
+          path: ${{ runner.temp }}/ios-test-results
+          if-no-files-found: warn
+          retention-days: 7

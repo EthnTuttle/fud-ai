@@ -269,6 +269,7 @@ struct ContentView: View {
 
     @MainActor
     private func refreshAppUpdateState(force: Bool = false) async {
+        guard !SimulatorTestEnvironment.isRunningTests else { return }
         if !force && appUpdateState.hasStartedCheck {
             return
         }
@@ -290,6 +291,7 @@ struct ContentView: View {
     /// Hosted upsell is marked seen when shown; meet-the-developer is marked seen only on Done.
     @MainActor
     private func runPostUpdatePromptsIfNeeded() async {
+        guard !SimulatorTestEnvironment.isRunningTests else { return }
         // Let the first frame and any launch route (quick action / deep link) settle first.
         try? await Task.sleep(for: .seconds(2))
         guard quickActionRequest == nil, foodLogMethodRequest == nil else {
@@ -5156,6 +5158,7 @@ struct ProfileView: View {
                         }
                         Spacer()
                         Toggle("Water Tracking", isOn: $waterTrackingEnabled)
+                            .accessibilityIdentifier("settings.water.enabled")
                             .labelsHidden()
                             .tint(AppColors.calorie)
                             .onChange(of: waterTrackingEnabled) { _, isEnabled in
