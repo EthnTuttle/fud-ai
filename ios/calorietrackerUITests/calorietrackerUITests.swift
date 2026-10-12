@@ -18,6 +18,8 @@ final class calorietrackerUITests: XCTestCase {
             "--ui-testing", "--ui-testing-reset",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
             "-WorkoutVectorsBaseURL", "none",
+            // The native first-meal review prompt is outside these local-flow tests.
+            "-didPromptReviewAfterFirstLog", "YES",
         ]
         if onboarded { app.launchArguments.append("--ui-testing-onboarded") }
         app.launchArguments += defaults

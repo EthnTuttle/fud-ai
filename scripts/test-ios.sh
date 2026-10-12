@@ -19,7 +19,13 @@ if [[ -e "$results/Tests.xcresult" ]]; then
   exit 1
 fi
 
-xcodebuild -version
+xcode_version="$(xcodebuild -version)"
+echo "$xcode_version"
+xcode_major="$(awk '/^Xcode / { split($2, version, "."); print version[1] }' <<< "$xcode_version")"
+if [[ ! "$xcode_major" =~ ^[0-9]+$ ]] || (( xcode_major < 27 )); then
+  echo 'Use Xcode 27 or newer: the app uses iOS 27 FoundationModels image APIs.' >&2
+  exit 1
+fi
 
 # Create a task-owned simulator: never erase or reset a developer's existing one.
 simulator_id="$(python3 - <<'PY'

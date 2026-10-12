@@ -8,7 +8,8 @@ not archive, upload, or submit an app.
 
 ## Run locally
 
-Use an Apple Silicon Mac with Xcode and an iOS 26.2 or newer Simulator runtime:
+Use an Apple Silicon Mac with Xcode 27 or newer and an iOS 26.2 or newer
+Simulator runtime:
 
 ```sh
 bash scripts/test-ios.sh
@@ -21,12 +22,17 @@ are retained in a unique `TestResults` subdirectory; the command prints the
 `.xcresult` path. Override `IOS_TEST_DERIVED_DATA`, `IOS_TEST_PACKAGES`, or
 `IOS_TEST_RESULTS` when needed. An existing result bundle is never overwritten.
 
-GitHub uses Xcode 26.6 on `macos-26` (ARM64), caches the pinned Swift packages,
+GitHub uses stable Xcode 27.0 on the `xcode-27` ARM64 runner, caches pinned Swift packages,
 and checks out only the small workout image sample needed by tests. LiteRT-LM
 does not include an Intel simulator library. Tests run serially to avoid
 multiple UI simulators competing for runner resources. Failures fail the job;
 `.xcresult` bundles, XCTest screenshots, coverage, and build logs are retained
 as the `ios-test-results` artifact for seven days.
+
+Xcode 27 is required to compile the app's iOS 27 FoundationModels image APIs;
+a runtime availability check does not make those APIs compile with an older SDK.
+The hosted `xcode-27` runner is currently in public preview, so runner capacity
+and queue times can vary.
 
 ## Coverage and boundaries
 
