@@ -141,8 +141,12 @@ enum AddMenuSettings {
         }
         let sanitized = decoded.sanitized()
         if sanitized.groups.isEmpty, sanitized.flatMethods.isEmpty {
-            let hadConfiguredContent = decoded.groups.contains { !$0.methods.isEmpty }
-                || !decoded.flatMethods.isEmpty
+            // Decoding drops unknown method IDs. Inspect the persisted IDs to
+            // distinguish an unavailable configuration from an intentional empty menu.
+            let raw = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            let groups = raw?["groups"] as? [[String: Any]] ?? []
+            let hadConfiguredContent = groups.contains { ($0["methods"] as? [String])?.isEmpty == false }
+                || (raw?["flatMethods"] as? [String])?.isEmpty == false
             if hadConfiguredContent {
                 return .iOSDefault
             }

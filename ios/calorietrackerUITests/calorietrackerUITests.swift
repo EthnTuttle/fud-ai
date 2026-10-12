@@ -36,9 +36,15 @@ final class calorietrackerUITests: XCTestCase {
 
     @MainActor
     private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
-        for _ in 0..<10 where !element.isHittable { app.swipeUp() }
+        for _ in 0..<10 {
+            if element.isHittable { break }
+            app.swipeUp()
+        }
         // A previous category may have left the Settings list below the target.
-        for _ in 0..<10 where !element.isHittable { app.swipeDown() }
+        for _ in 0..<10 {
+            if element.isHittable { break }
+            app.swipeDown()
+        }
         XCTAssertTrue(element.exists, "Missing element: \(element.identifier)")
         XCTAssertTrue(element.isHittable, "Element is not tappable: \(element.identifier)")
     }
@@ -141,13 +147,15 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("speechToText", in: app)
 
         let speechSection = app.staticTexts["Speech-to-Text"]
-        for _ in 0..<12 where !speechSection.exists {
+        for _ in 0..<12 {
+            if speechSection.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(speechSection.waitForExistence(timeout: 3))
 
         let providerPicker = app.buttons["settings.speech.provider"]
-        for _ in 0..<3 where !providerPicker.isHittable {
+        for _ in 0..<3 {
+            if providerPicker.isHittable { break }
             app.swipeUp()
         }
         XCTAssertTrue(providerPicker.waitForExistence(timeout: 3))
@@ -182,7 +190,8 @@ final class calorietrackerUITests: XCTestCase {
             XCTAssertTrue(navigationBar.waitForExistence(timeout: 3), "Missing \(title) detail page")
 
             let action = app.staticTexts[expectedAction]
-            for _ in 0..<6 where !action.exists {
+            for _ in 0..<6 {
+                if action.exists { break }
                 app.swipeUp()
             }
             XCTAssertTrue(action.waitForExistence(timeout: 3), "Missing \(expectedAction) in \(title)")
@@ -223,7 +232,8 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("aiProviders", in: app)
 
         let textProviderSection = app.staticTexts["Text AI"]
-        for _ in 0..<10 where !textProviderSection.exists {
+        for _ in 0..<10 {
+            if textProviderSection.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(textProviderSection.waitForExistence(timeout: 3))
@@ -247,13 +257,15 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("aiProviders", in: app)
 
         let textProviderSection = app.staticTexts["Text AI"]
-        for _ in 0..<10 where !textProviderSection.exists {
+        for _ in 0..<10 {
+            if textProviderSection.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(textProviderSection.waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["Apple Intelligence (On-Device)"].waitForExistence(timeout: 3))
         let systemModel = app.staticTexts["System Language Model"]
-        for _ in 0..<4 where !systemModel.exists {
+        for _ in 0..<4 {
+            if systemModel.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(systemModel.waitForExistence(timeout: 3))
@@ -273,7 +285,7 @@ final class calorietrackerUITests: XCTestCase {
         app.staticTexts["View More"].tap()
 
         XCTAssertTrue(app.navigationBars["Nutrition Details"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Protein, Carbs, Fat, Water"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Protein, Carbs, Fat, Fiber, Water"].waitForExistence(timeout: 3))
         XCTAssertTrue(
             app.staticTexts["Water is shown after your selected nutrients while Water Tracking is enabled."]
                 .waitForExistence(timeout: 3)
@@ -308,13 +320,21 @@ final class calorietrackerUITests: XCTestCase {
         reveal(waterRows.firstMatch, in: app)
         waitForCount(1, in: waterRows)
         waterRows.firstMatch.swipeLeft()
-        let deleteButton = app.buttons["Delete"]
-        if deleteButton.waitForExistence(timeout: 2) { deleteButton.tap() }
+        let confirmation = app.alerts["Delete Water Log?"]
+        // A full swipe opens confirmation directly; a shorter swipe reveals
+        // the row action first. In either case deletion requires confirmation.
+        if !confirmation.waitForExistence(timeout: 1) {
+            let deleteButton = app.buttons["Delete"]
+            XCTAssertTrue(deleteButton.waitForExistence(timeout: 3))
+            deleteButton.tap()
+        }
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+        confirmation.buttons["Delete"].tap()
         waitForCount(0, in: waterRows)
+        reveal(app.staticTexts["No diary entries"], in: app)
 
         relaunchPreservingData(app)
-        // Reveal the diary region where the deleted row was shown.
-        app.swipeUp()
+        reveal(app.staticTexts["No diary entries"], in: app)
         waitForCount(0, in: waterRows)
     }
 
@@ -325,6 +345,9 @@ final class calorietrackerUITests: XCTestCase {
         let addButton = app.buttons["home.add"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 15))
         addButton.tap()
+        let describeMeal = app.buttons["Describe Meal"]
+        XCTAssertTrue(describeMeal.waitForExistence(timeout: 5))
+        describeMeal.tap()
         let manualEntry = app.buttons["Manual Entry"]
         XCTAssertTrue(manualEntry.waitForExistence(timeout: 5))
         manualEntry.tap()
@@ -348,10 +371,10 @@ final class calorietrackerUITests: XCTestCase {
 
         let meal = app.staticTexts["CI oat bowl"]
         reveal(meal, in: app)
-        XCTAssertTrue(app.staticTexts["321 kcal"].exists)
+        XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
         relaunchPreservingData(app)
         reveal(meal, in: app)
-        XCTAssertTrue(app.staticTexts["321 kcal"].exists)
+        XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
     }
 
     @MainActor

@@ -402,6 +402,9 @@ struct StrengthWorkoutStoreTests {
             store.toggleExercise(bench, on: date)
             let exercise = try #require(store.exercises(for: date).first)
             let firstSet = try #require(exercise.sets.first)
+            // New sets copy their predecessor, so create the incomplete set
+            // before filling in the performed set for this statistics fixture.
+            store.setSetCount(2, exerciseID: exercise.id, on: date)
             store.updateSet(
                 exerciseID: exercise.id,
                 setID: firstSet.id,
@@ -411,7 +414,6 @@ struct StrengthWorkoutStoreTests {
                 reps: reps,
                 rpe: "8.5"
             )
-            store.setSetCount(2, exerciseID: exercise.id, on: date)
             return try #require(
                 store.completeWorkout(
                     on: date,
