@@ -34,8 +34,6 @@ jobs:
     timeout-minutes: 60
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-      IOS_TEST_RESULTS: ${{ runner.temp }}/ios-test-results
-      IOS_TEST_DERIVED_DATA: ${{ runner.temp }}/ios-test-build
       IOS_TEST_PACKAGES: ${{ github.workspace }}/.ios-test-packages
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,6 +73,9 @@ jobs:
           path: .ios-test-packages
           key: ios-spm-${{ runner.os }}-${{ runner.arch }}-xcode26.6-${{ hashFiles('ios/**/Package.resolved', 'ios/Packages/**/Package.swift') }}
       - name: Build and run unit and UI tests
+        env:
+          IOS_TEST_RESULTS: ${{ runner.temp }}/ios-test-results
+          IOS_TEST_DERIVED_DATA: ${{ runner.temp }}/ios-test-build
         run: bash scripts/test-ios.sh
       - name: Retain test results and failure screenshots
         if: always()
