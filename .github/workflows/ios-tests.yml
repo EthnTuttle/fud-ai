@@ -64,7 +64,7 @@ jobs:
                       patterns.append(f'/shared/workout-vectors/{exercise}_{gender}_v2_{frame}.png')
           if not patterns:
               raise SystemExit('Workout sample pack must not be empty')
-          subprocess.run(['git', 'sparse-checkout', 'add', '--no-cone', '--stdin'],
+          subprocess.run(['git', 'sparse-checkout', 'add', '--stdin'],
                          input='\n'.join(patterns) + '\n', text=True, check=True)
           PY
       - name: Cache pinned Swift packages
