@@ -105,6 +105,7 @@ async function deliverClosure(env: ClosureEnv, event: Closure): Promise<void> {
   if (!running) { running = new Set(); active.set(state, running); }
   if (running.has(key)) return;
   running.add(key);
+  let stage = "read_state";
   try {
     if (await state.get(`issue-close:sent:${key}`)) {
       await state.delete?.(PREFIX + key);
@@ -115,8 +116,10 @@ async function deliverClosure(env: ClosureEnv, event: Closure): Promise<void> {
     const link: IssueLink = JSON.parse(raw);
     if (!validLink(link)) return;
     // The same nonce deduplicates concurrent sends/retries in Discord's recent-message window.
+    stage = "nonce";
     const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(REPOSITORY + key));
     const nonce = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("").slice(0, 24);
+    stage = "discord_request";
     const response = await fetch(`https://discord.com/api/v10/channels/${link.channelId}/messages`, {
       method: "POST", redirect: "manual", signal: AbortSignal.timeout(6000),
       headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN.trim()}`, "Content-Type": "application/json" },
@@ -133,11 +136,12 @@ async function deliverClosure(env: ClosureEnv, event: Closure): Promise<void> {
       throw new Error("discord_send_failed");
     }
     await response.body?.cancel();
+    stage = "persist_delivery";
     await state.put(`issue-close:sent:${key}`, "1", { expirationTtl: RETENTION });
     await state.delete?.(PREFIX + key);
-  } catch {
+  } catch (error) {
     // Queue survives Discord/KV outages. Never log raw errors or credential-bearing URLs.
-    console.warn("discord_closure_delivery_pending");
+    console.warn("discord_closure_delivery_pending", { stage, errorType: error instanceof Error ? error.name : typeof error });
   } finally { running.delete(key); }
 }
 
