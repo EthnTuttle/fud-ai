@@ -579,7 +579,7 @@ private fun SavedMealRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Thumbnail(emoji = entry.emoji, imageFilename = entry.imageFilename, imageStore = imageStore)
+        Thumbnail(emoji = entry.emoji, imageFilenames = entry.thumbnailImageFilenames, imageStore = imageStore)
 
         Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -643,9 +643,9 @@ private fun SavedMealRow(
  * iOS RecentsView's `entry.imageData` branch.
  */
 @Composable
-private fun Thumbnail(emoji: String?, imageFilename: String?, imageStore: FoodImageStore) {
+private fun Thumbnail(emoji: String?, imageFilenames: List<String>, imageStore: FoodImageStore) {
     val shape = RoundedCornerShape(12.dp)
-    val bitmap = rememberFoodThumbnail(imageStore, imageFilename)
+    val bitmap = rememberFoodThumbnail(imageStore, imageFilenames)
 
     Box(
         Modifier

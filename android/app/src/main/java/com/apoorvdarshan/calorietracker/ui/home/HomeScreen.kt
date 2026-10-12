@@ -2412,7 +2412,7 @@ private fun FoodRow(
     val container = (ctx.applicationContext as com.apoorvdarshan.calorietracker.FudAIApp).container
     val scope = rememberCoroutineScope()
     val hasPhotos = entry.allImageFilenames.isNotEmpty()
-    val bitmap = rememberFoodThumbnail(container.imageStore, entry.allImageFilenames)
+    val bitmap = rememberFoodThumbnail(container.imageStore, entry.thumbnailImageFilenames)
     var previewPhotos by remember { mutableStateOf<Pair<List<android.graphics.Bitmap>, Int>?>(null) }
     var isLoadingPreview by remember { mutableStateOf(false) }
     // iOS layout: large 76dp square thumb · column with (Name + heart on left,
