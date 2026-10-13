@@ -58,18 +58,6 @@ trap cleanup EXIT
 export TEST_RUNNER_FUDAI_TESTING=1
 export SIMCTL_CHILD_FUDAI_TESTING=1
 
-# Test classes run on clones of the task-owned simulator (each clone has its own
-# app data). IOS_TEST_PARALLEL_WORKERS=1 restores fully serial runs.
-workers="${IOS_TEST_PARALLEL_WORKERS:-2}"
-if [[ ! "$workers" =~ ^[1-9][0-9]*$ ]]; then
-  echo 'IOS_TEST_PARALLEL_WORKERS must be a positive whole number.' >&2
-  exit 1
-fi
-parallel_args=(-parallel-testing-enabled NO)
-if (( workers > 1 )); then
-  parallel_args=(-parallel-testing-enabled YES -parallel-testing-worker-count "$workers")
-fi
-
 xcodebuild test \
   -project ios/calorietracker.xcodeproj \
   -scheme calorietracker \
@@ -81,7 +69,7 @@ xcodebuild test \
   -onlyUsePackageVersionsFromResolvedFile \
   -resultBundlePath "$results/Tests.xcresult" \
   -enableCodeCoverage YES \
-  "${parallel_args[@]}" \
+  -parallel-testing-enabled NO \
   -maximum-concurrent-test-simulator-destinations 1 \
   -jobs 2 \
   CODE_SIGNING_ALLOWED=NO WORKOUT_VECTORS=sample \
