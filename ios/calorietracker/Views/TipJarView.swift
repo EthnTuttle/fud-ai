@@ -85,9 +85,10 @@ struct TipJarSettingsSection: View {
 
     private func loadProducts() async {
         isLoading = true
+        defer { isLoading = false }
+        guard Purchases.isConfigured else { return }
         let fetched = await Purchases.shared.products(Self.tiers.map(\.productID))
         products = Dictionary(uniqueKeysWithValues: fetched.map { ($0.productIdentifier, $0) })
-        isLoading = false
     }
 
     private func purchase(_ product: StoreProduct) async {

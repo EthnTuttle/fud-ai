@@ -49,6 +49,7 @@ final class RevenueCatManager: NSObject {
     }
 
     func configure() {
+        guard Purchases.isConfigured else { return }
         Purchases.shared.delegate = self
         Task { await refreshCustomerInfo() }
     }
@@ -57,6 +58,7 @@ final class RevenueCatManager: NSObject {
     /// one-time UI on entitlement state must not treat a failed refresh as "no plan".
     @discardableResult
     func refreshCustomerInfo() async -> Bool {
+        guard Purchases.isConfigured else { return false }
         do {
             let info = try await Purchases.shared.customerInfo()
             applyCustomerInfo(info)
@@ -69,6 +71,7 @@ final class RevenueCatManager: NSObject {
     }
 
     func loadOfferings() async {
+        guard Purchases.isConfigured else { return }
         isLoadingOfferings = true
         defer { isLoadingOfferings = false }
         do {

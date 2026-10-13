@@ -48,7 +48,9 @@ struct FoodPhotoRemovalTests {
             let reloaded = FoodStore(observesExternalChanges: false, defaults: defaults)
             #expect(FoodImageStore.shared.load(filename: primary) == nil)
             #expect(reloaded.entries.first?.allImageFilenames == [second])
-            #expect(reloaded.entries.first?.imageData == Data("second".utf8))
+            // Disk-backed photos stay unloaded until the caller requests them.
+            #expect(reloaded.entries.first?.imageData == nil)
+            #expect(reloaded.entries.first?.allImageData == [Data("second".utf8)])
         }
     }
 
@@ -141,9 +143,12 @@ struct FoodPhotoRemovalTests {
             FoodImageStore.shared.delete(filename: missing)
 
             let reloadedStore = FoodStore(observesExternalChanges: false, defaults: defaults)
-            let reloaded = try #require(reloadedStore.entries.first)
-            // Legacy decoding compactMaps the missing file out of the byte cache.
-            #expect(reloaded.additionalImageData == [Data("surviving".utf8)])
+            var reloaded = try #require(reloadedStore.entries.first)
+            #expect(reloaded.additionalImageData.isEmpty)
+            #expect(reloaded.allImageData == [Data("primary".utf8), Data("surviving".utf8)])
+            // Older entries could have a compacted byte cache after a missing
+            // file. Simulate that cache explicitly; current decoding is lazy.
+            reloaded.additionalImageData = [Data("surviving".utf8)]
             let photos = reloaded.editablePhotos
             #expect(photos.first { $0.id == .filename(missing) }?.data == nil)
             #expect(photos.first { $0.id == .filename(surviving) }?.data == Data("surviving".utf8))

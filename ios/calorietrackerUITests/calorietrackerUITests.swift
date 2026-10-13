@@ -9,44 +9,102 @@ import XCTest
 
 final class calorietrackerUITests: XCTestCase {
 
-    private func openSettingsCategory(_ identifier: String, in app: XCUIApplication) {
-        let settings = app.tabBars.buttons["Settings"]
-        XCTAssertTrue(settings.waitForExistence(timeout: 8))
-        settings.tap()
+    /// Every test starts in a fresh Debug simulator data domain. UI mode also
+    /// isolates startup from live accounts, billing, cloud sync and update prompts.
+    @MainActor
+    private func makeApp(onboarded: Bool = true, defaults: [String] = []) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing", "--ui-testing-reset",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "-WorkoutVectorsBaseURL", "none",
+            // The native first-meal review prompt is outside these local-flow tests.
+            "-didPromptReviewAfterFirstLog", "YES",
+        ]
+        if onboarded { app.launchArguments.append("--ui-testing-onboarded") }
+        app.launchArguments += defaults
+        return app
+    }
 
-        let category = app.buttons["settings.category.\(identifier)"]
-        for _ in 0..<8 where !category.isHittable {
+    @MainActor
+    private func relaunchPreservingData(_ app: XCUIApplication) {
+        app.terminate()
+        app.launchArguments.removeAll {
+            $0 == "--ui-testing-reset" || $0 == "--ui-testing-onboarded"
+        }
+        app.launch()
+        XCTAssertTrue(app.buttons["home.add"].waitForExistence(timeout: 15))
+    }
+
+    @MainActor
+    private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+        for _ in 0..<10 {
+            if element.isHittable { break }
             app.swipeUp()
         }
-        XCTAssertTrue(category.waitForExistence(timeout: 3), "Missing Settings category \(identifier)")
+        // A previous category may have left the Settings list below the target.
+        for _ in 0..<10 {
+            if element.isHittable { break }
+            app.swipeDown()
+        }
+        XCTAssertTrue(element.exists, "Missing element: \(element.identifier)")
+        XCTAssertTrue(element.isHittable, "Element is not tappable: \(element.identifier)")
+    }
+
+    @MainActor
+    private func openSettingsCategory(_ identifier: String, in app: XCUIApplication) {
+        let settings = app.tabBars.buttons["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 15))
+        settings.tap()
+        let category = app.buttons["settings.category.\(identifier)"]
+        reveal(category, in: app)
         category.tap()
     }
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
-        continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    @MainActor
+    private func waitForCount(_ count: Int, in query: XCUIElementQuery) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in query.count == count },
+            object: nil
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 5), .completed)
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+    private func waitForValue(_ value: String, in element: XCUIElement) {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", value), object: element
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 5), .completed)
+    }
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    @MainActor
+    func testFreshInstallStartsOnboardingAndAdvancesThroughProfileSteps() throws {
+        let app = makeApp(onboarded: false)
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        let start = app.buttons["Get Started"]
+        XCTAssertTrue(start.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["home.add"].exists)
+        start.tap()
+
+        for title in ["What's your gender?", "When's your birthday?"] {
+            XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5))
+            app.buttons["Continue"].tap()
+        }
+        XCTAssertTrue(app.staticTexts["Height & Weight"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.segmentedControls.buttons["Imperial"].exists)
+        XCTAssertTrue(app.segmentedControls.buttons["Metric"].exists)
+        XCTAssertFalse(app.buttons["home.add"].exists)
     }
 
     @MainActor
-    func testBarbellFullSquatV2IllustrationRenders() throws {
-        let app = XCUIApplication()
+    func testWorkoutSearchOpensExerciseDetails() throws {
+        let app = makeApp()
         app.launchArguments += [
             "-AppleLanguages", "(en)",
             "-fudai.workouts.tab.mode.v2", "library",
@@ -70,18 +128,18 @@ final class calorietrackerUITests: XCTestCase {
         XCTAssertTrue(result.waitForExistence(timeout: 5))
         result.tap()
 
-        let visual = app.buttons["workouts.exercise.visual.Barbell_Full_Squat"]
+        let visual = app.descendants(matching: .any)["workouts.exercise.visual.Barbell_Full_Squat"]
         XCTAssertTrue(visual.waitForExistence(timeout: 5))
 
         let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = "Barbell Full Squat v2 Illustration"
+        screenshot.name = "Barbell Full Squat Details"
         screenshot.lifetime = .keepAlways
         add(screenshot)
     }
 
     @MainActor
     func testSpeechProviderPickerOpensInFocusedCategory() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launchArguments += [
             "-AppleLanguages", "(en)",
             "-selectedSpeechProvider", "Native iOS (On-Device)",
@@ -91,13 +149,15 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("speechToText", in: app)
 
         let speechSection = app.staticTexts["Speech-to-Text"]
-        for _ in 0..<12 where !speechSection.exists {
+        for _ in 0..<12 {
+            if speechSection.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(speechSection.waitForExistence(timeout: 3))
 
         let providerPicker = app.buttons["settings.speech.provider"]
-        for _ in 0..<3 where !providerPicker.isHittable {
+        for _ in 0..<3 {
+            if providerPicker.isHittable { break }
             app.swipeUp()
         }
         XCTAssertTrue(providerPicker.waitForExistence(timeout: 3))
@@ -107,7 +167,7 @@ final class calorietrackerUITests: XCTestCase {
 
     @MainActor
     func testSettingsHubShowsFiveFocusedAppInfoCategories() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launchArguments += ["-AppleLanguages", "(en)"]
         app.launch()
 
@@ -123,27 +183,17 @@ final class calorietrackerUITests: XCTestCase {
         XCTAssertTrue(settings.waitForExistence(timeout: 8))
         settings.tap()
 
-        let creatorFooter = app.staticTexts["Made by Apoorv Darshan"]
-        for _ in 0..<12 where !creatorFooter.isHittable {
-            app.swipeUp()
-        }
-        XCTAssertTrue(creatorFooter.waitForExistence(timeout: 3), "Missing creator footer on Settings")
-        XCTAssertTrue(creatorFooter.isHittable, "Creator footer is not visible on Settings")
-
         for (identifier, title, expectedAction) in categories {
             let category = app.buttons["settings.category.\(identifier)"]
-            for _ in 0..<12 where !category.isHittable {
-                app.swipeUp()
-            }
-            XCTAssertTrue(category.waitForExistence(timeout: 3), "Missing Settings category \(identifier)")
-            XCTAssertTrue(category.isHittable, "Settings category \(identifier) is not tappable")
+            reveal(category, in: app)
             category.tap()
 
             let navigationBar = app.navigationBars[title]
             XCTAssertTrue(navigationBar.waitForExistence(timeout: 3), "Missing \(title) detail page")
 
             let action = app.staticTexts[expectedAction]
-            for _ in 0..<6 where !action.exists {
+            for _ in 0..<6 {
+                if action.exists { break }
                 app.swipeUp()
             }
             XCTAssertTrue(action.waitForExistence(timeout: 3), "Missing \(expectedAction) in \(title)")
@@ -167,11 +217,12 @@ final class calorietrackerUITests: XCTestCase {
             backButton.tap()
             XCTAssertTrue(app.buttons["settings.category.\(identifier)"].waitForExistence(timeout: 3))
         }
+        reveal(app.staticTexts["Made by Apoorv Darshan"], in: app)
     }
 
     @MainActor
     func testSeparateTextProviderSettingsAreVisibleAndIndependent() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launchArguments += [
             "-AppleLanguages", "(en)",
             "-separateTextProviderEnabled", "YES",
@@ -183,7 +234,8 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("aiProviders", in: app)
 
         let textProviderSection = app.staticTexts["Text AI"]
-        for _ in 0..<10 where !textProviderSection.exists {
+        for _ in 0..<10 {
+            if textProviderSection.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(textProviderSection.waitForExistence(timeout: 3))
@@ -195,7 +247,7 @@ final class calorietrackerUITests: XCTestCase {
 
     @MainActor
     func testAppleIntelligenceAppearsAsTextProvider() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launchArguments += [
             "-AppleLanguages", "(en)",
             "-separateTextProviderEnabled", "YES",
@@ -207,21 +259,23 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("aiProviders", in: app)
 
         let textProviderSection = app.staticTexts["Text AI"]
-        for _ in 0..<10 where !textProviderSection.exists {
+        for _ in 0..<10 {
+            if textProviderSection.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(textProviderSection.waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["Apple Intelligence (On-Device)"].waitForExistence(timeout: 3))
         let systemModel = app.staticTexts["System Language Model"]
-        for _ in 0..<4 where !systemModel.exists {
+        for _ in 0..<4 {
+            if systemModel.exists { break }
             app.swipeUp()
         }
         XCTAssertTrue(systemModel.waitForExistence(timeout: 3))
     }
 
     @MainActor
-    func testWaterTrackingUsesFixedFourthHomePillar() throws {
-        let app = XCUIApplication()
+    func testWaterTrackingAppearsAfterSelectedHomeNutrients() throws {
+        let app = makeApp()
         app.launchArguments += [
             "-AppleLanguages", "(en)",
             "-waterTrackingEnabled", "YES",
@@ -233,54 +287,121 @@ final class calorietrackerUITests: XCTestCase {
         app.staticTexts["View More"].tap()
 
         XCTAssertTrue(app.navigationBars["Nutrition Details"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Protein, Carbs, Fat, Water"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Protein, Carbs, Fat, Fiber, Water"].waitForExistence(timeout: 3))
         XCTAssertTrue(
-            app.staticTexts["Water stays fixed as the fourth Home pillar while Water Tracking is enabled."]
+            app.staticTexts["Water is shown after your selected nutrients while Water Tracking is enabled."]
                 .waitForExistence(timeout: 3)
         )
 
         app.staticTexts["Home Nutrient Cards"].tap()
         XCTAssertTrue(app.navigationBars["Home Nutrients"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.staticTexts["Choose 3 Nutrients"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.staticTexts["Water"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Choose 1–4 Nutrients"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.descendants(matching: .any)["Water, shown after selected nutrients"].waitForExistence(timeout: 3))
     }
 
     @MainActor
-    func testWaterLogAppearsInDiaryAndCanBeDeleted() throws {
-        let app = XCUIApplication()
-        app.launchArguments += [
-            "-AppleLanguages", "(en)",
-            "-waterTrackingEnabled", "YES",
-        ]
+    func testWaterLogPersistsAfterRelaunchAndDeletionPersists() throws {
+        let app = makeApp(defaults: ["-waterTrackingEnabled", "YES"])
         app.launch()
 
         let addButton = app.buttons["home.add"]
-        XCTAssertTrue(addButton.waitForExistence(timeout: 8))
+        XCTAssertTrue(addButton.waitForExistence(timeout: 15))
         addButton.tap()
-        XCTAssertTrue(app.buttons["Water"].waitForExistence(timeout: 3))
-        app.buttons["Water"].tap()
-        XCTAssertTrue(app.buttons["1 Glass (~250 ml)"].waitForExistence(timeout: 3))
-        app.buttons["1 Glass (~250 ml)"].tap()
+        let waterMenu = app.buttons["Water"]
+        XCTAssertTrue(waterMenu.waitForExistence(timeout: 5))
+        waterMenu.tap()
+        let glass = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1 Glass")).firstMatch
+        XCTAssertTrue(glass.waitForExistence(timeout: 5))
+        glass.tap()
 
-        let waterRows = app.otherElements.matching(identifier: "water.log.row")
-        for _ in 0..<8 where waterRows.count == 0 {
-            app.swipeUp()
-        }
-        XCTAssertGreaterThan(waterRows.count, 0)
-        let countBeforeDelete = waterRows.count
+        let waterRows = app.descendants(matching: .any).matching(identifier: "water.log.row")
+        reveal(waterRows.firstMatch, in: app)
+        waitForCount(1, in: waterRows)
+
+        relaunchPreservingData(app)
+        reveal(waterRows.firstMatch, in: app)
+        waitForCount(1, in: waterRows)
         waterRows.firstMatch.swipeLeft()
-        let deleteButton = app.buttons["Delete"]
-        if deleteButton.waitForExistence(timeout: 2) {
+        let confirmation = app.alerts["Delete Water Log?"]
+        // A full swipe opens confirmation directly; a shorter swipe reveals
+        // the row action first. In either case deletion requires confirmation.
+        if !confirmation.waitForExistence(timeout: 1) {
+            let deleteButton = app.buttons["Delete"]
+            XCTAssertTrue(deleteButton.waitForExistence(timeout: 3))
             deleteButton.tap()
         }
-        XCTAssertEqual(waterRows.count, countBeforeDelete - 1)
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+        confirmation.buttons["Delete"].tap()
+        waitForCount(0, in: waterRows)
+        reveal(app.staticTexts["No diary entries"], in: app)
+
+        relaunchPreservingData(app)
+        reveal(app.staticTexts["No diary entries"], in: app)
+        waitForCount(0, in: waterRows)
     }
 
     @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func testManualFoodEntryValidatesRequiredFieldsAndPersists() throws {
+        let app = makeApp()
+        app.launch()
+        let addButton = app.buttons["home.add"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 15))
+        addButton.tap()
+        let describeMeal = app.buttons["Describe Meal"]
+        XCTAssertTrue(describeMeal.waitForExistence(timeout: 5))
+        describeMeal.tap()
+        let manualEntry = app.buttons["Manual Entry"]
+        XCTAssertTrue(manualEntry.waitForExistence(timeout: 5))
+        manualEntry.tap()
+
+        let name = app.textFields["manual.name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5))
+        let save = app.buttons["manual.save"]
+        XCTAssertFalse(save.isEnabled, "A blank meal must not be saved")
+        name.tap()
+        name.typeText("CI oat bowl")
+        XCTAssertFalse(save.isEnabled, "Calories are required before saving")
+
+        let calories = app.textFields["manual.calories"]
+        calories.tap()
+        calories.typeText("321")
+        let done = app.buttons["Done"]
+        if done.exists { done.tap() }
+        reveal(save, in: app)
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+
+        let meal = app.staticTexts["CI oat bowl"]
+        reveal(meal, in: app)
+        XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
+        relaunchPreservingData(app)
+        reveal(meal, in: app)
+        XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
+    }
+
+    @MainActor
+    func testWaterTrackingSettingPersistsAfterRelaunch() throws {
+        let app = makeApp()
+        app.launch()
+        openSettingsCategory("trackingReminders", in: app)
+
+        let toggle = app.switches["settings.water.enabled"]
+        reveal(toggle, in: app)
+        waitForValue("0", in: toggle)
+        toggle.tap()
+        waitForValue("1", in: toggle)
+
+        relaunchPreservingData(app)
+        XCTAssertTrue(app.staticTexts["Water"].waitForExistence(timeout: 5))
+        openSettingsCategory("trackingReminders", in: app)
+        reveal(toggle, in: app)
+        waitForValue("1", in: toggle)
+        toggle.tap()
+        waitForValue("0", in: toggle)
+
+        relaunchPreservingData(app)
+        openSettingsCategory("trackingReminders", in: app)
+        reveal(toggle, in: app)
+        waitForValue("0", in: toggle)
     }
 }

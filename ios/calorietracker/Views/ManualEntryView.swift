@@ -24,7 +24,7 @@ struct ManualEntryView: View {
     var onCancel: () -> Void
     var onSave: (FoodEntry) -> Void
 
-    private enum Field { case name, calories, protein, carbs, fat, fiber }
+    private enum Field: String { case name, calories, protein, carbs, fat, fiber }
 
     private var canSave: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -103,6 +103,7 @@ struct ManualEntryView: View {
                     .tint(AppColors.calorie)
                     .controlSize(.large)
                     .disabled(!canSave || submissionGate.isSubmitting)
+                    .accessibilityIdentifier("manual.save")
 
                     Button("Cancel") { onCancel() }
                         .foregroundStyle(.secondary)
@@ -134,6 +135,7 @@ struct ManualEntryView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             TextField(placeholder, text: text)
+                .accessibilityIdentifier("manual.\(focus.rawValue)")
                 .keyboardType(keyboard)
                 .textFieldStyle(.plain)
                 .autocorrectionDisabled()
@@ -150,6 +152,7 @@ struct ManualEntryView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             TextField("0", text: text)
+                .accessibilityIdentifier("manual.\(focus.rawValue)")
                 .keyboardType(focus == .calories ? .numberPad : .decimalPad)
                 .textFieldStyle(.plain)
                 .focused($focused, equals: focus)
