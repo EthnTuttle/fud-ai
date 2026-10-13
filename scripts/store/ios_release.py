@@ -252,6 +252,12 @@ def wait_for_build(
     sleep = sleep or time.sleep
     path = builds_query(app_id, build_number)
     while True:
+        # The budget is total (upload + processing): a build first seen as ready
+        # after the deadline is still a timeout, never a late success.
+        if now() > deadline:
+            raise ReleaseError(
+                f"timed out waiting for {marketing_version} ({build_number}) to finish processing"
+            )
         try:
             payload = client.get(path)
         except BaseException as exc:  # noqa: BLE001 - classified below

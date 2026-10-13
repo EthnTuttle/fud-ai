@@ -239,6 +239,13 @@ class WaitForBuildTests(unittest.TestCase):
             wait(client, clock, minutes=10)
         self.assertLessEqual(clock.time, STARTED + 10 * 60 + 30)
 
+    def test_ready_build_after_the_deadline_is_still_a_timeout(self) -> None:
+        client = SequenceClient([{"data": [build_row()], "included": [pre_row()]}])
+        clock = FakeClock(STARTED + 121 * 60)  # job started after the 120-minute budget
+        with self.assertRaisesRegex(ReleaseError, "timed out"):
+            wait(client, clock)
+        self.assertEqual(client.paths, [], "must not poll once the budget is spent")
+
     def test_processing_failure_stops(self) -> None:
         for state in ("FAILED", "INVALID"):
             client = SequenceClient([{"data": [build_row(state=state)], "included": [pre_row()]}])
