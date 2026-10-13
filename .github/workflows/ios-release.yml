@@ -9,7 +9,9 @@
 #   push tag ios-vX.Y   release run (the tag must equal MARKETING_VERSION)
 #   workflow_dispatch   validation run: archive, sign, export and validate the
 #                       IPA with App Store Connect. Never uploads, never touches
-#                       the App Store listing, review or GitHub Releases.
+#                       the App Store listing, review or GitHub Releases. The
+#                       optional marketing_version input validates as a not-yet-
+#                       approved version (Apple refuses already-approved ones).
 #
 # Switches (repository Variables; missing = off, invalid values fail the run).
 # See store/README.md for the full table.
@@ -41,6 +43,13 @@ on:
     tags:
       - "ios-v*"
   workflow_dispatch:
+    inputs:
+      marketing_version:
+        description: >-
+          Validation only: version to validate as (e.g. 7.2). Empty = the project
+          version. Apple rejects versions already approved, so use the next one.
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -110,6 +119,7 @@ jobs:
           IOS_PUBLIC_RELEASE: ${{ vars.IOS_PUBLIC_RELEASE }}
           IOS_BUILD_POLL_SECONDS: ${{ vars.IOS_BUILD_POLL_SECONDS }}
           IOS_BUILD_WAIT_MINUTES: ${{ vars.IOS_BUILD_WAIT_MINUTES }}
+          VALIDATION_MARKETING_VERSION: ${{ inputs.marketing_version }}
         run: python3 scripts/store/ios_release.py gates
 
       - name: Choose the build number
@@ -228,6 +238,7 @@ jobs:
             -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            MARKETING_VERSION="$MARKETING_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" > "$log" 2>&1 || status=$?
           grep -E '(error|warning): |\*\* ARCHIVE' "$log" || true
           [ "$status" -eq 0 ] || { tail -n 60 "$log"; echo "error: archive failed (full log in artifact)" >&2; exit "$status"; }

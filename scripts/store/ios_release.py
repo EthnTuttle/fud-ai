@@ -95,12 +95,26 @@ def single_project_value(setting: str, pbxproj: Path = PBXPROJ) -> str:
     return values.pop().strip().strip('"')
 
 
+VERSION_PATTERN = re.compile(r"\d+(\.\d+){0,2}")
+
+
 def resolve_gates(
-    env: Mapping[str, str], *, event: str, ref_name: str, marketing_version: str
+    env: Mapping[str, str],
+    *,
+    event: str,
+    ref_name: str,
+    marketing_version: str,
+    validation_version: str = "",
 ) -> dict[str, Any]:
     """Return what this run is allowed to do. Raises ReleaseError on bad config."""
     if event not in {"push", "workflow_dispatch"}:
         raise ReleaseError(f"unsupported event {event!r}")
+    validation_version = validation_version.strip()
+    if validation_version:
+        if event != "workflow_dispatch":
+            raise ReleaseError("a version override only applies to manual validation runs")
+        if not VERSION_PATTERN.fullmatch(validation_version):
+            raise ReleaseError(f"validation version {validation_version!r} must look like 7.2 or 7.2.1")
 
     # Parse every switch first so a typo fails even when the master is off.
     master = parse_switch(MASTER, env.get(MASTER))
@@ -114,6 +128,12 @@ def resolve_gates(
         resolved = {key: False for _, key in OPERATION_SWITCHES}
         mode = "validate"
         notes.append("validation run: build is archived, signed and validated only; nothing is uploaded")
+        if validation_version:
+            notes.append(
+                f"validating as version {validation_version} (project is {marketing_version}); "
+                "the project files are not changed"
+            )
+            marketing_version = validation_version
     else:
         if not ref_name.startswith(TAG_PREFIX):
             raise ReleaseError(f"release runs need an {TAG_PREFIX}* tag, got {ref_name!r}")
@@ -345,6 +365,7 @@ def cmd_gates(_: argparse.Namespace) -> None:
         event=os.environ.get("GITHUB_EVENT_NAME", ""),
         ref_name=os.environ.get("GITHUB_REF_NAME", ""),
         marketing_version=single_project_value("MARKETING_VERSION"),
+        validation_version=os.environ.get("VALIDATION_MARKETING_VERSION", ""),
     )
     notes = resolved.pop("notes")
     print("iOS release switches:")
