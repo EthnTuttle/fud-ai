@@ -70,6 +70,7 @@ open class MainActivity : AppCompatActivity() {
     }
     override fun onStart() {
         super.onStart()
+        if (!(application as FudAIApp).backgroundServicesEnabled) return
         lifecycleScope.launch {
             // Adaptive Goals auto-runs the full goal calculation about once a week (Energy Burn,
             // when on, supplies the measured-burn anchor it consumes — separate toggle).
@@ -89,6 +90,7 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        if (!(application as FudAIApp).backgroundServicesEnabled) return
         lifecycleScope.launch {
             runCatching { (application as FudAIApp).container.cloudBackup.autoBackupIfNeeded() }
         }
@@ -107,6 +109,7 @@ open class MainActivity : AppCompatActivity() {
         // successful food log (see ReviewPrompter). Silently no-ops on devices
         // without Play services or when Play declines to show the card.
         lifecycleScope.launch {
+            if (!(application as FudAIApp).backgroundServicesEnabled) return@launch
             ReviewPrompter.requestReview.collect { wanted ->
                 if (!wanted) return@collect
                 ReviewPrompter.consumed()
