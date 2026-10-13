@@ -30,7 +30,8 @@
 #       Admin-role key: build numbers, cloud-managed distribution signing,
 #       upload, build readiness, listing and review.
 #   IOS_DEV_SIGNING_P12_BASE64 / IOS_DEV_SIGNING_P12_PASSWORD
-#       "Fud AI GitHub Actions" Apple Development identity used only to sign the
+#       Dedicated CI Apple Development identity ("Apple Development: Created via
+#       API", certificate 7H3T2H8USS, expires 2027-10-13) used only to sign the
 #       archive; distribution signing at export is cloud-managed by Apple.
 
 name: iOS Release
@@ -175,6 +176,10 @@ jobs:
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 7200 "$keychain"
           security unlock-keychain -p "$keychain_password" "$keychain"
+          # Apple's WWDR G3 intermediate completes the development identity's chain.
+          curl -fsSL https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer -o "$RUNNER_TEMP/wwdr-g3.cer"
+          echo "dcf21878c77f4198e4b4614f03d696d89c66c66008d4244e1b99161aac91601f  $RUNNER_TEMP/wwdr-g3.cer" | shasum -a 256 -c -
+          security import "$RUNNER_TEMP/wwdr-g3.cer" -k "$keychain" > /dev/null
           printf '%s' "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/signing.p12"
           security import "$RUNNER_TEMP/signing.p12" -k "$keychain" -P "$P12_PASSWORD" \
             -T /usr/bin/codesign -T /usr/bin/security
@@ -182,7 +187,8 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" > /dev/null
           read -r -a existing <<< "$(security list-keychains -d user | tr -d '"' | xargs)"
           security list-keychains -d user -s "$keychain" "${existing[@]}"
-          security find-identity -v -p codesigning "$keychain"
+          security find-identity -v -p codesigning "$keychain" | tee "$RUNNER_TEMP/identities.txt"
+          grep -qE '[1-9][0-9]* valid identit' "$RUNNER_TEMP/identities.txt" || { echo "error: no valid signing identity in the CI keychain" >&2; exit 1; }
           {
             echo "ASC_KEY_PATH=$keys/AuthKey_${ASC_KEY_ID}.p8"
             echo "API_PRIVATE_KEYS_DIR=$keys"
@@ -314,7 +320,7 @@ jobs:
         if: always()
         run: |
           [ -n "${SIGNING_KEYCHAIN:-}" ] && security delete-keychain "$SIGNING_KEYCHAIN" 2>/dev/null || true
-          rm -rf "$RUNNER_TEMP/asc-keys" "$RUNNER_TEMP/signing.p12" "$RUNNER_TEMP/export"
+          rm -rf "$RUNNER_TEMP/asc-keys" "$RUNNER_TEMP/signing.p12" "$RUNNER_TEMP/export" "$RUNNER_TEMP/wwdr-g3.cer"
 
   app-store-connect:
     needs: [quality, prepare, build]

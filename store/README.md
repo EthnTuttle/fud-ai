@@ -89,11 +89,13 @@ iOS:
 | `APP_STORE_CONNECT_API_KEY_ID` | Admin-role ASC API key: build numbers, cloud-managed distribution signing, upload, build readiness, listing, review |
 | `APP_STORE_CONNECT_ISSUER_ID` | ASC issuer |
 | `APP_STORE_CONNECT_API_KEY_P8` | ASC private key (`.p8` body) |
-| `IOS_DEV_SIGNING_P12_BASE64` | "Fud AI GitHub Actions" Apple Development identity (base64 `.p12`) that signs the archive; App Store signing happens at export with Apple's cloud-managed distribution certificate |
+| `IOS_DEV_SIGNING_P12_BASE64` | Dedicated CI Apple Development identity (base64 `.p12`; certificate "Apple Development: Created via API", ID `7H3T2H8USS`, expires 2027-10-13) that signs the archive. App Store signing happens at export with Apple's cloud-managed distribution certificate |
 | `IOS_DEV_SIGNING_P12_PASSWORD` | Password for that `.p12` |
 
-If the development identity expires or is revoked, create a new Apple Development
-certificate for CI and replace both `IOS_DEV_SIGNING_*` secrets.
+If that certificate expires or is revoked, create a new Apple Development
+certificate for CI (App Store Connect API, `certificateType: DEVELOPMENT`), replace
+both `IOS_DEV_SIGNING_*` secrets, and revoke the old one. Its private key exists
+only in the GitHub secret.
 
 Later for catalog automation:
 
