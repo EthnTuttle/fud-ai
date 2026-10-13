@@ -380,6 +380,13 @@ kotlin {
     jvmToolchain(17)
 }
 
+// Unit tests also read repository files that are not task inputs (the workout manifest
+// and frames, this build script), so a cached result could hide a change to them. Test
+// results are never taken from the build cache; compiled classes still are.
+tasks.withType<Test>().configureEach {
+    outputs.doNotCacheIf("unit tests read undeclared repository files") { true }
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.play.review.ktx)
