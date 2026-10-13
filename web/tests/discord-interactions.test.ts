@@ -19,6 +19,12 @@ const APP_ID = "1548469419922038845";
 const GUILD_ID = "1548469034570354709";
 const ISSUE_URL = "https://github.com/apoorvdarshan/fud-ai/issues/42";
 
+// Match the request's exact host; a substring check would also match e.g. "api.github.com.evil.test".
+function hasHost(url: unknown, host: string): boolean {
+  const href = url instanceof Request ? url.url : String(url);
+  return URL.canParse(href) && new URL(href).hostname === host;
+}
+
 function bytesToHex(bytes: Uint8Array): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -130,10 +136,10 @@ function issueFlowFetch(gemini: Response | "fail" | "skip" = geminiIssueResponse
       }
       return gemini;
     }
-    if (String(url).includes("api.github.com")) {
+    if (hasHost(url, "api.github.com")) {
       return Response.json({ html_url: ISSUE_URL, number: 42 }, { status: 201 });
     }
-    if (String(url).includes("discord.com")) return new Response(null, { status: 200 });
+    if (hasHost(url, "discord.com")) return new Response(null, { status: 200 });
     throw new Error(`unexpected fetch ${url}`);
   };
 }
@@ -143,7 +149,7 @@ function githubPayload(fetchMock: ReturnType<typeof vi.fn<MockFetch>>): {
   body: string;
   labels: string[];
 } {
-  const githubCall = fetchMock.mock.calls.find(([url]) => String(url).includes("api.github.com"));
+  const githubCall = fetchMock.mock.calls.find(([url]) => hasHost(url, "api.github.com"));
   return JSON.parse(requestBody(githubCall?.[1])) as {
     title: string;
     body: string;
@@ -297,7 +303,7 @@ describe("discord interactions", () => {
           candidates: [{ content: { parts: [{ text: "Add your key in Settings → AI Access." }] } }],
         });
       }
-      if (String(url).includes("discord.com")) return new Response(null, { status: 200 });
+      if (hasHost(url, "discord.com")) return new Response(null, { status: 200 });
       throw new Error(`unexpected fetch ${url}`);
     });
     vi.stubGlobal("fetch", fetch);
@@ -315,7 +321,7 @@ describe("discord interactions", () => {
     await flush();
 
     expect(fetch.mock.calls.some(([url]) => String(url).includes("generativelanguage"))).toBe(true);
-    expect(fetch.mock.calls.some(([url]) => String(url).includes("api.github.com"))).toBe(false);
+    expect(fetch.mock.calls.some(([url]) => hasHost(url, "api.github.com"))).toBe(false);
     const askGeminiBody = requestBody(
       fetch.mock.calls.find(([url]) => String(url).includes("generativelanguage"))?.[1],
     );
@@ -365,7 +371,7 @@ describe("discord interactions", () => {
     expect(requestBody(geminiCall?.[1])).toContain("Crash on save");
     expect(requestBody(geminiCall?.[1])).toContain("Tap save after logging a meal.");
 
-    const githubCall = fetch.mock.calls.find(([url]) => String(url).includes("api.github.com"));
+    const githubCall = fetch.mock.calls.find(([url]) => hasHost(url, "api.github.com"));
     expect(githubCall?.[0]).toBe("https://api.github.com/repos/apoorvdarshan/fud-ai/issues");
     expect(githubCall?.[1]).toMatchObject({
       method: "POST",
@@ -537,8 +543,8 @@ describe("discord interactions", () => {
   it("retries with only the bug label when ios/android labels are missing on GitHub", async () => {
     const { privateKey, publicKeyHex } = await ed25519Pair();
     const fetch = vi.fn<MockFetch>(async (url) => {
-      if (String(url).includes("api.github.com")) {
-        if (fetch.mock.calls.filter(([called]) => String(called).includes("api.github.com")).length === 1) {
+      if (hasHost(url, "api.github.com")) {
+        if (fetch.mock.calls.filter(([called]) => hasHost(called, "api.github.com")).length === 1) {
           return Response.json({ message: "Validation Failed" }, { status: 422 });
         }
         return Response.json({ html_url: ISSUE_URL, number: 42 }, { status: 201 });
@@ -563,7 +569,7 @@ describe("discord interactions", () => {
     await flush();
 
     const githubBodies = fetch.mock.calls
-      .filter(([url]) => String(url).includes("api.github.com"))
+      .filter(([url]) => hasHost(url, "api.github.com"))
       .map(([, options]) => JSON.parse(requestBody(options)) as { labels: string[] });
     expect(githubBodies.map((body) => body.labels)).toEqual([["bug", "ios"], ["bug"]]);
   });
@@ -571,7 +577,7 @@ describe("discord interactions", () => {
   it("follows up when GITHUB_TOKEN is missing", async () => {
     const { privateKey, publicKeyHex } = await ed25519Pair();
     const fetch = vi.fn<MockFetch>(async (url) => {
-      if (String(url).includes("discord.com")) return new Response(null, { status: 200 });
+      if (hasHost(url, "discord.com")) return new Response(null, { status: 200 });
       throw new Error(`unexpected fetch ${url}`);
     });
     vi.stubGlobal("fetch", fetch);
@@ -587,7 +593,7 @@ describe("discord interactions", () => {
     );
     expect(await response.json()).toEqual({ type: 5 });
     await flush();
-    expect(fetch.mock.calls.some(([url]) => String(url).includes("api.github.com"))).toBe(false);
+    expect(fetch.mock.calls.some(([url]) => hasHost(url, "api.github.com"))).toBe(false);
     expect(requestBody(fetch.mock.calls[0]?.[1])).toContain("GitHub isn’t configured");
   });
 
@@ -621,7 +627,7 @@ describe("discord interactions", () => {
     expect(requestBody(geminiCall?.[1])).toContain("kind: feature");
     expect(requestBody(geminiCall?.[1])).toContain("Widget remaining calories");
 
-    const githubCall = fetch.mock.calls.find(([url]) => String(url).includes("api.github.com"));
+    const githubCall = fetch.mock.calls.find(([url]) => hasHost(url, "api.github.com"));
     expect(githubCall?.[0]).toBe("https://api.github.com/repos/apoorvdarshan/fud-ai/issues");
     expect(githubCall?.[1]).toMatchObject({
       method: "POST",
@@ -650,7 +656,7 @@ describe("discord interactions", () => {
   it("leaves /feature platform unspecified when omitted, even in a platform channel", async () => {
     const { privateKey, publicKeyHex } = await ed25519Pair();
     const fetch = vi.fn<MockFetch>(async (url) => {
-      if (String(url).includes("api.github.com")) {
+      if (hasHost(url, "api.github.com")) {
         return Response.json({ html_url: ISSUE_URL, number: 42 }, { status: 201 });
       }
       return new Response(null, { status: 200 });
