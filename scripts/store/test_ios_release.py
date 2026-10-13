@@ -439,5 +439,189 @@ class AscCliTests(unittest.TestCase):
                 self.assertEqual(set(attrs), expected)
 
 
+class TransientErrorTests(unittest.TestCase):
+    def test_real_retry_rule(self) -> None:
+        import http.client
+        import urllib.error
+
+        transient = [
+            http.client.RemoteDisconnected("closed"),
+            ConnectionResetError("reset"),
+            http.client.IncompleteRead(b""),
+            urllib.error.URLError("dns"),
+            TimeoutError("slow"),
+            asc_release.AscHttpError(503, "busy"),
+            asc_release.AscHttpError(429, "rate limited"),
+            urllib.error.HTTPError("https://x", 502, "bad gateway", {}, None),
+        ]
+        fatal = [
+            asc_release.AscHttpError(401, "unauthorized"),
+            asc_release.AscHttpError(409, "conflict"),
+            urllib.error.HTTPError("https://x", 404, "missing", {}, None),
+            ValueError("bad"),
+            ReleaseError("mismatch"),
+            SystemExit(1),
+        ]
+        for exc in transient:
+            with self.subTest(exc=repr(exc)):
+                self.assertTrue(ios_release.is_transient_error(exc))
+        for exc in fatal:
+            with self.subTest(exc=repr(exc)):
+                self.assertFalse(ios_release.is_transient_error(exc))
+
+
+class CmdWaitBuildTests(unittest.TestCase):
+    def test_deadline_counts_from_upload_start_and_app_lookup_is_retried(self) -> None:
+        import http.client
+        import argparse
+
+        lookups = []
+
+        def find_app(_client, bundle_id):
+            lookups.append(bundle_id)
+            if len(lookups) == 1:
+                raise http.client.RemoteDisconnected("closed")
+            return APP
+
+        fake_module = mock.Mock(find_app=find_app)
+        captured = {}
+
+        def fake_wait(client, **kwargs):
+            captured.update(kwargs)
+            return {"id": "B9"}
+
+        args = argparse.Namespace(
+            version=VERSION, build=40, started_at=STARTED, wait_minutes=120, poll_seconds=30
+        )
+        with tempfile.NamedTemporaryFile("r", suffix=".out") as out, mock.patch.object(
+            ios_release, "asc_client", return_value=(fake_module, object())
+        ), mock.patch.object(ios_release, "wait_for_build", side_effect=fake_wait), mock.patch.object(
+            ios_release.time, "sleep"
+        ), mock.patch.object(
+            ios_release.time, "time", return_value=STARTED + 30
+        ), mock.patch.dict(os.environ, {"GITHUB_OUTPUT": out.name}), redirect_stdout(io.StringIO()):
+            ios_release.cmd_wait_build(args)
+            written = Path(out.name).read_text()
+        self.assertEqual(lookups, [ios_release.BUNDLE_ID] * 2)
+        self.assertEqual(captured["deadline"], STARTED + 120 * 60)
+        self.assertEqual(captured["uploaded_after"], STARTED)
+        self.assertEqual(captured["build_number"], "40")
+        self.assertIs(captured["is_transient"], ios_release.is_transient_error)
+        self.assertIn("build_id=B9", written)
+
+    def test_app_lookup_gives_up_at_the_deadline(self) -> None:
+        import http.client
+
+        def boom():
+            raise http.client.RemoteDisconnected("closed")
+
+        clock = FakeClock(STARTED)
+        with redirect_stdout(io.StringIO()), self.assertRaises(http.client.RemoteDisconnected):
+            ios_release.call_with_retries(
+                boom, deadline=STARTED + 90, poll_seconds=30, now=clock.now, sleep=clock.sleep
+            )
+        self.assertEqual(clock.sleeps, [30, 30, 30])
+
+
+class FakeAsc:
+    """App Store Connect stand-in for asc_release.main() (live path, no network)."""
+
+    def __init__(self, *, state: str = "PREPARE_FOR_SUBMISSION", attached: str | None = "OLD",
+                 revert_after_select: bool = False) -> None:
+        self.state = state
+        self.attached = attached
+        self.revert_after_select = revert_after_select
+        self.build_reads = 0
+        self.calls: list[tuple[str, str]] = []
+
+    def get(self, path: str) -> dict:
+        self.calls.append(("GET", path))
+        if path.startswith("/apps?"):
+            return {"data": [{"id": APP}]}
+        if path.startswith(f"/apps/{APP}/appStoreVersions"):
+            return {"data": [{"id": "V1", "attributes": {"versionString": VERSION, "appStoreState": self.state}}]}
+        if path.startswith("/builds/B9"):
+            return {"data": build_row("B9"), "included": [pre_row()]}
+        if path == "/appStoreVersions/V1/build":
+            self.build_reads += 1
+            if self.revert_after_select and self.build_reads >= 2:
+                return {"data": {"type": "builds", "id": "OLD"}}
+            return {"data": {"type": "builds", "id": self.attached} if self.attached else None}
+        if path.startswith(f"/apps/{APP}/reviewSubmissions"):
+            return {"data": [{"id": "SUB1"}]}
+        if path.startswith("/reviewSubmissions/SUB1/items"):
+            return {"data": []}
+        raise AssertionError(f"unexpected GET {path}")
+
+    def post(self, path: str, body: dict) -> dict:
+        self.calls.append(("POST", path))
+        return {"data": {"id": "ITEM"}}
+
+    def patch(self, path: str, body: dict) -> dict:
+        self.calls.append(("PATCH", path))
+        return {"data": body["data"]}
+
+    def request(self, method: str, path: str, body: dict | None = None):
+        self.calls.append((method, path))
+        if method == "PATCH" and path == "/appStoreVersions/V1/relationships/build":
+            self.attached = body["data"]["id"]
+        return None
+
+
+class LiveSubmitFlowTests(unittest.TestCase):
+    def run_main(self, fake: FakeAsc) -> tuple[int, mock.Mock]:
+        products = mock.Mock(return_value=asc_release.ProductSubmitResult("SUB1", 0, False))
+        argv = ["asc_release.py", "--version", VERSION, "--build-id", "B9", "--build-number", "40"]
+        env = {k: v for k, v in os.environ.items() if k not in {
+            "UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "PUBLIC_RELEASE"}}
+        env["SUBMIT_IOS_REVIEW"] = "true"
+        code = 0
+        with mock.patch.dict(os.environ, env, clear=True), mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(asc_release, "client_from_environment", return_value=fake), \
+                mock.patch.object(asc_release, "submit_in_app_purchases", products), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            try:
+                asc_release.main()
+            except SystemExit as exc:
+                code = exc.code if isinstance(exc.code, int) else 1
+        return code, products
+
+    def test_selects_rechecks_then_submits(self) -> None:
+        fake = FakeAsc()
+        code, products = self.run_main(fake)
+        self.assertEqual(code, 0)
+        calls = fake.calls
+        select = calls.index(("PATCH", "/appStoreVersions/V1/relationships/build"))
+        submit = calls.index(("PATCH", "/reviewSubmissions/SUB1"))
+        reads = [i for i, c in enumerate(calls) if c == ("GET", "/appStoreVersions/V1/build")]
+        build_checks = [i for i, c in enumerate(calls) if c[0] == "GET" and c[1].startswith("/builds/B9")]
+        self.assertEqual(len(reads), 2, "selection must be read back and rechecked")
+        self.assertTrue(select < reads[0] < reads[1] < submit)
+        self.assertEqual(len(build_checks), 2)
+        self.assertTrue(build_checks[1] < reads[1] < submit, "build must be re-verified just before submit")
+        self.assertIn(("PATCH", "/appStoreVersions/V1"), calls)  # release type
+        products.assert_called_once()
+
+    def test_selection_changed_before_submit_aborts(self) -> None:
+        fake = FakeAsc(revert_after_select=True)
+        code, _ = self.run_main(fake)
+        self.assertEqual(code, 1)
+        self.assertNotIn(("PATCH", "/reviewSubmissions/SUB1"), fake.calls)
+
+    def test_waiting_for_review_with_another_build_aborts(self) -> None:
+        fake = FakeAsc(state="WAITING_FOR_REVIEW", attached="OTHER")
+        code, products = self.run_main(fake)
+        self.assertEqual(code, 1)
+        products.assert_not_called()
+        self.assertNotIn(("PATCH", "/reviewSubmissions/SUB1"), fake.calls)
+
+    def test_waiting_for_review_with_this_build_is_idempotent(self) -> None:
+        fake = FakeAsc(state="WAITING_FOR_REVIEW", attached="B9")
+        code, products = self.run_main(fake)
+        self.assertEqual(code, 0)
+        products.assert_called_once()
+        self.assertNotIn(("PATCH", "/appStoreVersions/V1/relationships/build"), fake.calls)
+
+
 if __name__ == "__main__":
     unittest.main()

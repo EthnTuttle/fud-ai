@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import http.client
 import os
 import re
 import sys
@@ -49,6 +50,7 @@ WAIT_MINUTES = ("IOS_BUILD_WAIT_MINUTES", 120, 10, 300)
 
 # Builds this old (relative to this run's upload) cannot be the one we uploaded.
 UPLOAD_CLOCK_SKEW_SECONDS = 600
+TRANSIENT_HTTP_STATUSES = {408, 429, 500, 502, 503, 504}
 
 
 class ReleaseError(Exception):
@@ -241,11 +243,13 @@ def wait_for_build(
     uploaded_after: float,
     deadline: float,
     poll_seconds: int,
-    now: Callable[[], float] = time.time,
-    sleep: Callable[[float], None] = time.sleep,
+    now: Callable[[], float] | None = None,
+    sleep: Callable[[float], None] | None = None,
     is_transient: Callable[[BaseException], bool] | None = None,
 ) -> dict[str, Any]:
     """Poll until this run's build is processed; raise ReleaseError otherwise."""
+    now = now or time.time
+    sleep = sleep or time.sleep
     path = builds_query(app_id, build_number)
     while True:
         try:
@@ -272,6 +276,40 @@ def wait_for_build(
                 f"timed out waiting for {marketing_version} ({build_number}) to finish processing"
             )
         sleep(min(poll_seconds, max(1.0, remaining)))
+
+
+def is_transient_error(exc: BaseException) -> bool:
+    """Network hiccups and App Store Connect overload are retried; anything else stops."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in TRANSIENT_HTTP_STATUSES
+    status = getattr(exc, "status", None)
+    if isinstance(exc, SystemExit):  # asc_release.AscHttpError carries the HTTP status
+        return isinstance(status, int) and status in TRANSIENT_HTTP_STATUSES
+    return isinstance(
+        exc, (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException)
+    )
+
+
+def call_with_retries(
+    fn: Callable[[], Any],
+    *,
+    deadline: float,
+    poll_seconds: int,
+    now: Callable[[], float] | None = None,
+    sleep: Callable[[float], None] | None = None,
+    is_transient: Callable[[BaseException], bool] = is_transient_error,
+) -> Any:
+    now = now or time.time
+    sleep = sleep or time.sleep
+    while True:
+        try:
+            return fn()
+        except BaseException as exc:  # noqa: BLE001 - classified below
+            remaining = deadline - now()
+            if not is_transient(exc) or remaining <= 0:
+                raise
+            print(f"  transient App Store Connect error ({exc!r}); retrying")
+            sleep(min(poll_seconds, max(1.0, remaining)))
 
 
 def write_outputs(values: Mapping[str, Any]) -> None:
@@ -329,17 +367,17 @@ def cmd_build_number(_: argparse.Namespace) -> None:
 
 def cmd_wait_build(args: argparse.Namespace) -> None:
     asc_release, client = asc_client()
-    app_id = asc_release.find_app(client, BUNDLE_ID)
+    # The budget covers upload + processing, so it is counted from upload start.
     deadline = args.started_at + args.wait_minutes * 60
     print(
         f"waiting for {args.version} ({args.build}) — poll every {args.poll_seconds}s, "
         f"deadline {dt.datetime.fromtimestamp(deadline, dt.timezone.utc).isoformat()}"
     )
-
-    def transient(exc: BaseException) -> bool:
-        code = getattr(exc, "status", None)
-        return isinstance(exc, (urllib.error.URLError, TimeoutError)) or code in {429, 500, 502, 503, 504}
-
+    app_id = call_with_retries(
+        lambda: asc_release.find_app(client, BUNDLE_ID),
+        deadline=deadline,
+        poll_seconds=args.poll_seconds,
+    )
     build = wait_for_build(
         client,
         app_id=app_id,
@@ -348,7 +386,7 @@ def cmd_wait_build(args: argparse.Namespace) -> None:
         uploaded_after=args.started_at,
         deadline=deadline,
         poll_seconds=args.poll_seconds,
-        is_transient=transient,
+        is_transient=is_transient_error,
     )
     write_outputs({"build_id": build["id"]})
 
