@@ -12,12 +12,15 @@ import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -289,12 +292,25 @@ class AppFlowsTest {
         // could be starved past the timeout even after the UI showed the saved value.
         val executor = Executors.newSingleThreadExecutor { Thread(it, "awaitPreference") }
         val scope = CoroutineScope(executor.asCoroutineDispatcher())
-        val saved = scope.async { flow.first { predicate(it) } }
+        val emissions = AtomicInteger()
+        val lastSeen = AtomicReference<Any?>(null)
+        val saved = scope.async {
+            flow.onEach { emissions.incrementAndGet(); lastSeen.set(it) }.first { predicate(it) }
+        }
         try {
             // A blocking coroutine wait starves pending Compose frame work even
             // after a menu disappears, so keep the test clock progressing. The wait
             // ends as soon as the value is saved; the limit only bounds a real failure.
-            compose.waitUntil(timeoutMillis = 30_000) { saved.isCompleted }
+            try {
+                compose.waitUntil(timeoutMillis = 30_000) { saved.isCompleted }
+            } catch (timeout: ComposeTimeoutException) {
+                // Say whether the stored value never arrived or arrived but did not match.
+                throw AssertionError(
+                    "Saved value did not match within 30 s; observed ${emissions.get()} " +
+                        "emission(s), last: ${lastSeen.get().toString().take(2_000)}",
+                    timeout
+                )
+            }
             // Already complete: return the value or propagate the original error.
             return runBlocking { saved.await() }
         } finally {
