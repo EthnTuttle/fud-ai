@@ -42,6 +42,14 @@ def fail(msg: str) -> None:
     raise SystemExit(1)
 
 
+class AscHttpError(SystemExit):
+    """An App Store Connect HTTP error; exits like fail() unless a caller retries."""
+
+    def __init__(self, status: int, message: str) -> None:
+        super().__init__(f"error: {message}")
+        self.status = status
+
+
 def truthy(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
@@ -54,8 +62,26 @@ def read_text(path: Path) -> str | None:
 
 
 class AscClient:
-    def __init__(self, token: str) -> None:
-        self._token = token
+    # JWTs are minted for 20 minutes; refresh well before that during long waits.
+    TOKEN_MAX_AGE_SECONDS = 600
+
+    def __init__(
+        self, token: str | None = None, *, token_factory: Any | None = None
+    ) -> None:
+        if token is None and token_factory is None:
+            raise ValueError("AscClient needs a token or a token_factory")
+        self._token_factory = token_factory
+        self._token = token if token is not None else token_factory()
+        self._token_minted = time.monotonic()
+
+    def _authorization(self) -> str:
+        if (
+            self._token_factory is not None
+            and time.monotonic() - self._token_minted > self.TOKEN_MAX_AGE_SECONDS
+        ):
+            self._token = self._token_factory()
+            self._token_minted = time.monotonic()
+        return f"Bearer {self._token}"
 
     def request(
         self,
@@ -69,7 +95,7 @@ class AscClient:
     ) -> dict[str, Any] | None:
         url = path if path.startswith("http") else f"{ASC_BASE}{path}"
         headers = {
-            "Authorization": f"Bearer {self._token}",
+            "Authorization": self._authorization(),
             "Accept": accept,
         }
         data: bytes | None = None
@@ -91,7 +117,8 @@ class AscClient:
                 return json.loads(payload.decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
-            fail(f"ASC {method} {path} → HTTP {exc.code}: {detail[:2000]}")
+            print(f"error: ASC {method} {path} → HTTP {exc.code}: {detail[:2000]}", file=sys.stderr)
+            raise AscHttpError(exc.code, f"ASC {method} {path} → HTTP {exc.code}") from None
 
     def get(self, path: str) -> dict[str, Any]:
         result = self.request("GET", path)
@@ -147,6 +174,12 @@ def load_credentials() -> tuple[str, str, str]:
         )
     key_p8 = key_p8.replace("\\n", "\n")
     return key_id, issuer_id, key_p8
+
+
+def client_from_environment() -> AscClient:
+    """Client whose JWT is re-minted automatically during long-running steps."""
+    key_id, issuer_id, key_p8 = load_credentials()
+    return AscClient(token_factory=lambda: make_asc_token(key_id, issuer_id, key_p8))
 
 
 def find_app(client: AscClient, bundle_id: str) -> str:
@@ -213,6 +246,16 @@ def get_app_info_localization(client: AscClient, app_id: str, locale: str) -> di
     )
 
 
+LISTING_FIELDS = (
+    ("description", "description.txt"),
+    ("keywords", "keywords.txt"),
+    ("promotionalText", "promotional_text.txt"),
+    ("marketingUrl", "marketing_url.txt"),
+    ("supportUrl", "support_url.txt"),
+)
+WHATS_NEW_FIELD = ("whatsNew", "whats_new.txt")
+
+
 def upload_listing(
     client: AscClient,
     *,
@@ -220,22 +263,21 @@ def upload_listing(
     version_id: str,
     locale: str,
     metadata_dir: Path,
+    include_listing: bool = True,
+    include_whats_new: bool = False,
 ) -> None:
+    """Update the version localization. Listing text and What's New are separate gates."""
     del app_id  # app info (name/subtitle/privacy) locked while prior version is live
     loc_dir = metadata_dir / "ios" / locale
 
     version_loc = localization_for_locale(
         client, f"/appStoreVersions/{version_id}/appStoreVersionLocalizations", locale
     )
+    fields = (LISTING_FIELDS if include_listing else ()) + (
+        (WHATS_NEW_FIELD,) if include_whats_new else ()
+    )
     version_attrs: dict[str, str] = {}
-    for field, filename in (
-        ("description", "description.txt"),
-        ("keywords", "keywords.txt"),
-        ("promotionalText", "promotional_text.txt"),
-        ("whatsNew", "whats_new.txt"),
-        ("marketingUrl", "marketing_url.txt"),
-        ("supportUrl", "support_url.txt"),
-    ):
+    for field, filename in fields:
         value = read_text(loc_dir / filename)
         if value:
             version_attrs[field] = value
@@ -725,6 +767,99 @@ def submit_for_review(
     )
 
 
+RELEASE_TYPE_PUBLIC = "AFTER_APPROVAL"
+RELEASE_TYPE_MANUAL = "MANUAL"
+
+
+def verify_build(
+    client: AscClient, build_id: str, version_string: str, build_number: str
+) -> None:
+    """Re-read the build and refuse anything but this run's processed build."""
+    payload = client.get(
+        f"/builds/{build_id}?"
+        + urllib.parse.urlencode(
+            {
+                "include": "preReleaseVersion",
+                "fields[builds]": "version,processingState,expired,preReleaseVersion",
+                "fields[preReleaseVersions]": "version,platform",
+            }
+        )
+    )
+    data = payload.get("data") or {}
+    attrs = data.get("attributes") or {}
+    pre = next(
+        (row for row in payload.get("included") or [] if row.get("type") == "preReleaseVersions"),
+        {},
+    )
+    pre_attrs = pre.get("attributes") or {}
+    problems = []
+    if data.get("id") != build_id:
+        problems.append(f"id {data.get('id')!r}")
+    if attrs.get("version") != build_number:
+        problems.append(f"build number {attrs.get('version')!r}")
+    if attrs.get("processingState") != "VALID":
+        problems.append(f"processing state {attrs.get('processingState')!r}")
+    if attrs.get("expired"):
+        problems.append("expired")
+    if pre_attrs.get("version") != version_string or pre_attrs.get("platform") != "IOS":
+        problems.append(f"version {pre_attrs.get('platform')} {pre_attrs.get('version')!r}")
+    if problems:
+        fail(
+            f"build {build_id} is not {version_string} ({build_number}), VALID and unexpired: "
+            + ", ".join(problems)
+        )
+
+
+def attached_build_id(client: AscClient, version_id: str) -> str | None:
+    payload = client.get(f"/appStoreVersions/{version_id}/build")
+    return (payload.get("data") or {}).get("id")
+
+
+def confirm_selected_build(client: AscClient, version_id: str, build_id: str) -> None:
+    current = attached_build_id(client, version_id)
+    if current != build_id:
+        fail(
+            f"App Store version {version_id} has build {current or 'none'} selected, "
+            f"expected {build_id}; not submitting"
+        )
+
+
+def select_build(
+    client: AscClient,
+    version_id: str,
+    build_id: str,
+    version_string: str,
+    build_number: str,
+) -> None:
+    """Explicitly select this run's build for the version, then read it back."""
+    verify_build(client, build_id, version_string, build_number)
+    client.request(
+        "PATCH",
+        f"/appStoreVersions/{version_id}/relationships/build",
+        body={"data": {"type": "builds", "id": build_id}},
+    )
+    confirm_selected_build(client, version_id, build_id)
+    print(f"  selected build {build_number} ({build_id}) for version {version_string}")
+
+
+def set_release_type(client: AscClient, version_id: str, *, public_release: bool) -> None:
+    release_type = RELEASE_TYPE_PUBLIC if public_release else RELEASE_TYPE_MANUAL
+    client.patch(
+        f"/appStoreVersions/{version_id}",
+        {
+            "data": {
+                "type": "appStoreVersions",
+                "id": version_id,
+                "attributes": {"releaseType": release_type},
+            }
+        },
+    )
+    print(
+        "  release type: "
+        + ("release automatically after approval" if public_release else "manual release after approval")
+    )
+
+
 class _RecordingClient:
     """Offline AscClient stand-in for the dry-run self-check."""
 
@@ -951,11 +1086,13 @@ def validate_local_inputs(
     metadata_dir: Path,
     screenshots_dir: Path,
     locale: str,
+    upload_whats_new: bool = False,
 ) -> None:
-    if upload_listing:
-        loc_dir = metadata_dir / "ios" / locale
-        if not loc_dir.is_dir():
-            fail(f"metadata dir missing: {loc_dir}")
+    loc_dir = metadata_dir / "ios" / locale
+    if (upload_listing or upload_whats_new) and not loc_dir.is_dir():
+        fail(f"metadata dir missing: {loc_dir}")
+    if upload_whats_new and not read_text(loc_dir / WHATS_NEW_FIELD[1]):
+        fail(f"What's New upload is on, but {loc_dir / WHATS_NEW_FIELD[1]} is missing or empty")
     if upload_screenshots:
         if not screenshots_dir.is_dir():
             fail(f"screenshots dir missing: {screenshots_dir}")
@@ -983,6 +1120,14 @@ def main() -> None:
         help="Marketing version from release tag (e.g. 1.2.3 when tag is v1.2.3)",
     )
     parser.add_argument(
+        "--build-id",
+        help="App Store Connect id of the build uploaded by this run (required to submit)",
+    )
+    parser.add_argument(
+        "--build-number",
+        help="CFBundleVersion of the build uploaded by this run (required to submit)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Validate flags and local files only — no ASC HTTP calls",
@@ -990,15 +1135,24 @@ def main() -> None:
     args = parser.parse_args()
 
     do_listing = truthy("UPLOAD_LISTING")
+    do_whats_new = truthy("UPLOAD_WHATS_NEW")
     do_screenshots = truthy("UPLOAD_SCREENSHOTS")
     do_submit = truthy("SUBMIT_IOS_REVIEW")
+    do_public = truthy("PUBLIC_RELEASE")
 
-    if not (do_listing or do_screenshots or do_submit):
+    if not (do_listing or do_whats_new or do_screenshots or do_submit):
         print(
-            "ASC release skipped — UPLOAD_LISTING / UPLOAD_SCREENSHOTS / "
-            "SUBMIT_IOS_REVIEW are off"
+            "ASC release skipped — UPLOAD_LISTING / UPLOAD_WHATS_NEW / "
+            "UPLOAD_SCREENSHOTS / SUBMIT_IOS_REVIEW are off"
         )
         return
+    if do_public and not do_submit:
+        fail("PUBLIC_RELEASE only applies when SUBMIT_IOS_REVIEW is on")
+    if do_submit and not (args.build_id and args.build_number):
+        fail(
+            "submitting needs --build-id and --build-number for the build uploaded by "
+            "this run; an older build is never substituted"
+        )
 
     validate_local_inputs(
         upload_listing=do_listing,
@@ -1006,21 +1160,20 @@ def main() -> None:
         metadata_dir=args.metadata_dir,
         screenshots_dir=args.screenshots_dir,
         locale=args.locale,
+        upload_whats_new=do_whats_new,
     )
 
     if args.dry_run:
         print("ASC dry-run — local inputs OK; no API calls")
         print(
-            f"  bundle={args.bundle_id} listing={do_listing} "
-            f"screenshots={do_screenshots} submit={do_submit}"
+            f"  bundle={args.bundle_id} listing={do_listing} whats_new={do_whats_new} "
+            f"screenshots={do_screenshots} submit={do_submit} public_release={do_public}"
         )
         if do_submit:
             dry_run_self_check()
         return
 
-    key_id, issuer_id, key_p8 = load_credentials()
-    token = make_asc_token(key_id, issuer_id, key_p8)
-    client = AscClient(token)
+    client = client_from_environment()
 
     if not args.version:
         fail("--version is required for live ASC calls (pass marketing version from tag)")
@@ -1032,11 +1185,13 @@ def main() -> None:
     print(
         f"ASC app={app_id} version={args.version} id={version_id} state={state}"
     )
+    edits_metadata = do_listing or do_whats_new or do_screenshots
 
     if state == "WAITING_FOR_REVIEW":
-        if do_submit and not (do_listing or do_screenshots):
-            # The version is already held by a live submission; still make sure
-            # no Ready-to-Submit product was left behind by an earlier partial run.
+        if do_submit and not edits_metadata:
+            # A rerun after a successful submit: only accept it if review holds
+            # exactly this run's build.
+            confirm_selected_build(client, version_id, args.build_id)
             print(
                 "ASC submit skipped — version already WAITING_FOR_REVIEW (idempotent)"
             )
@@ -1044,11 +1199,6 @@ def main() -> None:
                 result = submit_in_app_purchases(client, app_id)
             except ProductSubmitError as exc:
                 fail(str(exc))
-            # Attaching a product to a fresh draft does not submit it. If the
-            # version is already under review, the draft holding the late
-            # products must be submitted on its own or they never reach review.
-            # Only submit a product-only draft: refuse if it holds an app
-            # version (e.g. another release's) so unrelated items never ship.
             # Attaching a product to a fresh draft does not submit it. If the
             # version is already under review, the draft holding the late
             # products must be submitted on its own or they never reach review.
@@ -1065,14 +1215,14 @@ def main() -> None:
                 submit_product_draft(client, result.submission_id)
             print("ASC release step finished")
             return
-        if do_listing or do_screenshots:
+        if edits_metadata:
             fail(
-                f"cannot update listing/screenshots while version {args.version!r} "
+                f"cannot update listing/What's New/screenshots while version {args.version!r} "
                 "is WAITING_FOR_REVIEW"
             )
         do_submit = False
 
-    if do_listing or do_screenshots:
+    if edits_metadata:
         if state not in EDITABLE_VERSION_STATES:
             fail(
                 f"version {args.version!r} is not editable for metadata (state={state}); "
@@ -1084,14 +1234,17 @@ def main() -> None:
             f"version {args.version!r} cannot be submitted for review (state={state})"
         )
 
-    if do_listing:
-        print("uploading ASC listing metadata…")
+    if do_listing or do_whats_new:
+        parts = [name for name, on in (("listing", do_listing), ("What's New", do_whats_new)) if on]
+        print(f"uploading ASC {' + '.join(parts)}…")
         upload_listing(
             client,
             app_id=app_id,
             version_id=version_id,
             locale=args.locale,
             metadata_dir=args.metadata_dir,
+            include_listing=do_listing,
+            include_whats_new=do_whats_new,
         )
 
     if do_screenshots:
@@ -1104,6 +1257,9 @@ def main() -> None:
         )
 
     if do_submit:
+        print("selecting this run's build…")
+        select_build(client, version_id, args.build_id, args.version, args.build_number)
+        set_release_type(client, version_id, public_release=do_public)
         print("submitting in-app purchases / subscriptions for review…")
         submission_id = get_or_create_draft_submission(client, app_id)
         try:
@@ -1115,6 +1271,10 @@ def main() -> None:
             # required product blocks the whole submission rather than letting
             # the version enter review without it.
             fail(f"{exc} Not submitting the app version.")
+        # Recheck immediately before submitting: the selection must still be
+        # this run's processed build.
+        verify_build(client, args.build_id, args.version, args.build_number)
+        confirm_selected_build(client, version_id, args.build_id)
         print("submitting for App Store review…")
         submit_for_review(
             client, app_id, version_id, state, submission_id=submission_id
@@ -1122,7 +1282,6 @@ def main() -> None:
         print(f"  {result.submitted} product(s) went out with the version")
 
     print("ASC release step finished")
-
 
 if __name__ == "__main__":
     main()

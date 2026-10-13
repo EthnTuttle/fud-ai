@@ -2,16 +2,27 @@
 """Print store automation gate status. Never mutates stores."""
 from __future__ import annotations
 
+import argparse
 import os
 
-GATES = [
-    "STORE_UPLOAD_WHATS_NEW",
-    "STORE_UPLOAD_LISTING",
-    "STORE_UPLOAD_SCREENSHOTS",
-    "STORE_PRODUCTION_ROLLOUT",
-    "STORE_SUBMIT_IOS_REVIEW",
-    "STORE_SYNC_REVENUECAT",
-]
+GATES = {
+    "ios": [
+        "IOS_RELEASE_AUTOMATION",
+        "IOS_UPLOAD_BUILD",
+        "IOS_UPLOAD_LISTING",
+        "IOS_UPLOAD_WHATS_NEW",
+        "IOS_UPLOAD_SCREENSHOTS",
+        "IOS_SUBMIT_REVIEW",
+        "IOS_PUBLIC_RELEASE",
+    ],
+    "android": [
+        "STORE_UPLOAD_WHATS_NEW",
+        "STORE_UPLOAD_LISTING",
+        "STORE_UPLOAD_SCREENSHOTS",
+        "STORE_PRODUCTION_ROLLOUT",
+    ],
+    "shared": ["STORE_SYNC_REVENUECAT"],
+}
 
 
 def enabled(name: str) -> bool:
@@ -19,14 +30,24 @@ def enabled(name: str) -> bool:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--platform", choices=("ios", "android", "all"), default="all")
+    args = parser.parse_args()
+    groups = ["ios", "android"] if args.platform == "all" else [args.platform]
+    groups.append("shared")
+
     print("Store automation gates (false = setup-only / safe):")
     any_on = False
-    for name in GATES:
-        on = enabled(name)
-        any_on = any_on or on
-        print(f"  {name}={'true' if on else 'false'}")
+    for group in groups:
+        print(f"  [{group}]")
+        for name in GATES[group]:
+            on = enabled(name)
+            any_on = any_on or on
+            print(f"    {name}={'true' if on else 'false'}")
+    if "ios" in groups and not enabled("IOS_RELEASE_AUTOMATION"):
+        print("  note: IOS_RELEASE_AUTOMATION is off, so every iOS store operation is skipped")
     if not any_on:
-        print("all gates off — no live listing/submit/rollout/sync will run")
+        print("all gates off — no live upload/listing/submit/rollout/sync will run")
     else:
         print("WARNING: one or more live gates are on")
 

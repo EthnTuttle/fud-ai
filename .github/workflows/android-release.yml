@@ -1,7 +1,7 @@
 # Android release CI — the Play-side sibling of the Xcode Cloud "Release" workflow.
 #
 # Trigger:  push a tag starting with "android-v" (e.g. android-v3.0). iOS uses
-#           ios-v* tags for Xcode Cloud, so the two pipelines never collide.
+#           ios-v* tags (ios-release.yml), so the two pipelines never collide.
 # Output:   a signed AAB and APK on the GitHub Release. Play is not touched
 #           unless you turn STORE_PRODUCTION_ROLLOUT on (off by default).
 #           That switch publishes only the production track, live (no draft).
@@ -74,10 +74,9 @@ jobs:
           STORE_UPLOAD_LISTING: ${{ vars.STORE_UPLOAD_LISTING }}
           STORE_UPLOAD_SCREENSHOTS: ${{ vars.STORE_UPLOAD_SCREENSHOTS }}
           STORE_PRODUCTION_ROLLOUT: ${{ vars.STORE_PRODUCTION_ROLLOUT }}
-          STORE_SUBMIT_IOS_REVIEW: ${{ vars.STORE_SUBMIT_IOS_REVIEW }}
           STORE_SYNC_REVENUECAT: ${{ vars.STORE_SYNC_REVENUECAT }}
         run: |
-          python3 scripts/store/print_gates.py
+          python3 scripts/store/print_gates.py --platform android
           python3 scripts/store/validate_catalog.py
 
       - name: Normalize store gates

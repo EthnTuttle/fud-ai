@@ -140,9 +140,10 @@ unsigned Release packaging, plus Android emulator instrumentation/UI tests on
 pushes, relevant pull requests and daily. The separate iOS tests workflow runs the full
 Debug simulator app, unit tests and key UI flows on relevant pushes and pull
 requests, daily, and on demand. Release workflows require Quality checks before
-creating their release artifacts/entries. Before an App Store release through
-Xcode Cloud, the maintainer must also verify a successful Quality checks run for
-the exact release commit and run the affected iOS tests. Resolve lint errors;
+creating their release artifacts/entries. App Store builds are archived, signed
+and uploaded by the iOS Release workflow on `ios-v*` tags (see
+[store/README.md](store/README.md)); before tagging, the maintainer must also
+confirm the iOS tests passed for the exact release commit. Resolve lint errors;
 review warnings and document any accepted limitations before release. Security
 findings require explicit triage and remediation, not a blanket lint baseline.
 
