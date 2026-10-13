@@ -11,8 +11,9 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
+import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
@@ -283,17 +284,22 @@ class AppFlowsTest {
     }
 
     private fun <T> awaitPreference(flow: Flow<T>, predicate: (T) -> Boolean): T {
-        val scope = CoroutineScope(Dispatchers.Default)
+        // Observe the real DataStore transaction on a thread of its own: on a busy
+        // 2-CPU CI emulator the shared Dispatchers.Default pool (also used by the app)
+        // could be starved past the timeout even after the UI showed the saved value.
+        val executor = Executors.newSingleThreadExecutor { Thread(it, "awaitPreference") }
+        val scope = CoroutineScope(executor.asCoroutineDispatcher())
         val saved = scope.async { flow.first { predicate(it) } }
         try {
             // A blocking coroutine wait starves pending Compose frame work even
-            // after a menu disappears. Keep the test clock progressing while
-            // observing the real DataStore transaction on a separate dispatcher.
-            compose.waitUntil(timeoutMillis = 10_000) { saved.isCompleted }
+            // after a menu disappears, so keep the test clock progressing. The wait
+            // ends as soon as the value is saved; the limit only bounds a real failure.
+            compose.waitUntil(timeoutMillis = 30_000) { saved.isCompleted }
             // Already complete: return the value or propagate the original error.
             return runBlocking { saved.await() }
         } finally {
             scope.cancel()
+            executor.shutdownNow()
         }
     }
 
