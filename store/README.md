@@ -7,9 +7,9 @@ copy, What's New, screenshots, and the IAP / subscription / tip / credit catalog
 **Nothing reaches a store unless its switch is on.** An `ios-v*` tag runs
 [`ios-release.yml`](../.github/workflows/ios-release.yml): GitHub Actions builds,
 signs and uploads the iOS binary (Xcode Cloud no longer builds Fud AI). An
-`android-v*` tag builds the Android app and makes a GitHub Release;
-`STORE_PRODUCTION_ROLLOUT` (off by default) publishes only production, live,
-with no draft.
+`android-v*` tag runs [`android-release.yml`](../.github/workflows/android-release.yml):
+GitHub Actions builds, verifies and signs the Android app, and uploads it to the
+Play tracks you switch on.
 
 ## iOS release flow (`ios-v*` tag)
 
@@ -39,6 +39,30 @@ processing, is expired, is ambiguous, belongs to another app/version, was
 uploaded before this run, or is not the build selected on the version. An older
 build is never substituted.
 
+## Android release flow (`android-v*` tag)
+
+```
+android-vX.Y tag ─► resolve switches (tag must equal versionName)
+  └─ ANDROID_RELEASE_AUTOMATION off ─► nothing is built or released
+  └─ on:
+       quality checks ─► build signed AAB + APK
+                      ─► verify package, versionName/versionCode, upload-key signature
+                      ─► Sigstore signatures + build provenance
+       ANDROID_UPLOAD_LISTING / ANDROID_UPLOAD_SCREENSHOTS ─► Play listing
+       GitHub Release (AAB + APK)
+       ANDROID_INTERNAL_TESTING / ANDROID_CLOSED_TESTING / ANDROID_PRODUCTION_ROLLOUT
+                      ─► one Play upload to every selected track (+ What's New if on)
+                      ─► read each track back: this versionCode, status completed
+```
+
+A manual **Run workflow** (`workflow_dispatch`) is a validation run: it builds
+the signed AAB and APK and verifies them, and never uploads, signs with Sigstore
+or creates a GitHub Release.
+
+Each track switch is independent: testing tracks never imply production, and
+production never falls back to a testing track. A completed Play release can
+still go through Google's review before testers or users get it.
+
 **Xcode Cloud:** its tag-triggered "Release" workflow was removed in App Store
 Connect. Xcode Cloud triggers live in App Store Connect, not in this repo, so a
 GitHub switch cannot stop them; never re-create an `ios-v*` Xcode Cloud workflow
@@ -47,8 +71,8 @@ or both pipelines will upload a build for the same tag.
 ## Switches
 
 Repository **Variables** (Settings → Secrets and variables → Actions → Variables).
-Missing means off. For iOS, any value other than `true/false/yes/no/on/off/1/0`
-fails the run.
+Missing means off. Any value other than `true/false/yes/no/on/off/1/0` fails the
+run, even when the platform's master switch is off.
 
 ### iOS
 
@@ -68,10 +92,13 @@ fails the run.
 
 | Variable | When `true` |
 |----------|-------------|
-| `STORE_UPLOAD_WHATS_NEW` | Attach English What's New on the Play upload |
-| `STORE_UPLOAD_LISTING` | Upload Play title/description |
-| `STORE_UPLOAD_SCREENSHOTS` | Upload Play phone screenshots |
-| `STORE_PRODUCTION_ROLLOUT` | Publish this Android build to Play production, live |
+| `ANDROID_RELEASE_AUTOMATION` | Master switch. On: the tag builds and verifies the signed AAB/APK and creates the GitHub Release. Off: the tag builds and releases nothing, and every switch below is ignored |
+| `ANDROID_UPLOAD_LISTING` | Play title, short and full description |
+| `ANDROID_UPLOAD_WHATS_NEW` | English What's New on this run's Play release. Needs a track below; skipped with a note otherwise |
+| `ANDROID_UPLOAD_SCREENSHOTS` | Play phone screenshots (see below) |
+| `ANDROID_INTERNAL_TESTING` | Upload this build to Play **internal testing** |
+| `ANDROID_CLOSED_TESTING` | Upload this build to Play **closed testing** (the `alpha` track) |
+| `ANDROID_PRODUCTION_ROLLOUT` | Upload this build to Play **production**, live |
 
 ### Shared
 
@@ -116,16 +143,18 @@ Later for catalog automation:
 | [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | iOS switches, build number, wait for this run's build |
 | [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | ASC listing, What's New, 6.7" screenshots, build selection, submit for review |
 | [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, timeouts, failures, mismatches |
+| [`scripts/store/android_release.py`](../scripts/store/android_release.py) | Android switches, AAB/APK identity + signature checks, Play track read-back |
+| [`scripts/store/test_android_release.py`](../scripts/store/test_android_release.py) | Offline tests: disabled/invalid switches, track selection, wrong app/version/key |
 | [`scripts/store/play_listing.py`](../scripts/store/play_listing.py) | Play listing text + phone screenshots |
 | [`scripts/store/sync_revenuecat_catalog.py`](../scripts/store/sync_revenuecat_catalog.py) | Validate catalog; fail if sync gate on |
 
-When any live iOS or Play listing gate is on, release workflows install
+When any live iOS or Play gate is on, release workflows install
 [`requirements-store.txt`](../requirements-store.txt) (PyJWT, Google API client).
 
 Environment flags consumed by `asc_release.py` (set by `ios-release.yml` from the
 resolved iOS switches): `UPLOAD_LISTING`, `UPLOAD_WHATS_NEW`, `UPLOAD_SCREENSHOTS`,
 `SUBMIT_IOS_REVIEW`, `PUBLIC_RELEASE`. `play_listing.py` uses `UPLOAD_LISTING` and
-`UPLOAD_SCREENSHOTS` from the Android switches.
+`UPLOAD_SCREENSHOTS`, set by `android-release.yml` from the resolved Android switches.
 
 ### iOS subscription submission caveat
 
@@ -170,17 +199,19 @@ store/metadata/
 
 Marketing PNGs live in [`web/assets/screenshots/`](../web/assets/screenshots/).
 Release workflows run `stage_screenshots.py` when `IOS_UPLOAD_SCREENSHOTS`
-(iOS) or `STORE_UPLOAD_SCREENSHOTS` (Android) is true, copying those PNGs into `store/metadata/screenshots/` until you replace
+(iOS) or `ANDROID_UPLOAD_SCREENSHOTS` (Android) is true, copying those PNGs into `store/metadata/screenshots/` until you replace
 them with store-tailored exports.
 
 ## How to enable later
 
 1. Keep `APPSTORE.md` / `PLAYSTORE.md` / `RELEASE_NOTES.md` in sync; run the prepare scripts locally if needed.
 2. Confirm ASC + Play secrets are present.
-3. Flip only the variables you want. iOS operations also need `IOS_RELEASE_AUTOMATION`.
-4. Before relying on iOS signing changes, run **iOS Release → Run workflow**
-   (validation only; nothing is uploaded).
-5. Tag as usual (`ios-vX.Y` / `android-vX.Y`). Leave `STORE_PRODUCTION_ROLLOUT`,
+3. Flip only the variables you want. iOS operations also need `IOS_RELEASE_AUTOMATION`;
+   Android ones need `ANDROID_RELEASE_AUTOMATION`.
+4. Before relying on signing changes, run **iOS Release → Run workflow** or
+   **Android Release → Run workflow** (validation only; nothing is uploaded).
+5. Tag as usual (`ios-vX.Y` / `android-vX.Y`). Try a build on
+   `ANDROID_INTERNAL_TESTING` first; leave `ANDROID_PRODUCTION_ROLLOUT`,
    `IOS_SUBMIT_REVIEW` and `IOS_PUBLIC_RELEASE` off until you intend that release.
 
 ## Dry-run
@@ -193,6 +224,7 @@ python3 scripts/store/prepare_whats_new.py --platform all --tag android-v6.1 --o
 python3 scripts/store/prepare_listing_text.py --platform all --out /tmp/listing
 python3 scripts/store/stage_screenshots.py --dry-run
 python3 -m unittest scripts/store/test_ios_release.py
+python3 -m unittest scripts/store/test_android_release.py
 UPLOAD_LISTING=true python3 scripts/store/asc_release.py --dry-run --metadata-dir store/metadata
 UPLOAD_LISTING=true python3 scripts/store/play_listing.py --dry-run --metadata-dir store/metadata
 STORE_SYNC_REVENUECAT=false python3 scripts/store/sync_revenuecat_catalog.py
