@@ -4,7 +4,9 @@ from __future__ import annotations
 import base64
 import hashlib
 import sys
+import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -211,6 +213,46 @@ class ArtifactTests(unittest.TestCase):
         for found in (set(), {DEBUG}, {UPLOAD, DEBUG}):
             with self.subTest(found=found), self.assertRaises(ar.ReleaseError):
                 ar.check_signers("APK", found, upload_cert=UPLOAD)
+
+
+class SignatureCoverageTests(unittest.TestCase):
+    LONG = "base/root/" + "x" * 80 + ".properties"
+
+    def bundle(self, entries, manifest_names):
+        manifest = "Manifest-Version: 1.0\r\n\r\n"
+        for name in manifest_names:
+            line = f"Name: {name}"
+            # JAR manifests wrap at 72 bytes with a leading-space continuation.
+            wrapped = "\r\n ".join([line[:72]] + [line[i:i + 71] for i in range(72, len(line), 71)])
+            manifest += f"{wrapped}\r\nSHA-256-Digest: AAAA\r\n\r\n"
+        handle = tempfile.NamedTemporaryFile(suffix=".aab", delete=False)
+        handle.close()
+        self.addCleanup(Path(handle.name).unlink)
+        with zipfile.ZipFile(handle.name, "w") as bundle:
+            bundle.writestr("META-INF/MANIFEST.MF", manifest)
+            bundle.writestr("META-INF/FUDAI.SF", "signature")
+            bundle.writestr("META-INF/FUDAI.RSA", "block")
+            bundle.writestr("base/", "")
+            for name in entries:
+                bundle.writestr(name, "data")
+        return Path(handle.name)
+
+    def test_fully_signed_bundle_passes(self):
+        names = ["BundleConfig.pb", "base/manifest/AndroidManifest.xml", self.LONG]
+        self.assertEqual(ar.unsigned_entries(self.bundle(names, names)), [])
+
+    def test_added_unsigned_entry_is_reported(self):
+        names = ["BundleConfig.pb", "base/dex/classes.dex"]
+        found = ar.unsigned_entries(self.bundle(names + ["base/dex/classes2.dex"], names))
+        self.assertEqual(found, ["base/dex/classes2.dex"])
+
+    def test_bundle_without_manifest_is_entirely_unsigned(self):
+        handle = tempfile.NamedTemporaryFile(suffix=".aab", delete=False)
+        handle.close()
+        self.addCleanup(Path(handle.name).unlink)
+        with zipfile.ZipFile(handle.name, "w") as bundle:
+            bundle.writestr("BundleConfig.pb", "data")
+        self.assertEqual(ar.unsigned_entries(Path(handle.name)), ["BundleConfig.pb"])
 
 
 class TrackReadBackTests(unittest.TestCase):

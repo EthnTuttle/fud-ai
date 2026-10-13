@@ -25,6 +25,7 @@ import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -205,6 +206,33 @@ def manifest_identity(xml_text: str) -> tuple[str, int, str]:
     return package, int(code), name
 
 
+SIGNATURE_FILE = re.compile(r"META-INF/(MANIFEST\.MF|[^/]+\.(SF|RSA|DSA|EC)|SIG-[^/]+)")
+
+
+def manifest_entry_names(manifest: str) -> set[str]:
+    """Entry names listed in a JAR manifest (unwrapping 72-byte continuation lines)."""
+    unwrapped = re.sub(r"\r?\n ", "", manifest)
+    return {
+        line[len("Name: "):].strip()
+        for line in unwrapped.splitlines()
+        if line.startswith("Name: ")
+    }
+
+
+def unsigned_entries(archive: Path) -> list[str]:
+    """Files in a JAR-signed archive (an AAB) that its signature does not cover.
+
+    `jarsigner -verify` checks every entry the manifest lists, but still reports
+    "jar verified." when other entries were added without a signature.
+    """
+    with zipfile.ZipFile(archive) as bundle:
+        names = [n for n in bundle.namelist() if not n.endswith("/")]
+        if "META-INF/MANIFEST.MF" not in names:
+            return [n for n in names if not SIGNATURE_FILE.fullmatch(n)]
+        listed = manifest_entry_names(bundle.read("META-INF/MANIFEST.MF").decode("utf-8"))
+    return sorted(n for n in names if not SIGNATURE_FILE.fullmatch(n) and n not in listed)
+
+
 def check_identity(
     kind: str, found: tuple[str, int, str], *, package: str, version_code: int, version_name: str
 ) -> None:
@@ -273,7 +301,13 @@ def cmd_verify(args: argparse.Namespace) -> None:
     check_identity("AAB", manifest_identity(manifest.stdout), **identity)
     jar = run(["jarsigner", "-verify", str(args.aab)], check=False)
     if jar.returncode != 0 or "jar verified." not in jar.stdout:
-        raise ReleaseError(f"AAB signature does not verify: {(jar.stdout + jar.stderr).strip()}")
+        raise ReleaseError(f"AAB signature does not verify: {(jar.stdout + jar.stderr).strip()[-2000:]}")
+    unsigned = unsigned_entries(args.aab)
+    if unsigned:
+        raise ReleaseError(
+            f"AAB has {len(unsigned)} entr{'y' if len(unsigned) == 1 else 'ies'} its signature "
+            f"does not cover, e.g. {unsigned[0]}"
+        )
     printed = run(["keytool", "-printcert", "-rfc", "-jarfile", str(args.aab)])
     check_signers("AAB", pem_fingerprints(printed.stdout), upload_cert=upload_cert)
 
