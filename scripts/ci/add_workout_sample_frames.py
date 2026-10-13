@@ -11,6 +11,13 @@ import subprocess
 
 SAMPLE_PACK = pathlib.Path("shared/workout-vectors/sample-pack.txt")
 
+sparse = subprocess.run(
+    ["git", "config", "--get", "core.sparseCheckout"], capture_output=True, text=True
+).stdout.strip()
+if sparse != "true":
+    print("full checkout: every workout frame is already present; nothing to add")
+    raise SystemExit(0)
+
 patterns = []
 for line in SAMPLE_PACK.read_text().splitlines():
     exercise = line.split("#", 1)[0].strip()
