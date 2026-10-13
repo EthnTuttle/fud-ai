@@ -73,7 +73,7 @@ def parse_bounded_int(spec: tuple[str, int, int, int], raw: str | None) -> int:
     value = (raw or "").strip()
     if not value:
         return default
-    if not re.fullmatch(r"\d+", value):
+    if not re.fullmatch(r"[0-9]+", value):
         raise ReleaseError(f"{name}={raw!r} must be a whole number between {low} and {high}")
     number = int(value)
     if not low <= number <= high:
@@ -95,7 +95,7 @@ def single_project_value(setting: str, pbxproj: Path = PBXPROJ) -> str:
     return values.pop().strip().strip('"')
 
 
-VERSION_PATTERN = re.compile(r"\d+(\.\d+){0,2}")
+VERSION_PATTERN = re.compile(r"[0-9]+(\.[0-9]+){0,2}")
 
 
 def resolve_gates(
@@ -175,7 +175,7 @@ def resolve_gates(
 
 
 def next_build_number(project_build: int, asc_build_versions: list[str]) -> int:
-    numeric = [int(v) for v in asc_build_versions if re.fullmatch(r"\d+", v or "")]
+    numeric = [int(v) for v in asc_build_versions if re.fullmatch(r"[0-9]+", v or "")]
     highest = max(numeric, default=0)
     return max(project_build, highest + 1)
 
@@ -376,7 +376,7 @@ def cmd_gates(_: argparse.Namespace) -> None:
 
 def cmd_build_number(_: argparse.Namespace) -> None:
     project_build = single_project_value("CURRENT_PROJECT_VERSION")
-    if not re.fullmatch(r"\d+", project_build):
+    if not re.fullmatch(r"[0-9]+", project_build):
         raise ReleaseError(f"CURRENT_PROJECT_VERSION must be a whole number, got {project_build!r}")
     asc_release, client = asc_client()
     app_id = asc_release.find_app(client, BUNDLE_ID)
