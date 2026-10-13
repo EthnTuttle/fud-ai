@@ -10,6 +10,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
@@ -19,6 +20,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextReplacement
 import androidx.test.espresso.Espresso.closeSoftKeyboard
@@ -263,12 +265,16 @@ class AddFoodStateRestorationTest {
         val list = SemanticsMatcher.keyIsDefined(SemanticsActions.ScrollToIndex)
         compose.onNode(list).performScrollToNode(hasText(string(R.string.label_date)))
         compose.onNodeWithText(string(R.string.label_date)).performClick()
-        compose.onNode(hasText("20")).performScrollTo()
+        // The target day may not be composed yet. Scroll the day wheel itself;
+        // its first visible item is the centered selection, with day 1 at index 0.
+        val dayWheel = list and hasAnyDescendant(hasText("15"))
+        compose.onNode(dayWheel).performScrollToIndex(expectedDate.dayOfMonth - 1)
         compose.onNodeWithText(string(R.string.action_done)).performClick()
 
         compose.onNodeWithText(string(R.string.label_time)).performClick()
         compose.onNode(hasSetTextAction() and hasText("10")).performTextReplacement("16")
         compose.onNode(hasSetTextAction() and hasText("30")).performTextReplacement("45")
+        closeSoftKeyboard()
         compose.onNodeWithText(string(R.string.action_done)).performClick()
 
         compose.onNodeWithText("Jun 20, 2024").assertExists()
