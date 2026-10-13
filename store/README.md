@@ -4,49 +4,98 @@ GitHub Actions plumbing for App Store + Play Store releases, including listing
 copy, What's New, screenshots, and the IAP / subscription / tip / credit catalog
 (RevenueCat).
 
-**An `android-v*` tag does not publish to Play.** It builds the app and makes a GitHub Release. `STORE_PRODUCTION_ROLLOUT` is off by default; when on, it publishes only production, live, with no draft. iOS still only creates a GitHub Release; Xcode Cloud uploads the binary. Listing, screenshots, and App Review stay off unless you enable those variables.
+**Nothing reaches a store unless its switch is on.** An `ios-v*` tag runs
+[`ios-release.yml`](../.github/workflows/ios-release.yml): GitHub Actions builds,
+signs and uploads the iOS binary (Xcode Cloud no longer builds Fud AI). An
+`android-v*` tag builds the Android app and makes a GitHub Release;
+`STORE_PRODUCTION_ROLLOUT` (off by default) publishes only production, live,
+with no draft.
 
-## Current vs planned
+## iOS release flow (`ios-v*` tag)
 
-| Step | iOS today | Android today | Automation (gates OFF) |
-|------|-----------|---------------|------------------------|
-| Tag → quality | `ios-v*` → GitHub Release | `android-v*` → GitHub Release | unchanged |
-| Binary upload | Xcode Cloud → ASC | Play only if `STORE_PRODUCTION_ROLLOUT` is on | unchanged for iOS |
-| What's New | manual paste | optional via `STORE_UPLOAD_WHATS_NEW` on the Play upload | prepared locally every tag |
-| Listing / screenshots | manual | manual | **wired** (`asc_release.py`, `play_listing.py`) |
-| Submit for review / production | manual | off unless `STORE_PRODUCTION_ROLLOUT` is on | **wired, OFF** (`STORE_SUBMIT_IOS_REVIEW`, `STORE_PRODUCTION_ROLLOUT`); includes Ready-to-Submit IAPs / subscriptions |
-| IAP / subs / tips / credits | ASC + RevenueCat console | Play Console + RevenueCat console (7.2+; Play ids in each catalog item's `play` block) | versioned `store/catalog/` + validate CI |
-| RevenueCat sync | manual | manual | dry-run in CI; `STORE_SYNC_REVENUECAT=true` **fails closed** |
+```
+ios-vX.Y tag ─► quality checks ─► resolve switches (tag must equal MARKETING_VERSION)
+  └─ IOS_RELEASE_AUTOMATION off ─► GitHub Release only
+  └─ on:
+       IOS_UPLOAD_BUILD ─► next build number from App Store Connect
+                        ─► archive Release ─► verify app id/version/build in every bundle
+                        ─► cloud-signed export + upload
+                        ─► wait until THIS build is VALID (poll 30 s, up to 120 min from upload start)
+       IOS_UPLOAD_LISTING / IOS_UPLOAD_WHATS_NEW / IOS_UPLOAD_SCREENSHOTS ─► version metadata
+       IOS_SUBMIT_REVIEW ─► select this run's build, read it back, set release type
+                         ─► recheck build + selection ─► submit version and IAPs/subscriptions
+  └─ GitHub Release (only if every enabled step succeeded)
+```
 
-## Safe defaults (do not flip until ready)
+A manual **Run workflow** (`workflow_dispatch`) is a validation run: it archives,
+signs, exports and validates the IPA with App Store Connect, and never uploads,
+edits the listing, submits or creates a GitHub Release.
 
-Repository **Variables** (Settings → Secrets and variables → Actions → Variables):
+Submission fails instead of continuing when the build times out, fails
+processing, is expired, is ambiguous, belongs to another app/version, was
+uploaded before this run, or is not the build selected on the version. An older
+build is never substituted.
 
-| Variable | Default | When `true` |
-|----------|---------|-------------|
-| `STORE_UPLOAD_WHATS_NEW` | unset / false | Attach English What's New on the Play upload |
-| `STORE_UPLOAD_LISTING` | unset / false | Upload title/description (Play + ASC listing + iOS What's New) |
-| `STORE_UPLOAD_SCREENSHOTS` | unset / false | Upload phone / 6.7" screenshots (see below) |
-| `STORE_PRODUCTION_ROLLOUT` | unset / false | Publish this Android build to Play production, live |
-| `STORE_SUBMIT_IOS_REVIEW` | unset / false | Submit the editable ASC version **and** any Ready-to-Submit IAPs / subscriptions for review |
-| `STORE_SYNC_REVENUECAT` | unset / false | **Fails the workflow** — RevenueCat write/sync is not implemented yet |
+**Xcode Cloud:** its tag-triggered "Release" workflow was removed in App Store
+Connect. Xcode Cloud triggers live in App Store Connect, not in this repo, so a
+GitHub switch cannot stop them; never re-create an `ios-v*` Xcode Cloud workflow
+or both pipelines will upload a build for the same tag.
 
-Copy names from [`gates.env.example`](gates.env.example). Leave unset or `false`
-for setup-only runs.
+## Switches
+
+Repository **Variables** (Settings → Secrets and variables → Actions → Variables).
+Missing means off. For iOS, any value other than `true/false/yes/no/on/off/1/0`
+fails the run.
+
+### iOS
+
+| Variable | When `true` |
+|----------|-------------|
+| `IOS_RELEASE_AUTOMATION` | Master switch. When off, every iOS store operation below is skipped |
+| `IOS_UPLOAD_BUILD` | Build, sign and upload the binary to App Store Connect, then wait for processing |
+| `IOS_UPLOAD_LISTING` | Description, keywords, promotional text, marketing/support URLs |
+| `IOS_UPLOAD_WHATS_NEW` | What's New text |
+| `IOS_UPLOAD_SCREENSHOTS` | 6.7" screenshots (see below) |
+| `IOS_SUBMIT_REVIEW` | Select this run's build and submit the version **and** Ready-to-Submit IAPs / subscriptions for review. Requires `IOS_UPLOAD_BUILD` |
+| `IOS_PUBLIC_RELEASE` | Release automatically after approval. Off = manual release. Requires `IOS_SUBMIT_REVIEW` |
+| `IOS_BUILD_POLL_SECONDS` | Poll interval, default 30 (10–600) |
+| `IOS_BUILD_WAIT_MINUTES` | Total wait from upload start, default 120 (10–300) |
+
+### Android
+
+| Variable | When `true` |
+|----------|-------------|
+| `STORE_UPLOAD_WHATS_NEW` | Attach English What's New on the Play upload |
+| `STORE_UPLOAD_LISTING` | Upload Play title/description |
+| `STORE_UPLOAD_SCREENSHOTS` | Upload Play phone screenshots |
+| `STORE_PRODUCTION_ROLLOUT` | Publish this Android build to Play production, live |
+
+### Shared
+
+| Variable | When `true` |
+|----------|-------------|
+| `STORE_SYNC_REVENUECAT` | **Fails the workflow** — RevenueCat write/sync is not implemented yet |
+
+Copy names from [`gates.env.example`](gates.env.example).
 
 ## Secrets
 
-Already used by release workflows:
+Android: `ANDROID_KEYSTORE_*`, `PLAY_SERVICE_ACCOUNT_JSON`.
 
-- `ANDROID_KEYSTORE_*`, `PLAY_SERVICE_ACCOUNT_JSON`
-
-For ASC metadata / submit (when iOS store gates are on):
+iOS:
 
 | Secret | Used for |
 |--------|----------|
-| `APP_STORE_CONNECT_API_KEY_ID` | ASC JWT (`asc_release.py`) |
-| `APP_STORE_CONNECT_ISSUER_ID` | ASC JWT |
+| `APP_STORE_CONNECT_API_KEY_ID` | Admin-role ASC API key: build numbers, cloud-managed distribution signing, upload, build readiness, listing, review |
+| `APP_STORE_CONNECT_ISSUER_ID` | ASC issuer |
 | `APP_STORE_CONNECT_API_KEY_P8` | ASC private key (`.p8` body) |
+| `IOS_DEV_SIGNING_P12_BASE64` | Dedicated CI Apple Development identity (base64 `.p12`; certificate "Apple Development: Created via API", ID `7H3T2H8USS`, expires 2027-10-13) that signs the archive. App Store signing happens at export with Apple's cloud-managed distribution certificate |
+| `IOS_DEV_SIGNING_P12_PASSWORD` | Password for that `.p12` |
+
+If that certificate expires or is revoked, create a new Apple Development
+certificate for CI (App Store Connect API, `certificateType: DEVELOPMENT`), replace
+both `IOS_DEV_SIGNING_*` secrets, and revoke the old one. Its private key exists
+only in the GitHub secret.
 
 Later for catalog automation:
 
@@ -61,19 +110,23 @@ Later for catalog automation:
 | [`scripts/store/prepare_listing_text.py`](../scripts/store/prepare_listing_text.py) | `APPSTORE.md` / `PLAYSTORE.md` → `store/metadata/` |
 | [`scripts/store/prepare_whats_new.py`](../scripts/store/prepare_whats_new.py) | What's New for Play + iOS |
 | [`scripts/store/stage_screenshots.py`](../scripts/store/stage_screenshots.py) | `web/assets/screenshots/*.png` → `store/metadata/screenshots/` |
-| [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | ASC listing, 6.7" screenshots, submit for review |
+| [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | iOS switches, build number, wait for this run's build |
+| [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | ASC listing, What's New, 6.7" screenshots, build selection, submit for review |
+| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, timeouts, failures, mismatches |
 | [`scripts/store/play_listing.py`](../scripts/store/play_listing.py) | Play listing text + phone screenshots |
 | [`scripts/store/sync_revenuecat_catalog.py`](../scripts/store/sync_revenuecat_catalog.py) | Validate catalog; fail if sync gate on |
 
 When any live iOS or Play listing gate is on, release workflows install
 [`requirements-store.txt`](../requirements-store.txt) (PyJWT, Google API client).
 
-Environment flags consumed by the publisher scripts (set by workflows from repo
-variables): `UPLOAD_LISTING`, `UPLOAD_SCREENSHOTS`, `SUBMIT_IOS_REVIEW`.
+Environment flags consumed by `asc_release.py` (set by `ios-release.yml` from the
+resolved iOS switches): `UPLOAD_LISTING`, `UPLOAD_WHATS_NEW`, `UPLOAD_SCREENSHOTS`,
+`SUBMIT_IOS_REVIEW`, `PUBLIC_RELEASE`. `play_listing.py` uses `UPLOAD_LISTING` and
+`UPLOAD_SCREENSHOTS` from the Android switches.
 
 ### iOS subscription submission caveat
 
-`STORE_SUBMIT_IOS_REVIEW` submits the App Store version and every
+`IOS_SUBMIT_REVIEW` submits the App Store version and every
 `READY_TO_SUBMIT` (or `DEVELOPER_REJECTED`) subscription in one step. As of the
 2026 App Store Connect workflow, subscriptions attach to the review submission
 through the `subscriptionVersion` relationship on Review Submission Items (the
@@ -113,17 +166,19 @@ store/metadata/
 ```
 
 Marketing PNGs live in [`web/assets/screenshots/`](../web/assets/screenshots/).
-Release workflows run `stage_screenshots.py` when `STORE_UPLOAD_SCREENSHOTS`
-is true, copying those PNGs into `store/metadata/screenshots/` until you replace
+Release workflows run `stage_screenshots.py` when `IOS_UPLOAD_SCREENSHOTS`
+(iOS) or `STORE_UPLOAD_SCREENSHOTS` (Android) is true, copying those PNGs into `store/metadata/screenshots/` until you replace
 them with store-tailored exports.
 
 ## How to enable later
 
 1. Keep `APPSTORE.md` / `PLAYSTORE.md` / `RELEASE_NOTES.md` in sync; run the prepare scripts locally if needed.
 2. Confirm ASC + Play secrets are present.
-3. Flip only the variables you want (e.g. start with `STORE_UPLOAD_LISTING`).
-4. Tag as usual (`ios-vX.Y` / `android-vX.Y`). Leave `STORE_PRODUCTION_ROLLOUT`
-   and `STORE_SUBMIT_IOS_REVIEW` off until you intend that release.
+3. Flip only the variables you want. iOS operations also need `IOS_RELEASE_AUTOMATION`.
+4. Before relying on iOS signing changes, run **iOS Release → Run workflow**
+   (validation only; nothing is uploaded).
+5. Tag as usual (`ios-vX.Y` / `android-vX.Y`). Leave `STORE_PRODUCTION_ROLLOUT`,
+   `IOS_SUBMIT_REVIEW` and `IOS_PUBLIC_RELEASE` off until you intend that release.
 
 ## Dry-run
 
@@ -134,6 +189,7 @@ python3 scripts/store/validate_catalog.py
 python3 scripts/store/prepare_whats_new.py --platform all --tag android-v6.1 --out /tmp/whatsnew
 python3 scripts/store/prepare_listing_text.py --platform all --out /tmp/listing
 python3 scripts/store/stage_screenshots.py --dry-run
+python3 -m unittest scripts/store/test_ios_release.py
 UPLOAD_LISTING=true python3 scripts/store/asc_release.py --dry-run --metadata-dir store/metadata
 UPLOAD_LISTING=true python3 scripts/store/play_listing.py --dry-run --metadata-dir store/metadata
 STORE_SYNC_REVENUECAT=false python3 scripts/store/sync_revenuecat_catalog.py

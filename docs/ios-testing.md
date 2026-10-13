@@ -51,5 +51,6 @@ and queue times can vary.
   camera/HealthKit hardware, iCloud, on-device AI quality, and purchase/restore
   acceptance require separate device or approved store-sandbox testing.
 
-Existing Release archives remain in Xcode Cloud. These Debug simulator tests
-do not replace signed Release validation or change any store release switch.
+Signed Release archives are built by the iOS Release workflow (`ios-v*` tags, or
+a manual validation-only run). These Debug simulator tests do not replace that
+signed Release validation or change any store release switch.

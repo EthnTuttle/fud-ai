@@ -10,7 +10,7 @@
 #   actions                .github/workflows/*.yml
 #
 # Swift (ios/) is not analyzed: CodeQL's Swift extractor needs a macOS runner and a
-# full xcodebuild, which Xcode Cloud already owns for this project.
+# full xcodebuild; iOS builds run in ios-tests.yml and ios-release.yml instead.
 
 name: CodeQL
 
