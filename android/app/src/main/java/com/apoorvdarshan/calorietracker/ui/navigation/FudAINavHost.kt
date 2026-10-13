@@ -137,6 +137,7 @@ fun FudAINavHost(
     }
 
     LaunchedEffect(currentVersion) {
+        if (!container.backgroundServicesEnabled) return@LaunchedEffect
         val state = AndroidUpdateChecker.check(context, currentVersion)
         updateAvailable = state is AndroidUpdateState.Available
         // A newer version is out — fire a one-shot notification (de-duped per version, gated by the
@@ -275,7 +276,10 @@ fun FudAINavHost(
             }
             // One-time post-update prompts for existing users; never during (or right after)
             // a fresh onboarding — those users are marked as "seen" on completion.
-            PostUpdatePromptsHost(container = container, enabled = !startOnboarding)
+            PostUpdatePromptsHost(
+                container = container,
+                enabled = !startOnboarding && container.backgroundServicesEnabled
+            )
             // Paywall, credits, and out-of-quota UI for Hosted AI, reachable from any screen
             // (including onboarding).
             HostedUiHost(container = container)

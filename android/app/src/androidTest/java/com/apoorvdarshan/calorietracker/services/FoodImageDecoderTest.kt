@@ -152,6 +152,8 @@ class FoodImageDecoderTest {
                 sideways.recycle()
                 val sentinel = File(root, "meal-data").apply { writeText("preserve") }
                 val store = FoodImageStore(isolatedContext)
+                // App startup schedules this migration separately from construction.
+                store.cleanupLegacyThumbnailDirectory()
                 assertFalse(legacy.exists())
                 assertCorners(store.load(filename)!!, expectedCorners[5])
                 assertCorners(store.loadThumbnail(filename)!!, expectedCorners[5])

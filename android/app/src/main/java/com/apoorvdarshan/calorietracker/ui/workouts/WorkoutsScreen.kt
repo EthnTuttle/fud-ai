@@ -61,6 +61,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -336,7 +337,7 @@ private fun WorkoutLibraryScreen(
         )
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag("workouts.results"),
             contentPadding = PaddingValues(bottom = BottomNavScrollPadding)
         ) {
             if (items.isEmpty()) {
@@ -398,7 +399,7 @@ internal fun SearchPill(value: String, onValueChange: (String) -> Unit, modifier
                     inner()
                 }
             },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f).testTag("workouts.search")
         )
         if (value.isNotEmpty()) {
             Icon(

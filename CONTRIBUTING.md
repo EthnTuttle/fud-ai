@@ -115,7 +115,7 @@ npm run check
 
 ```bash
 cd android
-./gradlew :app:testDebugUnitTest :app:lintRelease
+./gradlew :app:testDebugUnitTest :app:lintRelease :app:assembleRelease -PworkoutVectors=none
 ```
 
 The web suite includes fast-check generated-input tests for malformed JSON,
@@ -129,12 +129,15 @@ bash scripts/test-ios.sh
 ```
 
 See [iOS testing](docs/ios-testing.md) for simulator requirements, test isolation,
-results, and coverage limits. You can also use Xcode's Test action. Run
-instrumented Android tests on an emulator or device for Android framework paths.
+results, and coverage limits. You can also use Xcode's Test action. See
+[Android testing](docs/android-testing.md) to run the instrumentation/UI suite on
+a disposable emulator and inspect its reports. The suite uses the isolated Debug
+app; real hardware and store sandbox checks remain separate.
 Do not uninstall an existing app or clear its data as part of routine validation.
 
-The Quality checks workflow runs web tests, Android unit tests and Android lint
-on pushes, pull requests and daily. The separate iOS tests workflow runs the full
+The Quality checks workflow runs web tests, Android unit tests, Release lint and
+unsigned Release packaging, plus Android emulator instrumentation/UI tests on
+pushes, relevant pull requests and daily. The separate iOS tests workflow runs the full
 Debug simulator app, unit tests and key UI flows on relevant pushes and pull
 requests, daily, and on demand. Release workflows require Quality checks before
 creating their release artifacts/entries. Before an App Store release through

@@ -63,7 +63,11 @@ import java.util.UUID
  * Application-scoped singleton wiring. Manual DI (no Hilt) — repositories and
  * services are instantiated once and handed to ViewModels via [container].
  */
-class FudAIApp : Application() {
+open class FudAIApp : Application() {
+
+    // Instrumentation supplies a test-only Application subclass. Production
+    // always starts the normal services; there is no Intent or saved reset flag.
+    open val backgroundServicesEnabled: Boolean = true
 
     lateinit var container: AppContainer
         private set
@@ -82,6 +86,11 @@ class FudAIApp : Application() {
         // Re-apply the AndroidX per-app locale list on API 32 and below, where
         // AppCompat stores it. Empty list = follow the system language.
         AppCompatDelegate.setApplicationLocales(AppCompatDelegate.getApplicationLocales())
+        if (!backgroundServicesEnabled) {
+            container = AppContainer(this)
+            ExerciseRepository.warm(this)
+            return
+        }
         // RevenueCat must be configured before the container reads its app user id.
         runCatching { BillingManager.configure(this) }
             .onFailure { Log.e("FudAIApp", "RevenueCat configure failed", it) }
@@ -194,6 +203,7 @@ data class GoalCalculationEvidenceContext(
 )
 
 class AppContainer(app: FudAIApp) {
+    val backgroundServicesEnabled = app.backgroundServicesEnabled
     val appContext = app.applicationContext
     val localModels = LocalModelManager(app, FoodAnalysisService.defaultClient)
     val prefs = PreferencesStore(

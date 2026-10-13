@@ -145,6 +145,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -964,6 +965,7 @@ fun SettingsScreen(
                     stringResource(R.string.settings_water_tracking),
                     ui.waterTrackingEnabled,
                     icon = Icons.Filled.WaterDrop,
+                    switchModifier = Modifier.testTag("settings.water.enabled"),
                     onChange = vm::setWaterTrackingEnabled
                 )
                 if (ui.waterTrackingEnabled) {
@@ -2012,6 +2014,7 @@ private fun SettingsCategoryRows(
     categories.forEachIndexed { index, category ->
         Row(
             modifier = Modifier
+                .testTag("settings.category.${category.name}")
                 .fillMaxWidth()
                 .clickable { onSelect(category) }
                 .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -4411,6 +4414,7 @@ private fun ToggleRow(
     checked: Boolean,
     icon: ImageVector? = null,
     subtitle: String? = null,
+    switchModifier: Modifier = Modifier,
     onChange: (Boolean) -> Unit
 ) {
     Row(
@@ -4431,7 +4435,7 @@ private fun ToggleRow(
                 )
             }
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = onChange, modifier = switchModifier)
     }
 }
 

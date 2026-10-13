@@ -134,6 +134,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
@@ -499,7 +500,7 @@ DisposableEffect(lifecycleOwner, vm) {
         Box(Modifier.fillMaxSize().padding(padding)) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize().testTag("home.diary"),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = if (selectionMode) 8.dp else BottomNavScrollPadding + 72.dp)
         ) {
             // Week strip — verbatim port of WeekEnergyStrip in HomeComponents.swift,
@@ -701,6 +702,7 @@ CalorieHero(
         ) {
             Box(
                 modifier = Modifier
+                    .testTag("home.add")
                     .size(60.dp)
                     .clip(CircleShape)
                     .background(AppColors.Calorie)
@@ -2344,6 +2346,7 @@ private fun WaterLogRow(
 
     Row(
         Modifier
+            .testTag("diary.water.${entry.id}")
             .fillMaxWidth()
             .clip(rowShape)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
@@ -2419,6 +2422,7 @@ private fun FoodRow(
     // time on right) · pink kcal · serving · macro tag pills row.
     Row(
         Modifier
+            .testTag("diary.food.${entry.id}")
             .fillMaxWidth()
             .clip(rowShape)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
@@ -3037,11 +3041,11 @@ internal fun ManualEntryDialog(
                     onValueChange = { name = it },
                     placeholder = stringResource(R.string.manual_name_placeholder),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("manual.name")
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    NumberField(stringResource(R.string.manual_calories), calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f))
+                    NumberField(stringResource(R.string.manual_calories), calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f).testTag("manual.calories"))
                     NumberField(stringResource(R.string.manual_protein), protein, { protein = filterDecimalInput(it) }, Modifier.weight(1f), decimal = true)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -3121,7 +3125,7 @@ internal fun ManualEntryDialog(
                         )
                     },
                     enabled = canSave,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("manual.save")
                 )
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.action_cancel), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
