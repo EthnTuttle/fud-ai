@@ -11,12 +11,15 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -284,12 +287,25 @@ class AppFlowsTest {
 
     private fun <T> awaitPreference(flow: Flow<T>, predicate: (T) -> Boolean): T {
         val scope = CoroutineScope(Dispatchers.Default)
-        val saved = scope.async { flow.first { predicate(it) } }
+        val emissions = AtomicInteger()
+        val lastSeen = AtomicReference<Any?>(null)
+        val saved = scope.async {
+            flow.onEach { emissions.incrementAndGet(); lastSeen.set(it) }.first { predicate(it) }
+        }
         try {
             // A blocking coroutine wait starves pending Compose frame work even
             // after a menu disappears. Keep the test clock progressing while
             // observing the real DataStore transaction on a separate dispatcher.
-            compose.waitUntil(timeoutMillis = 10_000) { saved.isCompleted }
+            try {
+                compose.waitUntil(timeoutMillis = 10_000) { saved.isCompleted }
+            } catch (timeout: ComposeTimeoutException) {
+                // Say whether the stored value never arrived or arrived but did not match.
+                throw AssertionError(
+                    "Saved value did not match within 10 s; observed ${emissions.get()} " +
+                        "emission(s), last: ${lastSeen.get().toString().take(2_000)}",
+                    timeout
+                )
+            }
             // Already complete: return the value or propagate the original error.
             return runBlocking { saved.await() }
         } finally {

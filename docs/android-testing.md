@@ -2,13 +2,14 @@
 
 The **Quality checks** workflow runs two Android jobs on relevant pull requests,
 every push to `main`, daily, and on demand. Changes to Android, shared resources,
-workflow configuration, exercise data, or bundled legal notices trigger both jobs.
+`quality.yml` or its CI helper scripts, exercise data, or bundled legal notices
+trigger both jobs; edits to other workflows do not.
 Release workflows that reuse Quality checks also wait for both jobs to pass.
 
 | Job | Checks |
 | --- | --- |
 | `android` | Debug JVM unit tests, Release lint, and an unsigned minified Release APK build. |
-| `android-instrumentation` | All Debug instrumentation tests, including Compose component tests and full-app UI flows, on a fresh headless Android 16 / API 36 emulator. |
+| `android-instrumentation (0)` / `(1)` | All Debug instrumentation tests, including Compose component tests and full-app UI flows, split across two headless Android 16 / API 36 emulators by AndroidJUnitRunner sharding. Every test runs in exactly one shard; a shard that runs no tests fails. |
 
 CI's Release build catches R8, resource shrinking, and packaging failures before a
 release tag. It does not install or test the Release APK, sign it with a store
@@ -45,15 +46,22 @@ these resets are not intended for a developer's existing Debug install. The
 Release package is not cleared or changed.
 
 GitHub uses hardware acceleration and an x86_64 Google APIs image. An Apple
-Silicon Mac can use the corresponding ARM64 image. Both run the same test suite;
-the hosted job does not cache emulator app data or snapshots.
+Silicon Mac can use the corresponding ARM64 image. Both run the same test suite.
+The hosted job caches a booted emulator snapshot taken before any app is
+installed and never saves over it, so every run starts without Fud AI data; no
+app data is cached.
+
+Gradle's build and configuration caches are on. Unit test results are never taken
+from the build cache (the tests read repository files that are not task inputs),
+and signed store builds in `android-release.yml` use `--no-build-cache`.
 
 ## Results and scope
 
 - JVM test reports and Release lint results are in `android-quality-reports`.
 - Instrumentation HTML/XML results, captured failure screenshots, Gradle logs,
   and emulator logcat are retained for seven days in
-  `android-instrumentation-reports`, including when tests fail. Locally, reports
+  `android-instrumentation-reports-0` and `android-instrumentation-reports-1`
+  (one per shard), including when tests fail. Locally, reports
   are under `android/app/build/reports/androidTests/connected/` and machine-readable
   results under `android/app/build/outputs/androidTest-results/connected/`.
 - UI coverage includes onboarding, manual meal persistence, water logging and
