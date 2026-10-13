@@ -131,7 +131,8 @@ jobs:
 
       - name: Build signed AAB + APK
         working-directory: android
-        run: ./gradlew :app:bundleRelease :app:assembleRelease
+        # Store artifacts are always built fresh, never from cached task outputs.
+        run: ./gradlew --no-build-cache :app:bundleRelease :app:assembleRelease
 
       - name: Stage release artifacts
         run: |
