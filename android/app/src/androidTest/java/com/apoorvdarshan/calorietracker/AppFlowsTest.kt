@@ -11,11 +11,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
@@ -287,11 +286,7 @@ class AppFlowsTest {
     }
 
     private fun <T> awaitPreference(flow: Flow<T>, predicate: (T) -> Boolean): T {
-        // Observe the real DataStore transaction on a thread of its own: on a busy
-        // 2-CPU CI emulator the shared Dispatchers.Default pool (also used by the app)
-        // could be starved past the timeout even after the UI showed the saved value.
-        val executor = Executors.newSingleThreadExecutor { Thread(it, "awaitPreference") }
-        val scope = CoroutineScope(executor.asCoroutineDispatcher())
+        val scope = CoroutineScope(Dispatchers.Default)
         val emissions = AtomicInteger()
         val lastSeen = AtomicReference<Any?>(null)
         val saved = scope.async {
@@ -299,14 +294,14 @@ class AppFlowsTest {
         }
         try {
             // A blocking coroutine wait starves pending Compose frame work even
-            // after a menu disappears, so keep the test clock progressing. The wait
-            // ends as soon as the value is saved; the limit only bounds a real failure.
+            // after a menu disappears. Keep the test clock progressing while
+            // observing the real DataStore transaction on a separate dispatcher.
             try {
-                compose.waitUntil(timeoutMillis = 30_000) { saved.isCompleted }
+                compose.waitUntil(timeoutMillis = 10_000) { saved.isCompleted }
             } catch (timeout: ComposeTimeoutException) {
                 // Say whether the stored value never arrived or arrived but did not match.
                 throw AssertionError(
-                    "Saved value did not match within 30 s; observed ${emissions.get()} " +
+                    "Saved value did not match within 10 s; observed ${emissions.get()} " +
                         "emission(s), last: ${lastSeen.get().toString().take(2_000)}",
                     timeout
                 )
@@ -315,7 +310,6 @@ class AppFlowsTest {
             return runBlocking { saved.await() }
         } finally {
             scope.cancel()
-            executor.shutdownNow()
         }
     }
 
