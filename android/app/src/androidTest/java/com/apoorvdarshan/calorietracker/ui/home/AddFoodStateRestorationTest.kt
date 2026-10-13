@@ -7,6 +7,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextEquals
@@ -271,9 +272,19 @@ class AddFoodStateRestorationTest {
         compose.onNode(dayWheel).performScrollToIndex(expectedDate.dayOfMonth - 1)
         compose.onNodeWithText(string(R.string.action_done)).performClick()
 
-        compose.onNodeWithText(string(R.string.label_time)).performClick()
-        compose.onNode(hasSetTextAction() and hasText("10")).performTextReplacement("16")
-        compose.onNode(hasSetTextAction() and hasText("30")).performTextReplacement("45")
+        // Date and Time share a lazy item, but the lower Time row can still be
+        // clipped on a shorter display after scrolling only the Date row.
+        val timeRow = hasText(string(R.string.label_time))
+        compose.onNode(list).performScrollToNode(timeRow)
+        compose.onNode(timeRow).performScrollTo().assertIsDisplayed().performClick()
+        val hourField = hasSetTextAction() and hasText("10")
+        val minuteField = hasSetTextAction() and hasText("30")
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onAllNodes(hourField).fetchSemanticsNodes(atLeastOneRootRequired = false).size == 1 &&
+                compose.onAllNodes(minuteField).fetchSemanticsNodes(atLeastOneRootRequired = false).size == 1
+        }
+        compose.onNode(hourField).assertIsDisplayed().performTextReplacement("16")
+        compose.onNode(minuteField).assertIsDisplayed().performTextReplacement("45")
         closeSoftKeyboard()
         compose.onNodeWithText(string(R.string.action_done)).performClick()
 
