@@ -281,6 +281,9 @@ class AddFoodStateRestorationTest {
 
         restoration.emulateSavedInstanceStateRestore()
 
+        // The restored LazyColumn may compose its top rows first. Bring the
+        // date/time card back into view before checking its retained values.
+        compose.onNode(list).performScrollToNode(hasText(string(R.string.label_date)))
         compose.onNodeWithText("Jun 20, 2024").assertExists()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val timeLabel = expectedTime.format(

@@ -158,6 +158,7 @@ class AppFlowsTest {
         val oneGlass = string(R.string.water_one_glass_dynamic, WaterUnit.MILLILITERS.format(250))
         waitFor(hasText(oneGlass))
         compose.onNodeWithText(oneGlass).performClick()
+        waitForAbsent(hasText(oneGlass))
         val entry = runBlocking {
             withTimeout(10_000) { prefs.waterEntries.first { it.size == 1 } }.single()
         }
@@ -171,6 +172,7 @@ class AppFlowsTest {
         compose.onNodeWithTag(row).assertIsDisplayed().performTouchInput { swipeLeft() }
         waitFor(hasText("Delete Water Log?"))
         clickText(R.string.action_delete)
+        waitForAbsent(hasText("Delete Water Log?"))
         runBlocking { withTimeout(10_000) { prefs.waterEntries.first { it.isEmpty() } } }
         assertEmptyDiary()
         relaunchActivity()
@@ -201,6 +203,8 @@ class AppFlowsTest {
         compose.onNodeWithTag("settings.water.enabled").assertIsOff()
         openTab("home")
         compose.onNodeWithTag("home.add").performClick()
+        waitFor(hasText(string(R.string.home_menu_describe_meal)) and hasClickAction())
+        compose.onNodeWithText(string(R.string.home_menu_describe_meal)).assertIsDisplayed()
         compose.onNodeWithText(string(R.string.water)).assertDoesNotExist()
     }
 
@@ -273,8 +277,10 @@ class AppFlowsTest {
     }
 
     private fun waitForWaterSetting(enabled: Boolean) {
-        runBlocking { withTimeout(10_000) { prefs.waterTrackingEnabled.first { it == enabled } } }
+        // Let Compose dispatch the touch and advance its frames before blocking
+        // for storage. The ViewModel publishes this UI state only after saving.
         waitFor(hasTestTag("settings.water.enabled") and if (enabled) isOn() else isOff())
+        runBlocking { withTimeout(10_000) { prefs.waterTrackingEnabled.first { it == enabled } } }
     }
 
     private fun assertFoodVisible(name: String) {
