@@ -11,9 +11,13 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -109,9 +113,7 @@ class AppFlowsTest {
         compose.onNodeWithTag("manual.save").assertIsEnabled().performClick()
         waitForAbsent(hasTestTag("manual.name"))
 
-        val saved = runBlocking {
-            withTimeout(10_000) { prefs.foodEntries.first { it.size == 1 } }.single()
-        }
+        val saved = awaitPreference(prefs.foodEntries) { it.size == 1 }.single()
         assertEquals("CI oat bowl", saved.name)
         assertEquals(321, saved.calories)
         assertFoodVisible(saved.name)
@@ -159,9 +161,7 @@ class AppFlowsTest {
         waitFor(hasText(oneGlass))
         compose.onNodeWithText(oneGlass).performClick()
         waitForAbsent(hasText(oneGlass))
-        val entry = runBlocking {
-            withTimeout(10_000) { prefs.waterEntries.first { it.size == 1 } }.single()
-        }
+        val entry = awaitPreference(prefs.waterEntries) { it.size == 1 }.single()
         assertEquals(250, entry.milliliters)
         val row = "diary.water.${entry.id}"
         showDiaryRow(hasTestTag(row))
@@ -173,7 +173,7 @@ class AppFlowsTest {
         waitFor(hasText("Delete Water Log?"))
         clickText(R.string.action_delete)
         waitForAbsent(hasText("Delete Water Log?"))
-        runBlocking { withTimeout(10_000) { prefs.waterEntries.first { it.isEmpty() } } }
+        awaitPreference(prefs.waterEntries) { it.isEmpty() }
         assertEmptyDiary()
         relaunchActivity()
         assertEmptyDiary()
@@ -277,10 +277,24 @@ class AppFlowsTest {
     }
 
     private fun waitForWaterSetting(enabled: Boolean) {
-        // Let Compose dispatch the touch and advance its frames before blocking
-        // for storage. The ViewModel publishes this UI state only after saving.
+        // The ViewModel publishes this UI state only after saving.
         waitFor(hasTestTag("settings.water.enabled") and if (enabled) isOn() else isOff())
-        runBlocking { withTimeout(10_000) { prefs.waterTrackingEnabled.first { it == enabled } } }
+        awaitPreference(prefs.waterTrackingEnabled) { it == enabled }
+    }
+
+    private fun <T> awaitPreference(flow: Flow<T>, predicate: (T) -> Boolean): T {
+        val scope = CoroutineScope(Dispatchers.Default)
+        val saved = scope.async { flow.first { predicate(it) } }
+        try {
+            // A blocking coroutine wait starves pending Compose frame work even
+            // after a menu disappears. Keep the test clock progressing while
+            // observing the real DataStore transaction on a separate dispatcher.
+            compose.waitUntil(timeoutMillis = 10_000) { saved.isCompleted }
+            // Already complete: return the value or propagate the original error.
+            return runBlocking { saved.await() }
+        } finally {
+            scope.cancel()
+        }
     }
 
     private fun assertFoodVisible(name: String) {
