@@ -29,7 +29,10 @@ ios-vX.Y tag ─► quality checks ─► resolve switches (tag must equal MARKE
 
 A manual **Run workflow** (`workflow_dispatch`) is a validation run: it archives,
 signs, exports and validates the IPA with App Store Connect, and never uploads,
-edits the listing, submits or creates a GitHub Release.
+edits the listing, submits or creates a GitHub Release. Apple refuses versions it
+has already approved, so before bumping the project version, fill in the optional
+**marketing_version** input with the next version (e.g. `7.2`); the build is
+validated as that version without changing the project.
 
 Submission fails instead of continuing when the build times out, fails
 processing, is expired, is ambiguous, belongs to another app/version, was

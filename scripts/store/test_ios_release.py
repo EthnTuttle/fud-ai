@@ -81,6 +81,7 @@ class GateTests(unittest.TestCase):
         for env in (
             {"IOS_BUILD_POLL_SECONDS": "5"},
             {"IOS_BUILD_POLL_SECONDS": "thirty"},
+            {"IOS_BUILD_POLL_SECONDS": "٣٠"},
             {"IOS_BUILD_WAIT_MINUTES": "0"},
             {"IOS_BUILD_WAIT_MINUTES": "999"},
         ):
@@ -114,6 +115,23 @@ class GateTests(unittest.TestCase):
         for key in OPS:
             self.assertFalse(result[key], key)
 
+    def test_manual_run_can_validate_a_future_version(self) -> None:
+        result = resolve_gates({}, event="workflow_dispatch", ref_name="main",
+                               marketing_version=VERSION, validation_version="7.3")
+        self.assertEqual(result["mode"], "validate")
+        self.assertEqual(result["marketing_version"], "7.3")
+        self.assertFalse(result["asc"])
+        default = resolve_gates({}, event="workflow_dispatch", ref_name="main", marketing_version=VERSION)
+        self.assertEqual(default["marketing_version"], VERSION)
+
+    def test_version_override_is_rejected_for_releases_and_bad_values(self) -> None:
+        with self.assertRaisesRegex(ReleaseError, "manual validation"):
+            resolve_gates({}, event="push", ref_name=TAG, marketing_version=VERSION, validation_version="7.3")
+        for bad in ("7.x", "v7.3", "7.3.1.2", "7.3 beta", "٧.٢"):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ReleaseError, "must look like"):
+                resolve_gates({}, event="workflow_dispatch", ref_name="main",
+                              marketing_version=VERSION, validation_version=bad)
+
     def test_project_versions_are_consistent(self) -> None:
         self.assertRegex(ios_release.single_project_value("MARKETING_VERSION"), r"^\d+(\.\d+)*$")
         self.assertRegex(ios_release.single_project_value("CURRENT_PROJECT_VERSION"), r"^\d+$")
@@ -130,6 +148,7 @@ class BuildNumberTests(unittest.TestCase):
         self.assertEqual(ios_release.next_build_number(39, ["13", "39"]), 40)
         self.assertEqual(ios_release.next_build_number(1, []), 1)
         self.assertEqual(ios_release.next_build_number(5, ["7.1", "abc", "9"]), 10)
+        self.assertEqual(ios_release.next_build_number(5, ["٩٩"]), 5)  # only ASCII digits count
 
 
 APP = "APP1"
