@@ -45,10 +45,13 @@ jobs:
 
       - name: Print gates (must stay safe by default)
         env:
-          STORE_UPLOAD_WHATS_NEW: ${{ vars.STORE_UPLOAD_WHATS_NEW }}
-          STORE_UPLOAD_LISTING: ${{ vars.STORE_UPLOAD_LISTING }}
-          STORE_UPLOAD_SCREENSHOTS: ${{ vars.STORE_UPLOAD_SCREENSHOTS }}
-          STORE_PRODUCTION_ROLLOUT: ${{ vars.STORE_PRODUCTION_ROLLOUT }}
+          ANDROID_RELEASE_AUTOMATION: ${{ vars.ANDROID_RELEASE_AUTOMATION }}
+          ANDROID_UPLOAD_LISTING: ${{ vars.ANDROID_UPLOAD_LISTING }}
+          ANDROID_UPLOAD_WHATS_NEW: ${{ vars.ANDROID_UPLOAD_WHATS_NEW }}
+          ANDROID_UPLOAD_SCREENSHOTS: ${{ vars.ANDROID_UPLOAD_SCREENSHOTS }}
+          ANDROID_INTERNAL_TESTING: ${{ vars.ANDROID_INTERNAL_TESTING }}
+          ANDROID_CLOSED_TESTING: ${{ vars.ANDROID_CLOSED_TESTING }}
+          ANDROID_PRODUCTION_ROLLOUT: ${{ vars.ANDROID_PRODUCTION_ROLLOUT }}
           STORE_SYNC_REVENUECAT: ${{ vars.STORE_SYNC_REVENUECAT }}
           IOS_RELEASE_AUTOMATION: ${{ vars.IOS_RELEASE_AUTOMATION }}
           IOS_UPLOAD_BUILD: ${{ vars.IOS_UPLOAD_BUILD }}
@@ -61,6 +64,9 @@ jobs:
 
       - name: Test iOS release switches, build wait and build selection (offline)
         run: python3 -m unittest scripts/store/test_ios_release.py
+
+      - name: Test Android release switches, artifact checks and track read-back (offline)
+        run: python3 -m unittest scripts/store/test_android_release.py
 
       - name: Validate IAP / subscription / tip catalog
         run: python3 scripts/store/validate_catalog.py
@@ -89,6 +95,7 @@ jobs:
             python3 scripts/store/asc_release.py --dry-run --metadata-dir store/metadata \
             --build-id DRY-RUN --build-number 1
           python3 scripts/store/ios_release.py --help
+          python3 scripts/store/android_release.py --help
           UPLOAD_LISTING=true \
             python3 scripts/store/play_listing.py --dry-run --metadata-dir store/metadata
 

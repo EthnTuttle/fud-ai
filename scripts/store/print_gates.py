@@ -16,10 +16,13 @@ GATES = {
         "IOS_PUBLIC_RELEASE",
     ],
     "android": [
-        "STORE_UPLOAD_WHATS_NEW",
-        "STORE_UPLOAD_LISTING",
-        "STORE_UPLOAD_SCREENSHOTS",
-        "STORE_PRODUCTION_ROLLOUT",
+        "ANDROID_RELEASE_AUTOMATION",
+        "ANDROID_UPLOAD_LISTING",
+        "ANDROID_UPLOAD_WHATS_NEW",
+        "ANDROID_UPLOAD_SCREENSHOTS",
+        "ANDROID_INTERNAL_TESTING",
+        "ANDROID_CLOSED_TESTING",
+        "ANDROID_PRODUCTION_ROLLOUT",
     ],
     "shared": ["STORE_SYNC_REVENUECAT"],
 }
@@ -46,6 +49,8 @@ def main() -> None:
             print(f"    {name}={'true' if on else 'false'}")
     if "ios" in groups and not enabled("IOS_RELEASE_AUTOMATION"):
         print("  note: IOS_RELEASE_AUTOMATION is off, so every iOS store operation is skipped")
+    if "android" in groups and not enabled("ANDROID_RELEASE_AUTOMATION"):
+        print("  note: ANDROID_RELEASE_AUTOMATION is off, so android-v* tags build and release nothing")
     if not any_on:
         print("all gates off — no live upload/listing/submit/rollout/sync will run")
     else:
