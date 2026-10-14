@@ -91,9 +91,11 @@ jobs:
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
-          # Everything the Android build reads except the 1.2 GB workout frame corpus.
+          # Everything the Android build reads except the 1.2 GB workout frame corpus
+          # and the historical release binaries in android/release (500 MB).
           sparse-checkout: |
             /android/
+            !/android/release/
             /ios/calorietracker/Resources/FreeExerciseDB/dist/
             /local-models/legal/
             /scripts/ci/
@@ -149,14 +151,24 @@ jobs:
     env:
       TEST_SHARDS: 2
       TEST_SHARD: ${{ matrix.shard }}
+      # The emulator, used by both emulator steps and the snapshot cache key.
+      AVD_API_LEVEL: 36
+      AVD_TARGET: google_apis
+      AVD_ARCH: x86_64
+      AVD_PROFILE: pixel_2
+      AVD_CORES: 4
+      AVD_RAM_SIZE: 4096M
+      AVD_OPTIONS: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
-          # Everything the Android build reads except the 1.2 GB workout frame corpus.
+          # Everything the Android build reads except the 1.2 GB workout frame corpus
+          # and the historical release binaries in android/release (500 MB).
           sparse-checkout: |
             /android/
+            !/android/release/
             /ios/calorietracker/Resources/FreeExerciseDB/dist/
             /local-models/legal/
             /scripts/ci/
@@ -216,42 +228,74 @@ jobs:
       # A booted emulator snapshot taken before any app is installed: tests still
       # start from a device with no Fud AI data, without a cold boot each run. It is
       # saved only once start-up work is done, so restored runs don't resume into it.
+      #
+      # The snapshot only loads in the emulator and system image that created it,
+      # and android-emulator-runner installs the newest of both on every run. So the
+      # key names those versions, the runner image, the emulator settings and the
+      # settle script: any change creates a fresh snapshot instead of the emulator
+      # silently cold-booting.
+      - name: Test the emulator snapshot key (offline)
+        run: python3 -m unittest scripts/ci/test_emulator_cache_key.py
+      - name: Pick the emulator snapshot key
+        id: avd-key
+        run: |
+          set -euo pipefail
+          sdkmanager --list --channel=0 > "$RUNNER_TEMP/sdk-packages.txt" 2> /dev/null
+          versions=$(python3 scripts/ci/emulator_cache_key.py \
+            --image "system-images;android-${AVD_API_LEVEL};${AVD_TARGET};${AVD_ARCH}" < "$RUNNER_TEMP/sdk-packages.txt")
+          emulator=$(sed -n 's/^emulator=//p' <<< "$versions")
+          image=$(sed -n 's/^system_image=//p' <<< "$versions")
+          setup=$({ printf '%s\n' "$AVD_OPTIONS"; cat scripts/ci/wait_for_emulator_idle.sh; } | sha256sum | cut -c1-16)
+          key="avd-v4-api${AVD_API_LEVEL}-${AVD_TARGET}-${AVD_ARCH}-${AVD_PROFILE}-${AVD_CORES}cpu-${AVD_RAM_SIZE}"
+          key="${key}-emu${emulator}-img${image}-${ImageOS:?}-${setup}"
+          echo "key=$key" | tee -a "$GITHUB_OUTPUT"
       - name: Restore the clean emulator snapshot
         id: avd-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-v3-api36-google_apis-x86_64-pixel_2-4cpu-4g
+          key: ${{ steps.avd-key.outputs.key }}
       - name: Create the emulator and save a clean boot snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
-          api-level: 36
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          cores: 4
-          ram-size: 4096M
+          api-level: ${{ env.AVD_API_LEVEL }}
+          target: ${{ env.AVD_TARGET }}
+          arch: ${{ env.AVD_ARCH }}
+          profile: ${{ env.AVD_PROFILE }}
+          cores: ${{ env.AVD_CORES }}
+          ram-size: ${{ env.AVD_RAM_SIZE }}
           force-avd-creation: false
           emulator-boot-timeout: 300
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          emulator-options: ${{ env.AVD_OPTIONS }}
           disable-animations: false
           script: bash scripts/ci/wait_for_emulator_idle.sh --compile
+      # Cached right after creation, before any app is installed, so the cache holds
+      # exactly the clean snapshot. Only main saves: pull requests reuse main's copy
+      # (or create one for that run) and never add their own 4 GB cache entry.
+      - name: Save the clean emulator snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: ${{ steps.avd-key.outputs.key }}
       - name: Run instrumentation and app UI tests
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
-          api-level: 36
-          target: google_apis
-          arch: x86_64
-          profile: pixel_2
-          cores: 4
-          ram-size: 4096M
+          api-level: ${{ env.AVD_API_LEVEL }}
+          target: ${{ env.AVD_TARGET }}
+          arch: ${{ env.AVD_ARCH }}
+          profile: ${{ env.AVD_PROFILE }}
+          cores: ${{ env.AVD_CORES }}
+          ram-size: ${{ env.AVD_RAM_SIZE }}
           force-avd-creation: false
           emulator-boot-timeout: 300
           # -no-snapshot-save: the clean snapshot is reused, never overwritten by a test run.
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          emulator-options: -no-snapshot-save ${{ env.AVD_OPTIONS }}
           disable-animations: true
           working-directory: android
           # The custom AndroidJUnitRunner isolates accounts/background work.

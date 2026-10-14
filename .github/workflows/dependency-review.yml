@@ -11,6 +11,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the pull request supersedes its older review.
+concurrency:
+  group: dependency-review-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
@@ -19,7 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: .github
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.github/
           persist-credentials: false
 
       - name: Dependency review

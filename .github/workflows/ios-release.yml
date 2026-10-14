@@ -31,14 +31,26 @@
 #   The tag's RELEASE_NOTES.md section becomes the GitHub Release body; a tag
 #   without one gets GitHub's generated notes instead. App Store What's New comes
 #   from APPSTORE.md and is read only when IOS_UPLOAD_WHATS_NEW is on; then it is
-#   checked in `prepare`, before anything is built. With it off, missing or
-#   unfit What's New text never blocks a release.
+#   checked in `prepare` (plain text, at most 4,000 characters), before anything
+#   is built. The listing text is likewise read and checked only when
+#   IOS_UPLOAD_LISTING is on, so unused store text never blocks a release.
+#
+# Checked before anything is built (tag run)
+#   ios-tests  iOS unit + UI tests (ios-tests.yml); a bundle that runs no test fails
+#   quality    web and Android checks (quality.yml)
+#   prepare    store-script unit tests, release notes, IAP catalog, switches, the
+#              text that is switched on and, when any App Store Connect switch is
+#              on, that the App Store version X.Y already exists in a state that
+#              can take the release (read-only; this pipeline never creates it)
 #
 # Jobs (tag run)
-#   quality + prepare → build (archive, upload) → wait-for-build → app-store-connect
-#   → github-release. wait-for-build is its own job and outputs build_id, so
-#   "Re-run failed jobs" after a store-step failure keeps the processed build
-#   instead of waiting again against the original upload deadline.
+#   ios-tests + quality + prepare → build (archive, upload) → wait-for-build →
+#   app-store-connect → github-release. wait-for-build is its own job and
+#   outputs build_id, so "Re-run failed jobs" after a store-step failure keeps the
+#   processed build instead of waiting again against the original upload
+#   deadline. A re-run of app-store-connect is idempotent: it only changes what
+#   differs, and re-checks a version already waiting for review. github-release
+#   updates the release if an earlier attempt created it.
 #
 # Secrets
 #   APP_STORE_CONNECT_API_KEY_ID / _ISSUER_ID / _API_KEY_P8
@@ -49,6 +61,8 @@
 #       certificate NVNGDQGCKK, expires 2027-10-14) used only to sign the
 #       archive; distribution signing at export is cloud-managed by Apple. The
 #       same identity is shared by the owner's other app repositories.
+#   Signing material is written only under $RUNNER_TEMP (umask 077) and removed
+#   afterwards; failure logs are redacted before upload (public repository).
 
 name: iOS Release
 
@@ -77,6 +91,12 @@ concurrency:
   queue: max
 
 jobs:
+  ios-tests:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/ios-tests.yml
+    permissions:
+      contents: read
+
   quality:
     if: github.event_name == 'push'
     uses: ./.github/workflows/quality.yml
@@ -114,9 +134,19 @@ jobs:
             /RELEASE_NOTES.md
             /APPSTORE.md
 
+      # Store tooling runs on a pinned Python, never the runner image's own.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      # Offline, on validation runs too: switches, build wait and selection, What's
+      # New, release notes and log redaction behave as the store steps expect.
+      - name: Test the store release scripts (offline)
+        run: python3 -m unittest scripts/store/test_ios_release.py
+
       # These gates must pass before anything reaches App Store Connect. A tag
       # without a RELEASE_NOTES.md section is fine (GitHub generates the notes);
-      # an empty section is not.
+      # an empty or duplicated section is not.
       - name: Check release notes, IAP catalog and RevenueCat gate
         if: github.event_name == 'push'
         env:
@@ -141,10 +171,35 @@ jobs:
           VALIDATION_MARKETING_VERSION: ${{ inputs.marketing_version }}
         run: python3 scripts/store/ios_release.py gates
 
-      # Fail before building when What's New is switched on without usable text.
+      # Fail before building when switched-on text would not fit the store.
+      - name: Check listing text
+        if: steps.gates.outputs.listing == 'true'
+        run: python3 scripts/store/prepare_listing_text.py --platform ios --out "$RUNNER_TEMP/listing-check"
+
       - name: Check What's New
         if: steps.gates.outputs.whats_new == 'true'
         run: python3 scripts/store/prepare_whats_new.py --platform ios --tag "$GITHUB_REF_NAME" --out "$RUNNER_TEMP/whats-new-check"
+
+      - name: Install store tooling
+        if: steps.gates.outputs.build == 'true' || steps.gates.outputs.asc == 'true'
+        run: python3 -m pip install --disable-pip-version-check --require-hashes -r requirements-store.txt
+
+      # Read-only, tag runs with a listing/What's New/screenshot/review switch on
+      # (`asc` is never on for validation runs). asc_release.py never creates App
+      # Store versions, so fail now, before the archive and upload, when X.Y is
+      # missing or already in review.
+      - name: Check the App Store version (read-only)
+        if: steps.gates.outputs.asc == 'true'
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          MARKETING_VERSION: ${{ steps.gates.outputs.marketing_version }}
+          UPLOAD_LISTING: ${{ steps.gates.outputs.listing }}
+          UPLOAD_WHATS_NEW: ${{ steps.gates.outputs.whats_new }}
+          UPLOAD_SCREENSHOTS: ${{ steps.gates.outputs.screenshots }}
+          SUBMIT_IOS_REVIEW: ${{ steps.gates.outputs.submit }}
+        run: python3 -u scripts/store/ios_release.py version-preflight --version "$MARKETING_VERSION"
 
       - name: Choose the build number
         id: number
@@ -153,17 +208,17 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
-        run: |
-          python3 -m pip install --disable-pip-version-check --require-hashes -r requirements-store.txt
-          python3 scripts/store/ios_release.py build-number
+        run: python3 -u scripts/store/ios_release.py build-number
 
   build:
-    needs: [quality, prepare]
+    needs: [ios-tests, quality, prepare]
+    # Tag runs need the iOS tests and quality checks to pass; validation runs skip both.
     if: >-
       !cancelled() && needs.prepare.result == 'success' &&
       needs.prepare.outputs.build == 'true' &&
-      (needs.quality.result == 'success' ||
-       (github.event_name == 'workflow_dispatch' && needs.quality.result == 'skipped'))
+      ((needs.ios-tests.result == 'success' && needs.quality.result == 'success') ||
+       (github.event_name == 'workflow_dispatch' &&
+        needs.ios-tests.result == 'skipped' && needs.quality.result == 'skipped'))
     # LiteRT-LM ships arm64-only libraries; same runner as the iOS tests.
     runs-on: xcode-27
     timeout-minutes: 90
@@ -190,6 +245,7 @@ jobs:
             /local-models/legal/
             /shared/workout-vectors/sample-pack.txt
             /shared/workout-vectors/exercise-visual-manifest.json
+            /scripts/store/redact_credential_ids.py
 
       - name: Cache pinned Swift packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -272,6 +328,7 @@ jobs:
           set -euo pipefail
           apps="$RUNNER_TEMP/FudAI.xcarchive/Products/Applications"
           main="$(find "$apps" -maxdepth 1 -name '*.app' | head -n1)"
+          [ -n "$main" ] || { echo "error: the archive holds no .app under Products/Applications" >&2; exit 1; }
           id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$main/Info.plist")"
           [ "$id" = "$BUNDLE_ID" ] || { echo "error: archived $id, expected $BUNDLE_ID" >&2; exit 1; }
           # The app, its extensions, the Watch app and its widgets must all carry
@@ -352,20 +409,21 @@ jobs:
           echo "uploaded $MARKETING_VERSION ($BUILD_NUMBER); App Store Connect processing is checked next"
 
       - name: Collect logs
+        id: collect-logs
         if: failure()
         run: |
+          set -euo pipefail
           mkdir -p "$RUNNER_TEMP/logs"
           find "${TMPDIR:-/tmp}" -maxdepth 1 -name '*.xcdistributionlogs' -exec cp -R {} "$RUNNER_TEMP/logs/" \; 2>/dev/null || true
-          # xcodebuild and altool echo their command lines into these logs. Artifacts are
-          # not masked like the console, so replace the key and issuer IDs before upload.
-          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ]; then
-            grep -rlIF -e "$ASC_KEY_ID" -e "$ASC_ISSUER_ID" "$RUNNER_TEMP/logs" 2>/dev/null | while IFS= read -r file; do
-              perl -pi -e 's/\Q$ENV{ASC_KEY_ID}\E/<ASC_KEY_ID>/g; s/\Q$ENV{ASC_ISSUER_ID}\E/<ASC_ISSUER_ID>/g' "$file"
-            done
-          fi
+          # xcodebuild, altool and Xcode's distribution logs echo the key and issuer
+          # IDs. Artifacts are not masked like the console and this repository is
+          # public, so every file is rewritten (binary ones too), and any file that
+          # still holds an ID in another encoding is removed before upload.
+          python3 scripts/store/redact_credential_ids.py "$RUNNER_TEMP/logs"
 
       - name: Keep build logs
-        if: failure()
+        # Only logs the redaction step finished with are uploaded.
+        if: failure() && steps.collect-logs.outcome == 'success'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-release-logs-${{ github.run_id }}-${{ github.run_attempt }}
@@ -383,12 +441,13 @@ jobs:
   # this result (and build_id) instead of waiting again against the original
   # upload deadline, which by then has always passed.
   wait-for-build:
-    needs: [quality, prepare, build]
+    needs: [ios-tests, quality, prepare, build]
     if: >-
       !cancelled() && needs.prepare.result == 'success' &&
       needs.prepare.outputs.mode == 'release' &&
       needs.prepare.outputs.upload_build == 'true' &&
-      needs.quality.result == 'success' && needs.build.result == 'success'
+      needs.ios-tests.result == 'success' && needs.quality.result == 'success' &&
+      needs.build.result == 'success'
     runs-on: ubuntu-latest
     # Covers IOS_BUILD_WAIT_MINUTES (max 300), counted from upload start.
     timeout-minutes: 310
@@ -396,6 +455,10 @@ jobs:
       build_id: ${{ steps.wait.outputs.build_id }}
     env:
       MARKETING_VERSION: ${{ needs.prepare.outputs.marketing_version }}
+      BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+      UPLOAD_STARTED_AT: ${{ needs.build.outputs.upload_started_at }}
+      WAIT_MINUTES: ${{ needs.prepare.outputs.wait_minutes }}
+      POLL_SECONDS: ${{ needs.prepare.outputs.poll_seconds }}
       APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
@@ -408,28 +471,33 @@ jobs:
             /scripts/store/
             /requirements-store.txt
 
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
       - name: Install store tooling
         run: python3 -m pip install --disable-pip-version-check --require-hashes -r requirements-store.txt
 
+      # -u: each poll's progress line shows in the live log right away.
       - name: Wait for App Store Connect to process this build
         id: wait
         run: |
-          python3 scripts/store/ios_release.py wait-build \
+          python3 -u scripts/store/ios_release.py wait-build \
             --version "$MARKETING_VERSION" \
-            --build "${{ needs.prepare.outputs.build_number }}" \
-            --started-at "${{ needs.build.outputs.upload_started_at }}" \
-            --wait-minutes "${{ needs.prepare.outputs.wait_minutes }}" \
-            --poll-seconds "${{ needs.prepare.outputs.poll_seconds }}"
+            --build "$BUILD_NUMBER" \
+            --started-at "$UPLOAD_STARTED_AT" \
+            --wait-minutes "$WAIT_MINUTES" \
+            --poll-seconds "$POLL_SECONDS"
 
   app-store-connect:
-    needs: [quality, prepare, build, wait-for-build]
+    needs: [ios-tests, quality, prepare, build, wait-for-build]
     # With IOS_UPLOAD_BUILD on, only after this run's build is processed; with it
     # off, listing/What's New/screenshots run without a build.
     if: >-
       !cancelled() && needs.prepare.result == 'success' &&
       needs.prepare.outputs.mode == 'release' &&
       needs.prepare.outputs.asc == 'true' &&
-      needs.quality.result == 'success' &&
+      needs.ios-tests.result == 'success' && needs.quality.result == 'success' &&
       ((needs.build.result == 'success' && needs.wait-for-build.result == 'success') ||
        (needs.prepare.outputs.upload_build != 'true' &&
         needs.build.result == 'skipped' && needs.wait-for-build.result == 'skipped'))
@@ -445,16 +513,34 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout-cone-mode: false
+          # Store scripts, catalog and copy, plus the marketing screenshots that are
+          # staged when IOS_UPLOAD_SCREENSHOTS is on; never the workout frames.
+          sparse-checkout: |
+            /scripts/store/
+            /store/
+            /APPSTORE.md
+            /requirements-store.txt
+            /web/assets/screenshots/
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
 
       - name: Install store tooling
         run: python3 -m pip install --disable-pip-version-check --require-hashes -r requirements-store.txt
 
       - name: Prepare listing text and What's New (local only)
         env:
+          LISTING: ${{ needs.prepare.outputs.listing }}
           WHATS_NEW: ${{ needs.prepare.outputs.whats_new }}
         run: |
-          python3 scripts/store/prepare_listing_text.py --platform ios --out "$RUNNER_TEMP/store-meta"
-          # APPSTORE.md's What's New is read only when IOS_UPLOAD_WHATS_NEW is on.
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/store-meta"
+          # Each text is read only when its switch is on, so unused text never blocks a release.
+          if [ "$LISTING" = true ]; then
+            python3 scripts/store/prepare_listing_text.py --platform ios --out "$RUNNER_TEMP/store-meta"
+          fi
           if [ "$WHATS_NEW" = true ]; then
             python3 scripts/store/prepare_whats_new.py --platform ios --tag "$GITHUB_REF_NAME" --out "$RUNNER_TEMP/store-meta"
           fi
@@ -463,7 +549,7 @@ jobs:
         if: needs.prepare.outputs.screenshots == 'true'
         env:
           STORE_UPLOAD_SCREENSHOTS: "true"
-        run: python3 scripts/store/stage_screenshots.py
+        run: python3 -u scripts/store/stage_screenshots.py
 
       - name: Listing / What's New / screenshots / review (gated)
         env:
@@ -480,23 +566,31 @@ jobs:
           if [ -n "$BUILD_ID" ]; then
             args+=(--build-id "$BUILD_ID" --build-number "$BUILD_NUMBER")
           fi
-          python3 scripts/store/asc_release.py "${args[@]}"
+          python3 -u scripts/store/asc_release.py "${args[@]}"
 
   github-release:
-    needs: [quality, prepare, build, wait-for-build, app-store-connect]
+    needs: [ios-tests, quality, prepare, build, wait-for-build, app-store-connect]
     if: >-
       !cancelled() && github.event_name == 'push' &&
+      needs.ios-tests.result == 'success' &&
       needs.quality.result == 'success' && needs.prepare.result == 'success' &&
       (needs.build.result == 'success' || needs.build.result == 'skipped') &&
       (needs.wait-for-build.result == 'success' || needs.wait-for-build.result == 'skipped') &&
       (needs.app-store-connect.result == 'success' || needs.app-store-connect.result == 'skipped')
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write # create the GitHub Release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/release_notes.py
+            /scripts/store/print_gates.py
+            /RELEASE_NOTES.md
+            /ios/calorietracker.xcodeproj/project.pbxproj
 
       # Empty output (no RELEASE_NOTES.md section) → GitHub generates the notes below.
       - name: Prepare reviewed release notes
@@ -514,18 +608,25 @@ jobs:
           STORE_SYNC_REVENUECAT: ${{ vars.STORE_SYNC_REVENUECAT }}
         run: python3 scripts/store/print_gates.py --platform ios
 
-      - name: Create GitHub Release
+      # Re-runnable: when an earlier attempt already created the release, it is
+      # updated instead of failing on "already exists".
+      - name: Create or update the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.marketing_version }}
           UPLOADED_BUILD: ${{ needs.build.result == 'success' && needs.prepare.outputs.build_number || '' }}
         run: |
-          VERSION="${{ needs.prepare.outputs.marketing_version }}"
+          set -euo pipefail
           BUILD="${UPLOADED_BUILD:-$(grep -m1 'CURRENT_PROJECT_VERSION' ios/calorietracker.xcodeproj/project.pbxproj | tr -dc '0-9')}"
-          if [ -s "$RUNNER_TEMP/release-notes.md" ]; then
-            notes=(--notes-file "$RUNNER_TEMP/release-notes.md")
+          title="iOS ${VERSION} (build ${BUILD})"
+          notes=()
+          [ -s "$RUNNER_TEMP/release-notes.md" ] && notes=(--notes-file "$RUNNER_TEMP/release-notes.md")
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "the GitHub Release for $GITHUB_REF_NAME exists (earlier attempt); updating it"
+            gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" \
+              --title "$title" "${notes[@]}" --draft=false --prerelease=false --latest
           else
-            notes=(--generate-notes)
+            [ "${#notes[@]}" -gt 0 ] || notes=(--generate-notes)
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "$title" "${notes[@]}" --latest
           fi
-          gh release create "$GITHUB_REF_NAME" \
-            --title "iOS ${VERSION} (build ${BUILD})" \
-            "${notes[@]}" --latest
