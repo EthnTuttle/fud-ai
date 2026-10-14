@@ -3,14 +3,19 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import io
+import os
 import sys
 import tempfile
 import unittest
 import zipfile
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import android_release as ar  # noqa: E402
+import prepare_whats_new  # noqa: E402
 
 ALL_ON = {name: "true" for name, _ in ar.OPERATION_SWITCHES}
 
@@ -83,6 +88,22 @@ class SwitchTests(unittest.TestCase):
         )
         self.assertEqual(result["play_tracks"], "internal,alpha")
         self.assertFalse(result["production"])
+
+    def test_production_output_decides_latest_github_release(self):
+        # The workflow marks the GitHub Release Latest only when `production` is true;
+        # otherwise it is a pre-release so the iOS release stays Latest.
+        for env, expected in (
+            ({ar.MASTER: "true"}, "false"),
+            ({ar.MASTER: "true", "ANDROID_INTERNAL_TESTING": "true"}, "false"),
+            ({ar.MASTER: "true", "ANDROID_PRODUCTION_ROLLOUT": "true"}, "true"),
+            ({"ANDROID_PRODUCTION_ROLLOUT": "true"}, "false"),
+        ):
+            with self.subTest(env=env), tempfile.NamedTemporaryFile("r", suffix=".out") as out, \
+                    mock.patch.dict(os.environ, {"GITHUB_OUTPUT": out.name}), redirect_stdout(io.StringIO()):
+                resolved = gates(env)
+                resolved.pop("notes")
+                ar.write_outputs(resolved)
+                self.assertIn(f"production={expected}\n", Path(out.name).read_text())
 
     def test_all_tracks_go_in_one_upload(self):
         result = gates({ar.MASTER: "true", **ALL_ON})
@@ -284,6 +305,36 @@ class TrackReadBackTests(unittest.TestCase):
         ):
             with self.subTest(release=release), self.assertRaises(ar.ReleaseError):
                 ar.check_tracks(self.fetcher({"production": release}), ["production"], 42)
+
+
+class PlayWhatsNewTests(unittest.TestCase):
+    """The strict check the gates job runs only when ANDROID_UPLOAD_WHATS_NEW is on."""
+
+    def write(self, block):
+        out = tempfile.TemporaryDirectory()
+        self.addCleanup(out.cleanup)
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            try:
+                prepare_whats_new.write_play_whatsnew(block, Path(out.name))
+            except SystemExit as exc:
+                return exc.code, Path(out.name)
+        return 0, Path(out.name)
+
+    def test_each_locale_becomes_a_whatsnew_file(self):
+        code, out = self.write("<en-US>\nFixes.\n</en-US>\n<de-DE>\nFehler.\n</de-DE>\n")
+        self.assertEqual(code, 0)
+        self.assertEqual((out / "whatsnew-en-US").read_text(encoding="utf-8"), "Fixes.\n")
+        self.assertTrue((out / "whatsnew-de-DE").is_file())
+
+    def test_missing_empty_or_too_long_text_fails(self):
+        for label, block in {
+            "no locales": "Fixes.",
+            "empty": "<en-US>\n\n</en-US>",
+            "too long": "<en-US>\n" + "x" * 501 + "\n</en-US>",
+        }.items():
+            with self.subTest(label):
+                code, _ = self.write(block)
+                self.assertEqual(code, 1)
 
 
 if __name__ == "__main__":

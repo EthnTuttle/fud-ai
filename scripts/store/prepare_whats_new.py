@@ -58,6 +58,20 @@ def write_play_whatsnew(block: str, out_dir: Path) -> list[Path]:
     return written
 
 
+# App Store Connect's limit for a version's "What's New in This Version".
+IOS_WHATS_NEW_MAX = 4000
+
+
+def check_ios_whats_new(block: str) -> str:
+    """The iOS What's New text, or fail when App Store Connect would refuse it."""
+    text = block.strip()
+    if not text:
+        fail("empty what's new in APPSTORE.md")
+    if len(text) > IOS_WHATS_NEW_MAX:
+        fail(f"what's new in APPSTORE.md exceeds {IOS_WHATS_NEW_MAX} chars ({len(text)})")
+    return text
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -83,10 +97,10 @@ def main() -> None:
 
     if args.platform in ("ios", "all"):
         ios = (ROOT / "APPSTORE.md").read_text(encoding="utf-8")
-        ios_block = extract_fenced_after_heading(ios, "What's New")
+        ios_text = check_ios_whats_new(extract_fenced_after_heading(ios, "What's New"))
         ios_path = args.out / "ios" / "en-US" / "whats_new.txt"
         ios_path.parent.mkdir(parents=True, exist_ok=True)
-        ios_path.write_text(ios_block.strip() + "\n", encoding="utf-8")
+        ios_path.write_text(ios_text + "\n", encoding="utf-8")
         print(f"  ios: {ios_path}")
 
     print(f"prepared what's new for {args.tag}")

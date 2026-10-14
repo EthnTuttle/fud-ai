@@ -11,6 +11,7 @@ on:
     paths:
       - "store/**"
       - "scripts/store/**"
+      - "scripts/release_notes.py"
       - "APPSTORE.md"
       - "PLAYSTORE.md"
       - "docs/HOSTED_AI_REVENUECAT.md"
@@ -22,6 +23,7 @@ on:
     paths:
       - "store/**"
       - "scripts/store/**"
+      - "scripts/release_notes.py"
       - "APPSTORE.md"
       - "PLAYSTORE.md"
       - "docs/HOSTED_AI_REVENUECAT.md"
