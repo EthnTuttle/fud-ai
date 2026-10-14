@@ -245,10 +245,11 @@ GitHub:
 
 1. Read the target repository's Actions public key:
    `gh api repos/<owner>/<repo>/actions/secrets/public-key` (`key` and `key_id`).
-2. On a temporary branch of a private repository that already has the secrets
-   and whose workflows don't run on other branches, push the workflow below with
-   `<key>` filled in. It prints only the sealed ciphertext, which only GitHub can
-   decrypt for the target repository.
+2. On a temporary branch of a repository that already has the secrets and whose
+   workflows don't run on other branches, push the workflow below with `<key>`
+   filled in. It prints only the sealed ciphertext, which only GitHub can decrypt
+   for the target repository. All the app repositories are public, so that run's
+   log is public until step 4 deletes it, but it never contains a usable secret.
 3. Store each sealed value in the target (`<run id>` is the finished temporary
    run). This stops on the first error and refuses anything but exactly two
    sealed values:
