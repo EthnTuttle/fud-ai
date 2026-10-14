@@ -658,10 +658,11 @@ class ReleaseNotesTests(unittest.TestCase):
         "## ios-v7.2\n\nShipped.\n\n## android-v7.2\n\nBeta.\n\n## ios-v7.3\n\n## v7.0\n\nOld.\n"
     )
 
-    def run_cli(self, *args: str) -> tuple[int, str, str]:
+    def run_cli(self, *args: str, text: str | None = TEXT) -> tuple[int, str, str]:
         out, err = io.StringIO(), io.StringIO()
         with tempfile.TemporaryDirectory() as root:
-            (Path(root) / "RELEASE_NOTES.md").write_text(self.TEXT, encoding="utf-8")
+            if text is not None:
+                (Path(root) / "RELEASE_NOTES.md").write_text(text, encoding="utf-8")
             with mock.patch.object(release_notes, "ROOT", Path(root)), redirect_stdout(out), redirect_stderr(err):
                 try:
                     release_notes.main(list(args))
@@ -698,6 +699,14 @@ class ReleaseNotesTests(unittest.TestCase):
         self.assertEqual((code, out), (0, "Shipped.\n"))
         code, _, _ = self.run_cli("--if-present", "ios-v7.3")
         self.assertEqual(code, 2, "an empty section is malformed even when notes are optional")
+
+    def test_missing_notes_file_is_missing_notes(self) -> None:
+        code, out, err = self.run_cli("--if-present", "ios-v7.2", text=None)
+        self.assertEqual((code, out), (0, ""))
+        self.assertIn("no ## ios-v7.2 section", err)
+        code, out, err = self.run_cli("ios-v7.2", text=None)
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("Add a reviewed ## ios-v7.2", err)
 
 
 class IosWhatsNewTests(unittest.TestCase):

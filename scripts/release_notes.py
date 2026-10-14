@@ -19,11 +19,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def section_for_tag(tag: str, text: str | None = None) -> str | None:
-    """The tag's notes, or None without a section. An empty section fails."""
+    """The tag's notes, or None without a section (or file). An empty section fails."""
     if tag == 'Unreleased':
         raise ValueError('the Unreleased section is not a release; use the exact tag')
     if text is None:
-        text = (ROOT / 'RELEASE_NOTES.md').read_text(encoding='utf-8')
+        path = ROOT / 'RELEASE_NOTES.md'
+        if not path.is_file():
+            return None
+        text = path.read_text(encoding='utf-8')
     for section in re.split(r'^## ', text, flags=re.MULTILINE)[1:]:
         title, _, body = section.partition('\n')
         if title.strip() == tag:
