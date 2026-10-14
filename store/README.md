@@ -179,16 +179,62 @@ GitHub:
 
 1. Read the target repository's Actions public key:
    `gh api repos/<owner>/<repo>/actions/secrets/public-key` (`key` and `key_id`).
-2. Push a temporary branch to a private repository that already has the secrets
-   and whose workflows don't run on other branches. Its push-triggered workflow
-   seals both secrets with that public key (PyNaCl `SealedBox`) and prints only
-   the ciphertext.
-3. Store each value in the target with
-   `gh api -X PUT repos/<owner>/<repo>/actions/secrets/<NAME> -f encrypted_value=… -f key_id=…`.
-4. Delete the temporary branch and its workflow run.
+2. On a temporary branch of a private repository that already has the secrets
+   and whose workflows don't run on other branches, push the workflow below with
+   `<key>` filled in. It prints only the sealed ciphertext, which only GitHub can
+   decrypt for the target repository.
+3. Store each sealed value in the target (`<run id>` is the temporary run):
+
+   ```sh
+   gh run view <run id> -R <owner>/<source repo> --log \
+     | grep -oE 'SEALED [A-Z0-9_]+ [A-Za-z0-9+/=]+' \
+     | while read -r _ name value; do
+         gh api -X PUT "repos/<owner>/<repo>/actions/secrets/$name" \
+           -f encrypted_value="$value" -f key_id="<key_id>" --silent
+       done
+   ```
+
+4. Delete the temporary branch and its run
+   (`gh api -X DELETE repos/<owner>/<source repo>/git/refs/heads/<branch>`,
+   `gh run delete <run id> -R <owner>/<source repo>`).
 
 Then add the three `APP_STORE_CONNECT_*` secrets, add the repository to the list
 above, and run a validation dispatch.
+
+The temporary workflow (`.github/workflows/tmp-seal-ci-signing.yml`):
+
+```yaml
+name: Seal CI signing secrets (temporary)
+on:
+  push:
+    branches: [tmp/seal-ci-signing]
+permissions: {}
+jobs:
+  seal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Seal with the target repository's Actions public key
+        env:
+          IOS_DEV_SIGNING_P12_BASE64: ${{ secrets.IOS_DEV_SIGNING_P12_BASE64 }}
+          IOS_DEV_SIGNING_P12_PASSWORD: ${{ secrets.IOS_DEV_SIGNING_P12_PASSWORD }}
+          TARGET_PUBLIC_KEY: "<key>"
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet pynacl==1.5.0
+          "$RUNNER_TEMP/venv/bin/python" - <<'PY'
+          import base64, os
+          from nacl import encoding, public
+          key = public.PublicKey(os.environ["TARGET_PUBLIC_KEY"].encode(), encoding.Base64Encoder())
+          box = public.SealedBox(key)
+          for name in ("IOS_DEV_SIGNING_P12_BASE64", "IOS_DEV_SIGNING_P12_PASSWORD"):
+              value = os.environ[name]
+              if not value:
+                  raise SystemExit(f"missing {name}")
+              sealed = base64.b64encode(box.encrypt(value.encode())).decode()
+              print(f"SEALED {name} {sealed}")
+          PY
+```
 
 Later for catalog automation:
 
