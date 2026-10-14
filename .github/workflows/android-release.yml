@@ -247,7 +247,6 @@ jobs:
             /RELEASE_NOTES.md
             /PLAYSTORE.md
             /requirements-store.txt
-            /web/assets/screenshots/
 
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
@@ -358,11 +357,11 @@ jobs:
           needs.gates.outputs.play_upload == 'true'
         run: python3 -m pip install --disable-pip-version-check --require-hashes -r requirements-store.txt
 
-      - name: Stage marketing screenshots
+      - name: Stage Play screenshots
         if: needs.gates.outputs.screenshots == 'true'
         env:
           STORE_UPLOAD_SCREENSHOTS: "true"
-        run: python3 -u scripts/store/stage_screenshots.py
+        run: python3 -u scripts/store/stage_screenshots.py --platform play
 
       - name: Play listing / screenshots upload
         if: needs.gates.outputs.listing == 'true' || needs.gates.outputs.screenshots == 'true'

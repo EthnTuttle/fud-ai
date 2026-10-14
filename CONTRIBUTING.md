@@ -55,7 +55,7 @@ Android Studio is needed for the SDK + bundled JDK, but you can do all your day-
 
 The site is plain HTML/CSS with a validation-only npm build step and no framework. It is deployed with Cloudflare Workers Static Assets from `web/` using `web/wrangler.toml`.
 
-Marketing screenshots live in `web/assets/screenshots/` and are also used by the README. When replacing screenshots, update the whole set together so the website and README stay in sync.
+Website screenshots live in `web/assets/screenshots/` and are also used by the README. When replacing screenshots, update the whole set together so the website and README stay in sync. App Store and Play listing images live in `store/screenshots/` and `store/graphics/` (see [store/README.md](store/README.md#metadata-layout)). Promo, social and launch graphics do not belong in the repository.
 
 ## First-Run Setup (both platforms)
 
