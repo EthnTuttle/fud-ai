@@ -201,6 +201,8 @@ jobs:
             adb pull /sdcard/Android/data/com.apoorvdarshan.calorietracker.debug/files/screenshots "$RUNNER_TEMP/android-test-logs/screenshots" >/dev/null 2>&1 || true
           }
           trap capture_diagnostics EXIT
+          # The restored snapshot catches up on the time it was saved; let that settle.
+          bash "$GITHUB_WORKSPACE/scripts/ci/wait_for_emulator_idle.sh"
           adb logcat -c
           ./gradlew :app:connectedDebugAndroidTest -PworkoutVectors=sample --stacktrace \
             -Pandroid.testInstrumentationRunnerArguments.numShards="$TEST_SHARDS" \
@@ -212,7 +214,8 @@ jobs:
           [ "$ran" -gt 0 ] || { echo "error: shard $TEST_SHARD ran no tests" >&2; exit 1; }
           SH
       # A booted emulator snapshot taken before any app is installed: tests still
-      # start from a device with no Fud AI data, without a cold boot each run.
+      # start from a device with no Fud AI data, without a cold boot each run. It is
+      # saved only once start-up work is done, so restored runs don't resume into it.
       - name: Restore the clean emulator snapshot
         id: avd-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -220,7 +223,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-v1-api36-google_apis-x86_64-pixel_2
+          key: avd-v3-api36-google_apis-x86_64-pixel_2-4cpu-4g
       - name: Create the emulator and save a clean boot snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
@@ -229,11 +232,13 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
+          cores: 4
+          ram-size: 4096M
           force-avd-creation: false
           emulator-boot-timeout: 300
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: false
-          script: echo "Saved a clean boot snapshot (no app installed)."
+          script: bash scripts/ci/wait_for_emulator_idle.sh --compile
       - name: Run instrumentation and app UI tests
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -241,6 +246,8 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
+          cores: 4
+          ram-size: 4096M
           force-avd-creation: false
           emulator-boot-timeout: 300
           # -no-snapshot-save: the clean snapshot is reused, never overwritten by a test run.

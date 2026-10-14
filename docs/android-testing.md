@@ -49,7 +49,10 @@ GitHub uses hardware acceleration and an x86_64 Google APIs image. An Apple
 Silicon Mac can use the corresponding ARM64 image. Both run the same test suite.
 The hosted job caches a booted emulator snapshot taken before any app is
 installed and never saves over it, so every run starts without Fud AI data; no
-app data is cached.
+app data is cached. The snapshot is saved only after start-up work (background
+compilation and pending broadcasts) finishes and the CPU is idle, and each run
+waits for that again before testing. Otherwise Google Play services' start-up burst
+starves System UI, and its "isn't responding" dialog takes focus from the app.
 
 Gradle's build and configuration caches are on. Unit test results are never taken
 from the build cache (the tests read repository files that are not task inputs),
