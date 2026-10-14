@@ -445,6 +445,7 @@ python3 scripts/store/prepare_listing_text.py --platform all --out /tmp/listing
 python3 scripts/store/stage_screenshots.py --dry-run
 python3 -m unittest scripts/store/test_ios_release.py
 python3 -m unittest scripts/store/test_android_release.py
+python3 -m unittest scripts/store/test_stage_screenshots.py
 IOS_SUBMIT_REVIEW=maybe python3 scripts/store/print_gates.py   # shows INVALID
 UPLOAD_LISTING=true python3 scripts/store/asc_release.py --dry-run --metadata-dir store/metadata
 UPLOAD_LISTING=true python3 scripts/store/play_listing.py --dry-run --metadata-dir store/metadata
