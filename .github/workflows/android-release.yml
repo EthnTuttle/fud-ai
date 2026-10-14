@@ -35,8 +35,9 @@
 #   checked in `gates`, before anything is built.
 #
 # Order (tag run, master on)
-#   gates: store-script unit tests, switches, notes/What's New/listing checks and,
-#          with a Play track on, a read-only check that this versionCode is new to
+#   gates: store-script unit tests, switches, notes/What's New/listing checks, a
+#          read-only check that this versionCode is higher than every earlier
+#          android-v* GitHub Release and, with a Play track on, that it is new to
 #          Google Play
 #   quality: the whole Quality checks workflow (quality.yml): web checks and the
 #          Android unit tests, release lint, Release APK and emulator UI tests
@@ -57,7 +58,7 @@
 #
 # versionCode discipline stays in the repo: bump it in app/build.gradle.kts
 # BEFORE tagging — Play rejects a versionCode it has already seen, and `gates`
-# stops the run before building when Play already has it.
+# stops the run before building when Play or an earlier GitHub Release has it.
 #
 # Supply-chain: the AAB/APK attached to the GitHub Release are signed keylessly
 # with Sigstore cosign (a *.sigstore.json bundle per artifact) and carry a
@@ -159,6 +160,17 @@ jobs:
           if [ "$LISTING" = true ]; then
             python3 scripts/store/prepare_listing_text.py --platform play --out "$RUNNER_TEMP/listing-check"
           fi
+
+      # Read-only. The GitHub Release APK must install over every earlier one, so its
+      # versionCode must be higher than any earlier android-v* release's (from titles).
+      - name: Check this versionCode is new to GitHub Releases (read-only)
+        if: steps.gates.outputs.github_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 1000 --json tagName,name > "$RUNNER_TEMP/releases.json"
+          python3 scripts/store/android_release.py github-preflight --releases "$RUNNER_TEMP/releases.json"
 
       - name: Install store tooling
         if: steps.gates.outputs.play_upload == 'true'

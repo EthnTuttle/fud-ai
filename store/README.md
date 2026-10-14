@@ -80,6 +80,8 @@ android-vX.Y tag ─► store-script unit tests ─► resolve switches (tag mus
   └─ on:
        ANDROID_UPLOAD_WHATS_NEW (with a track) / ANDROID_UPLOAD_LISTING
                       ─► check that PLAYSTORE.md text
+       read-only: this versionCode is higher than every earlier android-v*
+                      GitHub Release (from their titles)
        any Play track ─► read-only: this versionCode is new to Google Play
        quality checks (the whole quality.yml, see below)
                       ─► check the keystore secrets are set
@@ -120,7 +122,9 @@ the duplicate) and the read-back and GitHub Release go ahead, and an existing
 GitHub Release for the tag gets this attempt's signed files instead of failing.
 Play then holds the first attempt's AAB; both come from the same commit and the
 same upload key. A versionCode Play already has from anything else (an older
-release, another run) fails the run before it builds.
+release, another run) fails the run before it builds, and so does a versionCode
+that is not higher than every earlier `android-v*` GitHub Release's, so the APK
+on GitHub always installs over the previous one.
 
 **Xcode Cloud:** its tag-triggered "Release" workflow was removed in App Store
 Connect. Xcode Cloud triggers live in App Store Connect, not in this repo, so a
@@ -325,7 +329,7 @@ Later for catalog automation:
 | [`scripts/store/redact_credential_ids.py`](../scripts/store/redact_credential_ids.py) | Removes the ASC key and issuer IDs from failure logs before they are uploaded |
 | [`scripts/store/print_gates.py`](../scripts/store/print_gates.py) | Prints the switches as configured; an invalid value shows as `INVALID` |
 | [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, timeouts, failures, mismatches, the version preflight, re-runs, IAP order, optional release notes, iOS What's New checks, log redaction. Run by every iOS release before anything is built |
-| [`scripts/store/android_release.py`](../scripts/store/android_release.py) | Android switches, Play versionCode preflight, signing properties, AAB/APK identity + pinned-certificate checks, Play track read-back |
+| [`scripts/store/android_release.py`](../scripts/store/android_release.py) | Android switches, versionCode checks against earlier GitHub Releases and Google Play, signing properties, AAB/APK identity + pinned-certificate checks, Play track read-back |
 | [`scripts/store/test_android_release.py`](../scripts/store/test_android_release.py) | Offline tests: disabled/invalid switches, track selection, wrong app/version/key, the versionCode preflight and re-runs, signing properties, Play What's New checks. Run by every Android release before anything is built |
 | [`scripts/store/play_listing.py`](../scripts/store/play_listing.py) | Play listing text + phone screenshots |
 | [`scripts/store/sync_revenuecat_catalog.py`](../scripts/store/sync_revenuecat_catalog.py) | Validate catalog; fail if sync gate on |

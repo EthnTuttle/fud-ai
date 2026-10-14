@@ -6,6 +6,10 @@ Subcommands (`gates` also writes key=value lines to $GITHUB_OUTPUT when it is se
   gates           Validate the ANDROID_* repository variables and resolve what this
                   run may do. Missing values mean off; invalid values fail. A tag
                   run needs android-v<versionName>; a manual run only validates.
+  github-preflight
+                  Read-only: this versionCode must be higher than that of every
+                  earlier android-v* GitHub Release (from their titles), so the
+                  published APK installs over them.
   play-preflight  Read-only: compare this versionCode with everything Google Play
                   already has. New (higher than every uploaded versionCode): the
                   upload goes ahead. Already completed on every selected track (a
@@ -542,6 +546,49 @@ def cmd_play_preflight(args: argparse.Namespace) -> None:
     write_outputs({"play_upload_needed": decision == "upload"})
 
 
+# --- GitHub Releases versionCode preflight -----------------------------------
+
+RELEASE_VERSION_CODE = re.compile(r"\(versionCode ([0-9]+)\)")
+
+
+def released_version_codes(releases: list[dict[str, Any]], current_tag: str) -> dict[int, str]:
+    """versionCode -> tag for every other android-v* GitHub Release, read from titles
+    such as "Android 7.2 (versionCode 42)". Releases without one in the title are skipped."""
+    codes: dict[int, str] = {}
+    for release in releases:
+        tag = release.get("tagName") or ""
+        if not tag.startswith(TAG_PREFIX) or tag == current_tag:
+            continue
+        match = RELEASE_VERSION_CODE.search(release.get("name") or "")
+        if match:
+            codes.setdefault(int(match.group(1)), tag)
+    return codes
+
+
+def check_new_on_github(version_code: int, codes: dict[int, str]) -> None:
+    """The GitHub Release APK must be installable over every earlier one."""
+    if not codes:
+        return
+    highest = max(codes)
+    if version_code <= highest:
+        raise ReleaseError(
+            f"versionCode {version_code} is not higher than versionCode {highest} of the "
+            f"{codes[highest]} GitHub Release; bump versionCode in android/app/build.gradle.kts "
+            "before tagging (sideloaded installs could not update otherwise)"
+        )
+
+
+def cmd_github_preflight(args: argparse.Namespace) -> None:
+    version_name, version_code = gradle_version(GRADLE.read_text(encoding="utf-8"))
+    releases = json.loads(args.releases.read_text(encoding="utf-8"))
+    codes = released_version_codes(releases, os.environ.get("GITHUB_REF_NAME", ""))
+    check_new_on_github(version_code, codes)
+    print(
+        f"versionCode {version_code} ({version_name}) is higher than every earlier Android "
+        f"GitHub Release (highest: {max(codes, default=0)})"
+    )
+
+
 # --- signing properties ------------------------------------------------------
 
 
@@ -628,6 +675,12 @@ def main(argv: list[str] | None = None) -> None:
     preflight = sub.add_parser("play-preflight")
     preflight.add_argument("--tracks", required=True, help="comma-separated Play track ids")
     preflight.set_defaults(func=cmd_play_preflight)
+    github = sub.add_parser("github-preflight")
+    github.add_argument(
+        "--releases", required=True, type=Path,
+        help="JSON from `gh release list --json tagName,name`",
+    )
+    github.set_defaults(func=cmd_github_preflight)
     signing = sub.add_parser("write-signing-properties")
     signing.add_argument("--keystore", required=True, type=Path)
     signing.add_argument("--out", required=True, type=Path)

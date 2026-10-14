@@ -430,6 +430,50 @@ class PlayPreflightTests(unittest.TestCase):
         edits.commit.assert_not_called()
 
 
+RELEASES = [  # the shape of `gh release list --json tagName,name`
+    {"tagName": "android-v7.2", "name": "Android 7.2 (versionCode 42)"},
+    {"tagName": "ios-v7.1.2", "name": "iOS 7.1.2 (build 39)"},
+    {"tagName": "android-v7.1.1", "name": "Android 7.1.1 (versionCode 39)"},
+    {"tagName": "android-v3.0.4", "name": "Android 3.0.4"},
+    {"tagName": "v1.0.0", "name": "Fud AI (versionCode 99)"},
+]
+
+
+class GithubPreflightTests(unittest.TestCase):
+    """A3: an APK on GitHub Releases never reuses an earlier Android versionCode."""
+
+    def test_reads_android_release_titles_only(self):
+        codes = ar.released_version_codes(RELEASES, "android-v7.3")
+        self.assertEqual(codes, {42: "android-v7.2", 39: "android-v7.1.1"})
+
+    def test_this_tags_own_release_is_ignored(self):
+        # "Re-run all jobs" after the release was created must not fail on itself.
+        self.assertEqual(ar.released_version_codes(RELEASES, "android-v7.2"), {39: "android-v7.1.1"})
+
+    def test_version_code_must_be_higher_than_every_release(self):
+        codes = ar.released_version_codes(RELEASES, "android-v7.3")
+        ar.check_new_on_github(43, codes)
+        ar.check_new_on_github(1, {})
+        for code in (42, 41, 39):
+            with self.subTest(code=code), self.assertRaisesRegex(ar.ReleaseError, "android-v7.2"):
+                ar.check_new_on_github(code, codes)
+
+    def test_command(self):
+        import argparse
+        import json as json_module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "releases.json"
+            path.write_text(json_module.dumps(RELEASES), encoding="utf-8")
+            args = argparse.Namespace(releases=path)
+            with mock.patch.dict(os.environ, {"GITHUB_REF_NAME": "android-v7.3"}), redirect_stdout(io.StringIO()):
+                with mock.patch.object(ar, "gradle_version", return_value=("7.3", 43)):
+                    ar.cmd_github_preflight(args)
+                with mock.patch.object(ar, "gradle_version", return_value=("7.3", 42)), \
+                        self.assertRaises(ar.ReleaseError):
+                    ar.cmd_github_preflight(args)
+
+
 def java_load(text):
     """Reference java.util.Properties.load() for the key=value lines the writer emits."""
     values = {}
