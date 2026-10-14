@@ -24,4 +24,23 @@ echo "waiting for pending broadcasts..."
 if ! adb shell 'timeout 300 am wait-for-broadcast-idle' > /dev/null; then
   echo "warning: broadcasts were still pending after 5 minutes" >&2
 fi
-echo "load average: $(adb shell cat /proc/loadavg | tr -d '\r')"
+
+# Then wait for the CPU to calm down: under 50% busy across two 5-second samples.
+# (Android's load average stays high even when idle, so CPU time is measured.)
+cpu_busy_percent() {
+  adb shell 'head -1 /proc/stat; sleep 5; head -1 /proc/stat' | tr -d '\r' | awk '
+    { idle = $5 + $6; total = 0; for (i = 2; i <= NF; i++) total += $i }
+    NR == 1 { idle0 = idle; total0 = total }
+    NR == 2 { printf "%d", 100 * (1 - (idle - idle0) / (total - total0)) }'
+}
+deadline=$((SECONDS + 300))
+calm=0
+while (( calm < 2 )); do
+  busy=$(cpu_busy_percent)
+  if (( busy < 50 )); then calm=$((calm + 1)); else calm=0; fi
+  if (( SECONDS >= deadline )); then
+    echo "warning: CPU still ${busy}% busy after 5 minutes" >&2
+    break
+  fi
+done
+echo "CPU ${busy}% busy"

@@ -223,7 +223,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-v2-api36-google_apis-x86_64-pixel_2-4cpu-4g
+          key: avd-v3-api36-google_apis-x86_64-pixel_2-4cpu-4g
       - name: Create the emulator and save a clean boot snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
