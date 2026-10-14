@@ -410,10 +410,14 @@ them with store-tailored exports.
    Android ones need `ANDROID_RELEASE_AUTOMATION`.
 6. Before relying on signing changes, run **iOS Release → Run workflow** or
    **Android Release → Run workflow** (validation only; nothing is uploaded).
-7. Tag as usual (`ios-vX.Y` / `android-vX.Y`). Try a build on
+7. Check that the commit you tag passed **Quality checks** and, for iOS, **iOS
+   tests** (that workflow runs on `main` only when iOS files change and daily;
+   start it with **Run workflow** if its last run is older or red). The tag run
+   repeats them and builds nothing if one fails.
+8. Tag as usual (`ios-vX.Y` / `android-vX.Y`). Try a build on
    `ANDROID_INTERNAL_TESTING` first; leave `ANDROID_PRODUCTION_ROLLOUT`,
    `IOS_SUBMIT_REVIEW` and `IOS_PUBLIC_RELEASE` off until you intend that release.
-8. If a later step fails, fix the cause and use **Re-run failed jobs** (see the
+9. If a later step fails, fix the cause and use **Re-run failed jobs** (see the
    re-run notes in the iOS and Android flows above).
 
 ## Dry-run
