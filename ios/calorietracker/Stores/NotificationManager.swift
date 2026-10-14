@@ -6,36 +6,53 @@ import UserNotifications
 /// a synchronous reply from the notification daemon; made on the main thread, a
 /// slow daemon froze the UI for minutes (seen in CI after toggling the water
 /// reminder). The queue keeps removes and adds in the order the app made them, so
-/// a reminder that is removed and re-added is never left removed.
+/// a reminder that is removed and re-added is never left removed, and each change
+/// keeps the app running in the background until it has reached the daemon, so a
+/// reminder switched off just before the app is closed is still cancelled.
 nonisolated enum PendingNotificationRequests {
     private static let queue = DispatchQueue(
         label: "com.apoorvdarshan.calorietracker.pending-notification-requests",
         qos: .utility
     )
 
-    static func remove(_ identifiers: [String]) {
-        queue.async {
-            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: identifiers)
+    /// Queues `work`, holding an expiring-activity assertion from now until it has run.
+    private static func perform(_ work: @escaping @Sendable (UNUserNotificationCenter) -> Void) {
+        let finished = DispatchSemaphore(value: 0)
+        ProcessInfo.processInfo.performExpiringActivity(withReason: "Update pending notifications") { expired in
+            // Called again with `expired` when the time is up; the work still runs on resume.
+            if !expired { finished.wait() }
         }
+        queue.async {
+            work(UNUserNotificationCenter.current())
+            finished.signal()
+        }
+    }
+
+    static func remove(_ identifiers: [String]) {
+        perform { $0.removePendingNotificationRequests(withIdentifiers: identifiers) }
     }
 
     static func removeAll() {
-        queue.async {
-            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        }
+        perform { $0.removeAllPendingNotificationRequests() }
     }
 
     static func add(_ request: UNNotificationRequest) {
-        queue.async {
-            UNUserNotificationCenter.current().add(request)
+        perform { $0.add(request) }
+    }
+
+    /// Builds the request when the queue reaches it, so a countdown trigger starts
+    /// when it is added, after any earlier, slower change. Returning nil adds nothing.
+    static func addWhenQueued(_ makeRequest: @escaping @Sendable () -> UNNotificationRequest?) {
+        perform { center in
+            if let request = makeRequest() { center.add(request) }
         }
     }
 
     /// Adds once every earlier change has been applied, and reports whether it worked.
     static func addAfterPendingChanges(_ request: UNNotificationRequest) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            queue.async {
-                UNUserNotificationCenter.current().add(request) { error in
+            perform { center in
+                center.add(request) { error in
                     if let error {
                         continuation.resume(throwing: error)
                     } else {
@@ -149,17 +166,24 @@ class NotificationManager {
         PendingNotificationRequests.remove(["fasting.goal"])
         guard enabled, let session, session.isActive else { return }
 
-        let interval = session.goalDate.timeIntervalSinceNow
-        guard interval > 1 else { return }
+        let goalDate = session.goalDate
+        guard goalDate.timeIntervalSinceNow > 1 else { return }
 
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Fasting Goal Reached")
         let goal = FastingDurationFormatter.goal(minutes: session.goalMinutes)
         content.body = String(localized: "You reached your \(goal) fasting goal. End the fast when you're ready.")
         content.sound = .default
+        let message = content.copy() as! UNNotificationContent
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
-        PendingNotificationRequests.add(UNNotificationRequest(identifier: "fasting.goal", content: content, trigger: trigger))
+        // The countdown is measured when the request is added, so a slow earlier
+        // change cannot push the reminder past the goal.
+        PendingNotificationRequests.addWhenQueued {
+            let interval = goalDate.timeIntervalSinceNow
+            guard interval > 1 else { return nil }
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            return UNNotificationRequest(identifier: "fasting.goal", content: message, trigger: trigger)
+        }
     }
 
     func cancelFastingGoal() {
