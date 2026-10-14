@@ -2,9 +2,11 @@
 
 The **iOS tests** GitHub Actions workflow builds the full Debug iOS app and runs
 both `calorietrackerTests` and `calorietrackerUITests` on an Apple Silicon runner.
-It runs for relevant pull requests and pushes to `main`, daily, and manually.
-It is separate from the existing tag-triggered store release workflows and does
-not archive, upload, or submit an app.
+It runs for relevant pull requests and pushes to `main`, daily, and manually, and
+the tag-triggered iOS Release workflow calls it so a release commit is tested
+before anything is archived. It never archives, uploads, or submits an app. A
+newer push to a pull request cancels that pull request's older run; runs on
+`main`, scheduled, manual and release runs are never cancelled.
 
 ## Run locally
 
@@ -25,9 +27,11 @@ are retained in a unique `TestResults` subdirectory; the command prints the
 GitHub uses stable Xcode 27.0 on the `xcode-27` ARM64 runner, caches pinned Swift packages,
 and checks out only the small workout image sample needed by tests. LiteRT-LM
 does not include an Intel simulator library. Tests run serially to avoid
-multiple UI simulators competing for runner resources. Failures fail the job;
-`.xcresult` bundles, XCTest screenshots, coverage, and build logs are retained
-as the `ios-test-results` artifact for seven days.
+multiple UI simulators competing for runner resources. Failures fail the job,
+and so does a test bundle that ran no tests even when `xcodebuild` succeeded
+(`scripts/ci/check_ios_test_counts.py` reads the result bundle); `.xcresult`
+bundles, XCTest screenshots, coverage, and build logs are retained as the
+`ios-test-results` artifact for seven days.
 
 Xcode 27 is required to compile the app's iOS 27 FoundationModels image APIs;
 a runtime availability check does not make those APIs compile with an older SDK.
