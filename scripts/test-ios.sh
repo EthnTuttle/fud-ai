@@ -48,6 +48,7 @@ print(subprocess.check_output(['xcrun', 'simctl', 'create', 'Fud AI CI',
 PY
 )"
 
+# shellcheck disable=SC2329 # invoked by the EXIT trap below
 cleanup() {
   # Only the simulator created by this invocation is removed.
   xcrun simctl shutdown "$simulator_id" >/dev/null 2>&1 || true
@@ -58,6 +59,7 @@ trap cleanup EXIT
 export TEST_RUNNER_FUDAI_TESTING=1
 export SIMCTL_CHILD_FUDAI_TESTING=1
 
+status=0
 xcodebuild test \
   -project ios/calorietracker.xcodeproj \
   -scheme calorietracker \
@@ -73,4 +75,16 @@ xcodebuild test \
   -maximum-concurrent-test-simulator-destinations 1 \
   -jobs 2 \
   CODE_SIGNING_ALLOWED=NO WORKOUT_VECTORS=sample \
-  2>&1 | tee "$results/xcodebuild.log"
+  2>&1 | tee "$results/xcodebuild.log" || status=$?
+
+# xcodebuild can succeed while a bundle runs nothing (for example after a scheme
+# or target change), so both bundles must have run at least one test.
+if [[ -d "$results/Tests.xcresult" ]]; then
+  python3 scripts/ci/check_ios_test_counts.py "$results/Tests.xcresult" \
+    calorietrackerTests calorietrackerUITests || status=1
+else
+  echo 'error: xcodebuild produced no result bundle' >&2
+  status=1
+fi
+echo "Results: $results/Tests.xcresult"
+exit "$status"

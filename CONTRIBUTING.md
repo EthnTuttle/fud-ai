@@ -139,11 +139,12 @@ The Quality checks workflow runs web tests, Android unit tests, Release lint and
 unsigned Release packaging, plus Android emulator instrumentation/UI tests on
 pushes, relevant pull requests and daily. The separate iOS tests workflow runs the full
 Debug simulator app, unit tests and key UI flows on relevant pushes and pull
-requests, daily, and on demand. Release workflows require Quality checks before
-creating their release artifacts/entries. App Store builds are archived, signed
-and uploaded by the iOS Release workflow on `ios-v*` tags (see
-[store/README.md](store/README.md)); before tagging, the maintainer must also
-confirm the iOS tests passed for the exact release commit. Resolve lint errors;
+requests, daily, and on demand; it fails if either test bundle runs no tests.
+Release workflows require Quality checks and their offline store-script tests
+before creating their release artifacts/entries, and the iOS Release workflow
+also runs the iOS tests on the tagged commit before it archives anything. App
+Store builds are archived, signed and uploaded by the iOS Release workflow on
+`ios-v*` tags (see [store/README.md](store/README.md)). Resolve lint errors;
 review warnings and document any accepted limitations before release. Security
 findings require explicit triage and remediation, not a blanket lint baseline.
 
@@ -153,8 +154,9 @@ iPhone release tags are `ios-vX.Y`. Android release tags are `android-vX.Y`. Bef
 [`RELEASE_NOTES.md`](RELEASE_NOTES.md). Summarize user-visible changes, upgrade
 impact and publicly known security fixes, including identifiers when available.
 Do not substitute raw commit logs for release notes. Keep App Store and Google
-Play copy aligned with this summary. The release workflows reject tags without
-an exact reviewed note section.
+Play copy aligned with this summary. A tag without a section still gets a GitHub
+Release with GitHub's generated notes; an empty or duplicated section fails the
+release before anything is built.
 
 ## Reporting Issues
 

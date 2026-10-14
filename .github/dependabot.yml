@@ -68,3 +68,25 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: "Scripts"
+
+  # Store release tooling (requirements-store.in → hash-locked requirements-store.txt),
+  # installed by the release jobs that hold the App Store Connect and Play credentials.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    groups:
+      store-tooling:
+        patterns: ["*"]
+    commit-message:
+      prefix: "Store"
+
+  # Not covered: the iOS app's Swift packages (RevenueCat, argmax, swift-argument-
+  # parser) are pinned by the Xcode project's Package.resolved. Dependabot's swift
+  # ecosystem needs a Package.swift that declares them (the only one,
+  # ios/Packages/LiteRTLM, has checksum-pinned binaries and no dependencies), and
+  # the dependency graph does not list that Package.resolved (checked 2026-10-14),
+  # so they get neither alerts nor version updates: review their releases by hand.

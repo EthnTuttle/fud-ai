@@ -53,6 +53,11 @@ app data is cached. The snapshot is saved only after start-up work (background
 compilation and pending broadcasts) finishes and the CPU is idle, and each run
 waits for that again before testing. Otherwise Google Play services' start-up burst
 starves System UI, and its "isn't responding" dialog takes focus from the app.
+The cache is written right after the snapshot is created, before any app is
+installed, and only by `main` runs (pull requests reuse it). Its key names the
+emulator and system-image versions the run installs, the runner image, the
+emulator settings and the settle script, so an update creates a fresh snapshot
+instead of a run silently cold-booting.
 
 Gradle's build and configuration caches are on. Unit test results are never taken
 from the build cache (the tests read repository files that are not task inputs),

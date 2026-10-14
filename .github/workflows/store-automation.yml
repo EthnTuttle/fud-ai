@@ -3,11 +3,16 @@
 #
 # Live paths stay behind repository variables documented in store/README.md
 # and store/gates.env.example (all default OFF).
+#
+# Pull requests are checked by pull_request; push covers main only, so a PR
+# branch is not dry-run twice. A newer push to a pull request cancels its older
+# run; main and manual runs are never cancelled.
 
 name: Store automation (dry-run)
 
 on:
   push:
+    branches: [main]
     paths:
       - "store/**"
       - "scripts/store/**"
@@ -36,6 +41,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: store-automation-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   dry-run:
     runs-on: ubuntu-latest
@@ -44,6 +53,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout-cone-mode: false
+          # Only what the store scripts and their tests read (plus the marketing
+          # screenshots for the staging dry-run); never the 1.2 GB workout corpus.
+          sparse-checkout: |
+            /scripts/store/
+            /scripts/release_notes.py
+            /store/
+            /APPSTORE.md
+            /PLAYSTORE.md
+            /requirements-store.txt
+            /ios/calorietracker.xcodeproj/project.pbxproj
+            /android/app/build.gradle.kts
+            /web/assets/screenshots/
+
+      # The same pinned Python the release jobs run the store scripts on.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
 
       - name: Print gates (must stay safe by default)
         env:
@@ -64,10 +91,10 @@ jobs:
           IOS_PUBLIC_RELEASE: ${{ vars.IOS_PUBLIC_RELEASE }}
         run: python3 scripts/store/print_gates.py --platform all
 
-      - name: Test iOS release switches, build wait and build selection (offline)
+      - name: Test iOS release switches, build wait, build selection and redaction (offline)
         run: python3 -m unittest scripts/store/test_ios_release.py
 
-      - name: Test Android release switches, artifact checks and track read-back (offline)
+      - name: Test Android release switches, artifact checks, Play checks and signing files (offline)
         run: python3 -m unittest scripts/store/test_android_release.py
 
       - name: Validate IAP / subscription / tip catalog
@@ -105,6 +132,13 @@ jobs:
         env:
           STORE_SYNC_REVENUECAT: "false"
         run: python3 scripts/store/sync_revenuecat_catalog.py
+
+      # Release jobs install this hash-locked set before touching a store, so a
+      # broken pin (e.g. a Dependabot bump) fails here instead of in a release.
+      - name: Install and import the store tooling (no store calls)
+        run: |
+          python3 -m pip install --disable-pip-version-check --require-hashes -r requirements-store.txt
+          python3 -c "import jwt, googleapiclient.discovery, google.oauth2.service_account, PIL.Image; print('store tooling imports OK')"
 
       - name: Upload prepared artifacts (inspection only)
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

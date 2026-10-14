@@ -3,14 +3,26 @@
 
 Subcommands (`gates` also writes key=value lines to $GITHUB_OUTPUT when it is set):
 
-  gates         Validate the ANDROID_* repository variables and resolve what this
-                run may do. Missing values mean off; invalid values fail. A tag
-                run needs android-v<versionName>; a manual run only validates.
-  verify        Before anything leaves the runner, check the built AAB and APK:
-                package name, versionName/versionCode from build.gradle.kts, and
-                that both are signed only by the upload key.
-  check-tracks  After a Play upload, read every selected track back and confirm
-                it carries this versionCode as a completed release. Never edits.
+  gates           Validate the ANDROID_* repository variables and resolve what this
+                  run may do. Missing values mean off; invalid values fail. A tag
+                  run needs android-v<versionName>; a manual run only validates.
+  github-preflight
+                  Read-only: this versionCode must be higher than that of every
+                  earlier android-v* GitHub Release (from their titles), so the
+                  published APK installs over them.
+  play-preflight  Read-only: compare this versionCode with everything Google Play
+                  already has. New (higher than every uploaded versionCode): the
+                  upload goes ahead. Already completed on every selected track (a
+                  re-run after an earlier attempt reached Play): the upload is
+                  skipped. Anything else fails before the build or upload.
+  write-signing-properties
+                  Write the Gradle keystore.properties for the upload key under
+                  $RUNNER_TEMP (mode 600, Java properties escaping).
+  verify          Before anything leaves the runner, check the built AAB and APK:
+                  package name, versionName/versionCode from build.gradle.kts, and
+                  that both are signed only by the pinned upload certificate.
+  check-tracks    After a Play upload, read every selected track back and confirm
+                  it carries this versionCode as a completed release. Never edits.
 
 See store/README.md for what each switch controls.
 """
@@ -49,6 +61,13 @@ OPERATION_SWITCHES = (
 # Switch key -> Google Play track id. Closed testing is Play's default "alpha" track.
 PLAY_TRACKS = (("internal", "internal"), ("closed", "alpha"), ("production", "production"))
 TRACK_LABELS = {"internal": "internal testing", "alpha": "closed testing", "production": "production"}
+
+# SHA-256 of the Play upload certificate (alias fudai in fudai-release.jks). Every
+# release since 1.0.0 is signed with it. `verify` fails when the keystore in the
+# ANDROID_KEYSTORE_BASE64 secret holds any other certificate, so a swapped secret
+# can never sign or publish an APK. Change it only deliberately, after a Play
+# upload-key reset (see store/README.md).
+UPLOAD_CERT_SHA256 = "35d739f426248c3c04f344ffaaf972dabc67b9aaa64f49143ef8f3f4b1f704e0"
 
 ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
 PEM_CERT = re.compile(
@@ -244,6 +263,17 @@ def check_identity(
         )
 
 
+def check_upload_certificate(found: str, expected: str) -> None:
+    """The keystore's certificate must be the pinned upload certificate."""
+    if not re.fullmatch(r"[0-9a-f]{64}", expected or ""):
+        raise ReleaseError(f"pinned upload certificate {expected!r} is not a SHA-256 hex digest")
+    if found != expected:
+        raise ReleaseError(
+            f"the keystore's upload certificate is {found}, not the pinned {expected}; "
+            "check ANDROID_KEYSTORE_BASE64 (update UPLOAD_CERT_SHA256 only after a Play upload-key reset)"
+        )
+
+
 def check_signers(kind: str, found: set[str], *, upload_cert: str) -> None:
     if not found:
         raise ReleaseError(f"{kind} is not signed")
@@ -291,6 +321,7 @@ def cmd_verify(args: argparse.Namespace) -> None:
         raise ReleaseError(f"expected one upload certificate in the keystore, found {len(upload_certs)}")
     upload_cert = upload_certs.pop()
     print(f"upload certificate SHA-256: {upload_cert}")
+    check_upload_certificate(upload_cert, args.expected_cert)
 
     badging = run([build_tool("aapt2"), "dump", "badging", str(args.apk)])
     check_identity("APK", badging_identity(badging.stdout), **identity)
@@ -311,7 +342,10 @@ def cmd_verify(args: argparse.Namespace) -> None:
     printed = run(["keytool", "-printcert", "-rfc", "-jarfile", str(args.aab)])
     check_signers("AAB", pem_fingerprints(printed.stdout), upload_cert=upload_cert)
 
-    print(f"verified AAB and APK: {args.package} {version_name} ({version_code}), signed by the upload key")
+    print(
+        f"verified AAB and APK: {args.package} {version_name} ({version_code}), "
+        "signed only by the pinned upload key"
+    )
 
 
 # --- Play read-back ----------------------------------------------------------
@@ -345,35 +379,262 @@ def check_tracks(fetch_track, tracks: list[str], version_code: int) -> list[str]
     return messages
 
 
-def cmd_check_tracks(args: argparse.Namespace) -> None:
-    tracks = [t for t in args.tracks.split(",") if t]
+def parse_tracks(raw: str) -> list[str]:
+    """The selected Play track ids. Empty, unknown or repeated ids are refused: the
+    pinned upload action falls back to production when it gets no track."""
+    tracks = [t for t in (raw or "").split(",") if t]
     if not tracks:
-        raise ReleaseError("no Play tracks to check")
+        raise ReleaseError("no Play track selected; refusing to call Play (it would default to production)")
     unknown = [t for t in tracks if t not in TRACK_LABELS]
     if unknown:
         raise ReleaseError(f"unexpected Play track(s): {', '.join(unknown)}")
-    _, version_code = gradle_version(GRADLE.read_text(encoding="utf-8"))
+    if len(set(tracks)) != len(tracks):
+        raise ReleaseError(f"Play track listed twice: {raw}")
+    return tracks
 
+
+def play_publisher() -> Any:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import play_listing  # noqa: PLC0415 - keeps `gates` free of Google API deps
 
     raw = os.environ.get("PLAY_SERVICE_ACCOUNT_JSON", "").strip()
     if not raw:
         raise ReleaseError("PLAY_SERVICE_ACCOUNT_JSON is not set")
-    service = play_listing.build_android_publisher(json.loads(raw))
+    return play_listing.build_android_publisher(json.loads(raw))
+
+
+def read_play_state(service: Any, reader) -> Any:
+    """Run reader(edits, edit_id) in a throwaway edit that is deleted, never committed."""
     edits = service.edits()
-    # A throwaway edit only reads the committed state; it is deleted, never committed.
     edit_id = edits.insert(packageName=PACKAGE_NAME, body={}).execute()["id"]
     try:
-        messages = check_tracks(
+        return reader(edits, edit_id)
+    finally:
+        edits.delete(packageName=PACKAGE_NAME, editId=edit_id).execute()
+
+
+def cmd_check_tracks(args: argparse.Namespace) -> None:
+    tracks = parse_tracks(args.tracks)
+    _, version_code = gradle_version(GRADLE.read_text(encoding="utf-8"))
+
+    def reader(edits, edit_id):
+        return check_tracks(
             lambda track: edits.tracks().get(packageName=PACKAGE_NAME, editId=edit_id, track=track).execute(),
             tracks,
             version_code,
         )
-    finally:
-        edits.delete(packageName=PACKAGE_NAME, editId=edit_id).execute()
-    for message in messages:
+
+    for message in read_play_state(play_publisher(), reader):
         print(message)
+
+
+# --- Play versionCode preflight ----------------------------------------------
+
+UPLOAD_STEP_PREFIX = "Upload to Play"
+RELEASE_JOB = "release"
+
+
+def known_version_codes(bundles: dict, apks: dict, tracks: dict) -> set[int]:
+    """Every versionCode Google Play has: uploaded bundles and APKs and track releases."""
+    codes: set[int] = set()
+    for item in (bundles or {}).get("bundles") or []:
+        codes.add(int(item["versionCode"]))
+    for item in (apks or {}).get("apks") or []:
+        codes.add(int(item["versionCode"]))
+    for track in (tracks or {}).get("tracks") or []:
+        for release in track.get("releases") or []:
+            codes.update(int(code) for code in release.get("versionCodes") or [])
+    return codes
+
+
+def play_upload_decision(
+    version_code: int,
+    *,
+    known_codes: set[int],
+    tracks: dict[str, dict],
+    selected: list[str],
+    earlier_upload_attempt: int | None,
+) -> str:
+    """'upload' when version_code is new to Google Play; 'skip' when an earlier
+    attempt of this same workflow run already uploaded it and every selected track
+    carries it as a completed release (a re-run after a later step failed).
+    Anything else raises: Play rejects a versionCode it has seen, and an older
+    release's versionCode must never be relabelled as this release.
+    """
+    highest = max(known_codes, default=0)
+    if version_code > highest:
+        return "upload"
+    if version_code in known_codes and earlier_upload_attempt is not None:
+        missing = [
+            track for track in selected
+            if track_release_state(tracks.get(track) or {}, version_code) != "completed"
+        ]
+        if not missing:
+            return "skip"
+        raise ReleaseError(
+            f"attempt {earlier_upload_attempt} of this run uploaded versionCode {version_code}, but Play "
+            f"does not carry it as a completed release on {', '.join(missing)}; finish that release in "
+            "Play Console, or bump versionCode and tag again"
+        )
+    raise ReleaseError(
+        f"versionCode {version_code} is not new to Google Play (highest versionCode already uploaded: "
+        f"{highest}); bump versionCode in android/app/build.gradle.kts before tagging"
+    )
+
+
+def earlier_upload_attempt(fetch_jobs, run_attempt: int) -> int | None:
+    """The latest earlier attempt of this workflow run whose release job finished the
+    Play upload step, if any. fetch_jobs(attempt) returns that attempt's jobs."""
+    for attempt in range(run_attempt - 1, 0, -1):
+        for job in fetch_jobs(attempt):
+            if job.get("name") != RELEASE_JOB:
+                continue
+            for step in job.get("steps") or []:
+                if (step.get("name") or "").startswith(UPLOAD_STEP_PREFIX) and step.get("conclusion") == "success":
+                    return attempt
+    return None
+
+
+def github_attempt_jobs(attempt: int) -> list[dict[str, Any]]:
+    """Jobs of one attempt of the current workflow run (GitHub Actions REST API)."""
+    import urllib.request  # noqa: PLC0415
+
+    api = os.environ.get("GITHUB_API_URL", "https://api.github.com")
+    repo = os.environ["GITHUB_REPOSITORY"]
+    run_id = os.environ["GITHUB_RUN_ID"]
+    token = os.environ.get("GITHUB_TOKEN", "")
+    request = urllib.request.Request(
+        f"{api}/repos/{repo}/actions/runs/{run_id}/attempts/{attempt}/jobs?per_page=100",
+        headers={"Accept": "application/vnd.github+json", **({"Authorization": f"Bearer {token}"} if token else {})},
+    )
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.loads(response.read().decode("utf-8")).get("jobs") or []
+
+
+def cmd_play_preflight(args: argparse.Namespace) -> None:
+    selected = parse_tracks(args.tracks)
+    version_name, version_code = gradle_version(GRADLE.read_text(encoding="utf-8"))
+    run_attempt = int(os.environ.get("GITHUB_RUN_ATTEMPT", "1") or "1")
+    earlier = earlier_upload_attempt(github_attempt_jobs, run_attempt) if run_attempt > 1 else None
+
+    def reader(edits, edit_id):
+        bundles = edits.bundles().list(packageName=PACKAGE_NAME, editId=edit_id).execute()
+        apks = edits.apks().list(packageName=PACKAGE_NAME, editId=edit_id).execute()
+        tracks = edits.tracks().list(packageName=PACKAGE_NAME, editId=edit_id).execute()
+        return bundles, apks, tracks
+
+    bundles, apks, tracks = read_play_state(play_publisher(), reader)
+    known = known_version_codes(bundles, apks, tracks)
+    by_track = {track.get("track"): track for track in tracks.get("tracks") or []}
+    decision = play_upload_decision(
+        version_code,
+        known_codes=known,
+        tracks=by_track,
+        selected=selected,
+        earlier_upload_attempt=earlier,
+    )
+    if decision == "upload":
+        print(
+            f"versionCode {version_code} ({version_name}) is new to Google Play "
+            f"(highest so far: {max(known, default=0)}); it can be uploaded to {', '.join(selected)}"
+        )
+    else:
+        print(
+            f"versionCode {version_code} ({version_name}) was uploaded by attempt {earlier} of this run and "
+            f"is already completed on {', '.join(selected)}; the Play upload is skipped"
+        )
+    write_outputs({"play_upload_needed": decision == "upload"})
+
+
+# --- GitHub Releases versionCode preflight -----------------------------------
+
+RELEASE_VERSION_CODE = re.compile(r"\(versionCode ([0-9]+)\)")
+
+
+def released_version_codes(releases: list[dict[str, Any]], current_tag: str) -> dict[int, str]:
+    """versionCode -> tag for every other android-v* GitHub Release, read from titles
+    such as "Android 7.2 (versionCode 42)". Releases without one in the title are skipped."""
+    codes: dict[int, str] = {}
+    for release in releases:
+        tag = release.get("tagName") or ""
+        if not tag.startswith(TAG_PREFIX) or tag == current_tag:
+            continue
+        match = RELEASE_VERSION_CODE.search(release.get("name") or "")
+        if match:
+            codes.setdefault(int(match.group(1)), tag)
+    return codes
+
+
+def check_new_on_github(version_code: int, codes: dict[int, str]) -> None:
+    """The GitHub Release APK must be installable over every earlier one."""
+    if not codes:
+        return
+    highest = max(codes)
+    if version_code <= highest:
+        raise ReleaseError(
+            f"versionCode {version_code} is not higher than versionCode {highest} of the "
+            f"{codes[highest]} GitHub Release; bump versionCode in android/app/build.gradle.kts "
+            "before tagging (sideloaded installs could not update otherwise)"
+        )
+
+
+def cmd_github_preflight(args: argparse.Namespace) -> None:
+    version_name, version_code = gradle_version(GRADLE.read_text(encoding="utf-8"))
+    releases = json.loads(args.releases.read_text(encoding="utf-8"))
+    codes = released_version_codes(releases, os.environ.get("GITHUB_REF_NAME", ""))
+    check_new_on_github(version_code, codes)
+    print(
+        f"versionCode {version_code} ({version_name}) is higher than every earlier Android "
+        f"GitHub Release (highest: {max(codes, default=0)})"
+    )
+
+
+# --- signing properties ------------------------------------------------------
+
+
+def java_properties_escape(value: str) -> str:
+    """Escape a value the way java.util.Properties.store() does, so load() reads it back
+    exactly (backslashes, a leading space, control and non-ASCII characters)."""
+    out: list[str] = []
+    for index, char in enumerate(value):
+        code = ord(char)
+        if char == " ":
+            out.append("\\ " if index == 0 else " ")
+        elif char in "\t\n\r\f":
+            out.append({"\t": "\\t", "\n": "\\n", "\r": "\\r", "\f": "\\f"}[char])
+        elif char in "\\=:#!":
+            out.append("\\" + char)
+        elif code < 0x20 or code > 0x7E:
+            units = char.encode("utf-16-be")
+            out.extend(f"\\u{units[i] << 8 | units[i + 1]:04X}" for i in range(0, len(units), 2))
+        else:
+            out.append(char)
+    return "".join(out)
+
+
+SIGNING_SECRETS = (
+    ("storePassword", "ANDROID_KEYSTORE_PASSWORD"),
+    ("keyAlias", "ANDROID_KEY_ALIAS"),
+    ("keyPassword", "ANDROID_KEY_PASSWORD"),
+)
+
+
+def signing_properties(keystore: Path, env: Mapping[str, str]) -> str:
+    missing = [name for _, name in SIGNING_SECRETS if not env.get(name)]
+    if missing:
+        raise ReleaseError(f"missing signing secret(s): {', '.join(missing)}")
+    lines = [f"storeFile={java_properties_escape(str(keystore))}"]
+    lines += [f"{key}={java_properties_escape(env[name])}" for key, name in SIGNING_SECRETS]
+    return "\n".join(lines) + "\n"
+
+
+def cmd_write_signing_properties(args: argparse.Namespace) -> None:
+    text = signing_properties(args.keystore, os.environ)
+    fd = os.open(args.out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="ascii") as handle:
+        handle.write(text)
+    os.chmod(args.out, 0o600)
+    print(f"wrote signing properties (mode 600) to {args.out}")
 
 
 def cmd_gates(_: argparse.Namespace) -> None:
@@ -404,10 +665,26 @@ def main(argv: list[str] | None = None) -> None:
     verify.add_argument("--alias", required=True)
     verify.add_argument("--bundletool", required=True, type=Path)
     verify.add_argument("--package", default=PACKAGE_NAME)
+    verify.add_argument(
+        "--expected-cert", default=UPLOAD_CERT_SHA256, help="pinned upload certificate SHA-256"
+    )
     verify.set_defaults(func=cmd_verify)
     tracks = sub.add_parser("check-tracks")
     tracks.add_argument("--tracks", required=True, help="comma-separated Play track ids")
     tracks.set_defaults(func=cmd_check_tracks)
+    preflight = sub.add_parser("play-preflight")
+    preflight.add_argument("--tracks", required=True, help="comma-separated Play track ids")
+    preflight.set_defaults(func=cmd_play_preflight)
+    github = sub.add_parser("github-preflight")
+    github.add_argument(
+        "--releases", required=True, type=Path,
+        help="JSON from `gh release list --json tagName,name`",
+    )
+    github.set_defaults(func=cmd_github_preflight)
+    signing = sub.add_parser("write-signing-properties")
+    signing.add_argument("--keystore", required=True, type=Path)
+    signing.add_argument("--out", required=True, type=Path)
+    signing.set_defaults(func=cmd_write_signing_properties)
     args = parser.parse_args(argv)
     try:
         args.func(args)

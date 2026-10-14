@@ -4,13 +4,16 @@
 Subcommands (all print to stdout; `gates`/`build-number`/`wait-build` also write
 key=value lines to $GITHUB_OUTPUT when it is set):
 
-  gates         Validate the IOS_* repository variables and resolve what this
-                run may do. Missing values mean off; invalid values fail.
-  build-number  Next CFBundleVersion: max(project value, highest ASC build + 1).
-  wait-build    Poll App Store Connect until the build uploaded by THIS run is
-                processed (VALID, unexpired, matching app/version/build number).
-                Fails on timeout, processing failure, ambiguity or mismatch and
-                never falls back to another build.
+  gates              Validate the IOS_* repository variables and resolve what this
+                     run may do. Missing values mean off; invalid values fail.
+  build-number       Next CFBundleVersion: max(project value, highest ASC build + 1).
+  version-preflight  Read-only, before anything is built: the App Store version
+                     exists and is in a state the store step can edit/submit.
+  wait-build         Poll App Store Connect until the build uploaded by THIS run is
+                     processed (VALID, unexpired, matching app/version/build number,
+                     uploaded during this run). Fails on timeout, processing
+                     failure, ambiguity or mismatch and never falls back to
+                     another build.
 
 See store/README.md for what each switch controls.
 """
@@ -226,7 +229,18 @@ def evaluate_builds(
     build = matches[0]
     attrs = build.get("attributes") or {}
     uploaded = attrs.get("uploadedDate")
-    if uploaded and parse_asc_date(uploaded) < uploaded_after - UPLOAD_CLOCK_SKEW_SECONDS:
+    # Fail closed: without an upload time the build cannot be proven to be this
+    # run's upload, so it is never treated as ready (the wait times out instead).
+    if not uploaded:
+        return BuildState.WAITING, "App Store Connect has not reported the upload time yet", None
+    try:
+        uploaded_at = parse_asc_date(uploaded)
+    except (AttributeError, TypeError, ValueError):
+        raise ReleaseError(
+            f"build {build_number} has an unreadable uploadedDate {uploaded!r}; "
+            "refusing to use a build that cannot be matched to this run's upload"
+        ) from None
+    if uploaded_at < uploaded_after - UPLOAD_CLOCK_SKEW_SECONDS:
         raise ReleaseError(
             f"build {build_number} was uploaded at {uploaded}, before this run's upload; "
             "refusing to use an older build"
@@ -392,6 +406,62 @@ def cmd_build_number(_: argparse.Namespace) -> None:
     write_outputs({"build_number": number})
 
 
+def version_preflight(
+    client: Any,
+    asc: Any,
+    *,
+    version: str,
+    metadata: bool,
+    submit: bool,
+    locale: str = "en-US",
+) -> str:
+    """Read-only: fail before anything is built when the App Store version cannot
+    take this release. Returns the version's state.
+
+    asc_release.py never creates App Store versions; the X.Y version must already
+    exist in App Store Connect (Prepare for Submission). Text can still be edited
+    and submitted in READY_FOR_REVIEW (a draft submission left by an earlier
+    attempt); any other state (waiting for or in review, released) cannot take a
+    new build or listing change.
+    """
+    app_id = asc.find_app(client, BUNDLE_ID)
+    record = asc.get_ios_app_store_version(client, app_id, version)
+    state = (record.get("attributes") or {}).get("appStoreState") or ""
+    allowed = asc.SUBMITTABLE_VERSION_STATES
+    if state not in allowed:
+        raise ReleaseError(
+            f"App Store version {version} is {state or 'in an unknown state'}; a release can only "
+            f"edit or submit a version in {', '.join(sorted(allowed))}. Create the next version in "
+            "App Store Connect (Prepare for Submission), or turn the listing/What's New/screenshot/"
+            "review switches off for this tag"
+        )
+    if metadata:
+        # Fails with a clear message when the locale the listing step edits is missing.
+        asc.localization_for_locale(
+            client, f"/appStoreVersions/{record['id']}/appStoreVersionLocalizations", locale
+        )
+    return state
+
+
+def cmd_version_preflight(args: argparse.Namespace) -> None:
+    listing = parse_switch("UPLOAD_LISTING", os.environ.get("UPLOAD_LISTING"))
+    whats_new = parse_switch("UPLOAD_WHATS_NEW", os.environ.get("UPLOAD_WHATS_NEW"))
+    screenshots = parse_switch("UPLOAD_SCREENSHOTS", os.environ.get("UPLOAD_SCREENSHOTS"))
+    submit = parse_switch("SUBMIT_IOS_REVIEW", os.environ.get("SUBMIT_IOS_REVIEW"))
+    if not (listing or whats_new or screenshots or submit):
+        print("no App Store Connect switch is on; the App Store version is not needed")
+        return
+    asc_release, client = asc_client()
+    state = version_preflight(
+        client,
+        asc_release,
+        version=args.version,
+        metadata=listing or whats_new or screenshots,
+        submit=submit,
+    )
+    print(f"App Store version {args.version} exists and is {state}: it can take this release")
+
+
 def cmd_wait_build(args: argparse.Namespace) -> None:
     asc_release, client = asc_client()
     # The budget covers upload + processing, so it is counted from upload start.
@@ -423,6 +493,9 @@ def main(argv: list[str] | None = None) -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("gates").set_defaults(func=cmd_gates)
     sub.add_parser("build-number").set_defaults(func=cmd_build_number)
+    preflight = sub.add_parser("version-preflight")
+    preflight.add_argument("--version", required=True, help="marketing version, e.g. 7.2")
+    preflight.set_defaults(func=cmd_version_preflight)
     wait = sub.add_parser("wait-build")
     wait.add_argument("--version", required=True)
     wait.add_argument("--build", required=True, type=int)
