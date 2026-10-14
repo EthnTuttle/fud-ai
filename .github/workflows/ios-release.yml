@@ -32,9 +32,10 @@
 #       Admin-role key: build numbers, cloud-managed distribution signing,
 #       upload, build readiness, listing and review.
 #   IOS_DEV_SIGNING_P12_BASE64 / IOS_DEV_SIGNING_P12_PASSWORD
-#       Dedicated CI Apple Development identity ("Apple Development: Created via
-#       API", certificate 7H3T2H8USS, expires 2027-10-13) used only to sign the
-#       archive; distribution signing at export is cloud-managed by Apple.
+#       CI Apple Development identity ("Apple Development: Created via API",
+#       certificate NVNGDQGCKK, expires 2027-10-14) used only to sign the
+#       archive; distribution signing at export is cloud-managed by Apple. The
+#       same identity is shared by the owner's other app repositories.
 
 name: iOS Release
 
