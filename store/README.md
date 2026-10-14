@@ -183,18 +183,26 @@ GitHub:
    and whose workflows don't run on other branches, push the workflow below with
    `<key>` filled in. It prints only the sealed ciphertext, which only GitHub can
    decrypt for the target repository.
-3. Store each sealed value in the target (`<run id>` is the temporary run):
+3. Store each sealed value in the target (`<run id>` is the finished temporary
+   run). This stops on the first error and refuses anything but exactly two
+   sealed values:
 
    ```sh
-   gh run view <run id> -R <owner>/<source repo> --log \
-     | grep -oE 'SEALED [A-Z0-9_]+ [A-Za-z0-9+/=]+' \
-     | while read -r _ name value; do
-         gh api -X PUT "repos/<owner>/<repo>/actions/secrets/$name" \
-           -f encrypted_value="$value" -f key_id="<key_id>" --silent
-       done
+   (
+     set -euo pipefail
+     sealed=$(gh run view <run id> -R <owner>/<source repo> --log \
+       | grep -oE 'SEALED [A-Z0-9_]+ [A-Za-z0-9+/=]+')
+     [ "$(printf '%s\n' "$sealed" | grep -c '^SEALED ')" -eq 2 ] \
+       || { echo "expected 2 sealed values" >&2; exit 1; }
+     while read -r _ name value; do
+       gh api -X PUT "repos/<owner>/<repo>/actions/secrets/$name" \
+         -f encrypted_value="$value" -f key_id="<key_id>" --silent
+     done <<< "$sealed"
+   )
    ```
 
-4. Delete the temporary branch and its run
+4. Once `gh secret list -R <owner>/<repo>` shows both `IOS_DEV_SIGNING_*`
+   secrets with today's date, delete the temporary branch and its run
    (`gh api -X DELETE repos/<owner>/<source repo>/git/refs/heads/<branch>`,
    `gh run delete <run id> -R <owner>/<source repo>`).
 
