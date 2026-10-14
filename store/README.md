@@ -173,6 +173,23 @@ secrets. When it expires or is revoked, revoke it first (App Store Connect API,
 and replace both `IOS_DEV_SIGNING_*` secrets in Fud AI and in every repository
 listed above.
 
+To give another app repository this identity, don't rotate it. Copy both
+`IOS_DEV_SIGNING_*` secrets on GitHub's side, so the private key never leaves
+GitHub:
+
+1. Read the target repository's Actions public key:
+   `gh api repos/<owner>/<repo>/actions/secrets/public-key` (`key` and `key_id`).
+2. Push a temporary branch to a private repository that already has the secrets
+   and whose workflows don't run on other branches. Its push-triggered workflow
+   seals both secrets with that public key (PyNaCl `SealedBox`) and prints only
+   the ciphertext.
+3. Store each value in the target with
+   `gh api -X PUT repos/<owner>/<repo>/actions/secrets/<NAME> -f encrypted_value=… -f key_id=…`.
+4. Delete the temporary branch and its workflow run.
+
+Then add the three `APP_STORE_CONNECT_*` secrets, add the repository to the list
+above, and run a validation dispatch.
+
 Later for catalog automation:
 
 | Secret | Used for |
