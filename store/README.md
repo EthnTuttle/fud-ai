@@ -17,15 +17,23 @@ Play tracks you switch on.
 ios-vX.Y tag ─► quality checks ─► resolve switches (tag must equal MARKETING_VERSION)
   └─ IOS_RELEASE_AUTOMATION off ─► GitHub Release only
   └─ on:
+       IOS_UPLOAD_WHATS_NEW ─► check APPSTORE.md What's New (before anything is built)
        IOS_UPLOAD_BUILD ─► next build number from App Store Connect
                         ─► archive Release ─► verify app id/version/build in every bundle
                         ─► cloud-signed export + upload
-                        ─► wait until THIS build is VALID (poll 30 s, up to 120 min from upload start)
+                        ─► wait-for-build job: until THIS build is VALID
+                           (poll 30 s, up to 120 min from upload start)
        IOS_UPLOAD_LISTING / IOS_UPLOAD_WHATS_NEW / IOS_UPLOAD_SCREENSHOTS ─► version metadata
        IOS_SUBMIT_REVIEW ─► select this run's build, read it back, set release type
                          ─► recheck build + selection ─► submit version and IAPs/subscriptions
-  └─ GitHub Release (only if every enabled step succeeded)
+  └─ GitHub Release, marked Latest (only if every enabled step succeeded)
 ```
+
+Waiting for the build is its own `wait-for-build` job, which outputs the
+processed build's ID to the `app-store-connect` job. If a listing, screenshot or
+review step fails, **Re-run failed jobs** reuses that build ID instead of
+waiting again; a second wait would always time out, because the wait budget
+counts from the original upload.
 
 A manual **Run workflow** (`workflow_dispatch`) is a validation run: it archives,
 signs, exports and validates the IPA with App Store Connect, and never uploads,
@@ -45,11 +53,14 @@ build is never substituted.
 android-vX.Y tag ─► resolve switches (tag must equal versionName)
   └─ ANDROID_RELEASE_AUTOMATION off ─► nothing is built or released
   └─ on:
-       quality checks ─► build signed AAB + APK
+       ANDROID_UPLOAD_WHATS_NEW (with a track) ─► check PLAYSTORE.md What's New
+       quality checks ─► check the keystore secrets are set
+                      ─► build signed AAB + APK
                       ─► verify package, versionName/versionCode, upload-key signature
                       ─► Sigstore signatures + build provenance
        ANDROID_UPLOAD_LISTING / ANDROID_UPLOAD_SCREENSHOTS ─► Play listing
-       GitHub Release (AAB + APK)
+       GitHub Release (AAB + APK): Latest with ANDROID_PRODUCTION_ROLLOUT,
+                                   otherwise a pre-release (iOS stays Latest)
        ANDROID_INTERNAL_TESTING / ANDROID_CLOSED_TESTING / ANDROID_PRODUCTION_ROLLOUT
                       ─► one Play upload to every selected track (+ What's New if on)
                       ─► read each track back: this versionCode, status completed
@@ -57,7 +68,8 @@ android-vX.Y tag ─► resolve switches (tag must equal versionName)
 
 A manual **Run workflow** (`workflow_dispatch`) is a validation run: it builds
 the signed AAB and APK and verifies them, and never uploads, signs with Sigstore
-or creates a GitHub Release.
+or creates a GitHub Release. Both validation and tag runs stop with the names of
+any missing `ANDROID_KEYSTORE_*` / `ANDROID_KEY_*` secrets before Gradle runs.
 
 Each track switch is independent: testing tracks never imply production, and
 production never falls back to a testing track. A completed Play release can
@@ -67,6 +79,27 @@ still go through Google's review before testers or users get it.
 Connect. Xcode Cloud triggers live in App Store Connect, not in this repo, so a
 GitHub switch cannot stop them; never re-create an `ios-v*` Xcode Cloud workflow
 or both pipelines will upload a build for the same tag.
+
+## Release notes and What's New
+
+The tag's `## ios-vX.Y` / `## android-vX.Y` section in `RELEASE_NOTES.md` becomes
+the GitHub Release body. A tag without a section still gets a GitHub Release,
+with GitHub's generated notes; an empty section fails the run.
+
+Store What's New comes from the What's New block in `APPSTORE.md` (iOS) and
+`PLAYSTORE.md` (Play), not from `RELEASE_NOTES.md`. It is read only when
+`IOS_UPLOAD_WHATS_NEW` / `ANDROID_UPLOAD_WHATS_NEW` is on, and then checked before
+anything is built: iOS needs non-empty text of at most 4,000 characters; Play
+needs `<locale>` blocks of at most 500 characters each, including `<en-US>`
+(the only one uploaded). With the switch off, missing or unfit What's New text
+never blocks a release.
+
+## Concurrency
+
+Tag runs of each workflow share one concurrency group with `queue: max`, so
+releases run one at a time and every waiting tag run stays queued (by default a
+third run would cancel the pending one). Manual validation runs each get their
+own group and never wait for, or cancel, a release run.
 
 ## Switches
 
@@ -81,7 +114,7 @@ run, even when the platform's master switch is off.
 | `IOS_RELEASE_AUTOMATION` | Master switch. When off, every iOS store operation below is skipped |
 | `IOS_UPLOAD_BUILD` | Build, sign and upload the binary to App Store Connect, then wait for processing |
 | `IOS_UPLOAD_LISTING` | Description, keywords, promotional text, marketing/support URLs |
-| `IOS_UPLOAD_WHATS_NEW` | What's New text |
+| `IOS_UPLOAD_WHATS_NEW` | What's New text from `APPSTORE.md`, checked before the build. Off: never read |
 | `IOS_UPLOAD_SCREENSHOTS` | 6.7" screenshots (see below) |
 | `IOS_SUBMIT_REVIEW` | Select this run's build and submit the version **and** Ready-to-Submit IAPs / subscriptions for review. Requires `IOS_UPLOAD_BUILD` |
 | `IOS_PUBLIC_RELEASE` | Release automatically after approval. Off = manual release. Requires `IOS_SUBMIT_REVIEW` |
@@ -94,11 +127,11 @@ run, even when the platform's master switch is off.
 |----------|-------------|
 | `ANDROID_RELEASE_AUTOMATION` | Master switch. On: the tag builds and verifies the signed AAB/APK and creates the GitHub Release. Off: the tag builds and releases nothing, and every switch below is ignored |
 | `ANDROID_UPLOAD_LISTING` | Play title, short and full description |
-| `ANDROID_UPLOAD_WHATS_NEW` | English What's New on this run's Play release. Needs a track below; skipped with a note otherwise |
+| `ANDROID_UPLOAD_WHATS_NEW` | English What's New from `PLAYSTORE.md` on this run's Play release, checked before the build. Needs a track below; skipped with a note otherwise. Off: never read |
 | `ANDROID_UPLOAD_SCREENSHOTS` | Play phone screenshots (see below) |
 | `ANDROID_INTERNAL_TESTING` | Upload this build to Play **internal testing** |
 | `ANDROID_CLOSED_TESTING` | Upload this build to Play **closed testing** (the `alpha` track) |
-| `ANDROID_PRODUCTION_ROLLOUT` | Upload this build to Play **production**, live |
+| `ANDROID_PRODUCTION_ROLLOUT` | Upload this build to Play **production**, live, and mark the GitHub Release Latest. Off: the `android-v*` GitHub Release is a pre-release, so the iOS release stays Latest |
 
 ### Shared
 
@@ -110,7 +143,17 @@ Copy names from [`gates.env.example`](gates.env.example).
 
 ## Secrets
 
-Android: `ANDROID_KEYSTORE_*`, `PLAY_SERVICE_ACCOUNT_JSON`.
+Android:
+
+| Secret | Used for |
+|--------|----------|
+| `ANDROID_KEYSTORE_BASE64` | base64 of `fudai-release.jks`, the upload keystore |
+| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Upload key alias (`fudai`) |
+| `ANDROID_KEY_PASSWORD` | Upload key password |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Play publisher service-account JSON key (listing, uploads, track read-back) |
+
+The four keystore secrets are required by every Android run, validation included.
 
 iOS:
 
@@ -141,13 +184,14 @@ Later for catalog automation:
 | Script | Role |
 |--------|------|
 | [`scripts/store/prepare_listing_text.py`](../scripts/store/prepare_listing_text.py) | `APPSTORE.md` / `PLAYSTORE.md` → `store/metadata/` |
-| [`scripts/store/prepare_whats_new.py`](../scripts/store/prepare_whats_new.py) | What's New for Play + iOS |
+| [`scripts/store/prepare_whats_new.py`](../scripts/store/prepare_whats_new.py) | What's New for Play + iOS (`APPSTORE.md` / `PLAYSTORE.md`), with the store length checks |
+| [`scripts/release_notes.py`](../scripts/release_notes.py) | The tag's `RELEASE_NOTES.md` section for the GitHub Release; `--if-present` prints nothing when there is none |
 | [`scripts/store/stage_screenshots.py`](../scripts/store/stage_screenshots.py) | `web/assets/screenshots/*.png` → `store/metadata/screenshots/` |
 | [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | iOS switches, build number, wait for this run's build |
 | [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | ASC listing, What's New, 6.7" screenshots, build selection, submit for review |
-| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, timeouts, failures, mismatches |
+| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, timeouts, failures, mismatches, optional release notes, iOS What's New checks |
 | [`scripts/store/android_release.py`](../scripts/store/android_release.py) | Android switches, AAB/APK identity + signature checks, Play track read-back |
-| [`scripts/store/test_android_release.py`](../scripts/store/test_android_release.py) | Offline tests: disabled/invalid switches, track selection, wrong app/version/key |
+| [`scripts/store/test_android_release.py`](../scripts/store/test_android_release.py) | Offline tests: disabled/invalid switches, track selection, wrong app/version/key, Play What's New checks |
 | [`scripts/store/play_listing.py`](../scripts/store/play_listing.py) | Play listing text + phone screenshots |
 | [`scripts/store/sync_revenuecat_catalog.py`](../scripts/store/sync_revenuecat_catalog.py) | Validate catalog; fail if sync gate on |
 

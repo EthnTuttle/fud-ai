@@ -16,9 +16,12 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import asc_release  # noqa: E402
 import ios_release  # noqa: E402
+import prepare_whats_new  # noqa: E402
+import release_notes  # noqa: E402
 from ios_release import ReleaseError, resolve_gates  # noqa: E402
 
 TAG = "ios-v7.2"
@@ -647,6 +650,100 @@ class LiveSubmitFlowTests(unittest.TestCase):
         self.assertEqual(code, 0)
         products.assert_called_once()
         self.assertNotIn(("PATCH", "/appStoreVersions/V1/relationships/build"), fake.calls)
+
+
+class ReleaseNotesTests(unittest.TestCase):
+    TEXT = (
+        "# Release notes\n\n## Unreleased\n\nWork in progress.\n\n"
+        "## ios-v7.2\n\nShipped.\n\n## android-v7.2\n\nBeta.\n\n## ios-v7.3\n\n## v7.0\n\nOld.\n"
+    )
+
+    def run_cli(self, *args: str, text: str | None = TEXT) -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as root:
+            if text is not None:
+                (Path(root) / "RELEASE_NOTES.md").write_text(text, encoding="utf-8")
+            with mock.patch.object(release_notes, "ROOT", Path(root)), redirect_stdout(out), redirect_stderr(err):
+                try:
+                    release_notes.main(list(args))
+                except SystemExit as exc:
+                    return (exc.code if isinstance(exc.code, int) else 1), out.getvalue(), err.getvalue()
+        return 0, out.getvalue(), err.getvalue()
+
+    def test_exact_tag_sections(self) -> None:
+        self.assertEqual(release_notes.notes_for_tag("ios-v7.2", self.TEXT), "Shipped.")
+        self.assertEqual(release_notes.notes_for_tag("android-v7.2", self.TEXT), "Beta.")
+        self.assertEqual(release_notes.notes_for_tag("v7.0", self.TEXT), "Old.")
+        self.assertIsNone(release_notes.section_for_tag("ios-v7.4", self.TEXT))
+        with self.assertRaisesRegex(ValueError, "Add a reviewed ## ios-v7.4"):
+            release_notes.notes_for_tag("ios-v7.4", self.TEXT)
+
+    def test_empty_section_and_unreleased_always_fail(self) -> None:
+        for strict in (True, False):
+            lookup = release_notes.notes_for_tag if strict else release_notes.section_for_tag
+            with self.subTest(strict=strict):
+                with self.assertRaisesRegex(ValueError, "empty"):
+                    lookup("ios-v7.3", self.TEXT)
+                with self.assertRaisesRegex(ValueError, "Unreleased"):
+                    lookup("Unreleased", self.TEXT)
+
+    def test_missing_notes_fail_unless_optional(self) -> None:
+        code, out, _ = self.run_cli("ios-v7.4")
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        # A tag without notes still gets a GitHub Release (generated notes).
+        code, out, err = self.run_cli("--if-present", "ios-v7.4")
+        self.assertEqual((code, out), (0, ""))
+        self.assertIn("no ## ios-v7.4 section", err)
+        code, out, _ = self.run_cli("--if-present", "ios-v7.2")
+        self.assertEqual((code, out), (0, "Shipped.\n"))
+        code, _, _ = self.run_cli("--if-present", "ios-v7.3")
+        self.assertEqual(code, 2, "an empty section is malformed even when notes are optional")
+
+    def test_missing_notes_file_is_missing_notes(self) -> None:
+        code, out, err = self.run_cli("--if-present", "ios-v7.2", text=None)
+        self.assertEqual((code, out), (0, ""))
+        self.assertIn("no ## ios-v7.2 section", err)
+        code, out, err = self.run_cli("ios-v7.2", text=None)
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("Add a reviewed ## ios-v7.2", err)
+
+
+class IosWhatsNewTests(unittest.TestCase):
+    def prepare(self, appstore: str) -> tuple[int, str, Path]:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        (root / "APPSTORE.md").write_text(appstore, encoding="utf-8")
+        argv = ["prepare_whats_new.py", "--platform", "ios", "--tag", TAG, "--out", str(root / "out")]
+        out = io.StringIO()
+        with mock.patch.object(prepare_whats_new, "ROOT", root), mock.patch.object(sys, "argv", argv), \
+                redirect_stdout(out), redirect_stderr(out):
+            try:
+                prepare_whats_new.main()
+            except SystemExit as exc:
+                return (exc.code if isinstance(exc.code, int) else 1), out.getvalue(), root
+        return 0, out.getvalue(), root
+
+    def test_writes_whats_new_for_asc(self) -> None:
+        code, output, root = self.prepare("## What's New (v7.2)\n```\n  Fixes.\n```\n")
+        self.assertEqual(code, 0, output)
+        written = root / "out" / "ios" / "en-US" / "whats_new.txt"
+        self.assertEqual(written.read_text(encoding="utf-8"), "Fixes.\n")
+
+    def test_missing_empty_or_too_long_text_fails(self) -> None:
+        cases = {
+            "no heading": "## Description\n```\nApp\n```\n",
+            "no fence": "## What's New\nFixes.\n## Privacy URL\n",
+            "empty": "## What's New\n```\n\n```\n",
+            "too long": "## What's New\n```\n" + "x" * 4001 + "\n```\n",
+        }
+        for label, text in cases.items():
+            with self.subTest(label):
+                code, _, _ = self.prepare(text)
+                self.assertEqual(code, 1)
+        code, output, _ = self.prepare("## What's New\n```\n" + "x" * 4000 + "\n```\n")
+        self.assertEqual(code, 0, output)
 
 
 if __name__ == "__main__":
