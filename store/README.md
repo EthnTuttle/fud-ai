@@ -127,7 +127,8 @@ Scowld and Sesslet: Apple allows one API-created development certificate per API
 key. Its private key exists only in those repositories' `IOS_DEV_SIGNING_*`
 secrets. When it expires or is revoked, revoke it first (App Store Connect API,
 `DELETE /v1/certificates/<id>`), create a new one (`certificateType: DEVELOPMENT`),
-and replace both `IOS_DEV_SIGNING_*` secrets in every one of those repositories.
+and replace both `IOS_DEV_SIGNING_*` secrets in Fud AI and in every repository
+listed above.
 
 Later for catalog automation:
 
