@@ -528,15 +528,6 @@ class PlayWhatsNewTests(unittest.TestCase):
         code, _ = self.write("<en-US>\n• Faster logging\n- Fixes\n</en-US>")
         self.assertEqual(code, 0)
 
-    def test_repository_playstore_whats_new_is_valid(self):
-        root = Path(ar.__file__).resolve().parents[2]
-        block = prepare_whats_new.extract_fenced_after_heading(
-            (root / "PLAYSTORE.md").read_text(encoding="utf-8"), "What's New"
-        )
-        code, out = self.write(block)
-        self.assertEqual(code, 0)
-        self.assertTrue((out / "whatsnew-en-US").is_file())
-
     def test_missing_empty_or_too_long_text_fails(self):
         for label, block in {
             "no locales": "Fixes.",

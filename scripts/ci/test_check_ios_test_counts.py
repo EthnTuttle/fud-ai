@@ -42,23 +42,33 @@ def results(unit_cases: list[dict], ui_cases: list[dict] | None) -> dict:
             "testNodes": [{"nodeType": "Test Plan", "name": "calorietracker", "children": bundles}]}
 
 
+def check(payload: dict) -> list[str]:
+    found, outcomes = counts.bundle_counts(payload)
+    return counts.problems(found, outcomes, BUNDLES)
+
+
 class CountTests(unittest.TestCase):
     def test_counts_cases_per_bundle(self) -> None:
-        found, outcomes = counts.bundle_counts(
-            results([case("a()"), case("b()", "Failed")], [case("testLaunch()")])
-        )
+        payload = results([case("a()"), case("b()", "Failed")], [case("testLaunch()")])
+        found, outcomes = counts.bundle_counts(payload)
         self.assertEqual(found["calorietrackerTests"], 2)
         self.assertEqual(found["calorietrackerUITests"], 1)
         self.assertEqual(outcomes[("calorietrackerTests", "Failed")], 1)
-        self.assertEqual(counts.problems(found, BUNDLES), [])
+        self.assertEqual(check(payload), [])
 
     def test_bundle_that_ran_nothing_or_did_not_run_fails(self) -> None:
-        found, _ = counts.bundle_counts(results([case("a()")], []))
-        self.assertEqual(counts.problems(found, BUNDLES), ["calorietrackerUITests ran zero tests"])
-        found, _ = counts.bundle_counts(results([case("a()")], None))
-        self.assertEqual(counts.problems(found, BUNDLES), ["calorietrackerUITests did not run"])
-        found, _ = counts.bundle_counts({"testNodes": []})
-        self.assertEqual(len(counts.problems(found, BUNDLES)), 2)
+        self.assertEqual(check(results([case("a()")], [])), ["calorietrackerUITests ran zero tests"])
+        self.assertEqual(check(results([case("a()")], None)), ["calorietrackerUITests did not run"])
+        self.assertEqual(len(check({"testNodes": []})), 2)
+
+    def test_skipped_tests_do_not_count_as_run(self) -> None:
+        all_skipped = results([case("a()")], [case("testLaunch()", "Skipped"), case("testFlow()", "Skipped")])
+        self.assertEqual(check(all_skipped), ["calorietrackerUITests ran zero tests (2 skipped)"])
+        # One executed case is enough, whatever its outcome; skipped ones are just reported.
+        for outcome in ("Passed", "Failed", "Expected Failure"):
+            with self.subTest(outcome=outcome):
+                mixed = results([case("a()")], [case("testLaunch()", "Skipped"), case("testFlow()", outcome)])
+                self.assertEqual(check(mixed), [])
 
 
 class CliTests(unittest.TestCase):
@@ -78,6 +88,10 @@ class CliTests(unittest.TestCase):
         code, output = self.run_main(results([case("a()")], []))
         self.assertEqual(code, 1)
         self.assertIn("error: calorietrackerUITests ran zero tests", output)
+        code, output = self.run_main(results([case("a()")], [case("testLaunch()", "Skipped")]))
+        self.assertEqual(code, 1)
+        self.assertIn("calorietrackerUITests: 1 test(s) (skipped 1)", output)
+        self.assertIn("error: calorietrackerUITests ran zero tests (1 skipped)", output)
 
     def test_usage_without_bundles(self) -> None:
         with redirect_stderr(io.StringIO()):

@@ -29,7 +29,8 @@ and checks out only the small workout image sample needed by tests. LiteRT-LM
 does not include an Intel simulator library. Tests run serially to avoid
 multiple UI simulators competing for runner resources. Failures fail the job,
 and so does a test bundle that ran no tests even when `xcodebuild` succeeded
-(`scripts/ci/check_ios_test_counts.py` reads the result bundle); `.xcresult`
+(`scripts/ci/check_ios_test_counts.py` reads the result bundle; skipped tests
+do not count as run); `.xcresult`
 bundles, XCTest screenshots, coverage, and build logs are retained as the
 `ios-test-results` artifact for seven days.
 

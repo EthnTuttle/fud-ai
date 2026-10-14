@@ -38,7 +38,8 @@ ios-vX.Y tag ─► iOS unit + UI tests (ios-tests.yml) ─┐
 ```
 
 The iOS tests are the same `ios-tests.yml` that runs on pull requests, called
-by the release; a test bundle that runs no tests fails it. Catalog IAPs go to
+by the release; a test bundle that runs no tests (skipped tests do not count)
+fails it. Catalog IAPs go to
 App Review immediately when submitted, so they are submitted only after the
 final build and selection recheck, never before it.
 

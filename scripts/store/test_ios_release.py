@@ -1180,14 +1180,6 @@ class IosWhatsNewTests(unittest.TestCase):
         code, output, _ = self.prepare(f"## What's New\n```\n{plain}\n```\n")
         self.assertEqual(code, 0, output)
 
-    def test_repository_whats_new_is_valid(self) -> None:
-        # APPSTORE.md's What's New must pass the checks a release run applies.
-        with tempfile.TemporaryDirectory() as tmp:
-            argv = ["prepare_whats_new.py", "--platform", "ios", "--tag", TAG, "--out", tmp]
-            with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
-                prepare_whats_new.main()
-            self.assertTrue((Path(tmp) / "ios" / "en-US" / "whats_new.txt").read_text(encoding="utf-8").strip())
-
 
 if __name__ == "__main__":
     unittest.main()

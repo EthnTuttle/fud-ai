@@ -272,6 +272,31 @@ jobs:
           emulator-options: ${{ env.AVD_OPTIONS }}
           disable-animations: false
           script: bash scripts/ci/wait_for_emulator_idle.sh --compile
+      # emulator-runner sends `adb emu kill` and returns at once; the emulator writes
+      # the boot snapshot while it shuts down. Wait for it to exit and check the
+      # snapshot exists, so neither the cache nor the test run sees a half-written one.
+      - name: Wait for the snapshot to be written
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          for second in $(seq 1 300); do
+            if ! pgrep -f 'qemu-system' > /dev/null; then
+              echo "emulator exited after ${second}s"
+              break
+            fi
+            if [ "$second" -eq 300 ]; then
+              echo "error: the emulator was still running 5 minutes after it was told to shut down" >&2
+              pgrep -fl 'qemu-system' >&2 || true
+              exit 1
+            fi
+            sleep 1
+          done
+          if ! compgen -G "$HOME/.android/avd/*.avd/snapshots/default_boot/snapshot.pb" > /dev/null; then
+            echo "error: the emulator exited without saving its default_boot snapshot" >&2
+            find "$HOME/.android/avd" -maxdepth 4 -path '*snapshots*' 2>&1 | head -40 >&2 || true
+            exit 1
+          fi
+          du -sh "$HOME"/.android/avd/*.avd/snapshots/default_boot
       # Cached right after creation, before any app is installed, so the cache holds
       # exactly the clean snapshot. Only main saves: pull requests reuse main's copy
       # (or create one for that run) and never add their own 4 GB cache entry.

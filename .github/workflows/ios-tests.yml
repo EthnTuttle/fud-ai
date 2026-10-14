@@ -3,7 +3,8 @@ name: iOS tests
 # Unit (calorietrackerTests) and UI (calorietrackerUITests) tests on an iOS
 # Simulator. Nothing here signs, archives, uploads, or touches App Store Connect.
 # ios-release.yml calls this workflow so a tagged release runs these tests before
-# anything is built. scripts/test-ios.sh fails when either bundle ran no tests.
+# anything is built. scripts/test-ios.sh fails when either bundle ran no tests
+# (skipped tests do not count).
 on:
   pull_request:
     paths:

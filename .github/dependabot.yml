@@ -84,7 +84,9 @@ updates:
     commit-message:
       prefix: "Store"
 
-  # The iOS app's Swift packages are pinned in the Xcode project, which Dependabot's
-  # swift ecosystem does not read (it needs a Package.swift with dependencies; the
-  # only one, ios/Packages/LiteRTLM, declares checksum-pinned binaries). The
-  # dependency graph still reports alerts for Package.resolved.
+  # Not covered: the iOS app's Swift packages (RevenueCat, argmax, swift-argument-
+  # parser) are pinned by the Xcode project's Package.resolved. Dependabot's swift
+  # ecosystem needs a Package.swift that declares them (the only one,
+  # ios/Packages/LiteRTLM, has checksum-pinned binaries and no dependencies), and
+  # the dependency graph does not list that Package.resolved (checked 2026-10-14),
+  # so they get neither alerts nor version updates: review their releases by hand.

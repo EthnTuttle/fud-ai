@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Fail unless every named test bundle in an .xcresult ran at least one test.
+"""Fail unless every named test bundle in an .xcresult executed at least one test.
 
 xcodebuild can succeed while a test bundle runs nothing (for example after a
-scheme or target change), so CI checks the result bundle as well.
+scheme or target change, or when every test is skipped), so CI checks the result
+bundle as well. Skipped tests do not count as run.
 
 Usage: check_ios_test_counts.py RESULT.xcresult BUNDLE [BUNDLE ...]
 """
@@ -12,6 +13,8 @@ import json
 import subprocess
 import sys
 from collections import Counter
+
+SKIPPED = "Skipped"
 
 
 def count_test_cases(node: dict, bundle: str | None, counts: Counter, results: Counter) -> None:
@@ -28,6 +31,7 @@ def count_test_cases(node: dict, bundle: str | None, counts: Counter, results: C
 
 
 def bundle_counts(tests: dict) -> tuple[Counter, Counter]:
+    """(test cases per bundle, test cases per (bundle, result))."""
     counts: Counter = Counter()
     results: Counter = Counter()
     for node in tests.get("testNodes") or []:
@@ -35,13 +39,19 @@ def bundle_counts(tests: dict) -> tuple[Counter, Counter]:
     return counts, results
 
 
-def problems(counts: Counter, required: list[str]) -> list[str]:
+def executed(results: Counter, bundle: str) -> int:
+    """Test cases of the bundle that ran (passed, failed, ...), not skipped."""
+    return sum(n for (name, outcome), n in results.items() if name == bundle and outcome != SKIPPED)
+
+
+def problems(counts: Counter, results: Counter, required: list[str]) -> list[str]:
     found = []
     for bundle in required:
         if bundle not in counts:
             found.append(f"{bundle} did not run")
-        elif counts[bundle] == 0:
-            found.append(f"{bundle} ran zero tests")
+        elif executed(results, bundle) == 0:
+            skipped = results[(bundle, SKIPPED)]
+            found.append(f"{bundle} ran zero tests" + (f" ({skipped} skipped)" if skipped else ""))
     return found
 
 
@@ -62,7 +72,7 @@ def main(argv: list[str]) -> int:
             if name == bundle
         )
         print(f"{bundle}: {counts[bundle]} test(s) ({outcomes or 'none'})")
-    found = problems(counts, required)
+    found = problems(counts, results, required)
     for problem in found:
         print(f"error: {problem}", file=sys.stderr)
     return 1 if found else 0
