@@ -73,6 +73,13 @@ updates:
   # installed by the release jobs that hold the App Store Connect and Play credentials.
   - package-ecosystem: pip
     directory: /
+    # Only the two root-level files above. Dependabot's pip support also reads
+    # requirements files one folder down, so without this it bumped
+    # scripts/requirements-workout-repair.txt here as well, duplicating the
+    # /scripts entry's PR under a "Store" title. "*/**" is everything inside any
+    # folder; a Python folder gets its own entry, like /scripts.
+    exclude-paths:
+      - "*/**"
     schedule:
       interval: weekly
       day: monday
