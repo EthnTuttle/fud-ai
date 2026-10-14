@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Print reviewed release notes for an exact tag; fail rather than publish empty notes.
 
-RELEASE_NOTES.md sections are headed `## <tag>` (e.g. `## ios-v7.1.2`). The text
+RELEASE_NOTES.md sections are headed `## <tag>` (e.g. `## ios-v7.1.2`), one per tag. The text
 becomes the GitHub Release body. Store What's New comes from APPSTORE.md and
 PLAYSTORE.md instead (scripts/store/prepare_whats_new.py).
 
@@ -19,7 +19,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def section_for_tag(tag: str, text: str | None = None) -> str | None:
-    """The tag's notes, or None without a section (or file). An empty section fails."""
+    """The tag's notes, or None without a section (or file).
+
+    An empty section fails, and so do duplicate sections: a copied or merged
+    heading must never silently publish whichever section comes first.
+    """
     if tag == 'Unreleased':
         raise ValueError('the Unreleased section is not a release; use the exact tag')
     if text is None:
@@ -27,14 +31,16 @@ def section_for_tag(tag: str, text: str | None = None) -> str | None:
         if not path.is_file():
             return None
         text = path.read_text(encoding='utf-8')
+    matches = []
     for section in re.split(r'^## ', text, flags=re.MULTILINE)[1:]:
         title, _, body = section.partition('\n')
         if title.strip() == tag:
-            body = body.strip()
-            if not body:
-                raise ValueError('The release note section is empty')
-            return body
-    return None
+            matches.append(body.strip())
+    if len(matches) > 1:
+        raise ValueError(f'RELEASE_NOTES.md has {len(matches)} ## {tag} sections; keep exactly one')
+    if matches and not matches[0]:
+        raise ValueError('The release note section is empty')
+    return matches[0] if matches else None
 
 
 def notes_for_tag(tag: str, text: str | None = None) -> str:

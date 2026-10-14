@@ -307,6 +307,189 @@ class TrackReadBackTests(unittest.TestCase):
                 ar.check_tracks(self.fetcher({"production": release}), ["production"], 42)
 
 
+class UploadCertificateTests(unittest.TestCase):
+    """A7: the keystore must hold the pinned upload certificate."""
+
+    def test_pinned_value_is_the_fud_ai_upload_certificate(self):
+        self.assertRegex(ar.UPLOAD_CERT_SHA256, r"^[0-9a-f]{64}$")
+        ar.check_upload_certificate(ar.UPLOAD_CERT_SHA256, ar.UPLOAD_CERT_SHA256)
+
+    def test_any_other_certificate_or_a_bad_pin_fails(self):
+        with self.assertRaisesRegex(ar.ReleaseError, "not the pinned"):
+            ar.check_upload_certificate(DEBUG, UPLOAD)
+        for bad in ("", "abc", UPLOAD.upper()):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ar.ReleaseError, "not a SHA-256"):
+                ar.check_upload_certificate(UPLOAD, bad)
+
+    def test_verify_stops_before_reading_the_artifacts(self):
+        import argparse
+        import subprocess
+
+        keytool = subprocess.CompletedProcess([], 0, stdout=pem(b"some-other-key"), stderr="")
+        args = argparse.Namespace(
+            aab=Path("app.aab"), apk=Path("app.apk"), keystore=Path("k.jks"), alias="fudai",
+            bundletool=Path("bundletool.jar"), package=ar.PACKAGE_NAME, expected_cert=UPLOAD,
+        )
+        with mock.patch.object(ar, "run", return_value=keytool) as run, redirect_stdout(io.StringIO()), \
+                self.assertRaisesRegex(ar.ReleaseError, "not the pinned"):
+            ar.cmd_verify(args)
+        self.assertEqual(run.call_count, 1, "nothing else may run with an unexpected key")
+
+
+class PlayTrackListTests(unittest.TestCase):
+    """A8: the upload action falls back to production when given no track."""
+
+    def test_valid_lists(self):
+        self.assertEqual(ar.parse_tracks("internal,alpha"), ["internal", "alpha"])
+        self.assertEqual(ar.parse_tracks("production"), ["production"])
+
+    def test_empty_unknown_or_repeated_tracks_fail(self):
+        with self.assertRaisesRegex(ar.ReleaseError, "default to production"):
+            ar.parse_tracks("")
+        for raw in ("beta", "internal,internal", "internal,Production"):
+            with self.subTest(raw=raw), self.assertRaises(ar.ReleaseError):
+                ar.parse_tracks(raw)
+
+
+def track(name, *releases):
+    return {"track": name, "releases": [{"versionCodes": [str(code)], "status": status} for code, status in releases]}
+
+
+class PlayPreflightTests(unittest.TestCase):
+    """A3/A4: a new versionCode is uploaded; only this run's own earlier upload is skipped."""
+
+    def decide(self, code=43, *, known=(40, 41, 42), tracks=None, selected=("internal",), earlier=None):
+        return ar.play_upload_decision(
+            code, known_codes=set(known), tracks=tracks or {}, selected=list(selected),
+            earlier_upload_attempt=earlier,
+        )
+
+    def test_new_version_code_is_uploaded(self):
+        self.assertEqual(self.decide(43), "upload")
+        self.assertEqual(self.decide(1, known=()), "upload")
+
+    def test_old_or_reused_version_code_fails_before_the_build(self):
+        with self.assertRaisesRegex(ar.ReleaseError, "bump versionCode"):
+            self.decide(42)
+        with self.assertRaisesRegex(ar.ReleaseError, "highest versionCode already uploaded: 42"):
+            self.decide(41)
+        # Even when 42 sits completed on the track (the previous release), a run that
+        # did not upload it itself must not reuse it under a new versionName.
+        tracks = {"internal": track("internal", (42, "completed"))}
+        with self.assertRaisesRegex(ar.ReleaseError, "bump versionCode"):
+            self.decide(42, tracks=tracks)
+
+    def test_rerun_after_this_runs_upload_skips_the_upload(self):
+        tracks = {"internal": track("internal", (42, "completed")), "alpha": track("alpha", (42, "completed"))}
+        self.assertEqual(self.decide(42, tracks=tracks, selected=("internal", "alpha"), earlier=1), "skip")
+        partial = {"internal": track("internal", (42, "completed")), "alpha": track("alpha", (41, "completed"))}
+        with self.assertRaisesRegex(ar.ReleaseError, "alpha"):
+            self.decide(42, tracks=partial, selected=("internal", "alpha"), earlier=1)
+        draft = {"internal": track("internal", (42, "draft"))}
+        with self.assertRaises(ar.ReleaseError):
+            self.decide(42, tracks=draft, earlier=1)
+
+    def test_known_version_codes_cover_bundles_apks_and_tracks(self):
+        codes = ar.known_version_codes(
+            {"bundles": [{"versionCode": 42}]},
+            {"apks": [{"versionCode": 12}]},
+            {"tracks": [track("production", (40, "completed"), (39, "halted"))]},
+        )
+        self.assertEqual(codes, {12, 39, 40, 42})
+        self.assertEqual(ar.known_version_codes({}, {}, {}), set())
+
+    def test_earlier_upload_attempt_reads_this_runs_history(self):
+        jobs = {
+            1: [{"name": "release", "steps": [{"name": "Upload to Play (internal)", "conclusion": "success"}]}],
+            2: [{"name": "release", "steps": [{"name": "Upload to Play (internal)", "conclusion": "skipped"}]}],
+        }
+        self.assertEqual(ar.earlier_upload_attempt(jobs.get, 3), 1)
+        self.assertIsNone(ar.earlier_upload_attempt(jobs.get, 1))
+        failed = {1: [{"name": "release", "steps": [{"name": "Upload to Play (internal)", "conclusion": "failure"}]}]}
+        self.assertIsNone(ar.earlier_upload_attempt(failed.get, 2))
+        other_job = {1: [{"name": "quality / android", "steps": [{"name": "Upload to Play", "conclusion": "success"}]}]}
+        self.assertIsNone(ar.earlier_upload_attempt(other_job.get, 2))
+
+    def test_command_reads_play_without_committing(self):
+        import argparse
+
+        service = mock.MagicMock()
+        edits = service.edits.return_value
+        edits.insert.return_value.execute.return_value = {"id": "E1"}
+        edits.bundles.return_value.list.return_value.execute.return_value = {"bundles": [{"versionCode": 42}]}
+        edits.apks.return_value.list.return_value.execute.return_value = {}
+        edits.tracks.return_value.list.return_value.execute.return_value = {"tracks": [track("internal", (42, "completed"))]}
+        with tempfile.NamedTemporaryFile("r", suffix=".out") as out, \
+                mock.patch.object(ar, "play_publisher", return_value=service), \
+                mock.patch.object(ar, "gradle_version", return_value=("7.3", 43)), \
+                mock.patch.dict(os.environ, {"GITHUB_OUTPUT": out.name, "GITHUB_RUN_ATTEMPT": "1"}), \
+                redirect_stdout(io.StringIO()):
+            ar.cmd_play_preflight(argparse.Namespace(tracks="internal"))
+            self.assertIn("play_upload_needed=true", Path(out.name).read_text())
+        edits.delete.assert_called_once_with(packageName=ar.PACKAGE_NAME, editId="E1")
+        edits.commit.assert_not_called()
+
+
+def java_load(text):
+    """Reference java.util.Properties.load() for the key=value lines the writer emits."""
+    values = {}
+    for line in text.splitlines():
+        key, _, rest = line.partition("=")
+        i = 0
+        while i < len(rest) and rest[i] in " \t\f":  # unescaped leading whitespace is dropped
+            i += 1
+        out = []
+        while i < len(rest):
+            char = rest[i]
+            if char == "\\":
+                nxt = rest[i + 1]
+                if nxt == "u":
+                    out.append(chr(int(rest[i + 2:i + 6], 16)))
+                    i += 6
+                    continue
+                out.append({"t": "\t", "n": "\n", "r": "\r", "f": "\f"}.get(nxt, nxt))
+                i += 2
+                continue
+            out.append(char)
+            i += 1
+        values[key] = "".join(out).encode("utf-16", "surrogatepass").decode("utf-16")
+    return values
+
+
+class SigningPropertiesTests(unittest.TestCase):
+    """P-19: signing secrets are written outside the checkout, escaped like Java expects."""
+
+    TRICKY = ["plain", "back\\slash", " leading", "trailing ", "tab\tnew\nline", "a=b:c#d!e",
+              "ünï 密码 🔑", "ends\\"]
+
+    def test_values_round_trip_through_java_properties(self):
+        for value in self.TRICKY:
+            with self.subTest(value=value):
+                escaped = ar.java_properties_escape(value)
+                self.assertTrue(escaped.isascii())
+                trailing = len(escaped) - len(escaped.rstrip("\\"))
+                self.assertEqual(trailing % 2, 0, "an odd trailing backslash would continue the line")
+                self.assertEqual(java_load(f"k={escaped}")["k"], value)
+
+    def test_writes_all_four_entries_with_mode_600(self):
+        env = {"ANDROID_KEYSTORE_PASSWORD": "s3cr\\t", "ANDROID_KEY_ALIAS": "fudai", "ANDROID_KEY_PASSWORD": " k p"}
+        with tempfile.TemporaryDirectory() as tmp:
+            import argparse
+
+            out = Path(tmp) / "keystore.properties"
+            with mock.patch.dict(os.environ, env), redirect_stdout(io.StringIO()):
+                ar.cmd_write_signing_properties(argparse.Namespace(keystore=Path("/tmp/fudai-release.jks"), out=out))
+            self.assertEqual(out.stat().st_mode & 0o777, 0o600)
+            self.assertEqual(java_load(out.read_text(encoding="ascii")), {
+                "storeFile": "/tmp/fudai-release.jks", "storePassword": "s3cr\\t",
+                "keyAlias": "fudai", "keyPassword": " k p",
+            })
+
+    def test_missing_secret_fails(self):
+        with self.assertRaisesRegex(ar.ReleaseError, "ANDROID_KEY_PASSWORD"):
+            ar.signing_properties(Path("k.jks"), {"ANDROID_KEYSTORE_PASSWORD": "p", "ANDROID_KEY_ALIAS": "a"})
+
+
 class PlayWhatsNewTests(unittest.TestCase):
     """The strict check the gates job runs only when ANDROID_UPLOAD_WHATS_NEW is on."""
 
@@ -323,8 +506,36 @@ class PlayWhatsNewTests(unittest.TestCase):
     def test_each_locale_becomes_a_whatsnew_file(self):
         code, out = self.write("<en-US>\nFixes.\n</en-US>\n<de-DE>\nFehler.\n</de-DE>\n")
         self.assertEqual(code, 0)
-        self.assertEqual((out / "whatsnew-en-US").read_text(encoding="utf-8"), "Fixes.\n")
+        # The upload action sends the file verbatim: exactly the checked text.
+        self.assertEqual((out / "whatsnew-en-US").read_text(encoding="utf-8"), "Fixes.")
         self.assertTrue((out / "whatsnew-de-DE").is_file())
+
+    def test_the_500_character_limit_is_what_play_receives(self):
+        text = "x" * 499 + "é"
+        code, out = self.write(f"<en-US>\n{text}\n</en-US>")
+        self.assertEqual(code, 0)
+        sent = (out / "whatsnew-en-US").read_text(encoding="utf-8")
+        self.assertEqual(sent, text)
+        self.assertEqual(len(sent), 500)
+        code, _ = self.write(f"<en-US>\n{text}y\n</en-US>")
+        self.assertEqual(code, 1)
+
+    def test_markdown_is_rejected(self):
+        for body in ("**Bold** fixes", "See [notes](https://fud-ai.app)", "Run `x`"):
+            with self.subTest(body=body):
+                code, _ = self.write(f"<en-US>\n{body}\n</en-US>")
+                self.assertEqual(code, 1)
+        code, _ = self.write("<en-US>\n• Faster logging\n- Fixes\n</en-US>")
+        self.assertEqual(code, 0)
+
+    def test_repository_playstore_whats_new_is_valid(self):
+        root = Path(ar.__file__).resolve().parents[2]
+        block = prepare_whats_new.extract_fenced_after_heading(
+            (root / "PLAYSTORE.md").read_text(encoding="utf-8"), "What's New"
+        )
+        code, out = self.write(block)
+        self.assertEqual(code, 0)
+        self.assertTrue((out / "whatsnew-en-US").is_file())
 
     def test_missing_empty_or_too_long_text_fails(self):
         for label, block in {

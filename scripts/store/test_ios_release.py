@@ -6,6 +6,7 @@ Run: python3 -m unittest scripts/store/test_ios_release.py
 """
 from __future__ import annotations
 
+import hashlib
 import io
 import os
 import sys
@@ -21,6 +22,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import asc_release  # noqa: E402
 import ios_release  # noqa: E402
 import prepare_whats_new  # noqa: E402
+import print_gates  # noqa: E402
+import redact_credential_ids  # noqa: E402
 import release_notes  # noqa: E402
 from ios_release import ReleaseError, resolve_gates  # noqa: E402
 
@@ -170,19 +173,20 @@ def build_row(
     number: str = "40",
     state: str = "VALID",
     expired: bool = False,
-    uploaded: float = STARTED + 60,
+    uploaded: float | None = STARTED + 60,
+    uploaded_raw: object = None,
     app: str = APP,
     pre: str = "P1",
 ) -> dict:
+    attributes = {"version": number, "processingState": state, "expired": expired}
+    if uploaded_raw is not None:
+        attributes["uploadedDate"] = uploaded_raw
+    elif uploaded is not None:
+        attributes["uploadedDate"] = iso(uploaded)
     return {
         "type": "builds",
         "id": build_id,
-        "attributes": {
-            "version": number,
-            "processingState": state,
-            "expired": expired,
-            "uploadedDate": iso(uploaded),
-        },
+        "attributes": attributes,
         "relationships": {
             "preReleaseVersion": {"data": {"type": "preReleaseVersions", "id": pre}},
             "app": {"data": {"type": "apps", "id": app}},
@@ -291,6 +295,28 @@ class WaitForBuildTests(unittest.TestCase):
         client = SequenceClient([{"data": [old], "included": [pre_row()]}])
         with self.assertRaisesRegex(ReleaseError, "older build"):
             wait(client, FakeClock(STARTED))
+
+    def test_build_without_an_upload_time_is_never_ready(self) -> None:
+        # Fail closed: a VALID build that cannot be proven to be this run's upload
+        # keeps the wait going until the deadline instead of passing the check.
+        for missing in (None, ""):
+            client = SequenceClient(
+                [{"data": [build_row(uploaded=None, uploaded_raw=missing)], "included": [pre_row()]}]
+            )
+            with self.subTest(missing=missing), self.assertRaisesRegex(ReleaseError, "timed out"):
+                wait(client, FakeClock(STARTED), minutes=10)
+        state, message, build = ios_release.evaluate_builds(
+            {"data": [build_row(uploaded=None)], "included": [pre_row()]},
+            app_id=APP, marketing_version=VERSION, build_number="40", uploaded_after=STARTED,
+        )
+        self.assertEqual((state, build), (ios_release.BuildState.WAITING, None))
+        self.assertIn("upload time", message)
+
+    def test_unreadable_upload_time_stops(self) -> None:
+        for raw in ("yesterday", 1_800_000_060):
+            client = SequenceClient([{"data": [build_row(uploaded_raw=raw)], "included": [pre_row()]}])
+            with self.subTest(raw=raw), self.assertRaisesRegex(ReleaseError, "unreadable uploadedDate"):
+                wait(client, FakeClock(STARTED))
 
     def test_other_versions_and_platforms_are_ignored(self) -> None:
         other_version = build_row("BX", pre="P2")
@@ -435,6 +461,11 @@ class AscCliTests(unittest.TestCase):
         code, _ = self.run_cli({"UPLOAD_LISTING": "true", "PUBLIC_RELEASE": "true"})
         self.assertEqual(code, 1)
 
+    def test_only_the_fud_ai_bundle_is_supported(self) -> None:
+        code, output = self.run_cli({"UPLOAD_LISTING": "true"}, "--bundle-id", "com.example.other")
+        self.assertEqual(code, 1)
+        self.assertIn("Fud AI iOS bundle", output)
+
     def test_whats_new_requires_text(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             (Path(tmp) / "ios" / "en-US").mkdir(parents=True)
@@ -556,17 +587,21 @@ class FakeAsc:
     """App Store Connect stand-in for asc_release.main() (live path, no network)."""
 
     def __init__(self, *, state: str = "PREPARE_FOR_SUBMISSION", attached: str | None = "OLD",
-                 revert_after_select: bool = False) -> None:
+                 revert_after_select: bool = False, live_text: dict | None = None,
+                 live_shots: list[dict] | None = None, iaps: list[dict] | None = None) -> None:
         self.state = state
         self.attached = attached
         self.revert_after_select = revert_after_select
+        self.live_text = dict(live_text or {})
+        self.live_shots = live_shots
+        self.iaps = iaps or []
         self.build_reads = 0
         self.calls: list[tuple[str, str]] = []
 
     def get(self, path: str) -> dict:
         self.calls.append(("GET", path))
         if path.startswith("/apps?"):
-            return {"data": [{"id": APP}]}
+            return {"data": [{"id": APP, "attributes": {"bundleId": asc_release.DEFAULT_BUNDLE_ID}}]}
         if path.startswith(f"/apps/{APP}/appStoreVersions"):
             return {"data": [{"id": "V1", "attributes": {"versionString": VERSION, "appStoreState": self.state}}]}
         if path.startswith("/builds/B9"):
@@ -580,6 +615,18 @@ class FakeAsc:
             return {"data": [{"id": "SUB1"}]}
         if path.startswith("/reviewSubmissions/SUB1/items"):
             return {"data": []}
+        if path.startswith("/appStoreVersions/V1/appStoreVersionLocalizations"):
+            return {"data": [{"id": "LOC1", "attributes": {"locale": "en-US", **self.live_text}}]}
+        if path == "/appStoreVersionLocalizations/LOC1/appScreenshotSets":
+            if self.live_shots is None:
+                return {"data": []}
+            return {"data": [{"id": "SET1", "attributes": {"screenshotDisplayType": "APP_IPHONE_67"}}]}
+        if path == "/appScreenshotSets/SET1/appScreenshots":
+            return {"data": [{"id": f"SHOT{i}", "attributes": shot} for i, shot in enumerate(self.live_shots or [])]}
+        if path == f"/apps/{APP}/subscriptionGroups?limit=200":
+            return {"data": []}
+        if path == f"/apps/{APP}/inAppPurchasesV2?limit=200":
+            return {"data": self.iaps}
         raise AssertionError(f"unexpected GET {path}")
 
     def post(self, path: str, body: dict) -> dict:
@@ -652,6 +699,369 @@ class LiveSubmitFlowTests(unittest.TestCase):
         self.assertNotIn(("PATCH", "/appStoreVersions/V1/relationships/build"), fake.calls)
 
 
+def writes(fake: FakeAsc) -> list[tuple[str, str]]:
+    return [call for call in fake.calls if call[0] != "GET"]
+
+
+class FindAppTests(unittest.TestCase):
+    BUNDLE = asc_release.DEFAULT_BUNDLE_ID
+
+    def find(self, rows: list[dict]) -> str:
+        client = mock.Mock()
+        client.get.return_value = {"data": rows}
+        return quiet(asc_release.find_app, client, self.BUNDLE)
+
+    def test_only_an_exact_bundle_id_matches(self) -> None:
+        rows = [
+            {"id": "DEBUG", "attributes": {"bundleId": self.BUNDLE + ".debug"}},
+            {"id": "APP", "attributes": {"bundleId": self.BUNDLE}},
+        ]
+        self.assertEqual(self.find(rows), "APP")
+
+    def test_no_match_or_an_ambiguous_match_stops(self) -> None:
+        exact = {"attributes": {"bundleId": self.BUNDLE}}
+        for rows in (
+            [],
+            [{"id": "DEBUG", "attributes": {"bundleId": self.BUNDLE + ".debug"}}],
+            [{"id": "NOATTRS"}],
+            [{"id": "A", **exact}, {"id": "B", **exact}],
+        ):
+            with self.subTest(rows=rows), self.assertRaises(SystemExit):
+                self.find(rows)
+
+
+class PreflightClient:
+    """Read-only App Store Connect fake: any write attempt fails the test."""
+
+    def __init__(self, versions: list[dict], *, localization: bool = True) -> None:
+        self.versions = versions
+        self.localization = localization
+        self.paths: list[str] = []
+
+    def get(self, path: str) -> dict:
+        self.paths.append(path)
+        if path.startswith("/apps?"):
+            return {"data": [{"id": APP, "attributes": {"bundleId": ios_release.BUNDLE_ID}}]}
+        if path.startswith(f"/apps/{APP}/appStoreVersions"):
+            return {"data": self.versions}
+        if path.startswith("/appStoreVersions/V1/appStoreVersionLocalizations"):
+            return {"data": [{"id": "LOC1"}] if self.localization else []}
+        raise AssertionError(f"unexpected GET {path}")
+
+
+def asc_version(state: str, version: str = VERSION) -> dict:
+    return {"id": "V1", "attributes": {"versionString": version, "appStoreState": state}}
+
+
+class VersionPreflightTests(unittest.TestCase):
+    """IOS-REL-2: the App Store version is checked before anything is built."""
+
+    def preflight(self, client: PreflightClient, *, metadata: bool = True, submit: bool = True) -> str:
+        return quiet(
+            ios_release.version_preflight, client, asc_release,
+            version=VERSION, metadata=metadata, submit=submit,
+        )
+
+    def test_versions_the_store_step_can_use_pass(self) -> None:
+        for state in ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "READY_FOR_REVIEW"):
+            with self.subTest(state=state):
+                self.assertEqual(self.preflight(PreflightClient([asc_version(state)])), state)
+
+    def test_missing_version_fails_with_the_fix(self) -> None:
+        err = io.StringIO()
+        with redirect_stderr(err), redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+            ios_release.version_preflight(
+                PreflightClient([asc_version("READY_FOR_SALE", "7.1")]), asc_release,
+                version=VERSION, metadata=False, submit=True,
+            )
+        self.assertIn("create the version in App Store Connect first", err.getvalue())
+
+    def test_versions_in_review_or_released_fail(self) -> None:
+        for state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE", ""):
+            with self.subTest(state=state), self.assertRaisesRegex(ReleaseError, "Prepare for Submission"):
+                self.preflight(PreflightClient([asc_version(state)]))
+
+    def test_metadata_needs_the_locale(self) -> None:
+        with self.assertRaises(SystemExit):
+            self.preflight(PreflightClient([asc_version("PREPARE_FOR_SUBMISSION")], localization=False))
+        client = PreflightClient([asc_version("PREPARE_FOR_SUBMISSION")], localization=False)
+        self.assertEqual(self.preflight(client, metadata=False), "PREPARE_FOR_SUBMISSION")
+        self.assertFalse([p for p in client.paths if "Localizations" in p])
+
+    def test_command_reads_switches_and_skips_without_store_work(self) -> None:
+        import argparse
+
+        env = {k: v for k, v in os.environ.items() if k not in {
+            "UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "SUBMIT_IOS_REVIEW"}}
+        with mock.patch.dict(os.environ, {**env, "UPLOAD_LISTING": "false"}, clear=True), \
+                mock.patch.object(ios_release, "asc_client") as client, redirect_stdout(io.StringIO()):
+            ios_release.cmd_version_preflight(argparse.Namespace(version=VERSION))
+        client.assert_not_called()
+        with mock.patch.dict(os.environ, {**env, "SUBMIT_IOS_REVIEW": "maybe"}, clear=True), \
+                self.assertRaises(ReleaseError):
+            ios_release.cmd_version_preflight(argparse.Namespace(version=VERSION))
+        fake = PreflightClient([asc_version("PREPARE_FOR_SUBMISSION")])
+        out = io.StringIO()
+        with mock.patch.dict(os.environ, {**env, "SUBMIT_IOS_REVIEW": "true"}, clear=True), \
+                mock.patch.object(ios_release, "asc_client", return_value=(asc_release, fake)), redirect_stdout(out):
+            ios_release.cmd_version_preflight(argparse.Namespace(version=VERSION))
+        self.assertIn("exists and is PREPARE_FOR_SUBMISSION", out.getvalue())
+
+
+class MetadataRerunTests(unittest.TestCase):
+    """IOS-REL-3: re-running the store job after a partial review submission."""
+
+    PNG = b"\x89PNG\r\n\x1a\n" + b"screenshot" * 4
+    LISTING = {"UPLOAD_LISTING": "true", "UPLOAD_WHATS_NEW": "true"}
+    SUBMIT = {"SUBMIT_IOS_REVIEW": "true"}
+
+    def setUp(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        loc = self.root / "meta" / "ios" / "en-US"
+        loc.mkdir(parents=True)
+        (loc / "description.txt").write_text("Track food with AI\n")
+        (loc / "whats_new.txt").write_text("Fixes.\n")
+        self.shots = self.root / "shots"
+        self.shots.mkdir()
+        (self.shots / "01-home.png").write_bytes(self.PNG)
+        self.same_text = {"description": "Track food with AI", "whatsNew": "Fixes."}
+        self.same_shots = [{"fileName": "01-home.png", "fileSize": len(self.PNG),
+                            "sourceFileChecksum": hashlib.md5(self.PNG).hexdigest()}]
+
+    def run_main(self, fake: FakeAsc, env: dict[str, str]) -> tuple[int, mock.Mock]:
+        products = mock.Mock(return_value=asc_release.ProductSubmitResult("SUB1", 0, False))
+        argv = ["asc_release.py", "--version", VERSION, "--build-id", "B9", "--build-number", "40",
+                "--metadata-dir", str(self.root / "meta"), "--screenshots-dir", str(self.shots)]
+        full_env = {k: v for k, v in os.environ.items() if k not in {
+            "UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "SUBMIT_IOS_REVIEW", "PUBLIC_RELEASE"}}
+        full_env.update(env)
+        code = 0
+        with mock.patch.dict(os.environ, full_env, clear=True), mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(asc_release, "client_from_environment", return_value=fake), \
+                mock.patch.object(asc_release, "submit_in_app_purchases", products), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            try:
+                asc_release.main()
+            except SystemExit as exc:
+                code = exc.code if isinstance(exc.code, int) else 1
+        return code, products
+
+    def test_ready_for_review_rerun_updates_text_and_submits(self) -> None:
+        fake = FakeAsc(state="READY_FOR_REVIEW", live_text={"description": "Old", "whatsNew": "Fixes."})
+        code, _ = self.run_main(fake, {**self.LISTING, **self.SUBMIT})
+        self.assertEqual(code, 0)
+        self.assertIn(("PATCH", "/appStoreVersionLocalizations/LOC1"), fake.calls)
+        self.assertIn(("PATCH", "/reviewSubmissions/SUB1"), fake.calls)
+
+    def test_waiting_for_review_rerun_with_matching_text_is_idempotent(self) -> None:
+        fake = FakeAsc(state="WAITING_FOR_REVIEW", attached="B9", live_text=self.same_text)
+        code, products = self.run_main(fake, {**self.LISTING, **self.SUBMIT})
+        self.assertEqual(code, 0)
+        self.assertEqual(writes(fake), [])
+        products.assert_called_once()
+
+    def test_waiting_for_review_with_changed_text_fails_before_any_write(self) -> None:
+        fake = FakeAsc(state="WAITING_FOR_REVIEW", attached="B9",
+                       live_text={**self.same_text, "description": "Older copy"})
+        for env in ({**self.LISTING, **self.SUBMIT}, self.LISTING):
+            with self.subTest(env=env):
+                code, products = self.run_main(fake, env)
+                self.assertEqual(code, 1)
+                self.assertEqual(writes(fake), [])
+                products.assert_not_called()
+
+    def test_locked_screenshots_are_compared_not_replaced(self) -> None:
+        fake = FakeAsc(state="READY_FOR_REVIEW", live_shots=self.same_shots)
+        code, _ = self.run_main(fake, {"UPLOAD_SCREENSHOTS": "true", **self.SUBMIT})
+        self.assertEqual(code, 0)
+        self.assertFalse([c for c in writes(fake) if "Screenshot" in c[1]])
+        # A different file must stop the run before the text update writes anything.
+        changed = [{**self.same_shots[0], "sourceFileChecksum": "0" * 32}]
+        fake = FakeAsc(state="READY_FOR_REVIEW", live_shots=changed, live_text={"description": "Old"})
+        code, _ = self.run_main(fake, {"UPLOAD_SCREENSHOTS": "true", **self.LISTING, **self.SUBMIT})
+        self.assertEqual(code, 1)
+        self.assertEqual(writes(fake), [])
+
+    def test_editable_version_skips_what_already_matches(self) -> None:
+        fake = FakeAsc(live_text=self.same_text, live_shots=self.same_shots)
+        code, _ = self.run_main(fake, {**self.LISTING, "UPLOAD_SCREENSHOTS": "true"})
+        self.assertEqual(code, 0)
+        self.assertEqual(writes(fake), [])
+
+    def test_other_states_still_refuse_metadata(self) -> None:
+        for state in ("IN_REVIEW", "READY_FOR_SALE"):
+            fake = FakeAsc(state=state, live_text={"description": "Old"})
+            with self.subTest(state=state):
+                code, _ = self.run_main(fake, self.LISTING)
+                self.assertEqual(code, 1)
+                self.assertEqual(writes(fake), [])
+
+
+class InAppPurchaseOrderTests(unittest.TestCase):
+    """IOS-REL-4: catalog IAPs reach App Review only after the final build recheck."""
+
+    PRODUCT = "com.apoorvdarshan.calorietracker.credits.50"
+    IAP = {"id": "IAP1", "attributes": {"name": "Credits 50", "productId": PRODUCT, "state": "READY_TO_SUBMIT"}}
+
+    def run_submit(self, fake: FakeAsc) -> int:
+        argv = ["asc_release.py", "--version", VERSION, "--build-id", "B9", "--build-number", "40"]
+        env = {k: v for k, v in os.environ.items() if k not in {
+            "UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "PUBLIC_RELEASE"}}
+        env["SUBMIT_IOS_REVIEW"] = "true"
+        code = 0
+        with mock.patch.dict(os.environ, env, clear=True), mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(asc_release, "client_from_environment", return_value=fake), \
+                mock.patch.object(asc_release, "intended_product_ids", return_value={self.PRODUCT}), \
+                redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            try:
+                asc_release.main()
+            except SystemExit as exc:
+                code = exc.code if isinstance(exc.code, int) else 1
+        return code
+
+    def test_iap_is_submitted_after_the_recheck_and_before_the_version(self) -> None:
+        fake = FakeAsc(iaps=[self.IAP])
+        self.assertEqual(self.run_submit(fake), 0)
+        calls = fake.calls
+        iap = calls.index(("POST", "/inAppPurchaseSubmissions"))
+        reads = [i for i, c in enumerate(calls) if c == ("GET", "/appStoreVersions/V1/build")]
+        submit = calls.index(("PATCH", "/reviewSubmissions/SUB1"))
+        self.assertEqual(len(reads), 2)
+        self.assertTrue(reads[1] < iap < submit)
+
+    def test_failed_recheck_sends_nothing_to_app_review(self) -> None:
+        fake = FakeAsc(iaps=[self.IAP], revert_after_select=True)
+        self.assertEqual(self.run_submit(fake), 1)
+        self.assertNotIn(("POST", "/inAppPurchaseSubmissions"), fake.calls)
+        self.assertNotIn(("PATCH", "/reviewSubmissions/SUB1"), fake.calls)
+
+    def test_failed_iap_submission_keeps_the_version_out_of_review(self) -> None:
+        class Refusing(FakeAsc):
+            def post(self, path: str, body: dict) -> dict:
+                if path == "/inAppPurchaseSubmissions":
+                    self.calls.append(("POST-REFUSED", path))
+                    raise asc_release.AscHttpError(409, "conflict")
+                return super().post(path, body)
+
+        fake = Refusing(iaps=[self.IAP])
+        self.assertEqual(self.run_submit(fake), 1)
+        self.assertNotIn(("PATCH", "/reviewSubmissions/SUB1"), fake.calls)
+
+    def test_deferred_collection_posts_nothing(self) -> None:
+        fake = FakeAsc(iaps=[self.IAP])
+        result = quiet(asc_release.submit_in_app_purchases, fake, APP,
+                       intended_ids={self.PRODUCT}, submission_id="SUB1", defer_in_app_purchases=True)
+        self.assertEqual(writes(fake), [])
+        self.assertEqual(result.pending_in_app_purchases, [("IAP1", "Credits 50", self.PRODUCT)])
+        self.assertEqual(quiet(asc_release.submit_deferred_in_app_purchases, fake, result), 1)
+        self.assertEqual(writes(fake), [("POST", "/inAppPurchaseSubmissions")])
+        self.assertEqual(result.pending_in_app_purchases, [])
+
+
+class ScreenshotUploadTests(unittest.TestCase):
+    def test_upload_records_the_file_checksum(self) -> None:
+        data = b"\x89PNG\r\n\x1a\nimage"
+        client = mock.Mock()
+        client.post.return_value = {"data": {"id": "S1", "attributes": {"uploadOperations": [
+            {"url": "https://upload.example", "offset": 0, "length": len(data), "method": "PUT", "requestHeaders": []}
+        ]}}}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "01-home.png"
+            path.write_bytes(data)
+            quiet(asc_release.upload_screenshot_file, client, "SET1", path)
+        attrs = client.patch.call_args[0][1]["data"]["attributes"]
+        self.assertEqual(attrs, {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()})
+
+
+class RedactionTests(unittest.TestCase):
+    """IOS-REL-6: failure artifacts never carry the key or issuer ID."""
+
+    KEY = "TESTKEY0001"
+    ISSUER = "00000000-test-4000-8000-issuer000001"
+
+    def secrets(self) -> dict[str, str]:
+        return {"ASC_KEY_ID": self.KEY, "ASC_ISSUER_ID": self.ISSUER}
+
+    def test_text_binary_and_utf16_copies_never_survive(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            logs = Path(tmp) / "logs"
+            dist = logs / "Fud.xcdistributionlogs"
+            dist.mkdir(parents=True)
+            (logs / "archive.log").write_text(
+                f"-authenticationKeyID {self.KEY} -authenticationKeyIssuerID {self.ISSUER}\nAuthKey_{self.KEY}.p8\n"
+            )
+            (dist / "options.plist").write_bytes(
+                b"bplist00\x00\x01" + self.KEY.encode() + b"\x00" + self.ISSUER.upper().encode() + b"\xff"
+            )
+            (dist / "upload.log").write_bytes(f"key {self.KEY}".encode("utf-16-le"))
+            (logs / "clean.log").write_text("nothing to hide")
+            outside = Path(tmp) / "outside.txt"
+            outside.write_text(self.KEY)
+            (logs / "link.txt").symlink_to(outside)
+
+            changed, removed = redact_credential_ids.redact_folder(logs, self.secrets())
+
+            text = (logs / "archive.log").read_text()
+            self.assertEqual(
+                text,
+                "-authenticationKeyID <ASC_KEY_ID> -authenticationKeyIssuerID <ASC_ISSUER_ID>\nAuthKey_<ASC_KEY_ID>.p8\n",
+            )
+            plist = (dist / "options.plist").read_bytes()
+            self.assertTrue(plist.startswith(b"bplist00\x00\x01<ASC_KEY_ID>\x00<ASC_ISSUER_ID>"))
+            self.assertFalse((dist / "upload.log").exists(), "UTF-16 copies are removed")
+            self.assertFalse((logs / "link.txt").exists(), "links out of the folder are removed")
+            self.assertEqual(outside.read_text(), self.KEY, "the link target is untouched")
+            self.assertEqual((logs / "clean.log").read_text(), "nothing to hide")
+            self.assertEqual(changed, 2)
+            self.assertEqual(len(removed), 2)
+            for path in logs.rglob("*"):
+                if path.is_file():
+                    self.assertFalse(
+                        redact_credential_ids.remaining_ids(path.read_bytes(), [self.KEY, self.ISSUER]), path
+                    )
+
+    def test_cli(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "export.log").write_text(f"--apiKey {self.KEY}")
+            out = io.StringIO()
+            with mock.patch.dict(os.environ, self.secrets()), redirect_stdout(out):
+                self.assertEqual(redact_credential_ids.main(["redact", tmp]), 0)
+            self.assertEqual((Path(tmp) / "export.log").read_text(), "--apiKey <ASC_KEY_ID>")
+            with mock.patch.dict(os.environ, {"ASC_KEY_ID": "", "ASC_ISSUER_ID": ""}), redirect_stdout(io.StringIO()):
+                self.assertEqual(redact_credential_ids.main(["redact", tmp]), 0)
+            with redirect_stderr(io.StringIO()):
+                self.assertEqual(redact_credential_ids.main(["redact"]), 2)
+
+
+class PrintGatesTests(unittest.TestCase):
+    """P-21: the printed summary never shows an invalid switch as off."""
+
+    def run_print(self, env: dict[str, str]) -> str:
+        clean = {k: v for k, v in os.environ.items() if not k.startswith(("IOS_", "ANDROID_", "STORE_"))}
+        clean.update(env)
+        out = io.StringIO()
+        with mock.patch.dict(os.environ, clean, clear=True), \
+                mock.patch.object(sys, "argv", ["print_gates.py", "--platform", "all"]), redirect_stdout(out):
+            print_gates.main()
+        return out.getvalue()
+
+    def test_invalid_values_are_shown_as_invalid(self) -> None:
+        output = self.run_print({"IOS_SUBMIT_REVIEW": "maybe", "ANDROID_RELEASE_AUTOMATION": " ON "})
+        self.assertIn("IOS_SUBMIT_REVIEW=INVALID 'maybe' (a release run fails)", output)
+        self.assertIn("ANDROID_RELEASE_AUTOMATION=true", output)
+        self.assertIn("IOS_UPLOAD_BUILD=false (unset)", output)
+        self.assertIn("invalid value", output)
+        self.assertIn("one or more live gates are on", output)
+
+    def test_everything_off(self) -> None:
+        output = self.run_print({"IOS_RELEASE_AUTOMATION": "false"})
+        self.assertIn("IOS_RELEASE_AUTOMATION=false\n", output)
+        self.assertIn("all gates off", output)
+        self.assertNotIn("INVALID", output)
+
+
 class ReleaseNotesTests(unittest.TestCase):
     TEXT = (
         "# Release notes\n\n## Unreleased\n\nWork in progress.\n\n"
@@ -700,6 +1110,16 @@ class ReleaseNotesTests(unittest.TestCase):
         code, _, _ = self.run_cli("--if-present", "ios-v7.3")
         self.assertEqual(code, 2, "an empty section is malformed even when notes are optional")
 
+    def test_duplicate_sections_fail(self) -> None:
+        text = self.TEXT + "\n## ios-v7.2\n\nShipped again.\n"
+        for lookup in (release_notes.notes_for_tag, release_notes.section_for_tag):
+            with self.subTest(lookup=lookup.__name__), self.assertRaisesRegex(ValueError, "2 ## ios-v7.2 sections"):
+                lookup("ios-v7.2", text)
+        self.assertEqual(release_notes.notes_for_tag("android-v7.2", text), "Beta.")
+        code, out, err = self.run_cli("--if-present", "ios-v7.2", text=text)
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("keep exactly one", err)
+
     def test_missing_notes_file_is_missing_notes(self) -> None:
         code, out, err = self.run_cli("--if-present", "ios-v7.2", text=None)
         self.assertEqual((code, out), (0, ""))
@@ -744,6 +1164,29 @@ class IosWhatsNewTests(unittest.TestCase):
                 self.assertEqual(code, 1)
         code, output, _ = self.prepare("## What's New\n```\n" + "x" * 4000 + "\n```\n")
         self.assertEqual(code, 0, output)
+
+    def test_markdown_is_rejected_plain_bullets_are_fine(self) -> None:
+        for label, body in {
+            "bold": "**New** logging",
+            "link": "Read [the notes](https://fud-ai.app)",
+            "code": "Use `Settings` to switch",
+            "heading": "# What changed",
+        }.items():
+            with self.subTest(label):
+                code, output, _ = self.prepare(f"## What's New\n```\n{body}\n```\n")
+                self.assertEqual(code, 1)
+                self.assertIn("plain text", output)
+        plain = "NEW\n• Faster logging → fewer taps\n- Fixes\n5*3 = 15, snake_case stays"
+        code, output, _ = self.prepare(f"## What's New\n```\n{plain}\n```\n")
+        self.assertEqual(code, 0, output)
+
+    def test_repository_whats_new_is_valid(self) -> None:
+        # APPSTORE.md's What's New must pass the checks a release run applies.
+        with tempfile.TemporaryDirectory() as tmp:
+            argv = ["prepare_whats_new.py", "--platform", "ios", "--tag", TAG, "--out", tmp]
+            with mock.patch.object(sys, "argv", argv), redirect_stdout(io.StringIO()):
+                prepare_whats_new.main()
+            self.assertTrue((Path(tmp) / "ios" / "en-US" / "whats_new.txt").read_text(encoding="utf-8").strip())
 
 
 if __name__ == "__main__":

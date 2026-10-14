@@ -36,8 +36,35 @@ def extract_fenced_after_heading(text: str, heading_prefix: str) -> str:
     fail(f"heading matching {heading_prefix!r} not found")
 
 
+# Both stores show What's New as plain text, so Markdown would appear literally.
+MARKDOWN_SYNTAX = (
+    (re.compile(r"\[[^\]\n]+\]\([^)\s]+\)"), "links like [text](url)"),
+    (re.compile(r"\*\*[^*\n]+\*\*|__[^_\n]+__"), "bold like **text**"),
+    (re.compile(r"`[^`\n]+`"), "code like `text`"),
+    (re.compile(r"^ {0,3}#{1,6}\s", re.MULTILINE), "headings like # Title"),
+)
+
+
+def check_plain_text(label: str, text: str) -> None:
+    """Fail when store text contains Markdown (bullets such as • or - are fine)."""
+    found = [description for pattern, description in MARKDOWN_SYNTAX if pattern.search(text)]
+    if found:
+        fail(
+            f"{label} must be plain text; the store would show Markdown literally "
+            f"(found {', '.join(found)})"
+        )
+
+
+# Google Play's limit for a release's "What's new", per language.
+PLAY_WHATS_NEW_MAX = 500
+
+
 def write_play_whatsnew(block: str, out_dir: Path) -> list[Path]:
-    """Split <locale>...</locale> blocks into whatsnew-LOCALE files."""
+    """Split <locale>...</locale> blocks into whatsnew-LOCALE files.
+
+    The upload action sends each file's bytes verbatim, so a file holds exactly
+    the checked text: no trailing newline that would make 500 characters 501.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
     for match in re.finditer(
@@ -48,10 +75,11 @@ def write_play_whatsnew(block: str, out_dir: Path) -> list[Path]:
         locale, body = match.group(1), match.group(2).strip()
         if not body:
             fail(f"empty what's new for {locale}")
-        if len(body) > 500:
-            fail(f"what's new for {locale} exceeds 500 chars ({len(body)})")
+        if len(body) > PLAY_WHATS_NEW_MAX:
+            fail(f"what's new for {locale} exceeds {PLAY_WHATS_NEW_MAX} chars ({len(body)})")
+        check_plain_text(f"what's new for {locale} in PLAYSTORE.md", body)
         path = out_dir / f"whatsnew-{locale}"
-        path.write_text(body + "\n", encoding="utf-8")
+        path.write_text(body, encoding="utf-8")
         written.append(path)
     if not written:
         fail("no <locale> what's-new blocks found in PLAYSTORE.md")
@@ -69,6 +97,7 @@ def check_ios_whats_new(block: str) -> str:
         fail("empty what's new in APPSTORE.md")
     if len(text) > IOS_WHATS_NEW_MAX:
         fail(f"what's new in APPSTORE.md exceeds {IOS_WHATS_NEW_MAX} chars ({len(text)})")
+    check_plain_text("what's new in APPSTORE.md", text)
     return text
 
 
