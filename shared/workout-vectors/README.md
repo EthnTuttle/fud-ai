@@ -176,8 +176,9 @@ candidate triage is available with:
 python3 scripts/audit_workout_visual_quality.py
 ```
 
-See `artifacts/workout-visual-qa/README.md` for numerical versus visual-review
-coverage and rejected built-in repair attempts. Do not treat candidate flags as
+The September 2026 review notes (numerical versus visual-review coverage and
+rejected built-in repair attempts) are no longer in the tree; read them with
+`git show 6b30f5782:artifacts/workout-visual-qa/README.md`. Do not treat candidate flags as
 accepted fixes. Workout list, grid, and diary thumbnails continue to animate;
 the image rollout must not disable existing animation behavior.
 

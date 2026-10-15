@@ -26,32 +26,8 @@ ios/build-sim/
 # Xcode per-user state (scheme order, workspace UI) — meaningless off this machine
 ios/**/xcuserdata/
 
-# Generated review contact sheets (regenerate via scripts/render_workout_review.py)
-artifacts/workout-visual-qa/review-batches/**/previews/
-artifacts/workout-visual-qa/cursor-pilot-10/candidates/
-artifacts/workout-visual-qa/cursor-pilot-10/previews/
-artifacts/workout-visual-qa/cursor-cloud-100/candidates/
-artifacts/workout-visual-qa/cursor-cloud-100/staging/
-artifacts/workout-visual-qa/cursor-cloud-100/workers/
-artifacts/workout-visual-qa/cursor-cloud-100/previews/
-artifacts/workout-visual-qa/cursor-promoted-5/originals/
-artifacts/workout-visual-qa/cursor-promoted-5/candidates/
-artifacts/workout-visual-qa/cursor-next-10/candidates/
-artifacts/workout-visual-qa/cursor-shard-100/candidates/
-artifacts/workout-visual-qa/cursor-shard-100/staging/
-artifacts/workout-visual-qa/cursor-shard-100/workers/
-artifacts/workout-visual-qa/cursor-wave-100/candidates/
-artifacts/workout-visual-qa/cursor-wave-100/staging/
-artifacts/workout-visual-qa/cursor-wave-100/workers/
-artifacts/workout-visual-qa/cursor-wave-200/candidates/
-artifacts/workout-visual-qa/cursor-wave-200/staging/
-artifacts/workout-visual-qa/cursor-wave-200/workers/
-artifacts/workout-visual-qa/cursor-wave-300/candidates/
-artifacts/workout-visual-qa/cursor-wave-300/staging/
-artifacts/workout-visual-qa/cursor-wave-300/workers/
-artifacts/workout-visual-qa/cursor-wave-leftover/candidates/
-artifacts/workout-visual-qa/cursor-wave-leftover/staging/
-artifacts/workout-visual-qa/cursor-wave-leftover/workers/
+# Local output of the workout-image review scripts in scripts/; never committed
+/artifacts/
 
 # Stray compiler output at the repo root (e.g. `swiftc test.swift` -> ./test).
 # A Mach-O binary was once committed this way; keep it out.

@@ -329,8 +329,9 @@ ios/
 ## Build & Run
 
 ```bash
-# Clone
-git clone https://github.com/apoorvdarshan/fud-ai.git
+# Clone. --filter=blob:none downloads only the files in the current version,
+# not every image and binary in the history.
+git clone --filter=blob:none https://github.com/apoorvdarshan/fud-ai.git
 cd fud-ai
 ```
 
