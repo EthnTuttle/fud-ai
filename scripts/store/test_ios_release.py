@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import io
 import os
+import plistlib
 import sys
 import tempfile
 import unittest
@@ -31,6 +32,7 @@ TAG = "ios-v7.2"
 VERSION = "7.2"
 ALL_ON = {
     "IOS_RELEASE_AUTOMATION": "true",
+    "IOS_CREATE_VERSION": "true",
     "IOS_UPLOAD_BUILD": "true",
     "IOS_UPLOAD_LISTING": "true",
     "IOS_UPLOAD_WHATS_NEW": "true",
@@ -38,7 +40,7 @@ ALL_ON = {
     "IOS_SUBMIT_REVIEW": "true",
     "IOS_PUBLIC_RELEASE": "true",
 }
-OPS = ("upload_build", "listing", "whats_new", "screenshots", "submit", "public_release")
+OPS = ("create_version", "upload_build", "listing", "whats_new", "screenshots", "submit", "public_release")
 
 
 def gates(env: dict[str, str], *, event: str = "push", ref: str = TAG) -> dict:
@@ -138,6 +140,16 @@ class GateTests(unittest.TestCase):
                 resolve_gates({}, event="workflow_dispatch", ref_name="main",
                               marketing_version=VERSION, validation_version=bad)
 
+    def test_create_version_needs_only_the_master_switch(self) -> None:
+        result = gates({"IOS_RELEASE_AUTOMATION": "true", "IOS_CREATE_VERSION": "true"})
+        self.assertTrue(result["create_version"])
+        self.assertFalse(result["build"])
+        self.assertFalse(result["asc"])
+        self.assertFalse(gates({"IOS_CREATE_VERSION": "true"})["create_version"])
+        self.assertFalse(gates(ALL_ON, event="workflow_dispatch", ref="main")["create_version"])
+        with self.assertRaisesRegex(ReleaseError, "IOS_CREATE_VERSION"):
+            gates({"IOS_CREATE_VERSION": "maybe"})
+
     def test_project_versions_are_consistent(self) -> None:
         self.assertRegex(ios_release.single_project_value("MARKETING_VERSION"), r"^\d+(\.\d+)*$")
         self.assertRegex(ios_release.single_project_value("CURRENT_PROJECT_VERSION"), r"^\d+$")
@@ -146,6 +158,197 @@ class GateTests(unittest.TestCase):
             pbx.write_text("MARKETING_VERSION = 1.0;\nMARKETING_VERSION = 1.1;\n")
             with self.assertRaisesRegex(ReleaseError, "identical"):
                 ios_release.single_project_value("MARKETING_VERSION", pbx)
+
+
+class ExportComplianceTests(unittest.TestCase):
+    """ITSAppUsesNonExemptEncryption must be declared, or App Store Connect asks about every build
+    and review submission fails with usesNonExemptEncryption missing (HTTP 409)."""
+
+    KEY = "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption"
+    CODE = {"INFOPLIST_KEY_ITSEncryptionExportComplianceCode": "ABC123"}
+    GENERATED = {"GENERATE_INFOPLIST_FILE": "YES"}
+    APP_PLIST = {"INFOPLIST_FILE": "calorietracker/Info.plist", **GENERATED}
+
+    def setUp(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        (self.root / "calorietracker.xcodeproj").mkdir()
+        (self.root / "calorietracker").mkdir()
+
+    def plist(self, values: dict, *, binary: bool = False, name: str = "calorietracker/Info.plist") -> Path:
+        fmt = plistlib.FMT_BINARY if binary else plistlib.FMT_XML
+        path = self.root / name
+        path.write_bytes(plistlib.dumps({"CFBundleName": "Fud AI", **values}, fmt=fmt))
+        return path
+
+    def project(self, app: dict[str, dict[str, str]], *, project: dict[str, dict[str, str]] | None = None,
+                other: dict[str, dict[str, str]] | None = None) -> Path:
+        """A minimal project.pbxproj: the app target, an optional other target, project-level settings."""
+        ids = iter(f"{n:024X}" for n in range(1, 1000))
+        objects: list[str] = []
+
+        def config_list(owner: str, configs: dict[str, dict[str, str]]) -> str:
+            list_id = next(ids)
+            refs = []
+            for name, settings in configs.items():
+                config_id = next(ids)
+                refs.append(f"\t\t\t\t{config_id} /* {name} */,\n")
+                lines = "".join(f"\t\t\t\t{key} = {value};\n" for key, value in settings.items())
+                objects.append(f"\t\t{config_id} /* {name} */ = {{\n\t\t\tisa = XCBuildConfiguration;\n"
+                               f"\t\t\tbuildSettings = {{\n{lines}\t\t\t}};\n\t\t\tname = {name};\n\t\t}};\n")
+            objects.append(f"\t\t{list_id} /* Build configuration list for {owner} */ = {{\n"
+                           f"\t\t\tisa = XCConfigurationList;\n\t\t\tbuildConfigurations = (\n{''.join(refs)}\t\t\t);\n"
+                           "\t\t\tdefaultConfigurationName = Release;\n\t\t};\n")
+            return list_id
+
+        def target(name: str, configs: dict[str, dict[str, str]]) -> None:
+            list_id = config_list(f'PBXNativeTarget "{name}"', configs)
+            objects.append(f"\t\t{next(ids)} /* {name} */ = {{\n\t\t\tisa = PBXNativeTarget;\n"
+                           f"\t\t\tbuildConfigurationList = {list_id} /* Build configuration list */;\n"
+                           f"\t\t\tname = {name};\n\t\t\tproductType = \"com.apple.product-type.application\";\n\t\t}};\n")
+
+        target("calorietracker", app)
+        if other is not None:
+            target("FudAIWatchApp", other)
+        project_list = config_list('PBXProject "calorietracker"', project or {"Debug": {}, "Release": {}})
+        objects.append(f"\t\t{next(ids)} /* Project object */ = {{\n\t\t\tisa = PBXProject;\n"
+                       f"\t\t\tbuildConfigurationList = {project_list} /* Build configuration list */;\n\t\t}};\n")
+        path = self.root / "calorietracker.xcodeproj" / "project.pbxproj"
+        path.write_text("// !$*UTF8*$!\n{\n\tobjects = {\n" + "".join(objects) + "\t};\n}\n", encoding="utf-8")
+        return path
+
+    def check(self, app: dict[str, dict[str, str]], **kwargs) -> str:
+        return ios_release.check_export_compliance(self.project(app, **kwargs))
+
+    def both(self, settings: dict[str, str]) -> dict[str, dict[str, str]]:
+        return {"Debug": dict(settings), "Release": dict(settings)}
+
+    def test_the_app_declares_no_non_exempt_encryption(self) -> None:
+        self.assertEqual(ios_release.check_export_compliance(), "NO")
+        configs = ios_release.app_configurations()
+        self.assertEqual(set(configs), {"Debug", "Release"})
+        for name, settings in configs.items():
+            self.assertEqual(settings.get("INFOPLIST_FILE"), "calorietracker/Info.plist", name)
+        with (ios_release.PBXPROJ.parents[1] / "calorietracker" / "Info.plist").open("rb") as handle:
+            self.assertIs(plistlib.load(handle)[ios_release.ENCRYPTION_KEY], False)
+
+    def test_no_from_the_info_plist_or_every_configuration_passes(self) -> None:
+        self.plist({"ITSAppUsesNonExemptEncryption": False})
+        self.assertEqual(self.check(self.both(self.APP_PLIST)), "NO")
+        self.assertEqual(self.check(self.both({**self.GENERATED, self.KEY: "NO"})), "NO")
+        self.assertEqual(self.check(self.both({**self.APP_PLIST, self.KEY: "NO"})), "NO")
+        # Inherited from the project-level configurations.
+        self.assertEqual(self.check(self.both(self.GENERATED), project=self.both({self.KEY: "NO"})), "NO")
+        self.assertEqual(self.check(self.both({"INFOPLIST_FILE": "\"$(SRCROOT)/calorietracker/Info.plist\""})), "NO")
+
+    def test_a_configuration_without_the_declaration_fails(self) -> None:
+        debug_only = {"Debug": {**self.GENERATED, self.KEY: "NO"}, "Release": dict(self.GENERATED)}
+        with self.assertRaisesRegex(ReleaseError, "Release configuration does not declare export compliance"):
+            self.check(debug_only)
+        self.plist({})
+        with self.assertRaisesRegex(ReleaseError, "does not declare export compliance"):
+            self.check(self.both(self.APP_PLIST))
+        # INFOPLIST_KEY_ settings only reach the Info.plist when Xcode generates it.
+        with self.assertRaisesRegex(ReleaseError, "does not declare export compliance"):
+            self.check(self.both({"GENERATE_INFOPLIST_FILE": "NO", self.KEY: "NO"}))
+
+    def test_other_targets_do_not_count(self) -> None:
+        with self.assertRaisesRegex(ReleaseError, "does not declare export compliance"):
+            self.check(self.both(self.GENERATED), other=self.both({**self.GENERATED, self.KEY: "NO"}))
+        self.assertEqual(self.check(self.both({**self.GENERATED, self.KEY: "NO"}),
+                                    other=self.both({**self.GENERATED, self.KEY: "maybe"})), "NO")
+
+    def test_yes_needs_the_compliance_code(self) -> None:
+        yes = {**self.GENERATED, self.KEY: "YES"}
+        with self.assertRaisesRegex(ReleaseError, "needs ITSEncryptionExportComplianceCode"):
+            self.check(self.both(yes))
+        self.assertEqual(self.check(self.both({**yes, **self.CODE})), "YES")
+        self.plist({"ITSAppUsesNonExemptEncryption": True, "ITSEncryptionExportComplianceCode": " "})
+        with self.assertRaisesRegex(ReleaseError, "needs ITSEncryptionExportComplianceCode"):
+            self.check(self.both(self.APP_PLIST))
+        self.plist({"ITSAppUsesNonExemptEncryption": True, "ITSEncryptionExportComplianceCode": "ABC123"})
+        self.assertEqual(self.check(self.both(self.APP_PLIST)), "YES")
+
+    def test_mixed_unknown_or_non_boolean_values_fail(self) -> None:
+        cases = [
+            (self.both({**self.GENERATED, self.KEY: "maybe"}), None),
+            (self.both({**self.GENERATED, self.KEY: "NO", f'"{self.KEY}[sdk=iphoneos*]"': "YES", **self.CODE}), None),
+            (self.both(self.APP_PLIST), {"ITSAppUsesNonExemptEncryption": "NO"}),
+            (self.both(self.APP_PLIST), {"ITSAppUsesNonExemptEncryption": "$(ENCRYPTION)"}),
+            (self.both({**self.APP_PLIST, self.KEY: "NO"}),
+             {"ITSAppUsesNonExemptEncryption": True, "ITSEncryptionExportComplianceCode": "X"}),
+        ]
+        for app, plist in cases:
+            if plist is not None:
+                self.plist(plist)
+            with self.subTest(app=app, plist=plist), self.assertRaisesRegex(ReleaseError, "must be NO or YES"):
+                self.check(app)
+        split = {"Debug": {**self.GENERATED, self.KEY: "NO"}, "Release": {**self.GENERATED, self.KEY: "YES", **self.CODE}}
+        with self.assertRaisesRegex(ReleaseError, "same in every calorietracker configuration"):
+            self.check(split)
+
+    def test_unreadable_project_inputs_fail(self) -> None:
+        with self.assertRaisesRegex(ReleaseError, "cannot read"):
+            self.check(self.both({"INFOPLIST_FILE": "calorietracker/Missing.plist"}))
+        with self.assertRaisesRegex(ReleaseError, "cannot resolve INFOPLIST_FILE"):
+            self.check(self.both({"INFOPLIST_FILE": "$(OTHER_DIR)/Info.plist"}))
+        with self.assertRaisesRegex(ReleaseError, "expected one 'Missing' target"):
+            ios_release.check_export_compliance(self.project(self.both(self.GENERATED)), target="Missing")
+        with self.assertRaisesRegex(ReleaseError, "no build configurations"):
+            self.check({})
+
+    def test_archived_info_plist_is_checked_the_same_way(self) -> None:
+        check = ios_release.check_archived_export_compliance
+        self.assertEqual(check(self.plist({"ITSAppUsesNonExemptEncryption": False}, binary=True)), "NO")
+        self.assertEqual(check(self.plist({"ITSAppUsesNonExemptEncryption": True,
+                                           "ITSEncryptionExportComplianceCode": "ABC123"}, binary=True)), "YES")
+        with self.assertRaisesRegex(ReleaseError, "archived app does not declare"):
+            check(self.plist({}, binary=True))
+        with self.assertRaisesRegex(ReleaseError, "needs ITSEncryptionExportComplianceCode"):
+            check(self.plist({"ITSAppUsesNonExemptEncryption": True}, binary=True))
+        broken = self.root / "Broken.plist"
+        broken.write_bytes(b"not a plist")
+        with self.assertRaisesRegex(ReleaseError, "cannot read"):
+            check(broken)
+        with self.assertRaisesRegex(ReleaseError, "cannot read"):
+            check(self.root / "no-such-dir" / "Info.plist")
+
+    def test_export_compliance_command_exit_codes(self) -> None:
+        out = io.StringIO()
+        with redirect_stdout(out):
+            ios_release.main(["export-compliance", "--info-plist",
+                              str(self.plist({"ITSAppUsesNonExemptEncryption": False}, binary=True))])
+        self.assertIn("ITSAppUsesNonExemptEncryption = NO", out.getvalue())
+        err = io.StringIO()
+        with redirect_stdout(io.StringIO()), redirect_stderr(err), self.assertRaises(SystemExit) as exit_:
+            ios_release.main(["export-compliance", "--info-plist", str(self.plist({}, binary=True))])
+        self.assertEqual(exit_.exception.code, 1)
+        self.assertIn("does not declare export compliance", err.getvalue())
+
+    def test_gates_check_it_only_when_this_run_builds(self) -> None:
+        cases = (
+            ({"GITHUB_EVENT_NAME": "workflow_dispatch", "GITHUB_REF_NAME": "main"}, True),
+            ({"GITHUB_EVENT_NAME": "push", "GITHUB_REF_NAME": TAG,
+              "IOS_RELEASE_AUTOMATION": "true", "IOS_UPLOAD_BUILD": "true"}, True),
+            ({"GITHUB_EVENT_NAME": "push", "GITHUB_REF_NAME": TAG,
+              "IOS_RELEASE_AUTOMATION": "true", "IOS_UPLOAD_LISTING": "true"}, False),
+            ({"GITHUB_EVENT_NAME": "push", "GITHUB_REF_NAME": TAG}, False),
+        )
+        for env, builds in cases:
+            missing = mock.patch.object(ios_release, "check_export_compliance",
+                                        side_effect=ReleaseError("the app does not declare export compliance"))
+            with self.subTest(env=env), missing as check, \
+                    mock.patch.object(ios_release, "single_project_value", return_value=VERSION), \
+                    mock.patch.dict(os.environ, env, clear=True), redirect_stdout(io.StringIO()), \
+                    redirect_stderr(io.StringIO()) as err:
+                if builds:
+                    with self.assertRaises(SystemExit):
+                        ios_release.main(["gates"])
+                    self.assertIn("export compliance", err.getvalue())
+                else:
+                    ios_release.main(["gates"])
+                    check.assert_not_called()
 
 
 class BuildNumberTests(unittest.TestCase):
@@ -775,6 +978,7 @@ class VersionPreflightTests(unittest.TestCase):
                 version=VERSION, metadata=False, submit=True,
             )
         self.assertIn("create the version in App Store Connect first", err.getvalue())
+        self.assertIn("IOS_CREATE_VERSION", err.getvalue())
 
     def test_versions_in_review_or_released_fail(self) -> None:
         for state in ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "READY_FOR_SALE", ""):
@@ -806,6 +1010,185 @@ class VersionPreflightTests(unittest.TestCase):
                 mock.patch.object(ios_release, "asc_client", return_value=(asc_release, fake)), redirect_stdout(out):
             ios_release.cmd_version_preflight(argparse.Namespace(version=VERSION))
         self.assertIn("exists and is PREPARE_FOR_SUBMISSION", out.getvalue())
+
+
+class VersionCreationClient:
+    """App Store Connect stand-in for `asc_release.py --create-version` (no network).
+
+    Only the app lookup, the IOS version listing and POST /appStoreVersions are
+    expected; any other call fails the test.
+    """
+
+    def __init__(self, *, versions: list[tuple[str, str]] | None = None,
+                 app_id: str = asc_release.ASC_APP_ID, listed_after_create: bool = True) -> None:
+        # The app's IOS App Store versions as (versionString, appStoreState).
+        self.versions = [("7.1.2", "READY_FOR_SALE")] if versions is None else list(versions)
+        self.app_id = app_id
+        # False: the created version does not show up in the listing yet.
+        self.listed_after_create = listed_after_create
+        self.calls: list[tuple[str, str]] = []
+        self.bodies: list[dict] = []
+
+    def get(self, path: str) -> dict:
+        self.calls.append(("GET", path))
+        if path.startswith("/apps?"):
+            return {"data": [{"id": self.app_id, "attributes": {"bundleId": asc_release.DEFAULT_BUNDLE_ID}}]}
+        if path.startswith(f"/apps/{self.app_id}/appStoreVersions"):
+            return {"data": [{"id": f"V{i}", "attributes": {"versionString": number, "appStoreState": state}}
+                             for i, (number, state) in enumerate(self.versions)]}
+        raise AssertionError(f"unexpected GET {path}")
+
+    def post(self, path: str, body: dict) -> dict:
+        self.calls.append(("POST", path))
+        self.bodies.append(body)
+        if path != "/appStoreVersions":
+            raise AssertionError(f"unexpected POST {path}")
+        if self.listed_after_create:
+            self.versions.append((body["data"]["attributes"]["versionString"], "PREPARE_FOR_SUBMISSION"))
+        return {"data": {"id": "NEW"}}
+
+    def writes(self) -> list[tuple[str, str]]:
+        return [call for call in self.calls if call[0] != "GET"]
+
+
+class CreateVersionTests(unittest.TestCase):
+    """--create-version (IOS_CREATE_VERSION): add the tag's App Store version only when it is missing."""
+
+    ON = {"CREATE_IOS_VERSION": "true"}
+    FLAGS = {"CREATE_IOS_VERSION", "UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS",
+             "SUBMIT_IOS_REVIEW", "PUBLIC_RELEASE"}
+
+    def create(self, fake: VersionCreationClient, env: dict[str, str] | None = None, *args: str,
+               version: str | None = VERSION) -> tuple[int, str]:
+        argv = ["asc_release.py", "--create-version", *args]
+        if version is not None:
+            argv += ["--version", version]
+        full_env = {k: v for k, v in os.environ.items() if k not in self.FLAGS}
+        full_env.update(self.ON if env is None else env)
+        out = io.StringIO()
+        code = 0
+        with mock.patch.dict(os.environ, full_env, clear=True), mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(asc_release, "client_from_environment", return_value=fake), \
+                redirect_stdout(out), redirect_stderr(out):
+            try:
+                asc_release.main()
+            except SystemExit as exc:
+                code = exc.code if isinstance(exc.code, int) else 1
+        return code, out.getvalue()
+
+    def test_switch_off_makes_no_calls(self) -> None:
+        fake = VersionCreationClient()
+        code, output = self.create(fake, {})
+        self.assertEqual(code, 0, output)
+        self.assertIn("skipped", output)
+        self.assertEqual(fake.calls, [])
+
+    def test_existing_version_is_left_alone(self) -> None:
+        for state in ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW", "READY_FOR_SALE"):
+            with self.subTest(state=state):
+                fake = VersionCreationClient(versions=[("7.1.2", "READY_FOR_SALE"), (VERSION, state)])
+                code, output = self.create(fake)
+                self.assertEqual(code, 0, output)
+                self.assertIn(f"already exists ({state})", output)
+                self.assertEqual(fake.writes(), [])
+
+    def test_missing_version_is_created_for_this_app_and_read_back(self) -> None:
+        fake = VersionCreationClient()
+        code, output = self.create(fake)
+        self.assertEqual(code, 0, output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+        body = fake.bodies[0]["data"]
+        self.assertEqual(body["type"], "appStoreVersions")
+        self.assertEqual(body["attributes"], {"platform": "IOS", "versionString": VERSION})
+        self.assertEqual(body["relationships"]["app"]["data"], {"type": "apps", "id": asc_release.ASC_APP_ID})
+        post = fake.calls.index(("POST", "/appStoreVersions"))
+        self.assertTrue(any(method == "GET" and "/appStoreVersions" in path
+                            for method, path in fake.calls[post + 1:]), "the created version must be read back")
+        self.assertIn(f"created App Store version {VERSION} (PREPARE_FOR_SUBMISSION)", output)
+
+    def test_read_back_miss_names_the_created_version(self) -> None:
+        fake = VersionCreationClient(listed_after_create=False)
+        code, output = self.create(fake)
+        self.assertEqual(code, 1, output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+        self.assertIn(f"created App Store version {VERSION} (NEW), but reading it back found 0", output)
+        self.assertNotIn("turn on IOS_CREATE_VERSION", output)
+
+    def test_another_version_on_its_way_blocks_creation(self) -> None:
+        for state in ("PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE",
+                      "DEVELOPER_REJECTED", ""):
+            with self.subTest(state=state):
+                fake = VersionCreationClient(versions=[("7.1.2", "READY_FOR_SALE"), ("7.1.3", state)])
+                code, output = self.create(fake)
+                self.assertEqual(code, 1, output)
+                self.assertIn(f"is still {state or 'in an unknown state'}", output)
+                self.assertIn("nothing was changed", output)
+                self.assertEqual(fake.writes(), [])
+
+    def test_version_not_newer_than_an_existing_one_is_refused(self) -> None:
+        # Numeric comparison: 7.10 is newer than 7.2, and 7.2.0 is the same version.
+        for existing in ("7.3", "7.10", "7.2.0", "7.2.1", "8"):
+            with self.subTest(existing=existing):
+                fake = VersionCreationClient(versions=[(existing, "READY_FOR_SALE")])
+                code, output = self.create(fake)
+                self.assertEqual(code, 1, output)
+                self.assertIn(f"not newer than the existing version {existing}", output)
+                self.assertEqual(fake.writes(), [])
+
+    def test_older_finished_versions_allow_creation(self) -> None:
+        fake = VersionCreationClient(versions=[
+            ("1.0", "REPLACED_WITH_NEW_VERSION"), ("6.9", "REMOVED_FROM_SALE"),
+            ("7.0", "DEVELOPER_REMOVED_FROM_SALE"), ("7.1.10", "READY_FOR_SALE"),
+        ])
+        code, output = self.create(fake)
+        self.assertEqual(code, 0, output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+
+    def test_other_app_or_bad_version_fails_without_writing(self) -> None:
+        fake = VersionCreationClient(app_id="1234567890")
+        code, output = self.create(fake)
+        self.assertEqual(code, 1)
+        self.assertIn(f"expected {asc_release.ASC_APP_ID}", output)
+        self.assertEqual(fake.writes(), [])
+        for bad in ("7.2-beta", "v7.2", "7.2.1.1", "7..2", "\u0667.\u0662"):
+            with self.subTest(bad=bad):
+                fake = VersionCreationClient()
+                code, output = self.create(fake, version=bad)
+                self.assertEqual(code, 1, output)
+                self.assertIn("must look like", output)
+                self.assertEqual(fake.calls, [])
+
+    def test_ambiguous_version_fails_without_writing(self) -> None:
+        fake = VersionCreationClient(versions=[(VERSION, "PREPARE_FOR_SUBMISSION"), (VERSION, "READY_FOR_SALE")])
+        code, output = self.create(fake)
+        self.assertEqual(code, 1)
+        self.assertIn("ambiguous", output)
+        self.assertEqual(fake.writes(), [])
+
+    def test_needs_the_version_and_the_fud_ai_bundle(self) -> None:
+        fake = VersionCreationClient()
+        code, output = self.create(fake, version=None)
+        self.assertEqual(code, 1)
+        self.assertIn("needs --version", output)
+        code, output = self.create(fake, None, "--bundle-id", "com.example.other")
+        self.assertEqual(code, 1)
+        self.assertIn("Fud AI iOS bundle", output)
+        self.assertEqual(fake.calls, [])
+
+    def test_dry_run_makes_no_calls(self) -> None:
+        fake = VersionCreationClient()
+        code, output = self.create(fake, None, "--dry-run")
+        self.assertEqual(code, 0, output)
+        self.assertIn("would create", output)
+        self.assertEqual(fake.calls, [])
+
+    def test_dry_run_rejects_a_bad_version_like_the_live_run(self) -> None:
+        fake = VersionCreationClient()
+        code, output = self.create(fake, None, "--dry-run", version="7.2-beta")
+        self.assertEqual(code, 1, output)
+        self.assertIn("must look like", output)
+        self.assertNotIn("would create", output)
+        self.assertEqual(fake.calls, [])
 
 
 class MetadataRerunTests(unittest.TestCase):
@@ -1054,6 +1437,12 @@ class PrintGatesTests(unittest.TestCase):
         self.assertIn("IOS_UPLOAD_BUILD=false (unset)", output)
         self.assertIn("invalid value", output)
         self.assertIn("one or more live gates are on", output)
+
+    def test_create_version_switch_is_listed(self) -> None:
+        output = self.run_print({"IOS_RELEASE_AUTOMATION": "true", "IOS_CREATE_VERSION": "true"})
+        self.assertIn("IOS_CREATE_VERSION=true\n", output)
+        self.assertIn("one or more live gates are on", output)
+        self.assertIn("IOS_CREATE_VERSION=INVALID", self.run_print({"IOS_CREATE_VERSION": "maybe"}))
 
     def test_everything_off(self) -> None:
         output = self.run_print({"IOS_RELEASE_AUTOMATION": "false"})
