@@ -58,8 +58,8 @@ jobs:
         with:
           persist-credentials: false
           sparse-checkout-cone-mode: false
-          # Only what the store scripts and their tests read (plus the marketing
-          # screenshots for the staging dry-run); never the 1.2 GB workout corpus.
+          # Only what the store scripts and their tests read (store/ includes the
+          # listing screenshots for the staging dry-run); never the 1.2 GB workout corpus.
           sparse-checkout: |
             /scripts/store/
             /scripts/release_notes.py
@@ -70,7 +70,6 @@ jobs:
             /ios/calorietracker.xcodeproj/project.pbxproj
             /ios/calorietracker/Info.plist
             /android/app/build.gradle.kts
-            /web/assets/screenshots/
 
       # The same pinned Python the release jobs run the store scripts on.
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -103,6 +102,9 @@ jobs:
       - name: Test Android release switches, artifact checks, Play checks and signing files (offline)
         run: python3 -m unittest scripts/store/test_android_release.py
 
+      - name: Test screenshot staging per store (offline)
+        run: python3 -m unittest scripts/store/test_stage_screenshots.py
+
       - name: Validate IAP / subscription / tip catalog
         run: python3 scripts/store/validate_catalog.py
 
@@ -116,11 +118,7 @@ jobs:
         run: |
           python3 scripts/store/prepare_listing_text.py --platform all --out store/metadata
           python3 scripts/store/prepare_whats_new.py --platform all --tag dry-run --out store/metadata
-          if compgen -G "web/assets/screenshots/*.png" > /dev/null; then
-            python3 scripts/store/stage_screenshots.py --dry-run
-          else
-            echo "skip stage_screenshots dry-run (no web/assets/screenshots/*.png in checkout)"
-          fi
+          python3 scripts/store/stage_screenshots.py --dry-run
 
       - name: Validate ASC / Play publisher scripts (import + --dry-run, no network)
         run: |

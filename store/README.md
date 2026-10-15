@@ -354,7 +354,7 @@ Later for catalog automation:
 | [`scripts/store/prepare_listing_text.py`](../scripts/store/prepare_listing_text.py) | `APPSTORE.md` / `PLAYSTORE.md` → `store/metadata/` |
 | [`scripts/store/prepare_whats_new.py`](../scripts/store/prepare_whats_new.py) | What's New for Play + iOS (`APPSTORE.md` / `PLAYSTORE.md`), with the store length and plain-text checks |
 | [`scripts/release_notes.py`](../scripts/release_notes.py) | The tag's `RELEASE_NOTES.md` section for the GitHub Release; `--if-present` prints nothing when there is none; duplicate sections fail |
-| [`scripts/store/stage_screenshots.py`](../scripts/store/stage_screenshots.py) | `web/assets/screenshots/*.png` → `store/metadata/screenshots/` |
+| [`scripts/store/stage_screenshots.py`](../scripts/store/stage_screenshots.py) | `store/screenshots/{ios,play}/*.png` → `store/metadata/screenshots/` (`--platform ios\|play\|all`) |
 | [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | iOS switches, export compliance check (project and archived app), build number, read-only App Store version preflight, wait for this run's build |
 | [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | App Store version creation (`--create-version`), ASC listing, What's New, 6.7" screenshots, build selection, submit for review (re-runnable) |
 | [`scripts/store/redact_credential_ids.py`](../scripts/store/redact_credential_ids.py) | Removes the ASC key and issuer IDs from failure logs before they are uploaded |
@@ -414,18 +414,31 @@ Source of truth for product IDs stays aligned with [`docs/HOSTED_AI_REVENUECAT.m
 ## Metadata layout
 
 ```
+store/screenshots/     # listing images, as live on the stores (source of truth)
+  ios/                 # 10 App Store iPhone screenshots, 1290×2796, NN-name.png
+  play/                # 8 Play phone screenshots, 1290×2796 (padded to 9:16 when staged)
+  watch/               # Apple Watch screenshot (uploaded by hand)
+store/graphics/
+  play/feature-graphic.png   # Play feature graphic, 1024×500 (uploaded by hand)
 store/metadata/
   play/en-US/          # title, short/full description, whatsnew (generated)
   ios/en-US/           # description, keywords, promotional_text, whats_new
   screenshots/
-    play/phone/        # Play phoneScreenshots (staged from web assets)
-    ios/6.7/           # ASC APP_IPHONE_67 slot
+    play/phone/        # Play phoneScreenshots (staged from store/screenshots/play)
+    ios/6.7/           # ASC APP_IPHONE_67 slot (staged from store/screenshots/ios)
 ```
 
-Marketing PNGs live in [`web/assets/screenshots/`](../web/assets/screenshots/).
-Release workflows run `stage_screenshots.py` when `IOS_UPLOAD_SCREENSHOTS`
-(iOS) or `ANDROID_UPLOAD_SCREENSHOTS` (Android) is true, copying those PNGs into `store/metadata/screenshots/` until you replace
-them with store-tailored exports.
+Release workflows run `stage_screenshots.py --platform ios` when
+`IOS_UPLOAD_SCREENSHOTS` is true and `--platform play` when
+`ANDROID_UPLOAD_SCREENSHOTS` is true. Staging copies the numbered PNGs, in file
+name order, into `store/metadata/screenshots/`, and each upload replaces that
+store's whole screenshot set. To change a listing, replace the files in
+`store/screenshots/` first, so turning a switch on never uploads an older set.
+The Watch screenshot and the Play feature graphic have no automated upload.
+Upload them in App Store Connect and Play Console by hand.
+
+Website and README screenshots stay in [`web/assets/screenshots/`](../web/assets/screenshots/).
+Promo, social and launch graphics do not belong in the repository.
 
 ## Release procedure
 
@@ -466,6 +479,7 @@ python3 scripts/store/prepare_listing_text.py --platform all --out /tmp/listing
 python3 scripts/store/stage_screenshots.py --dry-run
 python3 -m unittest scripts/store/test_ios_release.py
 python3 -m unittest scripts/store/test_android_release.py
+python3 -m unittest scripts/store/test_stage_screenshots.py
 IOS_SUBMIT_REVIEW=maybe python3 scripts/store/print_gates.py   # shows INVALID
 UPLOAD_LISTING=true python3 scripts/store/asc_release.py --dry-run --metadata-dir store/metadata
 CREATE_IOS_VERSION=true python3 scripts/store/asc_release.py --create-version --dry-run --version 7.2

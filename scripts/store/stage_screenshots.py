@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy marketing PNGs into store/metadata/screenshots/ for Play + ASC upload paths."""
+"""Copy store/screenshots/{ios,play}/ PNGs into store/metadata/screenshots/ for ASC + Play upload."""
 from __future__ import annotations
 
 import argparse
@@ -9,7 +9,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "web" / "assets" / "screenshots"
+IOS_SOURCE = ROOT / "store" / "screenshots" / "ios"
+PLAY_SOURCE = ROOT / "store" / "screenshots" / "play"
 PLAY_PHONE_DIR = ROOT / "store" / "metadata" / "screenshots" / "play" / "phone"
 IOS_67_DIR = ROOT / "store" / "metadata" / "screenshots" / "ios" / "6.7"
 
@@ -128,83 +129,89 @@ def validate_asc_png(path: Path, *, width: int, height: int) -> None:
         )
 
 
-def stage(*, dry_run: bool) -> list[Path]:
-    if not SOURCE.is_dir():
-        fail(f"screenshot source missing: {SOURCE.relative_to(ROOT)}")
+def numbered_pngs(source: Path) -> list[Path]:
+    if not source.is_dir():
+        fail(f"screenshot source missing: {source.relative_to(ROOT)}")
 
-    # Store uploads use numbered marketing frames only (01-….png).
-    # Short aliases (home.png, logging.png, …) exist for README/website and
-    # must not be staged — they duplicate the numbered set.
+    # Store uploads use numbered frames only (01-….png), in file-name order.
     pngs = sorted(
         p
-        for p in SOURCE.glob("*.png")
+        for p in source.glob("*.png")
         if len(p.name) >= 3 and p.name[0:2].isdigit() and p.name[2] == "-"
     )
     if not pngs:
         fail(
-            f"no numbered PNG files (NN-name.png) under {SOURCE.relative_to(ROOT)}"
+            f"no numbered PNG files (NN-name.png) under {source.relative_to(ROOT)}"
         )
+    return pngs
+
+
+def stage(*, dry_run: bool, platform: str = "all") -> list[Path]:
+    ios_pngs = numbered_pngs(IOS_SOURCE) if platform in ("ios", "all") else []
+    play_pngs = numbered_pngs(PLAY_SOURCE) if platform in ("play", "all") else []
+
+    if len(play_pngs) > PLAY_PHONE_MAX:
+        skipped = ", ".join(p.name for p in play_pngs[PLAY_PHONE_MAX:])
+        print(f"note: Play phone cap is {PLAY_PHONE_MAX}; not staging: {skipped}")
+        play_pngs = play_pngs[:PLAY_PHONE_MAX]
 
     will_upload = uploads_enabled()
     Image = try_import_pillow()
-    play_pngs = pngs[:PLAY_PHONE_MAX]
     if will_upload and Image is None:
         for path in play_pngs:
             w, h = read_png_size(path)
             validate_play_png(path, width=w, height=h)
-        for path in pngs:
+        for path in ios_pngs:
             w, h = read_png_size(path)
             validate_asc_png(path, width=w, height=h)
 
     if not dry_run:
-        clear_destination_pngs(PLAY_PHONE_DIR, IOS_67_DIR)
-
-    if len(pngs) > PLAY_PHONE_MAX:
-        skipped = ", ".join(p.name for p in pngs[PLAY_PHONE_MAX:])
-        print(
-            f"note: Play phone cap is {PLAY_PHONE_MAX}; "
-            f"staging ASC-only for: {skipped}"
+        clear_destination_pngs(
+            *([PLAY_PHONE_DIR] if play_pngs else []),
+            *([IOS_67_DIR] if ios_pngs else []),
         )
 
     copied: list[Path] = []
-    for path in pngs:
+    for path in play_pngs:
         w, h = read_png_size(path)
-        for_play = path in play_pngs
 
         if dry_run:
-            dests = [IOS_67_DIR.relative_to(ROOT)]
-            if for_play:
-                dests.insert(0, PLAY_PHONE_DIR.relative_to(ROOT))
             print(
-                f"dry-run: would stage {path.name} ({w}x{h}) → "
-                + " and ".join(str(d) for d in dests)
+                f"dry-run: would stage play/{path.name} ({w}x{h}) → "
+                f"{PLAY_PHONE_DIR.relative_to(ROOT)}"
             )
             continue
 
-        IOS_67_DIR.mkdir(parents=True, exist_ok=True)
-
-        if for_play:
-            PLAY_PHONE_DIR.mkdir(parents=True, exist_ok=True)
-            play_dest = PLAY_PHONE_DIR / path.name
-            if will_upload:
-                if Image is not None and not play_portrait_ok(w, h):
-                    with Image.open(path) as img:
-                        img = img.convert("RGBA")
-                        target_h = min(PLAY_MAX_SIDE, max(h, PLAY_MIN_SIDE * 16 // 9))
-                        target_w = int(round(target_h * PLAY_PORTRAIT_ASPECT))
-                        target_w = min(PLAY_MAX_SIDE, max(PLAY_MIN_SIDE, target_w))
-                        play_img = fit_and_pad_rgba(Image, img, target_w, target_h)
-                    out = io.BytesIO()
-                    play_img.save(out, format="PNG")
-                    play_bytes = out.getvalue()
-                else:
-                    validate_play_png(path, width=w, height=h)
-                    play_bytes = path.read_bytes()
+        play_dest = PLAY_PHONE_DIR / path.name
+        if will_upload:
+            if Image is not None and not play_portrait_ok(w, h):
+                with Image.open(path) as img:
+                    img = img.convert("RGBA")
+                    target_h = min(PLAY_MAX_SIDE, max(h, PLAY_MIN_SIDE * 16 // 9))
+                    target_w = int(round(target_h * PLAY_PORTRAIT_ASPECT))
+                    target_w = min(PLAY_MAX_SIDE, max(PLAY_MIN_SIDE, target_w))
+                    play_img = fit_and_pad_rgba(Image, img, target_w, target_h)
+                out = io.BytesIO()
+                play_img.save(out, format="PNG")
+                play_bytes = out.getvalue()
             else:
+                validate_play_png(path, width=w, height=h)
                 play_bytes = path.read_bytes()
+        else:
+            play_bytes = path.read_bytes()
 
-            play_dest.write_bytes(play_bytes)
-            copied.append(play_dest)
+        play_dest.write_bytes(play_bytes)
+        copied.append(play_dest)
+
+    for path in ios_pngs:
+        w, h = read_png_size(path)
+
+        if dry_run:
+            print(
+                f"dry-run: would stage ios/{path.name} ({w}x{h}) → "
+                f"{IOS_67_DIR.relative_to(ROOT)}"
+            )
+            continue
 
         ios_dest = IOS_67_DIR / path.name
         if Image is not None:
@@ -219,7 +226,7 @@ def stage(*, dry_run: bool) -> list[Path]:
 
     if not dry_run:
         print(
-            f"staged {len(play_pngs)} Play phone + {len(pngs)} ASC 6.7\" screenshot(s)"
+            f"staged {len(play_pngs)} Play phone + {len(ios_pngs)} ASC 6.7\" screenshot(s)"
         )
     return copied
 
@@ -231,8 +238,14 @@ def main() -> None:
         action="store_true",
         help="Print planned copies only (no filesystem changes)",
     )
+    parser.add_argument(
+        "--platform",
+        choices=("play", "ios", "all"),
+        default="all",
+        help="Which store's screenshots to stage (default: all)",
+    )
     args = parser.parse_args()
-    stage(dry_run=args.dry_run)
+    stage(dry_run=args.dry_run, platform=args.platform)
 
 
 if __name__ == "__main__":
