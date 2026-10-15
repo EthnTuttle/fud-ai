@@ -261,9 +261,8 @@ iOS:
 | `IOS_DEV_SIGNING_P12_BASE64` | CI Apple Development identity (base64 `.p12`; certificate "Apple Development: Created via API", ID `NVNGDQGCKK`, expires 2027-10-14) that signs the archive. App Store signing happens at export with Apple's cloud-managed distribution certificate |
 | `IOS_DEV_SIGNING_P12_PASSWORD` | Password for that `.p12` |
 
-The same CI identity signs the archives of Verceltics, Abysm, iitjee, Quit All,
-Scowld and Sesslet: Apple allows one API-created development certificate per API
-key. Its private key exists only in those repositories' `IOS_DEV_SIGNING_*`
+The same CI identity signs the archives of Verceltics, Abysm, iitjee, Quit All
+and Scowld: Apple allows one API-created development certificate per API key. Its private key exists only in those repositories' `IOS_DEV_SIGNING_*`
 secrets. When it expires or is revoked, revoke it first (App Store Connect API,
 `DELETE /v1/certificates/<id>`), create a new one (`certificateType: DEVELOPMENT`),
 and replace both `IOS_DEV_SIGNING_*` secrets in Fud AI and in every repository
