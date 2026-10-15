@@ -2,9 +2,8 @@
 #
 # One job per language, each with a sparse checkout of just the directories that
 # language lives in, so no job downloads the 1.2 GB workout-frame corpus in
-# shared/, the historical release binaries in android/release/ or the review
-# artifacts in artifacts/. A newer push to a pull request cancels its older
-# analysis; pushes to main, the weekly schedule and manual runs never are.
+# shared/. A newer push to a pull request cancels its older analysis; pushes to
+# main, the weekly schedule and manual runs never are.
 #
 #   javascript-typescript  web/ (Cloudflare Worker + static site), scripts/*.mjs
 #   python                 scripts/*.py, local-models/verify_catalog.py
@@ -56,12 +55,11 @@ jobs:
               /scripts/
               /local-models/
           # The Android sources plus the two small workout files Gradle reads while
-          # configuring the build; not the frames or android/release.
+          # configuring the build; not the frames.
           - language: java-kotlin
             build-mode: manual
             sparse-checkout: |
               /android/
-              !/android/release/
               /shared/workout-vectors/exercise-visual-manifest.json
               /shared/workout-vectors/sample-pack.txt
           - language: actions

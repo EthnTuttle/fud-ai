@@ -232,11 +232,9 @@ jobs:
           persist-credentials: false
           sparse-checkout-cone-mode: false
           # What the release build and store steps read. Never the 1.2 GB workout
-          # frame corpus (release builds bundle only its manifest) or the historical
-          # release binaries in android/release.
+          # frame corpus (release builds bundle only its manifest).
           sparse-checkout: |
             /android/
-            !/android/release/
             /ios/calorietracker/Resources/FreeExerciseDB/dist/
             /local-models/legal/
             /shared/workout-vectors/

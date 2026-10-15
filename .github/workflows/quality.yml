@@ -91,11 +91,9 @@ jobs:
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
-          # Everything the Android build reads except the 1.2 GB workout frame corpus
-          # and the historical release binaries in android/release (500 MB).
+          # Everything the Android build reads except the 1.2 GB workout frame corpus.
           sparse-checkout: |
             /android/
-            !/android/release/
             /ios/calorietracker/Resources/FreeExerciseDB/dist/
             /local-models/legal/
             /scripts/ci/
@@ -164,11 +162,9 @@ jobs:
         with:
           filter: blob:none
           sparse-checkout-cone-mode: false
-          # Everything the Android build reads except the 1.2 GB workout frame corpus
-          # and the historical release binaries in android/release (500 MB).
+          # Everything the Android build reads except the 1.2 GB workout frame corpus.
           sparse-checkout: |
             /android/
-            !/android/release/
             /ios/calorietracker/Resources/FreeExerciseDB/dist/
             /local-models/legal/
             /scripts/ci/
