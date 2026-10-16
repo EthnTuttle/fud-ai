@@ -48,6 +48,7 @@ nonisolated final class VoiceAssistantCamera: NSObject, AVCaptureVideoDataOutput
     private var mode: Mode = .food
     private var isConfigured = false
     private var lastBarcode: (code: String, at: TimeInterval)?
+    private var generation = 0
 
     static var isDenied: Bool {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
@@ -56,6 +57,10 @@ nonisolated final class VoiceAssistantCamera: NSObject, AVCaptureVideoDataOutput
 
     /// Asks for access when needed, then starts the camera in `mode`.
     func start(mode: Mode) async -> StartResult {
+        let number = lock.withLock {
+            generation += 1
+            return generation
+        }
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             break
@@ -67,6 +72,10 @@ nonisolated final class VoiceAssistantCamera: NSObject, AVCaptureVideoDataOutput
         let device = await MainActor.run { BarcodeScannerCameraSelection.preferredBackVideoCaptureDevice() }
         return await withCheckedContinuation { continuation in
             queue.async { [self] in
+                guard lock.withLock({ number == generation }) else {
+                    continuation.resume(returning: .unavailable)
+                    return
+                }
                 lock.withLock { self.mode = mode }
                 if !isConfigured {
                     configure(device: device)
@@ -97,6 +106,7 @@ nonisolated final class VoiceAssistantCamera: NSObject, AVCaptureVideoDataOutput
     }
 
     func stop() {
+        lock.withLock { generation += 1 }
         queue.async { [self] in
             if session.isRunning {
                 session.stopRunning()

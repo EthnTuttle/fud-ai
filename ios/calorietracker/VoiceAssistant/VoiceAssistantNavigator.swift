@@ -28,6 +28,7 @@ final class VoiceAssistantNavigator {
     // What the app shows (reported by the views).
     var currentScreen: VoiceAssistantScreen = .home
     var homeDiaryDate: Date = .now
+    var workoutDiaryDate: Date = .now
     var settingsSection: ProfileSettingsCategory?
     /// The tab bar's and home indicator's height, so the compact assistant sits
     /// where the Home orb button is, above the tab bar.

@@ -45,7 +45,13 @@ nonisolated final class URLSessionLiveSocket: LiveSocket, @unchecked Sendable {
     }
 
     func send(_ text: String) async throws {
-        try await task.send(.string(text))
+        do {
+            try await task.send(.string(text))
+        } catch {
+            // The setup send can fail before receive() reports a refused upgrade.
+            // Keep the HTTP/close reason whichever side observes it first.
+            throw Self.classify(error, response: task.response, closeCode: task.closeCode.rawValue, closeReason: task.closeReason)
+        }
     }
 
     func receive() async throws -> String {

@@ -115,8 +115,8 @@ nonisolated enum VoiceAssistantParsing {
         case "glass", "glasses": factor = millilitersPerGlass
         default: return nil
         }
-        let milliliters = Int((amount * factor).rounded())
-        return milliliters > 0 ? milliliters : nil
+        guard let milliliters = Int(exactly: (amount * factor).rounded()), milliliters > 0 else { return nil }
+        return milliliters
     }
 
     /// Body weight in kilograms for kg or lb.
@@ -147,7 +147,7 @@ nonisolated enum VoiceAssistantParsing {
               let match = regex.firstMatch(in: serving, range: NSRange(serving.startIndex..., in: serving)),
               let range = Range(match.range(at: 1), in: serving),
               let grams = Double(serving[range].replacingOccurrences(of: ",", with: ".")),
-              grams > 0 else { return nil }
+              grams.isFinite, grams > 0 else { return nil }
         return grams
     }
 }

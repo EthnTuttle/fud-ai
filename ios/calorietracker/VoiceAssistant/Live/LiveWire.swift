@@ -463,11 +463,11 @@ nonisolated struct HostedLiveWire: LiveWire {
 nonisolated struct OpenAIRealtimeWire: LiveWire {
     let inputSampleRate = 24_000.0
     let outputSampleRate = 24_000.0
-    let waitsForSetupAcknowledgement = false
+    let waitsForSetupAcknowledgement = true
     let needsResponseCreate = true
 
     /// Transcribes what the user says so captions and Coach get the user's words.
-    static let transcriptionModel = "whisper-1"
+    static let transcriptionModel = "gpt-transcribe"
 
     func request(for config: LiveSessionConfig) -> URLRequest {
         var components = URLComponents(string: "wss://api.openai.com/v1/realtime")!
@@ -575,6 +575,8 @@ nonisolated struct OpenAIRealtimeWire: LiveWire {
     static func parseRealtimeEvent(_ message: String) -> [LiveEvent] {
         guard let json = LiveJSON.object(message), let type = json["type"] as? String else { return [] }
         switch type {
+        case "session.updated":
+            return [.ready]
         case "response.output_audio.delta", "response.audio.delta":
             guard let base64 = json["delta"] as? String, let audio = Data(base64Encoded: base64) else { return [] }
             return [.audio(audio, itemID: json["item_id"] as? String)]
@@ -615,7 +617,7 @@ nonisolated struct OpenAIRealtimeWire: LiveWire {
 nonisolated struct XAIVoiceWire: LiveWire {
     let inputSampleRate = 24_000.0
     let outputSampleRate = 24_000.0
-    let waitsForSetupAcknowledgement = false
+    let waitsForSetupAcknowledgement = true
     let needsResponseCreate = true
 
     func request(for config: LiveSessionConfig) -> URLRequest {

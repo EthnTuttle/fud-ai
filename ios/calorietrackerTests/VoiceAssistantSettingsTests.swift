@@ -105,6 +105,12 @@ struct VoiceAssistantSettingsTests {
 
     // MARK: Parsing
 
+    @Test func waterConversionsRejectValuesOutsideTheIntegerRange() {
+        #expect(VoiceAssistantParsing.milliliters(amount: 1e300, unit: "l") == nil)
+        #expect(VoiceAssistantParsing.milliliters(amount: .greatestFiniteMagnitude, unit: "cup") == nil)
+        #expect(VoiceAssistantParsing.milliliters(amount: 0.5, unit: "l") == 500)
+    }
+
     @Test func datesAcceptWordsAndISODays() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try #require(TimeZone(identifier: "America/New_York"))

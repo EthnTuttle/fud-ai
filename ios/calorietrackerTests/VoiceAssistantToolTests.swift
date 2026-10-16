@@ -184,6 +184,63 @@ struct VoiceAssistantToolTests {
         #expect(harness.food.entries.count == 1)
     }
 
+    @Test func retryingADraftDoesNotLogItTwiceAndUndoAllowsLoggingAgain() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let draft = await harness.executor.execute(name: "describe_food", arguments: ["description": "oatmeal"])
+        let draftID = try #require(draft["draft_id"] as? String)
+        let first = await harness.executor.execute(name: "log_food", arguments: ["draft_id": draftID])
+        let retry = await harness.executor.execute(name: "log_food", arguments: ["draft_id": draftID])
+        #expect(first["entry_ids"] as? [String] == retry["entry_ids"] as? [String])
+        #expect(harness.food.entries.count == 1)
+        #expect(harness.cards.cards.filter(\.isUndo).count == 1)
+
+        let undo = try #require(harness.cards.cards.first { $0.isUndo })
+        _ = harness.executor.undo(cardID: undo.id)
+        #expect(harness.food.entries.isEmpty)
+        #expect(!harness.cards.cards.contains { $0.isLoggedDraft(draftID) })
+        #expect(await harness.executor.execute(name: "log_food", arguments: ["draft_id": draftID])["ok"] as? Bool == true)
+        #expect(harness.food.entries.count == 1)
+    }
+
+    @Test(arguments: [false, true])
+    func lateAnalysisCannotAddCardsAfterCancellation(resetSession: Bool) async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let (started, signal) = AsyncStream<Void>.makeStream()
+        var continuation: CheckedContinuation<Void, Never>?
+        harness.analyzer.beforeText = {
+            await withCheckedContinuation {
+                continuation = $0
+                signal.yield(())
+            }
+        }
+        let analysis = Task {
+            await harness.executor.execute(name: "describe_food", arguments: ["description": "oatmeal"])
+        }
+        var iterator = started.makeAsyncIterator()
+        await iterator.next()
+        if resetSession { harness.executor.reset() } else { analysis.cancel() }
+        continuation?.resume()
+        signal.finish()
+        let result = await analysis.value
+        #expect(result["error"] as? String == "cancelled")
+        #expect(harness.cards.cards.isEmpty)
+        #expect(harness.executor.foodDrafts.isEmpty)
+        if resetSession {
+            #expect(await harness.executor.execute(name: "log_water", arguments: ["amount": 250, "unit": "ml"])["error"] as? String == "cancelled")
+            #expect(harness.water.entries.isEmpty)
+        }
+    }
+
+    @Test func oversizedNumericArgumentsReturnErrorsWithoutTrapping() async {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        #expect(await harness.executor.execute(name: "log_water", arguments: ["amount": 1e300, "unit": "l"])["error"] as? String == "invalid_arguments")
+        #expect(await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 1e300])["error"] as? String == "invalid_arguments")
+        #expect(await harness.executor.execute(name: "log_food", arguments: ["item": ["name": "Rice", "calories": 100, "protein_g": 1e300]])["error"] as? String == "invalid_arguments")
+        #expect(await harness.executor.execute(name: "search_foods", arguments: ["query": "rice", "limit": 1e300])["ok"] as? Bool == true)
+        #expect(harness.water.entries.isEmpty)
+        #expect(harness.food.entries.isEmpty)
+    }
+
     @Test func logFoodNeedsExactlyOneSource() async {
         let harness = VoiceAssistantHarness(confirmSaves: false)
         let none = await harness.executor.execute(name: "log_food", arguments: [:])
@@ -317,6 +374,17 @@ struct VoiceAssistantToolTests {
         #expect(result["question"] as? String == "How many minutes of cardio did you do?")
     }
 
+    @Test func workoutAnalysisUsesTheVisibleWorkoutDiaryDateByDefault() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let yesterday = try #require(Calendar.current.date(byAdding: .day, value: -1, to: harness.now))
+        harness.host.workoutDiaryDate = yesterday
+        _ = await harness.executor.execute(name: "describe_workout", arguments: ["description": "running"])
+        let date = try #require(harness.analyzer.lastWorkoutDate)
+        #expect(Calendar.current.isDate(date, inSameDayAs: yesterday))
+        _ = await harness.executor.execute(name: "describe_workout", arguments: ["description": "running", "date": "today"])
+        #expect(Calendar.current.isDate(try #require(harness.analyzer.lastWorkoutDate), inSameDayAs: harness.now))
+    }
+
     @Test func workoutToolsAreOffWithTheDiary() async {
         let harness = VoiceAssistantHarness(confirmSaves: false, workoutDiary: false)
         #expect(await harness.executor.execute(name: "log_cardio", arguments: ["activity": "running", "minutes": 30])["error"] as? String == "workout_diary_off")
@@ -334,6 +402,37 @@ struct VoiceAssistantToolTests {
         #expect(VoiceAssistantToolExecutor.cardioItem(for: "Cycling", in: library)?.id == "Bicycling")
         #expect(VoiceAssistantToolExecutor.cardioItem(for: "rowing", in: library)?.id == "Rowing_Stationary")
         #expect(VoiceAssistantToolExecutor.cardioItem(for: "swimming", in: library) == nil)
+    }
+
+    @Test func cardioUndoRestoresThePreviousExplicitBurn() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let first = await harness.executor.execute(name: "log_cardio", arguments: ["activity": "swimming", "minutes": 20, "calories": 123])
+        #expect(first["ok"] as? Bool == true)
+        #expect(harness.workouts.caloriesBurned(on: harness.now) == 123)
+        let originalIDs = harness.workouts.exercises(for: harness.now).map(\.id)
+        let second = await harness.executor.execute(name: "log_cardio", arguments: ["activity": "walking", "minutes": 10])
+        #expect(second["ok"] as? Bool == true)
+        let undo = try #require(harness.cards.cards.last { $0.isUndo })
+        _ = harness.executor.undo(cardID: undo.id)
+        #expect(harness.workouts.exercises(for: harness.now).map(\.id) == originalIDs)
+        #expect(harness.workouts.caloriesBurned(on: harness.now) == 123)
+    }
+
+    @Test func workoutDraftLogsOnceAndCanBeUndone() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        harness.analyzer.workout = WorkoutTextDraft(date: VoiceAssistantParsing.isoDay(harness.now), exercises: [
+            WorkoutTextExercise(exerciseID: nil, name: "Swimming", minutes: "20"),
+        ])
+        let draft = await harness.executor.execute(name: "describe_workout", arguments: ["description": "swam for 20 minutes"])
+        let draftID = try #require(draft["draft_id"] as? String)
+        #expect(await harness.executor.execute(name: "log_workout", arguments: ["draft_id": draftID])["ok"] as? Bool == true)
+        #expect(await harness.executor.execute(name: "log_workout", arguments: ["draft_id": draftID])["ok"] as? Bool == true)
+        #expect(harness.workouts.exercises(for: harness.now).count == 1)
+        #expect(harness.cards.cards.filter(\.isUndo).count == 1)
+        let undo = try #require(harness.cards.cards.last { $0.isUndo })
+        _ = harness.executor.undo(cardID: undo.id)
+        #expect(harness.workouts.exercises(for: harness.now).isEmpty)
+        #expect(!harness.cards.cards.contains { $0.isLoggedDraft(draftID) })
     }
 
     // MARK: Settings
@@ -489,6 +588,7 @@ final class VoiceAssistantHarness {
         // The real time: Undo cards expire against the clock.
         now = .now
         host.homeDiaryDate = now
+        host.workoutDiaryDate = now
         let now = now
         let profileBox = profileBox
         executor = VoiceAssistantToolExecutor(
@@ -533,6 +633,7 @@ final class StubVoiceAssistantHost: VoiceAssistantToolHost {
     var currentScreen: VoiceAssistantScreen = .home
     var currentSettingsSection: ProfileSettingsCategory?
     var homeDiaryDate: Date = .now
+    var workoutDiaryDate: Date = .now
     var opened: [(screen: VoiceAssistantScreen, section: ProfileSettingsCategory?)] = []
     var shownDays: [Date] = []
     var openedEntries: [UUID] = []
@@ -574,6 +675,9 @@ final class StubVoiceAssistantHost: VoiceAssistantToolHost {
 final class StubVoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
     var analysis = GeminiService.FoodAnalysis(name: "Oatmeal", calories: 300, protein: 10, carbs: 50, fat: 6, servingSizeGrams: 250)
     var barcodeError: Error?
+    var workout: WorkoutTextDraft?
+    var beforeText: (() async -> Void)?
+    private(set) var lastWorkoutDate: Date?
     private(set) var lastNote: String?
 
     func analyzeImages(_ images: [UIImage], note: String?) async throws -> GeminiService.FoodAnalysis {
@@ -582,7 +686,8 @@ final class StubVoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
     }
 
     func analyzeText(_ description: String) async throws -> GeminiService.FoodAnalysis {
-        analysis
+        await beforeText?()
+        return analysis
     }
 
     func lookUpBarcode(_ code: String) async throws -> (analysis: GeminiService.FoodAnalysis, image: UIImage?) {
@@ -591,6 +696,8 @@ final class StubVoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
     }
 
     func parseWorkout(_ description: String, date: Date, unit: WeightUnit, library: [ExerciseLibraryItem]) async throws -> WorkoutTextDraft {
+        lastWorkoutDate = date
+        if let workout { return workout }
         throw WorkoutClarification(question: "How many minutes of cardio did you do?", options: ["20", "30"])
     }
 }

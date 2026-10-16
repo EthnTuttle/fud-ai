@@ -162,6 +162,10 @@ struct VoiceAssistantWireTests {
         #expect(tools[0]["type"] as? String == "function")
         #expect(tools[0]["name"] as? String == "log_water")
         #expect((tools[1]["parameters"] as? [String: Any])?["type"] as? String == "object")
+        let transcriptionSession = try #require(messages[2]["session"] as? [String: Any])
+        let audio = try #require(transcriptionSession["audio"] as? [String: Any])
+        let input = try #require(audio["input"] as? [String: Any])
+        #expect((input["transcription"] as? [String: Any])?["model"] as? String == "gpt-transcribe")
     }
 
     @Test func openAIParsesFunctionCallsAndResponseLifecycle() throws {
@@ -286,6 +290,29 @@ struct VoiceAssistantWireTests {
         session.connect()
         socket.fail(with: LiveSocketError.closed(code: 4408, reason: nil))
         try await events.waitFor { $0.contains(.closed(.closedByServer(code: 4408, reason: nil))) }
+        session.close()
+    }
+
+    @Test(arguments: [LiveProvider.openai, .xai])
+    func realtimeSessionsWaitForConfigurationBeforeSendingMicrophoneAudio(_ provider: LiveProvider) async throws {
+        let socket = FakeLiveSocket()
+        let events = EventRecorder()
+        let wire = provider.wire
+        let config = Self.config(provider)
+        let setupCount = wire.setupMessages(for: config, resumptionHandle: nil).count
+        let session = LiveSession(config: config, wire: wire, makeSocket: { _ in socket }) { events.append($0) }
+        session.connect()
+        session.send(audio: Data([0, 1]))
+        try await socket.waitForSent(count: setupCount)
+        #expect(socket.sent.count == setupCount)
+        #expect(!socket.sent.contains { $0.contains("input_audio_buffer.append") })
+        #expect(wire.waitsForSetupAcknowledgement)
+        #expect(wire.parse(#"{"type":"session.created"}"#).isEmpty)
+
+        socket.deliver(#"{"type":"session.updated","session":{}}"#)
+        try await socket.waitForSent(count: setupCount + 1)
+        #expect(socket.sent.last?.contains("input_audio_buffer.append") == true)
+        try await events.waitFor { $0.contains(.ready) }
         session.close()
     }
 }

@@ -36,6 +36,7 @@ protocol VoiceAssistantToolHost: AnyObject {
     var currentScreen: VoiceAssistantScreen { get }
     var currentSettingsSection: ProfileSettingsCategory? { get }
     var homeDiaryDate: Date { get }
+    var workoutDiaryDate: Date { get }
 
     func open(_ screen: VoiceAssistantScreen, settingsSection: ProfileSettingsCategory?)
     func showDiary(on day: Date)
@@ -171,8 +172,12 @@ final class VoiceAssistantToolExecutor {
     private(set) var foodDrafts: [String: FoodDraft] = [:]
     private(set) var workoutDrafts: [String: WorkoutDraft] = [:]
     private var draftCounter = 0
+    private var loggedDraftResults: [String: [String: Any]] = [:]
     private var pendingConfirmations: [UUID: PendingCall] = [:]
     private var undoActions: [UUID: UndoAction] = [:]
+    private var isReset = false
+
+    private var isCancelled: Bool { isReset || Task.isCancelled }
 
     init(
         specs: [VoiceAssistantToolSpec]? = nil,
@@ -208,6 +213,7 @@ final class VoiceAssistantToolExecutor {
     }
 
     func execute(name: String, arguments: [String: Any]) async -> [String: Any] {
+        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         if CoachTools.nutritionToolNames.contains(name) || CoachTools.workoutToolNames.contains(name) {
             return coachTool(name, arguments: arguments)
         }
@@ -293,8 +299,10 @@ final class VoiceAssistantToolExecutor {
 
     /// Forgets everything that only lives for the session.
     func reset() {
+        isReset = true
         foodDrafts.removeAll()
         workoutDrafts.removeAll()
+        loggedDraftResults.removeAll()
         pendingConfirmations.removeAll()
         undoActions.removeAll()
         cards.clear()
@@ -303,6 +311,7 @@ final class VoiceAssistantToolExecutor {
     // MARK: - Write flow
 
     private func perform(_ spec: VoiceAssistantToolSpec?, name: String, arguments: [String: Any], change: Change) -> [String: Any] {
+        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         let confirmed = VoiceAssistantParsing.bool(arguments["user_confirmed"]) == true
         let rule = spec?.confirm ?? .never
         let needsConfirmation = !confirmed && (rule == .always || (rule == .setting && settings.confirmSaves))
@@ -371,6 +380,7 @@ final class VoiceAssistantToolExecutor {
             "water_tracking": appDefaults.bool(forKey: WaterSettings.enabledKey),
             "fasting": fastingState(),
             "workout_diary": workoutDiaryEnabled,
+            "workout_diary_date": iso(host?.workoutDiaryDate ?? today),
         ]
         if let section = host?.currentSettingsSection?.voiceAssistantSection, host?.currentScreen == .settings {
             payload["settings_section"] = section
@@ -455,6 +465,7 @@ final class VoiceAssistantToolExecutor {
         guard let photo = await host.captureStill() else {
             return Self.failure(.cameraUnavailable, "Couldn't take a photo. Try again.")
         }
+        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         let note = VoiceAssistantParsing.string(arguments["note"])
         do {
             let analysis = try await analyzer.analyzeImages([photo], note: note)
@@ -473,6 +484,7 @@ final class VoiceAssistantToolExecutor {
         guard let host else { return Self.failure(.unsupported, "The photo library isn't available.") }
         switch await host.pickPhotos(limit: Self.maximumPickedPhotos, timeout: Self.waitTimeout) {
         case .value(let images):
+            guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
             guard !images.isEmpty else { return Self.failure(.cancelled, "No photos were chosen.") }
             do {
                 let analysis = try await analyzer.analyzeImages(images, note: VoiceAssistantParsing.string(arguments["note"]))
@@ -495,6 +507,7 @@ final class VoiceAssistantToolExecutor {
         guard let host else { return Self.failure(.cameraUnavailable, "The camera isn't available.") }
         switch await host.scanBarcode(timeout: Self.waitTimeout) {
         case .value(let code):
+            guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
             do {
                 let lookup = try await analyzer.lookUpBarcode(code)
                 var result = foodDraft(lookup.analysis, images: lookup.image.map { [$0] } ?? [], source: .barcode)
@@ -536,6 +549,9 @@ final class VoiceAssistantToolExecutor {
     }
 
     private func foodDraft(_ analysis: GeminiService.FoodAnalysis, images: [UIImage], source: FoodSource) -> [String: Any] {
+        // An analyzer may finish after cancellation even if its transport does
+        // not cooperate. It must never add cards to a later conversation.
+        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         draftCounter += 1
         let id = "d\(draftCounter)"
         foodDrafts[id] = FoodDraft(id: id, analysis: analysis, images: images, source: source)
@@ -574,7 +590,7 @@ final class VoiceAssistantToolExecutor {
     }
 
     private func analysisFailure(_ error: Error) -> [String: Any] {
-        if error is CancellationError {
+        if isCancelled || error is CancellationError {
             return Self.failure(.cancelled, "Cancelled.")
         }
         if let quota = error as? HostedAIQuotaError {
@@ -613,7 +629,7 @@ final class VoiceAssistantToolExecutor {
         guard let query = VoiceAssistantParsing.string(arguments["query"]) else {
             return Self.failure(.invalidArguments, "query is required.")
         }
-        let limit = min(max(Int(VoiceAssistantParsing.number(arguments["limit"]) ?? 8), 1), 20)
+        let limit = Int(min(max(VoiceAssistantParsing.number(arguments["limit"]) ?? 8, 1), 20))
         let words = query.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
         func matches(_ name: String) -> Bool {
             words.allSatisfy { name.range(of: $0, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
@@ -688,6 +704,7 @@ final class VoiceAssistantToolExecutor {
         let entry: FoodEntry
         var loggedDraftID: String?
         if let draftID = VoiceAssistantParsing.string(arguments["draft_id"]) {
+            if let result = loggedDraftResults[draftID] { return result }
             guard let draft = foodDrafts[draftID] else {
                 return Self.failure(.notFound, "No food draft has that draft_id in this session.")
             }
@@ -708,9 +725,12 @@ final class VoiceAssistantToolExecutor {
                   let calories = VoiceAssistantParsing.number(item["calories"]), calories >= 0, calories <= 10_000 else {
                 return Self.failure(.invalidArguments, "item needs a name and calories (0 to 10,000).")
             }
-            let protein = max(0, VoiceAssistantParsing.number(item["protein_g"]) ?? 0)
-            let carbs = max(0, VoiceAssistantParsing.number(item["carbs_g"]) ?? 0)
-            let fat = max(0, VoiceAssistantParsing.number(item["fat_g"]) ?? 0)
+            let protein = VoiceAssistantParsing.number(item["protein_g"]) ?? 0
+            let carbs = VoiceAssistantParsing.number(item["carbs_g"]) ?? 0
+            let fat = VoiceAssistantParsing.number(item["fat_g"]) ?? 0
+            guard [protein, carbs, fat].allSatisfy({ (0...1_000).contains($0) }) else {
+                return Self.failure(.invalidArguments, "Each macro must be between 0 and 1,000 grams.")
+            }
             let grams = VoiceAssistantParsing.grams(inServing: VoiceAssistantParsing.string(item["serving"]))
             entry = FoodEntry(
                 name: String(name.prefix(120)),
@@ -735,7 +755,7 @@ final class VoiceAssistantToolExecutor {
             summary: "Log \(entry.name) (\(entry.calories) kcal) as \(meal.rawValue) on \(dayText) at \(VoiceAssistantParsing.clockTime(timestamp, calendar: calendar))",
             pendingText: String(localized: "Log \(entry.name) · \(entry.calories) kcal · \(mealName)"),
             doneText: String(localized: "Logged \(entry.name) · \(entry.calories) kcal"),
-            apply: { [stores, cards] in
+            apply: { [self, stores, cards] in
                 guard stores.food.addEntry(entry) else {
                     return .failed(Self.failure(.unsupported, "The food couldn't be saved. End any running fast and try again."))
                 }
@@ -745,14 +765,21 @@ final class VoiceAssistantToolExecutor {
                     "entry_ids": [entry.id.uuidString],
                     "entry": self.entryPayload(logged),
                     "day_totals": self.totals(on: timestamp),
-                ], revert: { [stores] in
+                ], revert: { [weak self, stores, cards] in
                     guard let current = stores.food.entries.first(where: { $0.id == entry.id }) else { return false }
                     stores.food.deleteEntry(current)
+                    guard !stores.food.entries.contains(where: { $0.id == entry.id }) else { return false }
+                    if let loggedDraftID {
+                        self?.loggedDraftResults.removeValue(forKey: loggedDraftID)
+                        cards.markDraftLogged(loggedDraftID, logged: false)
+                    }
                     return true
                 })
             }
         )
-        return perform(spec, name: "log_food", arguments: arguments, change: change)
+        let result = perform(spec, name: "log_food", arguments: arguments, change: change)
+        if result["ok"] as? Bool == true, let loggedDraftID { loggedDraftResults[loggedDraftID] = result }
+        return result
     }
 
     private func updateFoodEntry(_ spec: VoiceAssistantToolSpec?, _ arguments: [String: Any]) -> [String: Any] {
@@ -1026,7 +1053,8 @@ final class VoiceAssistantToolExecutor {
         }
         let day: Date
         do {
-            day = try VoiceAssistantParsing.day(arguments["date"], now: now(), calendar: calendar) ?? calendar.startOfDay(for: now())
+            day = try VoiceAssistantParsing.day(arguments["date"], now: now(), calendar: calendar)
+                ?? calendar.startOfDay(for: host?.workoutDiaryDate ?? now())
         } catch {
             return Self.failure(.invalidArguments, "date must be yyyy-MM-dd, today or yesterday.")
         }
@@ -1043,6 +1071,7 @@ final class VoiceAssistantToolExecutor {
     }
 
     private func workoutDraft(_ draft: WorkoutTextDraft, library: [ExerciseLibraryItem]) -> [String: Any] {
+        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         draftCounter += 1
         let id = "w\(draftCounter)"
         let planned = (try? draft.planned(library: library, today: now())) ?? []
@@ -1108,6 +1137,7 @@ final class VoiceAssistantToolExecutor {
         guard let draftID = VoiceAssistantParsing.string(arguments["draft_id"]), let workout = workoutDrafts[draftID] else {
             return Self.failure(.notFound, "No workout draft has that draft_id in this session.")
         }
+        if let result = loggedDraftResults[draftID] { return result }
         let library = stores.workouts.exerciseLibrary.exercises
         do {
             _ = try workout.draft.planned(library: library, today: now())
@@ -1122,24 +1152,34 @@ final class VoiceAssistantToolExecutor {
             summary: "Add \(names) to the workout diary for \(workout.draft.date)",
             pendingText: String(localized: "Add \(names) to your workout diary"),
             doneText: String(localized: "Added \(names) to your workout diary"),
-            apply: { [stores] in
+            apply: { [self, stores] in
+                let previousIDs = Set(stores.workouts.exercises(for: day).map(\.id))
+                let previousBurn = stores.workouts.caloriesBurned(on: day)
                 do {
                     try stores.workouts.addTextWorkout(workout.draft, library: library)
                 } catch {
                     return .failed(Self.failure(.unsupported, error.localizedDescription))
                 }
                 self.cards.markDraftLogged(draftID)
-                let ids = workout.draft.exercises.map(\.id)
-                return .done(["date": workout.draft.date, "exercises": workout.draft.exercises.count], revert: { [stores] in
+                let ids = workout.draft.exercises.map(\.id).filter { !previousIDs.contains($0) }
+                return .done(["date": workout.draft.date, "exercises": workout.draft.exercises.count], revert: { [weak self, stores] in
                     let existing = Set(stores.workouts.exercises(for: day).map(\.id))
                     let added = ids.filter(existing.contains)
                     guard !added.isEmpty else { return false }
                     for id in added { stores.workouts.removeExercise(id, on: day) }
+                    guard !stores.workouts.exercises(for: day).contains(where: { added.contains($0.id) }) else { return false }
+                    if let previousBurn, let self {
+                        stores.workouts.upsertCalculatedWorkout(on: day, caloriesBurned: previousBurn, weightUnit: self.currentWeightUnit)
+                    }
+                    self?.loggedDraftResults.removeValue(forKey: draftID)
+                    self?.cards.markDraftLogged(draftID, logged: false)
                     return true
                 })
             }
         )
-        return perform(spec, name: "log_workout", arguments: arguments, change: change)
+        let result = perform(spec, name: "log_workout", arguments: arguments, change: change)
+        if result["ok"] as? Bool == true { loggedDraftResults[draftID] = result }
+        return result
     }
 
     /// Library exercises for common spoken activities.
@@ -1208,8 +1248,9 @@ final class VoiceAssistantToolExecutor {
                 return .done(payload, revert: { [weak executor = self, stores] in
                     guard stores.workouts.exercises(for: day).contains(where: { $0.id == exercise.id }) else { return false }
                     stores.workouts.removeExercise(exercise.id, on: day)
-                    if previousBurn != nil {
-                        _ = executor?.recalculateBurn(on: day, extraCalories: nil, excluding: nil)
+                    guard !stores.workouts.exercises(for: day).contains(where: { $0.id == exercise.id }) else { return false }
+                    if let previousBurn, let executor {
+                        stores.workouts.upsertCalculatedWorkout(on: day, caloriesBurned: previousBurn, weightUnit: executor.currentWeightUnit)
                     }
                     return true
                 })
@@ -1359,9 +1400,8 @@ final class VoiceAssistantToolExecutor {
             guard let number = VoiceAssistantParsing.number(rawValue) else {
                 return Self.failure(.invalidArguments, "\(key.rawValue) needs a number.")
             }
-            let value = Int(number.rounded())
             let range = key == .calorieGoal ? 800...10_000 : 0...1_000
-            guard range.contains(value) else {
+            guard let value = Int(exactly: number.rounded()), range.contains(value) else {
                 return Self.failure(.invalidArguments, "\(key.rawValue) must be between \(range.lowerBound) and \(range.upperBound).")
             }
             guard !adaptiveGoalsEnabled else {

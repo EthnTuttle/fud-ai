@@ -168,19 +168,17 @@ nonisolated final class LiveSession: @unchecked Sendable {
     }
 
     private func markReady(_ id: Int) {
-        let flushed: (AsyncStream<String>.Continuation, [String])? = lock.withLock {
-            guard id == connection, !isClosed, let outbox else { return nil }
-            isReady = true
-            let messages = queued.map(\.message)
+        let becameReady = lock.withLock {
+            guard id == connection, !isClosed, !isReady, let outbox else { return false }
+            // Yield under the same lock as enqueue: live microphone chunks must
+            // not overtake the speech that was queued during setup.
+            for item in queued { outbox.yield(item.message) }
             queued.removeAll()
             queuedAudioBytes = 0
-            return (outbox, messages)
+            isReady = true
+            return true
         }
-        guard let (outbox, messages) = flushed else { return }
-        for message in messages {
-            outbox.yield(message)
-        }
-        onEvent(.ready)
+        if becameReady { onEvent(.ready) }
     }
 
     // Locks by hand rather than with `withLock`: the closure version crashed the
@@ -192,8 +190,8 @@ nonisolated final class LiveSession: @unchecked Sendable {
             return
         }
         if isReady, let outbox {
-            lock.unlock()
             outbox.yield(message)
+            lock.unlock()
             return
         }
         queued.append((message, audioBytes))
@@ -235,17 +233,18 @@ nonisolated final class LiveSession: @unchecked Sendable {
     }
 
     private func connectionFailed(_ id: Int, _ error: Error) {
-        let shouldReport = lock.withLock {
-            guard id == connection, !isClosed else { return false }
+        let failed: ((any LiveSocket)?, AsyncStream<String>.Continuation?)? = lock.withLock {
+            guard id == connection, !isClosed else { return nil }
             isClosed = true
-            return true
-        }
-        guard shouldReport else { return }
-        logger.error("[Live] Connection ended: \(error.localizedDescription, privacy: .public)")
-        let socket = lock.withLock { () -> (any LiveSocket)? in
+            isReady = false
+            queued.removeAll()
+            queuedAudioBytes = 0
             defer { self.socket = nil; self.outbox = nil }
-            return self.socket
+            return (socket, outbox)
         }
+        guard let (socket, outbox) = failed else { return }
+        logger.error("[Live] Connection ended: \(error.localizedDescription, privacy: .public)")
+        outbox?.finish()
         socket?.close()
         let reason = (error as? LiveSocketError)?.endReason ?? .failed(error.localizedDescription)
         onEvent(.closed(reason))

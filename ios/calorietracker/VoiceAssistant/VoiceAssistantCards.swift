@@ -109,12 +109,12 @@ final class VoiceAssistantCardStore {
         cards.first { $0.id == id }
     }
 
-    func markDraftLogged(_ draftID: String) {
+    func markDraftLogged(_ draftID: String, logged: Bool = true) {
         guard let index = cards.firstIndex(where: {
             if case .draft(let draft) = $0.content { return draft.draftID == draftID }
             return false
         }), case .draft(var draft) = cards[index].content else { return }
-        draft.isLogged = true
+        draft.isLogged = logged
         cards[index].content = .draft(draft)
     }
 

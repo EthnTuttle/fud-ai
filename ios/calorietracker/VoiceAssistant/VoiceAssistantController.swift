@@ -146,7 +146,7 @@ final class VoiceAssistantController {
     // Tool calls. OpenAI and xAI need `response.create` after results, but refuse
     // it while a response is still being generated.
     @ObservationIgnored private var toolQueue: Task<Void, Never>?
-    @ObservationIgnored private var toolTasks: [String: Task<Void, Never>] = [:]
+    @ObservationIgnored private var toolTasks: [String: Task<LiveToolResponse, Never>] = [:]
     @ObservationIgnored private var cancelledCallIDs: Set<String> = []
     @ObservationIgnored private var pendingCallIDs: Set<String> = []
     @ObservationIgnored private var responseActive = false
@@ -156,6 +156,7 @@ final class VoiceAssistantController {
     // Waiting for the user.
     @ObservationIgnored private var waitingForUser = 0
     @ObservationIgnored private var pickerContinuation: CheckedContinuation<VoiceAssistantWait<[UIImage]>, Never>?
+    @ObservationIgnored private var pickerNumber = 0
     @ObservationIgnored private var isLoadingPickedPhotos = false
     @ObservationIgnored private var barcodeContinuation: CheckedContinuation<VoiceAssistantWait<String>, Never>?
 
@@ -199,6 +200,7 @@ final class VoiceAssistantController {
         }
         guard let appData, !isStarting else { return }
         isStarting = true
+        let number = sessionNumber
         Task {
             defer { isStarting = false }
             var route = VoiceAssistantRouting.current(settings: settings)
@@ -209,6 +211,7 @@ final class VoiceAssistantController {
                 didRefreshEntitlement = await RevenueCatManager.shared.refreshCustomerInfo()
                 route = VoiceAssistantRouting.current(settings: settings)
             }
+            guard number == sessionNumber, UIApplication.shared.applicationState != .background else { return }
             switch route {
             case .needsAccess(let reason):
                 isExpanded = true
@@ -224,6 +227,9 @@ final class VoiceAssistantController {
         if presentation == .session {
             end(.user)
         } else {
+            // Retire an entitlement/permission check that has not started a
+            // connection yet, so dismissing cannot reopen the assistant.
+            sessionNumber += 1
             presentation = .hidden
         }
     }
@@ -238,6 +244,7 @@ final class VoiceAssistantController {
         resetTurnState()
         hostedSecondsRemaining = nil
         clearBanner()
+        observeAppLifecycle(session: number)
 
         guard await microphoneAllowed() else {
             fail(VoiceAssistantFailure(
@@ -332,7 +339,6 @@ final class VoiceAssistantController {
         self.audio = audio
         startedAt = .now
         lastActivity = startedAt
-        observeAppLifecycle(session: number)
         session.connect()
         startWatchdog(session: number)
         logger.info("[Voice] Connecting to \(provider.rawValue, privacy: .public)")
@@ -394,6 +400,9 @@ final class VoiceAssistantController {
         responseNeeded = false
         isEndingConversation = false
         waitingForUser = 0
+        sheet = nil
+        isLoadingPickedPhotos = false
+        photoPickerItems = []
 
         switch reason {
         case .user, .idle, .conversationEnded, .background, .interrupted:
@@ -688,14 +697,20 @@ final class VoiceAssistantController {
                 guard !self.cancelledCallIDs.contains(call.id), let executor = self.executor else { continue }
                 self.runningTools += 1
                 self.noteActivity()
-                let result = await executor.execute(call)
+                let execution = Task { @MainActor in
+                    let result = await executor.execute(call)
+                    return LiveToolResponse(id: call.id, name: call.name, outputJSON: LiveJSON.string(result))
+                }
+                self.toolTasks[call.id] = execution
+                let response = await execution.value
+                guard number == self.sessionNumber else { return }
+                self.toolTasks.removeValue(forKey: call.id)
                 self.runningTools = max(0, self.runningTools - 1)
                 self.noteActivity()
                 guard number == self.sessionNumber, !self.cancelledCallIDs.contains(call.id) else { continue }
-                let response = LiveToolResponse(id: call.id, name: call.name, outputJSON: LiveJSON.string(result))
                 if separateResponses {
                     self.session?.send(toolResponses: [response])
-                    await self.followUp(call, result: result)
+                    await self.followUp(call)
                     self.pendingCallIDs.remove(call.id)
                     self.responseNeeded = true
                     self.requestResponseIfReady()
@@ -705,17 +720,18 @@ final class VoiceAssistantController {
             }
             guard number == self.sessionNumber, !responses.isEmpty else { return }
             self.session?.send(toolResponses: responses)
-            for call in calls { await self.followUp(call, result: nil) }
+            for call in calls where !self.cancelledCallIDs.contains(call.id) { await self.followUp(call) }
         }
         toolQueue = task
-        for call in calls { toolTasks[call.id] = task }
     }
 
     /// After some tools the model should see the camera straight away.
-    private func followUp(_ call: LiveToolCall, result: [String: Any]?) async {
+    private func followUp(_ call: LiveToolCall) async {
         guard call.name == "open_camera", cameraMode != nil, provider?.cameraFrames == .perTurn else { return }
+        let number = sessionNumber
         for _ in 0..<10 where camera.latestJPEG() == nil {
             try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled, number == sessionNumber else { return }
         }
         if let frame = camera.latestJPEG() {
             session?.send(image: frame)
@@ -727,13 +743,10 @@ final class VoiceAssistantController {
         cancelledCallIDs.formUnion(ids)
         for id in ids {
             pendingCallIDs.remove(id)
+            toolTasks[id]?.cancel()
         }
-        // A wait for the user (photos, barcode) belongs to the abandoned call.
-        if waitingForUser > 0 {
-            photoPickerPresented = false
-            finishPicker(.cancelled)
-            finishBarcode(.cancelled)
-        }
+        // Only the cancelled call's cancellation handler closes its picker or
+        // scanner. An unrelated queued cancellation must not dismiss either.
     }
 
     private func requestResponseIfReady() {
@@ -759,8 +772,10 @@ final class VoiceAssistantController {
     // MARK: - Card taps
 
     func confirmCard(_ id: UUID) {
+        let number = sessionNumber
         Task {
             guard let line = await executor?.confirm(cardID: id) else { return }
+            guard number == sessionNumber else { return }
             tellModel(line)
         }
     }
@@ -776,8 +791,10 @@ final class VoiceAssistantController {
     }
 
     func logDraft(_ draftID: String) {
+        let number = sessionNumber
         Task {
             guard let line = await executor?.logDraft(draftID) else { return }
+            guard number == sessionNumber else { return }
             tellModel(line)
         }
     }
@@ -800,9 +817,11 @@ final class VoiceAssistantController {
     /// The shutter in the camera panel: take the photo and analyze it now.
     func shutterTapped() {
         guard !isCapturingPhoto, cameraMode == .food, let executor else { return }
+        let number = sessionNumber
         isCapturingPhoto = true
         Task {
             let result = await executor.execute(name: "capture_photo", arguments: [:])
+            guard number == sessionNumber else { return }
             isCapturingPhoto = false
             tellModel("[App] The user tapped the camera shutter. capture_photo result: \(LiveJSON.string(result))")
         }
@@ -842,6 +861,7 @@ final class VoiceAssistantController {
     func photosPicked(_ items: [PhotosPickerItem]) {
         guard !items.isEmpty, pickerContinuation != nil else { return }
         isLoadingPickedPhotos = true
+        let number = pickerNumber
         let limit = photoPickerLimit
         Task {
             var images: [UIImage] = []
@@ -850,6 +870,7 @@ final class VoiceAssistantController {
                     images.append(image)
                 }
             }
+            guard number == pickerNumber, pickerContinuation != nil else { return }
             isLoadingPickedPhotos = false
             photoPickerItems = []
             finishPicker(images.isEmpty ? .cancelled : .value(images))
@@ -857,10 +878,11 @@ final class VoiceAssistantController {
     }
 
     func photoPickerDismissed() {
+        let number = pickerNumber
         // A selection updates the binding around the time the sheet closes.
         Task {
             try? await Task.sleep(for: .milliseconds(600))
-            guard !isLoadingPickedPhotos, photoPickerItems.isEmpty else { return }
+            guard number == pickerNumber, !isLoadingPickedPhotos, photoPickerItems.isEmpty else { return }
             finishPicker(.cancelled)
         }
     }
@@ -868,6 +890,8 @@ final class VoiceAssistantController {
     private func finishPicker(_ result: VoiceAssistantWait<[UIImage]>) {
         guard let continuation = pickerContinuation else { return }
         pickerContinuation = nil
+        pickerNumber += 1
+        isLoadingPickedPhotos = false
         continuation.resume(returning: result)
     }
 
@@ -932,7 +956,8 @@ final class VoiceAssistantController {
             return
         }
         // Someone talking keeps the session alive even before a transcript arrives.
-        if (audio?.microphoneLevel ?? 0) > 0.5 || isAssistantSpeaking || runningTools > 0 || waitingForUser > 0 {
+        if (audio?.microphoneLevel ?? 0) > 0.5 || isAssistantSpeaking || runningTools > 0 || waitingForUser > 0
+            || cards.cards.contains(where: \.isConfirmation) {
             noteActivity()
         }
         if now.timeIntervalSince(lastActivity) > Self.idleTimeout {
@@ -966,6 +991,7 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
     var currentScreen: VoiceAssistantScreen { navigator.currentScreen }
     var currentSettingsSection: ProfileSettingsCategory? { navigator.settingsSection }
     var homeDiaryDate: Date { navigator.homeDiaryDate }
+    var workoutDiaryDate: Date { navigator.workoutDiaryDate }
 
     func open(_ screen: VoiceAssistantScreen, settingsSection: ProfileSettingsCategory?) {
         closeCamera()
@@ -986,6 +1012,7 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
     }
 
     func openCamera(_ mode: VoiceAssistantCamera.Mode) async -> VoiceAssistantCamera.StartResult {
+        let number = sessionNumber
         isExpanded = true
         if cameraMode == mode { return .started }
         if cameraMode != nil {
@@ -994,8 +1021,8 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
             return .started
         }
         let result = await camera.start(mode: mode)
-        guard presentation == .session else {
-            camera.stop()
+        guard number == sessionNumber, presentation == .session, !Task.isCancelled else {
+            if number == sessionNumber { camera.stop() }
             return .unavailable
         }
         if result == .started {
@@ -1020,6 +1047,8 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
 
     func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> {
         finishPicker(.cancelled)
+        pickerNumber += 1
+        let number = pickerNumber
         photoPickerLimit = limit
         photoPickerItems = []
         waitingForUser += 1
@@ -1038,6 +1067,7 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
             }
         } onCancel: {
             Task { @MainActor [weak self] in
+                guard self?.pickerNumber == number else { return }
                 self?.photoPickerPresented = false
                 self?.finishPicker(.cancelled)
             }
