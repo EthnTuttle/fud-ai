@@ -22,7 +22,9 @@ object WidgetUpdateCoordinator {
         CalorieAppWidget(),
         ProteinAppWidget(),
         AllMetricsAppWidget(),
-        WaterAppWidget()
+        WaterAppWidget(),
+        // No data, but it follows the theme colour.
+        VoiceAssistantAppWidget()
     )
 
     private const val TAG = "FudAIWidget"
