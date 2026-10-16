@@ -80,7 +80,24 @@ enum VoiceAssistantInstructions {
             workoutAccessEnabled: session.workoutDiaryEnabled
         )
         lines += ChatService.userContextLines()
-        return String(lines.joined(separator: "\n").prefix(maximumLength))
+        return limitedToRelayLength(lines.joined(separator: "\n"))
+    }
+
+    /// The Worker measures JavaScript string length (UTF-16 code units), while
+    /// Swift's prefix counts grapheme clusters. Keep complete characters and
+    /// respect the relay's limit for emoji and non-Latin profile/context text.
+    static func limitedToRelayLength(_ text: String) -> String {
+        guard text.utf16.count > maximumLength else { return text }
+        var end = text.startIndex
+        var remaining = maximumLength
+        while end < text.endIndex {
+            let next = text.index(after: end)
+            let length = text[end..<next].utf16.count
+            guard length <= remaining else { break }
+            remaining -= length
+            end = next
+        }
+        return String(text[..<end])
     }
 
     static func languageRule(_ session: Session) -> String {

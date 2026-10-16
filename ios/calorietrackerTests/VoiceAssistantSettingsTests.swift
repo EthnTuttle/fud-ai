@@ -105,6 +105,16 @@ struct VoiceAssistantSettingsTests {
 
     // MARK: Parsing
 
+    @Test func instructionsRespectTheRelaysUTF16LimitWithoutSplittingCharacters() {
+        let text = String(repeating: "👩🏽‍💻", count: 20_000)
+        let limited = VoiceAssistantInstructions.limitedToRelayLength(text)
+        #expect(limited.utf16.count <= VoiceAssistantInstructions.maximumLength)
+        #expect(limited.allSatisfy { $0 == "👩🏽‍💻" })
+        #expect(text.hasPrefix(limited))
+        #expect(limited.utf16.count + "👩🏽‍💻".utf16.count > VoiceAssistantInstructions.maximumLength)
+        #expect(VoiceAssistantInstructions.limitedToRelayLength("Hello नमस्ते") == "Hello नमस्ते")
+    }
+
     @Test func waterConversionsRejectValuesOutsideTheIntegerRange() {
         #expect(VoiceAssistantParsing.milliliters(amount: 1e300, unit: "l") == nil)
         #expect(VoiceAssistantParsing.milliliters(amount: .greatestFiniteMagnitude, unit: "cup") == nil)

@@ -148,6 +148,37 @@ struct VoiceAssistantToolTests {
         #expect(harness.fasting.activeSession != nil)
     }
 
+    @Test func undoingTheFirstWeightRestoresItsProfileValueWithoutOverwritingLaterEdits() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let originalWeight = harness.profile.weightKg
+        let loggedWeight = originalWeight + 2
+        #expect(await harness.executor.execute(name: "log_weight", arguments: ["value": loggedWeight, "unit": "kg"])["ok"] as? Bool == true)
+        // WeightStore synchronizes the production profile through UserDefaults;
+        // this harness keeps its profile in memory, so reproduce that callback.
+        var synced = harness.profile
+        synced.weightKg = loggedWeight
+        harness.executor.stores.saveProfile(synced)
+        let undo = try #require(harness.cards.cards.last { $0.isUndo })
+        _ = harness.executor.undo(cardID: undo.id)
+        #expect(harness.weight.entries.isEmpty)
+        #expect(harness.profile.weightKg == originalWeight)
+
+        _ = await harness.executor.execute(name: "log_weight", arguments: ["value": loggedWeight, "unit": "kg"])
+        var laterEdit = harness.profile
+        laterEdit.weightKg = originalWeight + 5
+        harness.executor.stores.saveProfile(laterEdit)
+        let secondUndo = try #require(harness.cards.cards.last { $0.isUndo })
+        _ = harness.executor.undo(cardID: secondUndo.id)
+        #expect(harness.profile.weightKg == originalWeight + 5)
+    }
+
+    @Test func bodyFatRejectsFutureDates() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: harness.now))
+        let result = await harness.executor.execute(name: "log_body_fat", arguments: ["percent": 20, "date": VoiceAssistantParsing.isoDay(tomorrow)])
+        #expect(result["error"] as? String == "invalid_arguments")
+    }
+
     // MARK: Food
 
     @Test func describedFoodBecomesADraftThatLogsScaled() async throws {
