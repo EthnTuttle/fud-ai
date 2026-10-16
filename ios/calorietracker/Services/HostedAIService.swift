@@ -89,6 +89,20 @@ enum HostedAIService {
         return snapshot
     }
 
+    /// Hosted voice usage this month. `GET /quota` returns `voice` next to `quota`;
+    /// nil when the Worker doesn't report it.
+    static func fetchVoiceQuota() async throws -> HostedVoiceQuota? {
+        let data = try await send(method: "GET", path: "quota", jsonBody: nil)
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw HostedAIServiceError.invalidResponse
+        }
+        if let quotaJSON = json["quota"] as? [String: Any],
+           let snapshot = HostedAIQuotaSnapshot(json: quotaJSON) {
+            HostedAIQuotaManager.shared.apply(snapshot)
+        }
+        return (json["voice"] as? [String: Any]).flatMap(HostedVoiceQuota.init(json:))
+    }
+
     private static func post(path: String, jsonBody: [String: Any]) async throws -> Data {
         try await send(method: "POST", path: path, jsonBody: jsonBody)
     }
@@ -162,5 +176,37 @@ enum HostedAIService {
         default:
             return String(localized: "Hosted AI request failed (\(status)).")
         }
+    }
+}
+
+/// Hosted voice usage for the current UTC month (`GET /quota` → `voice`).
+struct HostedVoiceQuota: Equatable {
+    let month: String
+    let secondsUsed: Int
+    let secondsLimit: Int
+    /// Shared with hosted actions; voice spends one credit per 15-second block.
+    let creditBank: Int
+
+    static let secondsPerCredit = 15
+
+    var planSecondsLeft: Int { max(0, secondsLimit - secondsUsed) }
+    var creditSeconds: Int { max(0, creditBank) * Self.secondsPerCredit }
+
+    init(month: String, secondsUsed: Int, secondsLimit: Int, creditBank: Int) {
+        self.month = month
+        self.secondsUsed = secondsUsed
+        self.secondsLimit = secondsLimit
+        self.creditBank = creditBank
+    }
+
+    init?(json: [String: Any]) {
+        func int(_ key: String) -> Int? { (json[key] as? NSNumber)?.intValue }
+        guard let used = int("secondsUsed"), let limit = int("secondsLimit") else { return nil }
+        self.init(
+            month: json["month"] as? String ?? "",
+            secondsUsed: used,
+            secondsLimit: limit,
+            creditBank: int("creditBank") ?? 0
+        )
     }
 }
