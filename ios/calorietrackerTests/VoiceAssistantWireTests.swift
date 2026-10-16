@@ -315,6 +315,67 @@ struct VoiceAssistantWireTests {
         try await events.waitFor { $0.contains(.ready) }
         session.close()
     }
+
+    @Test func geminiReconnectTimesOutWithoutANewSetupAcknowledgement() async throws {
+        let sockets = FakeLiveSocketSequence()
+        let deadlines = ManualLiveSetupDeadlines()
+        let events = EventRecorder()
+        let session = LiveSession(
+            config: Self.config(.hosted, credential: .hostedUser("u")), wire: HostedLiveWire(),
+            makeSocket: { _ in sockets.next() }, waitForSetupTimeout: { await deadlines.wait() }
+        ) { events.append($0) }
+        defer { session.close(); deadlines.fireAll() }
+        session.connect()
+        try await sockets.first.waitForSent(count: 1)
+        try await deadlines.waitForCount(1)
+        sockets.first.deliver(#"{"setupComplete":{}}"#)
+        try await events.waitFor { $0.contains(.ready) }
+        // Relay resumption tokens are opaque and may exceed a native Gemini
+        // handle's length; the client must preserve the entire signed token.
+        let handle = "fudv1." + String(repeating: "x", count: 8_000)
+        sockets.first.deliver(LiveJSON.string(["sessionResumptionUpdate": ["newHandle": handle, "resumable": true]]))
+        sockets.first.deliver(#"{"goAway":{"timeLeft":"10s"}}"#)
+        try await sockets.second.waitForSent(count: 1)
+        try await deadlines.waitForCount(2)
+        let sentSetup = try #require(sockets.second.sent.first)
+        let setupMessage = try Self.json(sentSetup)
+        let setup = try #require(setupMessage["setup"] as? [String: Any])
+        #expect((setup["sessionResumption"] as? [String: Any])?["handle"] as? String == handle)
+        session.send(audio: Data([0, 1]))
+        #expect(sockets.second.sent.count == 1)
+
+        // The retired connection's deadline must not close its replacement.
+        deadlines.fire(0)
+        #expect(!sockets.second.wasClosed)
+        deadlines.fire(1)
+        try await events.waitFor { $0.contains { if case .closed = $0 { true } else { false } } }
+        #expect(sockets.second.wasClosed)
+        #expect(sockets.second.sent.count == 1)
+    }
+
+    @Test func reconnectAcknowledgementRetiresItsSetupDeadline() async throws {
+        let sockets = FakeLiveSocketSequence()
+        let deadlines = ManualLiveSetupDeadlines()
+        let events = EventRecorder()
+        let session = LiveSession(
+            config: Self.config(.gemini), wire: GeminiLiveWire(),
+            makeSocket: { _ in sockets.next() }, waitForSetupTimeout: { await deadlines.wait() }
+        ) { events.append($0) }
+        defer { session.close(); deadlines.fireAll() }
+        session.connect()
+        try await deadlines.waitForCount(1)
+        sockets.first.deliver(#"{"setupComplete":{}}"#)
+        try await events.waitFor { $0.contains(.ready) }
+        sockets.first.deliver(#"{"goAway":{}}"#)
+        try await deadlines.waitForCount(2)
+        sockets.second.deliver(#"{"setupComplete":{}}"#)
+        try await events.waitFor { $0.filter { $0 == .ready }.count == 2 }
+        deadlines.fireAll()
+        session.send(contextText: "Still listening")
+        try await sockets.second.waitForSent(count: 2)
+        #expect(sockets.second.sent.last?.contains("Still listening") == true)
+        #expect(!sockets.second.wasClosed)
+    }
 }
 
 // MARK: - Fakes
@@ -325,8 +386,10 @@ final class FakeLiveSocket: LiveSocket, @unchecked Sendable {
     private var outbox: [String] = []
     private var inbox: [Result<String, Error>] = []
     private var waiting: CheckedContinuation<String, Error>?
+    private var closed = false
 
     var sent: [String] { lock.withLock { outbox } }
+    var wasClosed: Bool { lock.withLock { closed } }
 
     func send(_ text: String) async throws {
         lock.withLock { outbox.append(text) }
@@ -335,6 +398,11 @@ final class FakeLiveSocket: LiveSocket, @unchecked Sendable {
     func receive() async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             lock.lock()
+            if closed {
+                lock.unlock()
+                continuation.resume(throwing: CancellationError())
+                return
+            }
             if !inbox.isEmpty {
                 let next = inbox.removeFirst()
                 lock.unlock()
@@ -348,6 +416,7 @@ final class FakeLiveSocket: LiveSocket, @unchecked Sendable {
 
     func close() {
         let pending: CheckedContinuation<String, Error>? = lock.withLock {
+            closed = true
             defer { waiting = nil }
             return waiting
         }
@@ -378,6 +447,56 @@ final class FakeLiveSocket: LiveSocket, @unchecked Sendable {
         for _ in 0..<200 where sent.count < count {
             try await Task.sleep(for: .milliseconds(10))
         }
+    }
+}
+
+final class FakeLiveSocketSequence: @unchecked Sendable {
+    let first = FakeLiveSocket()
+    let second = FakeLiveSocket()
+    private let lock = NSLock()
+    private var count = 0
+
+    func next() -> FakeLiveSocket {
+        lock.withLock {
+            defer { count += 1 }
+            return count == 0 ? first : second
+        }
+    }
+}
+
+/// Tests advance setup deadlines explicitly, without timing races with CI load.
+final class ManualLiveSetupDeadlines: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    private var waiting: [Int: CheckedContinuation<Void, Never>] = [:]
+
+    func wait() async {
+        await withCheckedContinuation { continuation in
+            lock.withLock {
+                waiting[count] = continuation
+                count += 1
+            }
+        }
+    }
+
+    func fire(_ index: Int) {
+        lock.withLock { waiting.removeValue(forKey: index) }?.resume()
+    }
+
+    func fireAll() {
+        let pending = lock.withLock {
+            defer { waiting.removeAll() }
+            return Array(waiting.values)
+        }
+        for continuation in pending { continuation.resume() }
+    }
+
+    func waitForCount(_ expected: Int) async throws {
+        for _ in 0..<200 {
+            if lock.withLock({ count >= expected }) { return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        Issue.record("Timed out waiting for setup deadline \(expected)")
     }
 }
 

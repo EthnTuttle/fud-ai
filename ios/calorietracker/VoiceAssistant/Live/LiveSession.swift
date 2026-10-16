@@ -19,6 +19,7 @@ nonisolated final class LiveSession: @unchecked Sendable {
     let wire: any LiveWire
 
     private let makeSocket: SocketFactory
+    private let waitForSetupTimeout: @Sendable () async throws -> Void
     private let onEvent: @Sendable (LiveEvent) -> Void
 
     private let lock = NSLock()
@@ -30,16 +31,19 @@ nonisolated final class LiveSession: @unchecked Sendable {
     private var queued: [(message: String, audioBytes: Int)] = []
     private var queuedAudioBytes = 0
     private var resumptionHandle: String?
+    private var setupWatchdog: Task<Void, Never>?
 
     init(
         config: LiveSessionConfig,
         wire: any LiveWire,
         makeSocket: @escaping SocketFactory = { URLSessionLiveSocket(request: $0) },
+        waitForSetupTimeout: @escaping @Sendable () async throws -> Void = { try await Task.sleep(for: .seconds(20)) },
         onEvent: @escaping @Sendable (LiveEvent) -> Void
     ) {
         self.config = config
         self.wire = wire
         self.makeSocket = makeSocket
+        self.waitForSetupTimeout = waitForSetupTimeout
         self.onEvent = onEvent
     }
 
@@ -87,6 +91,8 @@ nonisolated final class LiveSession: @unchecked Sendable {
     func close() {
         let (socket, outbox): ((any LiveSocket)?, AsyncStream<String>.Continuation?) = lock.withLock {
             isClosed = true
+            setupWatchdog?.cancel()
+            setupWatchdog = nil
             connection += 1
             queued.removeAll()
             queuedAudioBytes = 0
@@ -109,6 +115,17 @@ nonisolated final class LiveSession: @unchecked Sendable {
             let socket = makeSocket(request)
             self.socket = socket
             self.outbox = continuation
+            let id = connection
+            setupWatchdog?.cancel()
+            // Every socket needs its own acknowledgement deadline, including
+            // Gemini resumptions while the controller is already live.
+            setupWatchdog = Task { [weak self, waitForSetupTimeout] in
+                do {
+                    try await waitForSetupTimeout()
+                    try Task.checkCancellation()
+                } catch { return }
+                self?.connectionFailed(id, URLError(.timedOut), onlyBeforeSetup: true)
+            }
             return (connection, socket, resumptionHandle)
         }
         guard let opened else {
@@ -170,6 +187,8 @@ nonisolated final class LiveSession: @unchecked Sendable {
     private func markReady(_ id: Int) {
         let becameReady = lock.withLock {
             guard id == connection, !isClosed, !isReady, let outbox else { return false }
+            setupWatchdog?.cancel()
+            setupWatchdog = nil
             // Yield under the same lock as enqueue: live microphone chunks must
             // not overtake the speech that was queued during setup.
             for item in queued { outbox.yield(item.message) }
@@ -222,6 +241,8 @@ nonisolated final class LiveSession: @unchecked Sendable {
             // Retire the old connection first, so its closing can't end the session.
             connection += 1
             isReady = false
+            setupWatchdog?.cancel()
+            setupWatchdog = nil
             defer { socket = nil; outbox = nil }
             return (socket, outbox)
         }
@@ -232,10 +253,14 @@ nonisolated final class LiveSession: @unchecked Sendable {
         open()
     }
 
-    private func connectionFailed(_ id: Int, _ error: Error) {
+    private func connectionFailed(_ id: Int, _ error: Error, onlyBeforeSetup: Bool = false) {
         let failed: ((any LiveSocket)?, AsyncStream<String>.Continuation?)? = lock.withLock {
-            guard id == connection, !isClosed else { return nil }
+            // Check readiness under the same lock as markReady so a deadline
+            // racing the acknowledgement cannot close a configured session.
+            guard id == connection, !isClosed, !onlyBeforeSetup || !isReady else { return nil }
             isClosed = true
+            setupWatchdog?.cancel()
+            setupWatchdog = nil
             isReady = false
             queued.removeAll()
             queuedAudioBytes = 0
