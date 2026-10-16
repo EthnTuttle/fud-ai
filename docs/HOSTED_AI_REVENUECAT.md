@@ -75,6 +75,12 @@ prices without lowering an existing regional price. Product IDs, entitlements,
 and included usage stay the same. The apps display localized store prices;
 changing this catalog alone does not update either store.
 
+Google Play's price update was applied on October 17, 2026 (Asia/Kolkata).
+App Store price increases are scheduled for October 18, 2026. Regional
+equivalents vary by store; for example, the new India prices are ₹1,900/month
+and ₹17,100/year on Play, and ₹1,999/month (unchanged) and ₹19,900/year on the
+App Store.
+
 ### Android launch checklist (one time)
 
 1. **Play Console:** payments profile active. Upload the first 7.2 AAB (with the Billing permission) to **closed testing** — products cannot be created before a billing build exists on a track.
