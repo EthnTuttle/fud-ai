@@ -451,7 +451,7 @@ private struct VoiceAssistantCardView: View {
                     Button {
                         controller.logDraft(draft.draftID)
                     } label: {
-                        Text(draft.isWorkout ? "Add" : "Log")
+                        Text(draft.isWorkout ? LocalizedStringKey("Add") : LocalizedStringKey("Log This"))
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                             .padding(.horizontal, 18)
                             .frame(minHeight: 36)

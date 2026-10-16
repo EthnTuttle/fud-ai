@@ -2820,6 +2820,15 @@ private enum BarcodeLookupAlertPresenter {
 // MARK: - Siri Phrases
 private struct SiriPhrasesSettingsView: View {
     private let groups: [SiriPhraseGroup] = [
+        // Localized like the phrase Siri listens for (AppShortcuts.xcstrings).
+        SiriPhraseGroup(
+            title: String(localized: "Voice Assistant"),
+            icon: "waveform.circle.fill",
+            phrases: [
+                String(localized: "Talk to Fud AI"),
+                String(localized: "Start a voice chat in Fud AI"),
+            ]
+        ),
         SiriPhraseGroup(
             title: "Log Food",
             icon: "fork.knife",

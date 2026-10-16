@@ -199,7 +199,7 @@ struct VoiceAssistantSettingsView: View {
                 }
             } label: {
                 Label {
-                    Text("Voice")
+                    Text("Speaking Voice")
                 } icon: {
                     Image(systemName: "speaker.wave.2")
                         .foregroundStyle(AppColors.calorie)
