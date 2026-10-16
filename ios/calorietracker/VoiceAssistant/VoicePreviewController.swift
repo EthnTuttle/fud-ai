@@ -190,7 +190,7 @@ final class VoicePreviewController {
             receivedAudioBytes += bytes.count
             phase = .playing
             audio?.play(bytes)
-        case .turnComplete, .responseDone(hasToolCalls: false):
+        case .turnComplete, .responseDone(hasToolCalls: false, successful: true):
             guard receivedAudioBytes > 0 else {
                 showFailure()
                 return
@@ -201,7 +201,7 @@ final class VoicePreviewController {
             session?.close()
             session = nil
             finishIfDrained()
-        case .error, .hostedError, .closed, .toolCalls, .responseDone(hasToolCalls: true):
+        case .error, .hostedError, .closed, .toolCalls, .responseDone:
             showFailure()
         case .interrupted, .userSpeechStarted:
             stop()
