@@ -272,6 +272,25 @@ struct VoiceAssistantToolTests {
         #expect(harness.food.entries.isEmpty)
     }
 
+    @Test(arguments: [1e300, -1e300, Double(Int.max), Double(Int.min).nextDown])
+    func oversizedSettingValuesAreRejectedBeforeFormatting(value: Double) async {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let originalProfile = harness.profile
+        let rawValues: [Any] = [value, String(value)]
+        for key in ["calorie_goal", "protein_goal_g", "carbs_goal_g", "fat_goal_g", "water_goal_ml",
+                    "theme_color", "appearance", "units", "assistant_voice"] {
+            for rawValue in rawValues {
+                let result = await harness.executor.execute(name: "update_setting", arguments: ["key": key, "value": rawValue])
+                #expect(result["error"] as? String == "invalid_arguments", "\(key): \(rawValue)")
+            }
+        }
+        #expect(harness.profile.customCalories == originalProfile.customCalories)
+        #expect(harness.profile.customProtein == originalProfile.customProtein)
+        #expect(harness.profile.customCarbs == originalProfile.customCarbs)
+        #expect(harness.profile.customFat == originalProfile.customFat)
+        #expect(!harness.cards.cards.contains { $0.isUndo })
+    }
+
     @Test func logFoodNeedsExactlyOneSource() async {
         let harness = VoiceAssistantHarness(confirmSaves: false)
         let none = await harness.executor.execute(name: "log_food", arguments: [:])

@@ -1418,7 +1418,9 @@ final class VoiceAssistantToolExecutor {
         guard let rawValue = arguments["value"], !(rawValue is NSNull) else {
             return Self.failure(.invalidArguments, "value is required.")
         }
-        let text = VoiceAssistantParsing.string(rawValue) ?? VoiceAssistantParsing.number(rawValue).map { MacroValueFormatter.string($0) } ?? ""
+        // Named settings need text. Numeric settings validate rawValue below,
+        // before any formatting that could convert an oversized number to Int.
+        let text = VoiceAssistantParsing.string(rawValue) ?? ""
 
         let valueText: String
         let summaryValue: String
