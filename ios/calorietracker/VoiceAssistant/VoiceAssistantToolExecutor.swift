@@ -1004,11 +1004,22 @@ final class VoiceAssistantToolExecutor {
                 guard !stores.weight.isPersistenceBlocked else {
                     return .failed(Self.failure(.unsupported, "The weight couldn't be saved."))
                 }
+                let previousWeight = stores.profile().weightKg
                 let entry = WeightEntry(date: date, weightKg: kilograms)
                 stores.weight.addEntry(entry)
                 return .done(["kg": VoiceAssistantFoodBuilder.rounded(kilograms), "lb": VoiceAssistantFoodBuilder.rounded(kilograms * VoiceAssistantParsing.poundsPerKilogram)], revert: { [stores] in
                     guard let current = stores.weight.entries.first(where: { $0.id == entry.id }) else { return false }
                     stores.weight.deleteEntry(current)
+                    guard !stores.weight.entries.contains(where: { $0.id == entry.id }) else { return false }
+                    // The store intentionally leaves the profile alone when
+                    // its last reading is deleted. Undo restores that field.
+                    if stores.weight.entries.isEmpty {
+                        var profile = stores.profile()
+                        if abs(profile.weightKg - kilograms) < 0.01 {
+                            profile.weightKg = previousWeight
+                            stores.saveProfile(profile)
+                        }
+                    }
                     return true
                 })
             }
@@ -1027,17 +1038,28 @@ final class VoiceAssistantToolExecutor {
         } catch {
             return Self.failure(.invalidArguments, "date must be yyyy-MM-dd, today or yesterday.")
         }
+        guard date <= now().addingTimeInterval(60) else {
+            return Self.failure(.invalidArguments, "Body fat can't be logged for a future day.")
+        }
         let percentText = "\(MacroValueFormatter.string(VoiceAssistantFoodBuilder.rounded(percent)))%"
         let change = Change(
             summary: "Log body fat of \(percentText) on \(iso(date))",
             pendingText: String(localized: "Log body fat · \(percentText)"),
             doneText: String(localized: "Logged body fat · \(percentText)"),
             apply: { [stores] in
+                let previousBodyFat = stores.profile().bodyFatPercentage
                 let entry = BodyFatEntry(date: date, bodyFatFraction: percent / 100)
                 stores.bodyFat.addEntry(entry)
                 return .done(["percent": VoiceAssistantFoodBuilder.rounded(percent)], revert: { [stores] in
                     guard let current = stores.bodyFat.entries.first(where: { $0.id == entry.id }) else { return false }
                     stores.bodyFat.deleteEntry(current)
+                    if stores.bodyFat.entries.isEmpty {
+                        var profile = stores.profile()
+                        if abs((profile.bodyFatPercentage ?? -1) - entry.bodyFatFraction) < 0.0001 {
+                            profile.bodyFatPercentage = previousBodyFat
+                            stores.saveProfile(profile)
+                        }
+                    }
                     return true
                 })
             }
