@@ -20,6 +20,9 @@ struct VoiceAssistantHomeButton: View {
                 minimumFrameInterval: 1.0 / 30,
                 clearBackground: true
             )
+            // The shader's sphere occupies 56% of its canvas. Match the
+            // adjacent 60-point add button without enlarging the touch target.
+            .scaleEffect(1 / 0.56)
             .frame(width: 60, height: 60)
             .contentShape(Circle())
         }

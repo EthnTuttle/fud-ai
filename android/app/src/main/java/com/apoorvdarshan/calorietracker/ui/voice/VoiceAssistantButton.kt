@@ -4,10 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -27,7 +26,6 @@ fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, siz
     Box(
         modifier
             .size(size)
-            .clip(CircleShape)
             .clickable(onClick = onClick)
             .semantics {
                 contentDescription = label
@@ -35,6 +33,16 @@ fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, siz
             }
             .testTag("voiceAssistantButton")
     ) {
-        LiveOrb(mode = OrbMode.IDLE, tint = AppColors.Calorie, modifier = Modifier.fillMaxSize(), clearBackground = true)
+        LiveOrb(
+            mode = OrbMode.IDLE,
+            tint = AppColors.Calorie,
+            // The sphere occupies 56% of its canvas. Match the add button's
+            // visible diameter while keeping this button's existing bounds.
+            modifier = Modifier.fillMaxSize().graphicsLayer {
+                scaleX = 1f / 0.56f
+                scaleY = 1f / 0.56f
+            },
+            clearBackground = true
+        )
     }
 }
