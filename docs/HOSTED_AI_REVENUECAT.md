@@ -28,8 +28,8 @@ See [`store/README.md`](../store/README.md). Live store / RevenueCat sync stays
 |------------|-----------------|
 | `com.apoorvdarshan.calorietracker.plus.monthly` | $8.99 |
 | `com.apoorvdarshan.calorietracker.plus.yearly` | $69.99 |
-| `com.apoorvdarshan.calorietracker.pro.monthly` | $17.99 |
-| `com.apoorvdarshan.calorietracker.pro.yearly` | $149.99 |
+| `com.apoorvdarshan.calorietracker.pro.monthly` | $19.99 |
+| `com.apoorvdarshan.calorietracker.pro.yearly` | $179.99 |
 
 ### Credit packs (consumables)
 
@@ -58,12 +58,22 @@ Play caps product ids at **40 characters** and ids can never be reused, so the P
 |---|---|---|---|---|
 | subscription `plus` | `monthly` (auto-renew, 1 month) | `plus:monthly` | `plus` / `$rc_monthly` | $8.99 |
 | subscription `plus` | `yearly` (auto-renew, 1 year) | `plus:yearly` | `plus` / `$rc_annual` | $69.99 |
-| subscription `pro` | `monthly` | `pro:monthly` | `pro` / `pro_monthly` | $17.99 |
-| subscription `pro` | `yearly` | `pro:yearly` | `pro` / `pro_yearly` | $149.99 |
+| subscription `pro` | `monthly` | `pro:monthly` | `pro` / `pro_monthly` | $19.99 |
+| subscription `pro` | `yearly` | `pro:yearly` | `pro` / `pro_yearly` | $179.99 |
 | one-time `credits_50` / `credits_150` / `credits_400` | — | same | none / `credits_*` on both offerings | $1.99 / $4.99 / $9.99 |
 | one-time `tip_snack` / `tip_proteinshake` / `tip_lunch` / `tip_feast` | — | same | none (bought by id) | $0.99 / $2.99 / $4.99 / $9.99 |
 
 In RevenueCat, credit packs and tips must stay **consumable** (not "non-consumable") so they can be bought again. Plus ↔ Pro changes on Play use `oldProductId` + a replacement mode (upgrade: `CHARGE_PRORATED_PRICE`; downgrade or period change: `DEFERRED`), so a user is never billed for two subscriptions.
+
+### Pro price increase (October 2026)
+
+Pro's new-subscriber US prices are $19.99/month and $179.99/year. Preserve
+existing subscribers' prices: use `preserveCurrentPrice: true` for App Store
+subscription price increases, and leave Google Play's legacy price cohorts
+in place without calling `migratePrices`. Use each store's equivalent regional
+prices without lowering an existing regional price. Product IDs, entitlements,
+and included usage stay the same. The apps display localized store prices;
+changing this catalog alone does not update either store.
 
 ### Android launch checklist (one time)
 

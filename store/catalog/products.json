@@ -53,7 +53,7 @@
       "id": "com.apoorvdarshan.calorietracker.pro.monthly",
       "plan": "pro",
       "period": "P1M",
-      "suggested_price_usd": "17.99",
+      "suggested_price_usd": "19.99",
       "entitlement": "pro",
       "platforms": [
         "ios",
@@ -69,7 +69,7 @@
       "id": "com.apoorvdarshan.calorietracker.pro.yearly",
       "plan": "pro",
       "period": "P1Y",
-      "suggested_price_usd": "149.99",
+      "suggested_price_usd": "179.99",
       "entitlement": "pro",
       "platforms": [
         "ios",
