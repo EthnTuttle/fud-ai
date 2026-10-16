@@ -35,6 +35,9 @@ struct WorkoutsView: View {
         // Refresh static workout theme tokens without replacing this stack or
         // discarding its route and session-only timer state.
         .animation(.easeInOut(duration: 0.2), value: appThemeColorRaw)
+        .onChange(of: workoutLogSession.selectedDate, initial: true) { _, day in
+            VoiceAssistantNavigator.shared.workoutDiaryDate = day
+        }
     }
 
     private func showMode(_ mode: WorkoutTabMode) {

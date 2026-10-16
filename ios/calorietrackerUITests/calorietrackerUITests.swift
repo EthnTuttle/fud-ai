@@ -380,6 +380,28 @@ final class calorietrackerUITests: XCTestCase {
     }
 
     @MainActor
+    func testHomeOrbExplainsVoiceAccessWithoutSubscriptionOrKey() throws {
+        let app = makeApp()
+        app.launch()
+
+        let orb = app.buttons["voiceAssistantButton"]
+        XCTAssertTrue(orb.waitForExistence(timeout: 15))
+        orb.tap()
+
+        // UI tests run without a subscription or a Gemini, OpenAI or xAI key, so the
+        // assistant explains both ways to get voice instead of starting a session.
+        let explanation = app.descendants(matching: .any)["voiceAssistantAccessExplanation"]
+        XCTAssertTrue(explanation.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["voiceAssistant.access.title"].exists)
+        XCTAssertTrue(app.buttons["voiceAssistant.access.subscribe"].exists)
+        XCTAssertTrue(app.buttons["voiceAssistant.access.addKey"].exists)
+
+        app.buttons["voiceAssistant.access.notNow"].tap()
+        XCTAssertTrue(explanation.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(orb.waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testWaterTrackingSettingPersistsAfterRelaunch() throws {
         let app = makeApp()
         app.launch()

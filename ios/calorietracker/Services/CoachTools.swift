@@ -276,6 +276,8 @@ struct CoachTools {
             .prefix(limit)
         let entries = filtered.map { entry -> [String: Any] in
             var payload: [String: Any] = [
+                // The voice assistant opens, edits and deletes entries by this id.
+                "entry_id": entry.id.uuidString,
                 "date": Self.iso(entry.timestamp),
                 "name": entry.name,
                 "kcal": entry.calories,

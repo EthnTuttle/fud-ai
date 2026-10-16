@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// What the live Coach orb is doing.
+/// What the voice assistant's orb is doing.
 enum LiveOrbMode: Equatable {
     case idle
     case listening
@@ -8,20 +8,27 @@ enum LiveOrbMode: Equatable {
     case speaking
 }
 
-/// A holographic, voice-reactive orb for live voice Coach, drawn by the `liveOrb`
-/// Metal shader. `level` is the loudness of whoever is talking, 0...1.
+/// A holographic, voice-reactive orb for the voice assistant, drawn by the
+/// `liveOrb` Metal shader. The level is the loudness of whoever is talking, 0...1.
 struct LiveOrbView: View {
     var mode: LiveOrbMode
-    var level: Double
+    var level: Double = 0
+    /// Read every frame when set, so a changing loudness animates without
+    /// re-rendering the views around the orb.
+    var levelSource: (() -> Double)?
     /// The app theme colour (`AppColors.calorie`).
     var tint: Color
+    /// Stops drawing new frames, e.g. while the orb is off screen.
+    var isPaused = false
+    /// Seconds between frames; nil follows the display.
+    var minimumFrameInterval: Double?
 
     @State private var motion = LiveOrbMotion()
 
     var body: some View {
         GeometryReader { proxy in
-            TimelineView(.animation) { context in
-                let frame = motion.advance(to: context.date, mode: mode, level: level)
+            TimelineView(.animation(minimumInterval: minimumFrameInterval, paused: isPaused)) { context in
+                let frame = motion.advance(to: context.date, mode: mode, level: levelSource?() ?? level)
                 Rectangle()
                     .colorEffect(ShaderLibrary.liveOrb(
                         .float2(proxy.size.width, proxy.size.height),

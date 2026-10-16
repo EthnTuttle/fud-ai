@@ -226,6 +226,125 @@
           }
         }
       }
+    },
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم Fud AI الميكروفون لتتمكن من تسجيل الطعام بصوتك والتحدث مع المساعد الصوتي."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI mikrofondan istifadə edir ki, qidanı səslə qeyd edə və səsli köməkçi ilə danışa biləsiniz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI používá mikrofon, abys mohl zapisovat jídlo hlasem a mluvit s hlasovým asistentem."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI nutzt das Mikrofon, damit du Essen per Sprache eintragen und mit dem Sprachassistenten sprechen kannst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI uses the microphone so you can log food by voice and talk with the voice assistant."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI usa el micrófono para que puedas registrar comida por voz y hablar con el asistente de voz."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI utilise le micro pour que vous puissiez enregistrer vos repas à la voix et parler à l’assistant vocal."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI माइक्रोफ़ोन का उपयोग करता है ताकि आप आवाज़ से खाना लॉग कर सकें और वॉइस असिस्टेंट से बात कर सकें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI usa il microfono per permetterti di registrare il cibo con la voce e parlare con l’assistente vocale."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AIはマイクを使用して、音声で食事を記録したり、音声アシスタントと話したりできるようにします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI는 음성으로 음식을 기록하고 음성 어시스턴트와 대화할 수 있도록 마이크를 사용합니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI gebruikt de microfoon zodat je eten met je stem kunt loggen en met de spraakassistent kunt praten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI używa mikrofonu, abyś mógł zapisywać jedzenie głosem i rozmawiać z asystentem głosowym."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Fud AI usa o microfone para você registrar alimentos por voz e falar com o assistente de voz."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI folosește microfonul ca să poți înregistra mâncarea prin voce și să vorbești cu asistentul vocal."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI использует микрофон, чтобы вы могли записывать еду голосом и говорить с голосовым ассистентом."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI, yiyecekleri sesinizle kaydedebilmeniz ve sesli asistanla konuşabilmeniz için mikrofonu kullanır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI використовує мікрофон, щоб ви могли записувати їжу голосом і говорити з голосовим асистентом."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI 使用麦克风，以便你用语音记录食物并与语音助手对话。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

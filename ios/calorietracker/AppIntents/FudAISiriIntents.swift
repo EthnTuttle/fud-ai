@@ -120,6 +120,17 @@ struct QuickActionThreeIntent: AppIntent {
 
 struct FudAIShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        // First, so it leads the app's shortcuts in Spotlight and the Action Button picker.
+        AppShortcut(
+            intent: TalkToFudAIIntent(),
+            phrases: [
+                "Talk to \(.applicationName)",
+                "Start a voice chat in \(.applicationName)",
+            ],
+            shortTitle: "Talk to Fud AI",
+            systemImageName: "waveform.circle.fill"
+        )
+
         AppShortcut(
             intent: LogFoodIntent(),
             phrases: [
