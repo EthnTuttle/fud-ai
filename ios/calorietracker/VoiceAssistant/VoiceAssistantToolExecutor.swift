@@ -134,6 +134,7 @@ final class VoiceAssistantToolExecutor {
         let name: String
         let arguments: [String: Any]
         let summary: String
+        let foodVersion: FoodEntry?
     }
 
     private struct UndoAction {
@@ -260,6 +261,9 @@ final class VoiceAssistantToolExecutor {
     func confirm(cardID: UUID) async -> String? {
         guard let pending = pendingConfirmations.removeValue(forKey: cardID) else { return nil }
         cards.remove(id: cardID)
+        if let failure = confirmationFailure(pending) {
+            return "[App] The confirmation could not be applied. Result: \(Self.json(failure))"
+        }
         var arguments = pending.arguments
         arguments["user_confirmed"] = true
         let result = await execute(name: pending.name, arguments: arguments)
@@ -313,12 +317,19 @@ final class VoiceAssistantToolExecutor {
     private func perform(_ spec: VoiceAssistantToolSpec?, name: String, arguments: [String: Any], change: Change) -> [String: Any] {
         guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         let confirmed = VoiceAssistantParsing.bool(arguments["user_confirmed"]) == true
+        if confirmed, let pending = pendingConfirmations.values.first(where: {
+            $0.name == name && ($0.arguments["entry_id"] as? String) == (arguments["entry_id"] as? String)
+        }), let failure = confirmationFailure(pending) {
+            removePendingConfirmations(forTool: name)
+            return failure
+        }
         let rule = spec?.confirm ?? .never
         let needsConfirmation = !confirmed && (rule == .always || (rule == .setting && settings.confirmSaves))
         if needsConfirmation {
             removePendingConfirmations(forTool: name)
             let card = VoiceAssistantCard(content: .confirmation(.init(toolName: name, text: change.pendingText)))
-            pendingConfirmations[card.id] = PendingCall(name: name, arguments: arguments, summary: change.summary)
+            let foodVersion = ["update_food_entry", "delete_food_entry"].contains(name) ? foodEntry(arguments["entry_id"]) : nil
+            pendingConfirmations[card.id] = PendingCall(name: name, arguments: arguments, summary: change.summary, foodVersion: foodVersion)
             cards.show(card)
             return [
                 "ok": false,
@@ -345,6 +356,17 @@ final class VoiceAssistantToolExecutor {
             }
             return payload
         }
+    }
+
+    private func confirmationFailure(_ pending: PendingCall) -> [String: Any]? {
+        guard let expected = pending.foodVersion else { return nil }
+        guard let current = stores.food.entries.first(where: { $0.id == expected.id }) else {
+            return Self.failure(.notFound, "That food is no longer in the diary.")
+        }
+        guard Self.sameFoodVersion(current, expected) else {
+            return Self.failure(.unsupported, "That food changed after the confirmation was shown. Ask again using its current details.")
+        }
+        return nil
     }
 
     private func removePendingConfirmations(forTool name: String) {
@@ -482,10 +504,15 @@ final class VoiceAssistantToolExecutor {
 
     private func pickPhotos(_ arguments: [String: Any]) async -> [String: Any] {
         guard let host else { return Self.failure(.unsupported, "The photo library isn't available.") }
-        switch await host.pickPhotos(limit: Self.maximumPickedPhotos, timeout: Self.waitTimeout) {
+        let limit = appDefaults.string(forKey: "aiAccessMode") == AIMode.hosted.rawValue
+            ? min(Self.maximumPickedPhotos, HostedAIConstants.maxHostedImages) : Self.maximumPickedPhotos
+        switch await host.pickPhotos(limit: limit, timeout: Self.waitTimeout) {
         case .value(let images):
             guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
             guard !images.isEmpty else { return Self.failure(.cancelled, "No photos were chosen.") }
+            guard images.count <= limit else {
+                return Self.failure(.invalidArguments, "Choose at most \(limit) photos for the selected food-analysis provider.")
+            }
             do {
                 let analysis = try await analyzer.analyzeImages(images, note: VoiceAssistantParsing.string(arguments["note"]))
                 return foodDraft(analysis, images: images, source: .snapFood)
@@ -638,7 +665,7 @@ final class VoiceAssistantToolExecutor {
         var seen = Set<String>()
         var results: [[String: Any]] = []
         func add(_ entry: FoodEntry, id: String, source: String, count: Int? = nil) {
-            guard results.count < limit, matches(entry.name), seen.insert(entry.favoriteKey).inserted else { return }
+            guard results.count < limit, matches(entry.name), seen.insert(id).inserted else { return }
             var item: [String: Any] = [
                 "saved_food_id": id,
                 "name": entry.name,
@@ -659,7 +686,9 @@ final class VoiceAssistantToolExecutor {
         for group in stores.food.frequentGroups(days: 90, now: now()) {
             add(group.template, id: "food-\(group.template.id.uuidString)", source: "frequent", count: group.count)
         }
-        for entry in stores.food.recentEntries(days: 30, now: now()) {
+        // Frequent groups use name/calories for display grouping. Include every
+        // row in that window so different nutrition/servings remain selectable.
+        for entry in stores.food.recentEntries(days: 90, now: now()) {
             add(entry, id: "food-\(entry.id.uuidString)", source: "recent")
         }
         return ["ok": true, "query": query, "count": results.count, "foods": results]
@@ -766,9 +795,8 @@ final class VoiceAssistantToolExecutor {
                     "entry": self.entryPayload(logged),
                     "day_totals": self.totals(on: timestamp),
                 ], revert: { [weak self, stores, cards] in
-                    guard let current = stores.food.entries.first(where: { $0.id == entry.id }) else { return false }
-                    stores.food.deleteEntry(current)
-                    guard !stores.food.entries.contains(where: { $0.id == entry.id }) else { return false }
+                    guard let current = stores.food.entries.first(where: { $0.id == entry.id }),
+                          Self.sameFoodVersion(current, logged), stores.food.deleteEntry(current) else { return false }
                     if let loggedDraftID {
                         self?.loggedDraftResults.removeValue(forKey: loggedDraftID)
                         cards.markDraftLogged(loggedDraftID, logged: false)
@@ -838,11 +866,14 @@ final class VoiceAssistantToolExecutor {
                 guard stores.food.entries.contains(where: { $0.id == original.id }) else {
                     return .failed(Self.failure(.notFound, "That food is no longer in the diary."))
                 }
-                stores.food.updateEntry(updated)
-                return .done(["entry": self.entryPayload(updated)], revert: { [stores] in
-                    guard stores.food.entries.contains(where: { $0.id == original.id }) else { return false }
-                    stores.food.updateEntry(original)
-                    return true
+                guard stores.food.updateEntry(updated) else {
+                    return .failed(Self.failure(.unsupported, "The food couldn't be updated because diary persistence is unavailable."))
+                }
+                let saved = stores.food.entries.first { $0.id == updated.id } ?? updated
+                return .done(["entry": self.entryPayload(saved)], revert: { [stores] in
+                    guard let current = stores.food.entries.first(where: { $0.id == original.id }),
+                          Self.sameFoodVersion(current, saved) else { return false }
+                    return stores.food.updateEntry(original)
                 })
             }
         )
@@ -861,7 +892,9 @@ final class VoiceAssistantToolExecutor {
                 guard let current = stores.food.entries.first(where: { $0.id == entry.id }) else {
                     return .failed(Self.failure(.notFound, "That food is no longer in the diary."))
                 }
-                stores.food.deleteEntry(current)
+                guard stores.food.deleteEntry(current) else {
+                    return .failed(Self.failure(.unsupported, "The food couldn't be deleted because diary persistence is unavailable."))
+                }
                 // Deletes were confirmed, so they have no Undo.
                 return .done(["deleted_entry_id": entry.id.uuidString], revert: nil)
             }
@@ -872,6 +905,15 @@ final class VoiceAssistantToolExecutor {
     private func foodEntry(_ value: Any?) -> FoodEntry? {
         guard let text = VoiceAssistantParsing.string(value), let id = UUID(uuidString: text) else { return nil }
         return stores.food.entries.first { $0.id == id }
+    }
+
+    /// Undo must preserve any later user edit, including serving, notes and photos.
+    private static func sameFoodVersion(_ lhs: FoodEntry, _ rhs: FoodEntry) -> Bool {
+        guard lhs.imageData == rhs.imageData, lhs.additionalImageData == rhs.additionalImageData else { return false }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard let left = try? encoder.encode(lhs), let right = try? encoder.encode(rhs) else { return false }
+        return left == right
     }
 
     // MARK: - Water, fasting, body
@@ -1526,7 +1568,18 @@ final class VoiceAssistantToolExecutor {
                 "carbs_goal_g": profile.effectiveCarbs,
                 "fat_goal_g": profile.effectiveFat,
             ], revert: {
-                stores.saveProfile(previous)
+                var current = stores.profile()
+                // Only fields this goal edit changed belong to its Undo. Leave
+                // weight, height, name and other later profile edits intact.
+                func restore<Value: Equatable>(_ field: WritableKeyPath<UserProfile, Value>) -> Bool {
+                    guard previous[keyPath: field] != profile[keyPath: field] else { return true }
+                    guard current[keyPath: field] == profile[keyPath: field] else { return false }
+                    current[keyPath: field] = previous[keyPath: field]
+                    return true
+                }
+                guard restore(\.customCalories), restore(\.customProtein), restore(\.customCarbs),
+                      restore(\.customFat), restore(\.caloriesLocked), restore(\.lockedMacros) else { return false }
+                stores.saveProfile(current)
                 return true
             })
         }

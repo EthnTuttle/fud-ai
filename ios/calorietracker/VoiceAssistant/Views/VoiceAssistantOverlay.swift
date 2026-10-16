@@ -138,13 +138,13 @@ private struct VoiceAssistantExpandedView: View {
             .padding(.bottom, 12)
         }
         .environment(\.colorScheme, .dark)
-        .accessibilityAction(.escape) { controller.isExpanded = false }
+        .accessibilityAction(.escape) { controller.minimize() }
     }
 
     private var header: some View {
         HStack {
             Button {
-                controller.isExpanded = false
+                controller.minimize()
             } label: {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 17, weight: .semibold))

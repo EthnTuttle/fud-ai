@@ -170,7 +170,9 @@ struct VoiceAssistantWireTests {
 
     @Test func openAIParsesFunctionCallsAndResponseLifecycle() throws {
         let wire = OpenAIRealtimeWire()
-        let call = wire.parse(#"{"type":"response.function_call_arguments.done","item_id":"item-1","call_id":"call_9","name":"log_water","arguments":"{\"amount\":2,\"unit\":\"cup\"}"}"#)
+        #expect(wire.parse(#"{"type":"response.created","response":{"id":"r1"}}"#) == [.responseStarted])
+        #expect(wire.parse(#"{"type":"response.function_call_arguments.done","response_id":"r1","item_id":"item-1","call_id":"call_9","name":"log_water","arguments":"{\"amount\":2,\"unit\":\"cup\"}"}"#).isEmpty)
+        let call = wire.parse(#"{"type":"response.done","response":{"id":"r1","status":"completed","output":[{"type":"function_call","call_id":"call_9"}]}}"#)
         guard case .toolCalls(let calls) = try #require(call.first) else {
             Issue.record("Expected a tool call, got \(call)")
             return
@@ -178,8 +180,8 @@ struct VoiceAssistantWireTests {
         #expect(calls.first?.id == "call_9")
         #expect(calls.first?.arguments["unit"] as? String == "cup")
 
-        #expect(wire.parse(#"{"type":"response.created","response":{}}"#) == [.responseStarted])
-        #expect(wire.parse(#"{"type":"response.done","response":{"output":[{"type":"function_call","call_id":"call_9"}]}}"#) == [.responseDone(hasToolCalls: true)])
+        #expect(call.last == .responseDone(hasToolCalls: true))
+        #expect(wire.parse(#"{"type":"response.created","response":{"id":"r2"}}"#) == [.responseStarted])
         #expect(wire.parse(#"{"type":"response.done","response":{"output":[{"type":"message"}]}}"#) == [.responseDone(hasToolCalls: false)])
         #expect(wire.parse(#"{"type":"input_audio_buffer.speech_started"}"#) == [.userSpeechStarted])
         #expect(wire.parse(#"{"type":"error","error":{"message":"busy","code":"conversation_already_has_active_response"}}"#)
@@ -219,9 +221,40 @@ struct VoiceAssistantWireTests {
         #expect(wire.imageMessages(Data([1])).isEmpty)
         #expect(LiveProvider.xai.cameraFrames == .none)
         let call = wire.parse(#"{"type":"response.function_call_arguments.done","call_id":"c1","name":"end_conversation","arguments":""}"#)
-        #expect(call == [.toolCalls([LiveToolCall(id: "c1", name: "end_conversation", argumentsJSON: "{}")])])
+        #expect(call.isEmpty)
+        #expect(wire.parse(#"{"type":"response.done","response":{"status":"completed"}}"#) == [
+            .toolCalls([LiveToolCall(id: "c1", name: "end_conversation", argumentsJSON: "{}")]), .responseDone(hasToolCalls: true),
+        ])
         #expect(wire.parse(#"{"type":"conversation.item.input_audio_transcription.updated","transcript":"log a banana"}"#)
             == [.userText("log a banana", replacing: true)])
+    }
+
+    @Test func realtimeRecoversFunctionNamesAndEmitsOneCallOnlyAfterCompletion() {
+        let wire = OpenAIRealtimeWire()
+        _ = wire.parse(#"{"type":"response.created","response":{"id":"r"}}"#)
+        #expect(wire.parse(#"{"type":"response.output_item.added","response_id":"r","item":{"id":"item","type":"function_call","call_id":"call","name":"log_water"}}"#).isEmpty)
+        #expect(wire.parse(#"{"type":"response.function_call_arguments.done","response_id":"r","item_id":"item","call_id":"call","arguments":"{\"amount\":250,\"unit\":\"ml\"}"}"#).isEmpty)
+        #expect(wire.parse(#"{"type":"response.output_item.done","response_id":"r","item":{"id":"item","type":"function_call","call_id":"call","name":"log_water","arguments":"{\"amount\":250,\"unit\":\"ml\"}"}}"#).isEmpty)
+        let completion = #"{"type":"response.done","response":{"id":"r","status":"completed","output":[]}}"#
+        #expect(wire.parse(completion) == [
+            .toolCalls([LiveToolCall(id: "call", name: "log_water", argumentsJSON: #"{"amount":250,"unit":"ml"}"#)]),
+            .responseDone(hasToolCalls: true),
+        ])
+        #expect(wire.parse(completion).isEmpty)
+    }
+
+    @Test(arguments: ["cancelled", "failed", "incomplete", "interrupted"])
+    func realtimeDiscardsCallsFromUnsuccessfulOrInterruptedResponses(status: String) {
+        let wire = OpenAIRealtimeWire()
+        _ = wire.parse(#"{"type":"response.created","response":{"id":"r"}}"#)
+        _ = wire.parse(#"{"type":"response.function_call_arguments.done","response_id":"r","call_id":"call","name":"delete_food_entry","arguments":"{}"}"#)
+        if status == "interrupted" { _ = wire.parse(#"{"type":"input_audio_buffer.speech_started"}"#) }
+        let completion = LiveJSON.string(["type": "response.done", "response": ["id": "r", "status": status == "interrupted" ? "completed" : status]])
+        let events = wire.parse(completion)
+        #expect(!events.contains { if case .toolCalls = $0 { return true }; return false })
+        #expect(events.last == .responseDone(hasToolCalls: false))
+        _ = wire.parse(#"{"type":"response.created","response":{"id":"next"}}"#)
+        #expect(wire.parse(#"{"type":"response.done","response":{"id":"next","status":"completed","output":[]}}"#) == [.responseDone(hasToolCalls: false)])
     }
 
     @Test func cameraFramePoliciesFollowTheContract() {

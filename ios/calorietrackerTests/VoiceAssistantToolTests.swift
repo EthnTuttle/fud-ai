@@ -338,7 +338,8 @@ struct VoiceAssistantToolTests {
 
         let search = await harness.executor.execute(name: "search_foods", arguments: ["query": "oats"])
         let foods = try #require(search["foods"] as? [[String: Any]])
-        #expect(foods.count == 1)
+        // A favorite snapshot and its diary row can be edited independently.
+        #expect(foods.count == 2)
         let savedID = try #require(foods.first?["saved_food_id"] as? String)
         #expect(foods.first?["source"] as? String == "favorite")
 
@@ -361,6 +362,145 @@ struct VoiceAssistantToolTests {
         #expect(result["ok"] as? Bool == true)
         let foods = try #require(result["foods"] as? [[String: Any]])
         #expect(foods.first?["entry_id"] as? String == entry.id.uuidString)
+    }
+
+    @Test(arguments: [false, true], ["log_food", "update_food_entry", "delete_food_entry"])
+    func blockedFoodWritesReturnFailureWithoutUndoOrCallbacks(reloadBeforeWrite: Bool, tool: String) async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false, corruptBackupDirectory: URL(fileURLWithPath: "/dev/null/cannot-create"))
+        let original = harness.addFood("Toast", calories: 120)
+        var callbacks = 0
+        harness.food.onEntriesChanged = { callbacks += 1 }
+        let corrupt = Data("unreadable diary".utf8)
+        harness.defaults.set(corrupt, forKey: FoodStore.storageKey)
+        if reloadBeforeWrite {
+            harness.food.reloadFromDefaults()
+            #expect(harness.food.isPersistenceBlocked)
+        }
+        callbacks = 0
+
+        let arguments: [String: Any] = tool == "log_food"
+            ? ["item": ["name": "Banana", "calories": 90]]
+            : ["entry_id": original.id.uuidString, "calories": 90, "user_confirmed": true]
+        let result = await harness.executor.execute(name: tool, arguments: arguments)
+        #expect(result["ok"] as? Bool == false)
+        #expect(result["error"] as? String == "unsupported")
+        #expect(harness.food.entries.first?.calories == 120)
+        #expect(harness.food.entries.count == 1)
+        #expect(harness.defaults.data(forKey: FoodStore.storageKey) == corrupt)
+        #expect(callbacks == 0)
+        #expect(!harness.cards.cards.contains { $0.isUndo })
+    }
+
+    @Test(arguments: [false, true])
+    func foodUndoPreservesLaterUserEdits(updating: Bool) async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        if updating {
+            let original = harness.addFood("Toast", calories: 120)
+            _ = await harness.executor.execute(name: "update_food_entry", arguments: ["entry_id": original.id.uuidString, "calories": 90])
+        } else {
+            _ = await harness.executor.execute(name: "log_food", arguments: ["item": ["name": "Toast", "calories": 90]])
+        }
+        let undo = try #require(harness.cards.cards.first { $0.isUndo })
+        var edited = try #require(harness.food.entries.first)
+        edited.customNote = "Keep my later note"
+        edited.servingSizeGrams = 75
+        #expect(harness.food.updateEntry(edited))
+        let result = try #require(harness.executor.undo(cardID: undo.id))
+        #expect(result.contains("could not be reverted"))
+        #expect(harness.food.entries.first?.customNote == edited.customNote)
+        #expect(harness.food.entries.first?.servingSizeGrams == 75)
+        #expect(harness.food.entries.first?.calories == 90)
+    }
+
+    @Test func searchPreservesDistinctNutritionAndFavoriteSnapshots() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        var first = harness.addFood("Protein bowl", calories: 300, protein: 10)
+        harness.food.toggleFavorite(first)
+        first.protein = 20
+        first.servingSizeGrams = 200
+        #expect(harness.food.updateEntry(first))
+        let older = FoodEntry(name: "Protein bowl", calories: 300, protein: 30, carbs: 20, fat: 5,
+                              timestamp: harness.now.addingTimeInterval(-45 * 86_400), source: .manual,
+                              servingSizeGrams: 250)
+        #expect(harness.food.addEntry(older))
+        let result = await harness.executor.execute(name: "search_foods", arguments: ["query": "protein bowl"])
+        let foods = try #require(result["foods"] as? [[String: Any]])
+        #expect(foods.count == 3)
+        #expect(Set(foods.compactMap { $0["saved_food_id"] as? String }) == [
+            "favorite-\(first.id.uuidString)", "food-\(first.id.uuidString)", "food-\(older.id.uuidString)",
+        ])
+        #expect(Set(foods.compactMap { $0["protein_g"] as? Double }) == [10, 20, 30])
+    }
+
+    @Test func searchedFoodUsesCurrentValuesAndCannotBeLoggedAfterDeletion() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        var original = harness.addFood("Toast", calories: 120)
+        let result = await harness.executor.execute(name: "search_foods", arguments: ["query": "toast"])
+        let foods = try #require(result["foods"] as? [[String: Any]])
+        let id = try #require(foods.first?["saved_food_id"] as? String)
+        original.calories = 180
+        #expect(harness.food.updateEntry(original))
+        #expect(await harness.executor.execute(name: "log_food", arguments: ["saved_food_id": id])["ok"] as? Bool == true)
+        #expect(harness.food.entries.allSatisfy { $0.calories == 180 })
+        #expect(harness.food.deleteEntry(original))
+        #expect(await harness.executor.execute(name: "log_food", arguments: ["saved_food_id": id])["error"] as? String == "not_found")
+        #expect(harness.food.entries.count == 1)
+    }
+
+    @Test(arguments: ["update_food_entry", "delete_food_entry"], [false, true])
+    func foodConfirmationRejectsLaterEdits(tool: String, tapCard: Bool) async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: true)
+        var original = harness.addFood("Toast", calories: 120)
+        var arguments: [String: Any] = ["entry_id": original.id.uuidString, "calories": 90]
+        _ = await harness.executor.execute(name: tool, arguments: arguments)
+        let confirmation = try #require(harness.cards.cards.first { $0.isConfirmation })
+        original.customNote = "Changed after the request"
+        #expect(harness.food.updateEntry(original))
+        if tapCard {
+            #expect(await harness.executor.confirm(cardID: confirmation.id)?.contains("could not be applied") == true)
+        } else {
+            arguments["user_confirmed"] = true
+            #expect(await harness.executor.execute(name: tool, arguments: arguments)["ok"] as? Bool == false)
+        }
+        #expect(harness.food.entries.first?.calories == 120)
+        #expect(harness.food.entries.first?.customNote == original.customNote)
+        #expect(!harness.cards.cards.contains { $0.isUndo })
+    }
+
+    @Test func goalUndoRestoresOnlyItsOwnUnchangedFields() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        let before = harness.profile
+        _ = await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 2100])
+        let undo = try #require(harness.cards.cards.first { $0.isUndo })
+        var edited = harness.profile
+        edited.name = "Later name"
+        edited.weightKg += 3
+        harness.executor.stores.saveProfile(edited)
+        #expect(harness.executor.undo(cardID: undo.id)?.contains("was reverted") == true)
+        #expect(harness.profile.customCalories == before.customCalories)
+        #expect(harness.profile.customProtein == before.customProtein)
+        #expect(harness.profile.name == "Later name")
+        #expect(harness.profile.weightKg == edited.weightKg)
+
+        _ = await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 2200])
+        let secondUndo = try #require(harness.cards.cards.first { $0.isUndo })
+        var laterGoal = harness.profile
+        laterGoal.applyCaloriesEdit(2300)
+        harness.executor.stores.saveProfile(laterGoal)
+        #expect(harness.executor.undo(cardID: secondUndo.id)?.contains("could not be reverted") == true)
+        #expect(harness.profile == laterGoal)
+    }
+
+    @Test func hostedPhotoPickerNeverIncludesAnUnanalyzedFourthPhoto() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        harness.defaults.set(AIMode.hosted.rawValue, forKey: "aiAccessMode")
+        harness.host.pickResult = .value([UIImage(), UIImage(), UIImage()])
+        #expect(await harness.executor.execute(name: "pick_photos", arguments: [:])["ok"] as? Bool == true)
+        #expect(harness.host.lastPickLimit == HostedAIConstants.maxHostedImages)
+        #expect(harness.analyzer.lastImageCount == 3)
+        harness.host.pickResult = .value([UIImage(), UIImage(), UIImage(), UIImage()])
+        #expect(await harness.executor.execute(name: "pick_photos", arguments: [:])["error"] as? String == "invalid_arguments")
+        #expect(harness.analyzer.lastImageCount == 3)
     }
 
     // MARK: Waiting for the user
@@ -606,9 +746,9 @@ final class VoiceAssistantHarness {
         var profile = UserProfile.default
     }
 
-    init(confirmSaves: Bool, workoutDiary: Bool = true) {
+    init(confirmSaves: Bool, workoutDiary: Bool = true, corruptBackupDirectory: URL? = nil) {
         defaults = UserDefaults(suiteName: suite)!
-        food = FoodStore(observesExternalChanges: false, defaults: defaults)
+        food = FoodStore(observesExternalChanges: false, defaults: defaults, corruptBackupDirectory: corruptBackupDirectory)
         water = WaterStore(defaults: defaults)
         fasting = FastingStore(defaults: defaults)
         weight = WeightStore(observesExternalChanges: false, defaults: defaults)
@@ -672,6 +812,7 @@ final class StubVoiceAssistantHost: VoiceAssistantToolHost {
     var pickResult: VoiceAssistantWait<[UIImage]> = .cancelled
     var scanResult: VoiceAssistantWait<String> = .timeout
     var ended = false
+    var lastPickLimit: Int?
 
     func open(_ screen: VoiceAssistantScreen, settingsSection: ProfileSettingsCategory?) {
         opened.append((screen, settingsSection))
@@ -697,7 +838,10 @@ final class StubVoiceAssistantHost: VoiceAssistantToolHost {
     }
 
     func captureStill() async -> UIImage? { still }
-    func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> { pickResult }
+    func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> {
+        lastPickLimit = limit
+        return pickResult
+    }
     func scanBarcode(timeout: TimeInterval) async -> VoiceAssistantWait<String> { scanResult }
     func endConversation() { ended = true }
 }
@@ -710,8 +854,10 @@ final class StubVoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
     var beforeText: (() async -> Void)?
     private(set) var lastWorkoutDate: Date?
     private(set) var lastNote: String?
+    private(set) var lastImageCount = 0
 
     func analyzeImages(_ images: [UIImage], note: String?) async throws -> GeminiService.FoodAnalysis {
+        lastImageCount = images.count
         lastNote = note
         return analysis
     }

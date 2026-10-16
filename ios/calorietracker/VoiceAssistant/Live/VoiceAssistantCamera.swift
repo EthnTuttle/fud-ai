@@ -6,11 +6,21 @@ import os
 
 nonisolated private let logger = Logger(subsystem: "com.apoorvdarshan.calorietracker", category: "VoiceAssistantCamera")
 
+nonisolated protocol VoiceAssistantCameraIO: AnyObject, Sendable {
+    var session: AVCaptureSession { get }
+    var onBarcode: (@Sendable (String) -> Void)? { get set }
+    func start(mode: VoiceAssistantCamera.Mode) async -> VoiceAssistantCamera.StartResult
+    func setMode(_ mode: VoiceAssistantCamera.Mode)
+    func stop()
+    func latestJPEG() -> Data?
+    func captureStill(timeout: TimeInterval) async -> UIImage?
+}
+
 /// The back camera inside the voice assistant. It shows a live preview, keeps the
 /// latest frame as a small JPEG for the model, takes full-size stills for food
 /// analysis, and reads barcodes in barcode mode. Nothing is recorded; a still is
 /// kept only when the user logs the food it shows.
-nonisolated final class VoiceAssistantCamera: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
+nonisolated final class VoiceAssistantCamera: NSObject, VoiceAssistantCameraIO, AVCaptureVideoDataOutputSampleBufferDelegate,
     AVCaptureMetadataOutputObjectsDelegate, @unchecked Sendable {
     enum Mode: String, Sendable {
         case food
