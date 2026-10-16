@@ -113,7 +113,7 @@ draft, read back the main items and total calories; never call a tool with
 
 ## UI
 
-- Entry points: an orb button on Home; iOS App Shortcut / Siri phrase
+- Entry points: an orb button directly above Home's + button; iOS App Shortcut / Siri phrase
   ("Talk to Fud AI"), usable from the Action Button, plus a Control Center
   control; Android Quick Settings tile, launcher shortcut and a home-screen
   widget. All open the app straight into a listening session.
