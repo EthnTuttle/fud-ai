@@ -136,6 +136,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
@@ -187,7 +188,6 @@ import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextField
 import com.apoorvdarshan.calorietracker.ui.components.WeekEnergyStrip
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavDockedControlPadding
-import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantButton
 import java.time.DayOfWeek
@@ -509,13 +509,13 @@ DisposableEffect(lifecycleOwner, vm) {
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
+        Column(Modifier.fillMaxSize().padding(padding)) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize().testTag("home.diary"),
+                .weight(1f).fillMaxWidth().clipToBounds().testTag("home.diary"),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 top = 8.dp,
-                bottom = if (selectionMode) 8.dp else BottomNavScrollPadding + (if (voiceUi.visible) 72.dp else 144.dp)
+                bottom = 8.dp
             )
         ) {
             // Week strip — verbatim port of WeekEnergyStrip in HomeComponents.swift,
@@ -704,18 +704,17 @@ CalorieHero(
             }
         }
 
-        // Voice and "+" share a right-aligned stack lifted above the docked
-        // bottom nav bar. The parent Scaffold renders content full-screen behind the
-        // bar, so the Scaffold FAB slot would sit hidden underneath it. Mirrors the iOS
-        // ContentView FAB: .overlay(alignment: .bottomTrailing) + .padding(.bottom).
+        // This measured row reserves its own space below the diary viewport. Keeping
+        // both actions out of the scrolling layer prevents them covering meal headers.
+        // The bottom offset preserves the existing "+" position above the docked tabs.
         if (!selectionMode) {
-        Column(
+        Row(
             modifier = Modifier
-                .align(Alignment.BottomEnd)
+                .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(end = 24.dp, bottom = 100.dp),
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 100.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (!voiceUi.visible) {
                 VoiceAssistantButton(onClick = container.voiceAssistant::requestStart)

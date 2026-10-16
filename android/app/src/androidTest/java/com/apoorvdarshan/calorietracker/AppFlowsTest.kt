@@ -103,9 +103,12 @@ class AppFlowsTest {
         compose.onNodeWithTag("home.add").assertIsDisplayed()
         val addBounds = compose.onNodeWithTag("home.add").fetchSemanticsNode().boundsInRoot
         val voiceBounds = compose.onNodeWithTag("voiceAssistantButton").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
-        assertEquals(addBounds.right, voiceBounds.right, 1f)
-        assertTrue("Voice sits above the add button", voiceBounds.bottom < addBounds.top)
-        assertTrue("The stack stays above the tabs", addBounds.bottom <=
+        assertEquals(addBounds.top, voiceBounds.top, 1f)
+        assertEquals(addBounds.bottom, voiceBounds.bottom, 1f)
+        assertTrue("Voice sits beside the add button", voiceBounds.right < addBounds.left)
+        assertTrue("The diary viewport ends above both controls",
+            compose.onNodeWithTag("home.diary").fetchSemanticsNode().boundsInRoot.bottom <= voiceBounds.top)
+        assertTrue("The action row stays above the tabs", addBounds.bottom <=
             compose.onNodeWithTag("nav.home").fetchSemanticsNode().boundsInRoot.top)
         for (tab in listOf("progress", "coach", "settings", "workouts", "home")) {
             openTab(tab)
