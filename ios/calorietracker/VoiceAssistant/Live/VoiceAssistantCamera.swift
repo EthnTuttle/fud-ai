@@ -140,14 +140,28 @@ nonisolated final class VoiceAssistantCamera: NSObject, VoiceAssistantCameraIO, 
     /// A full-size still from the next frame, or nil if none arrives in time.
     func captureStill(timeout: TimeInterval = 3) async -> UIImage? {
         let token = UUID()
-        let image: CGImage? = await withCheckedContinuation { continuation in
-            lock.withLock { stillWaiters[token] = continuation }
-            queue.asyncAfter(deadline: .now() + timeout) { [self] in
-                let waiter = lock.withLock { stillWaiters.removeValue(forKey: token) }
-                waiter?.resume(returning: nil)
+        let image: CGImage? = await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                let cancelled = lock.withLock {
+                    // Cancellation can arrive before this waiter is installed.
+                    guard !Task.isCancelled else { return true }
+                    stillWaiters[token] = continuation
+                    return false
+                }
+                if cancelled {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                queue.asyncAfter(deadline: .now() + timeout) { [self] in
+                    let waiter = lock.withLock { stillWaiters.removeValue(forKey: token) }
+                    waiter?.resume(returning: nil)
+                }
             }
+        } onCancel: { [self] in
+            let waiter = lock.withLock { stillWaiters.removeValue(forKey: token) }
+            waiter?.resume(returning: nil)
         }
-        return image.map { UIImage(cgImage: $0) }
+        return Task.isCancelled ? nil : image.map { UIImage(cgImage: $0) }
     }
 
     // MARK: - Configuration (camera queue)

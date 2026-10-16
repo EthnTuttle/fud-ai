@@ -5,6 +5,16 @@ import UIKit
 
 @MainActor
 struct VoiceAssistantCameraLifecycleTests {
+    @Test func cameraWaitRespondsToCancellationWithoutWaitingForAFrame() async {
+        let camera = VoiceAssistantCamera()
+        let capture = Task { await camera.captureStill(timeout: 10) }
+        await Task.yield()
+        let cancelledAt = ContinuousClock.now
+        capture.cancel()
+        #expect(await capture.value == nil)
+        #expect(cancelledAt.duration(to: .now) < .seconds(2))
+    }
+
     @Test func stillCaptureClosesCameraWithoutCollapsingAssistant() async {
         let camera = StubVoiceCamera()
         camera.still = UIImage()

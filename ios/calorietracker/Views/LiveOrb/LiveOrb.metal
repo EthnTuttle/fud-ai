@@ -170,6 +170,8 @@ using namespace liveorb;
     light = 1.0 - exp(-light * 1.25);
 
     if (clearBackground > 0.5) {
+        // colorEffect uses premultiplied RGB: light already contributes its full
+        // intensity. Multiplying it by alpha again would dim the filaments.
         float alpha = clamp(max(light.r, max(light.g, light.b)), 0.0, 1.0);
         return half4(half3(light), half(alpha));
     }
