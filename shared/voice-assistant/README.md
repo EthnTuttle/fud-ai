@@ -158,12 +158,20 @@ hosted routes (`X-Fud-User-Id`, plus `X-Fud-Platform: ios|android`).
 4. Metering: from `setupComplete` until close, in 15-second blocks charged at
    the start of each block. Blocks come from the monthly voice allowance
    (Plus 20 min, Pro 100 min, UTC calendar month), then from the credit bank at
-   1 credit per block (4 credits a minute).
+   1 credit per block (4 credits a minute). Each block has an idempotent billing
+   receipt, so retrying a committed debit cannot charge twice. A charge that
+   cannot be confirmed within five seconds closes the session. The 15-minute
+   cap runs independently of database work.
 5. `GET /quota` also returns `voice: {month, secondsUsed, secondsLimit,
    creditBank}`.
+6. Hosted session-resumption handles are opaque, signed wrappers bound to the
+   subscriber. They expire after two hours and become invalid if the hosted
+   Gemini key rotates. Clients return them unchanged; raw provider handles,
+   modified handles, and handles from another subscriber are rejected.
 
 ## Privacy
 
 Voice audio, captions, camera frames sent to the model and tool results go to
-the chosen provider (Google for hosted). Nothing is recorded by the Worker
-beyond usage seconds. The privacy policy describes this.
+the chosen provider (Google for hosted). The Worker stores usage counters and
+billing receipts, not conversation content. Receipts expire after 30 days.
+The privacy policy describes this.
