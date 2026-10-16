@@ -374,6 +374,32 @@ final class calorietrackerUITests: XCTestCase {
         let meal = app.staticTexts["CI oat bowl"]
         reveal(meal, in: app)
         XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
+
+        let voiceButton = app.buttons["voiceAssistantButton"]
+        XCTAssertTrue(voiceButton.exists)
+        XCTAssertEqual(voiceButton.frame.midY, addButton.frame.midY, accuracy: 2)
+        XCTAssertEqual(addButton.frame.minX - voiceButton.frame.maxX, 12, accuracy: 2)
+        XCTAssertLessThan(addButton.frame.maxY, app.tabBars.firstMatch.frame.minY)
+
+        // The last diary row can scroll above both floating controls. Its meal
+        // summary stays beneath the title on the leading side, away from them.
+        app.swipeUp()
+        let mealCell = app.cells.containing(.staticText, identifier: "CI oat bowl").firstMatch
+        XCTAssertTrue(mealCell.exists)
+        XCTAssertTrue(meal.isHittable)
+        XCTAssertLessThan(mealCell.frame.maxY, voiceButton.frame.minY)
+        let mealTitle = app.descendants(matching: .any).matching(identifier: "home.meal.title").firstMatch
+        let mealCalories = app.staticTexts.matching(identifier: "home.meal.calories").firstMatch
+        let mealMacros = app.staticTexts.matching(identifier: "home.meal.macros").firstMatch
+        XCTAssertTrue(mealTitle.exists)
+        XCTAssertTrue(mealCalories.exists)
+        XCTAssertTrue(mealMacros.exists)
+        XCTAssertGreaterThanOrEqual(mealCalories.frame.minY, mealTitle.frame.maxY)
+        XCTAssertLessThanOrEqual(mealCalories.frame.minX, mealTitle.frame.minX)
+        XCTAssertEqual(mealCalories.frame.minX, mealMacros.frame.minX, accuracy: 1)
+        XCTAssertLessThan(mealCalories.frame.maxX, voiceButton.frame.minX)
+        XCTAssertLessThan(mealMacros.frame.maxX, voiceButton.frame.minX)
+
         relaunchPreservingData(app)
         reveal(meal, in: app)
         XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)

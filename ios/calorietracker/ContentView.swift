@@ -1403,10 +1403,9 @@ private var dailyStepsTaskKey: String {
         }
     }
 
-    /// A reserved action row keeps diary content above the controls while scrolling.
+    /// The diary scrolls behind these floating controls and can scroll fully above them.
     private var homeActionBar: some View {
         HStack(spacing: 12) {
-            Spacer(minLength: 0)
             // The live session uses its own floating controls.
             if !voiceAssistant.isActive {
                 VoiceAssistantHomeButton(controller: voiceAssistant)
@@ -1510,7 +1509,6 @@ private var dailyStepsTaskKey: String {
             }
         }
         .padding(24)
-        .background(AppColors.appBackground)
     }
 
     var body: some View {
@@ -1770,48 +1768,58 @@ private var dailyStepsTaskKey: String {
                                 .listRowBackground(AppColors.appCard)
                             }
                         } header: {
-                            HStack(alignment: .center) {
-                                Label(group.meal.displayName, systemImage: group.meal.icon)
-                                if group.id == mealGroups.first?.id {
-                                    Menu {
-                                        Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
-                                            ForEach(FoodLogSortOrder.allCases) { order in
-                                                Text(order.displayName).tag(order.rawValue)
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .center) {
+                                    Label(group.meal.displayName, systemImage: group.meal.icon)
+                                        .accessibilityIdentifier("home.meal.title")
+                                    if group.id == mealGroups.first?.id {
+                                        Menu {
+                                            Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
+                                                ForEach(FoodLogSortOrder.allCases) { order in
+                                                    Text(order.displayName).tag(order.rawValue)
+                                                }
+                                            }
+                                        } label: {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "arrow.up.arrow.down")
+                                                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                                                Text("Sort")
+                                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                             }
                                         }
-                                    } label: {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: "arrow.up.arrow.down")
-                                                .font(.system(.caption2, design: .rounded, weight: .semibold))
-                                            Text("Sort")
+                                        .tint(AppColors.calorie)
+                                        .textCase(nil)
+                                        .padding(.leading, 8)
+                                    }
+                                    if !group.foodEntries.isEmpty {
+                                        Button {
+                                            MealShare.presentShareSheet(for: group.foodEntries)
+                                        } label: {
+                                            Image(systemName: "square.and.arrow.up")
                                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                                .foregroundStyle(AppColors.calorie)
                                         }
+                                        .buttonStyle(.plain)
+                                        .padding(.leading, 8)
+                                        .textCase(nil)
                                     }
-                                    .tint(AppColors.calorie)
-                                    .textCase(nil)
-                                    .padding(.leading, 8)
+                                    Spacer(minLength: 0)
                                 }
-                                Spacer()
                                 if !group.foodEntries.isEmpty {
-                                    // Share and totals include food only; water and fasting have no calories/macros.
-                                    Button {
-                                        MealShare.presentShareSheet(for: group.foodEntries)
-                                    } label: {
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                            .foregroundStyle(AppColors.calorie)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(.trailing, 12)
-                                    .textCase(nil)
-                                    VStack(alignment: .trailing, spacing: 1) {
+                                    // Keep food totals on the leading side, clear of the floating controls.
+                                    VStack(alignment: .leading, spacing: 1) {
                                         Text("\(group.totalCalories.formatted()) kcal")
                                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                             .foregroundStyle(AppColors.calorie)
+                                            .accessibilityIdentifier("home.meal.calories")
                                         Text("\(Int(group.totalProtein.rounded()))P · \(Int(group.totalCarbs.rounded()))C · \(Int(group.totalFat.rounded()))F")
                                             .font(.system(.caption2, design: .rounded, weight: .medium))
                                             .foregroundStyle(.secondary)
+                                            .accessibilityIdentifier("home.meal.macros")
                                     }
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.trailing, isFoodSelectionMode ? 0 : (voiceAssistant.isActive ? 72 : 144))
                                     .textCase(nil)
                                 }
                             }
@@ -1825,7 +1833,7 @@ private var dailyStepsTaskKey: String {
             .task(id: dailyStepsTaskKey) {
                 await refreshDailySteps()
             }
-            .contentMargins(.bottom, isFoodSelectionMode ? 8 : 12, for: .scrollContent)
+            .contentMargins(.bottom, isFoodSelectionMode ? 8 : 96, for: .scrollContent)
             .sensoryFeedback(.selection, trigger: selectedFoodIDs) { _, selection in
                 !selection.isEmpty
             }
@@ -1847,12 +1855,15 @@ private var dailyStepsTaskKey: String {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(AppColors.appBackground)
-                } else {
-                    homeActionBar
                 }
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .overlay(alignment: .bottomTrailing) {
+                if !isFoodSelectionMode {
+                    homeActionBar
+                }
+            }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraView(
                     image: $capturedImage,
