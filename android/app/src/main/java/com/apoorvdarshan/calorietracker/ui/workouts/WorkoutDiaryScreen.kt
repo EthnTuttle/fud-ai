@@ -126,6 +126,7 @@ import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextButton
 import com.apoorvdarshan.calorietracker.ui.home.OutdoorActivityDurationSheet
 import com.apoorvdarshan.calorietracker.ui.home.OutdoorActivityKind
+import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantButton
 import com.apoorvdarshan.calorietracker.ui.home.SheetGlassDropdownMenu
 import com.apoorvdarshan.calorietracker.ui.home.SheetGlassDropdownMenuItem
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
@@ -170,6 +171,7 @@ internal fun WorkoutDiaryScreen(
     var addMenuExpanded by remember { mutableStateOf(false) }
     var outdoorActivitySheet by remember { mutableStateOf<OutdoorActivityKind?>(null) }
     val walkRunQuickLogEnabled by container.prefs.walkRunQuickLogEnabled.collectAsState(initial = false)
+    val voiceUi by container.voiceAssistant.ui.collectAsState()
     val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -352,109 +354,119 @@ internal fun WorkoutDiaryScreen(
                 .padding(top = 8.dp, end = 16.dp)
         )
 
-        Box(
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(end = 24.dp, bottom = 100.dp)
+                .padding(end = 24.dp, bottom = 100.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(AppColors.Calorie)
-                    .clickable(role = Role.Button) {
-                        dismissKeyboard()
-                        addMenuExpanded = true
-                    }
-                    .semantics { contentDescription = "Add workout" },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
+            if (!voiceUi.visible) {
+                VoiceAssistantButton(onClick = {
+                    dismissKeyboard()
+                    container.voiceAssistant.requestStart()
+                })
             }
-
-            SheetGlassDropdownMenu(
-                expanded = addMenuExpanded,
-                onDismissRequest = { addMenuExpanded = false },
-                modifier = Modifier.heightIn(max = 520.dp),
-                menuWidth = 236.dp
-            ) {
-                if (state.splitGroups.isEmpty()) {
-                    SheetGlassDropdownMenuItem(
-                        label = "All exercises",
-                        leadingContent = { WorkoutMenuGlyph(workoutMenuGlyphAsset("All exercises", emptySet())) },
-                        onClick = {
-                            addMenuExpanded = false
-                            pickerRequest = WorkoutPickerRequest.all()
+            Box {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(CircleShape)
+                        .background(AppColors.Calorie)
+                        .clickable(role = Role.Button) {
+                            dismissKeyboard()
+                            addMenuExpanded = true
                         }
-                    )
-                } else {
-                    state.splitGroups.forEach { group ->
+                        .semantics { contentDescription = "Add workout" },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
+                }
+
+                SheetGlassDropdownMenu(
+                    expanded = addMenuExpanded,
+                    onDismissRequest = { addMenuExpanded = false },
+                    modifier = Modifier.heightIn(max = 520.dp),
+                    menuWidth = 236.dp
+                ) {
+                    if (state.splitGroups.isEmpty()) {
                         SheetGlassDropdownMenuItem(
-                            label = group.title,
-                            leadingContent = {
-                                WorkoutMenuGlyph(workoutMenuGlyphAsset(group.title, group.muscles))
-                            },
+                            label = "All exercises",
+                            leadingContent = { WorkoutMenuGlyph(workoutMenuGlyphAsset("All exercises", emptySet())) },
                             onClick = {
                                 addMenuExpanded = false
-                                pickerRequest = WorkoutPickerRequest.group(group)
+                                pickerRequest = WorkoutPickerRequest.all()
+                            }
+                        )
+                    } else {
+                        state.splitGroups.forEach { group ->
+                            SheetGlassDropdownMenuItem(
+                                label = group.title,
+                                leadingContent = {
+                                    WorkoutMenuGlyph(workoutMenuGlyphAsset(group.title, group.muscles))
+                                },
+                                onClick = {
+                                    addMenuExpanded = false
+                                    pickerRequest = WorkoutPickerRequest.group(group)
+                                }
+                            )
+                        }
+                    }
+                    SheetGlassDropdownMenuItem(
+                        label = "Copy from day",
+                        leadingIcon = Icons.Filled.ContentCopy,
+                        onClick = {
+                            addMenuExpanded = false
+                            copySheetVisible = true
+                        }
+                    )
+                    SheetGlassDropdownMenuItem(
+                        label = "Saved",
+                        leadingIcon = Icons.Filled.Bookmark,
+                        onClick = {
+                            addMenuExpanded = false
+                            pickerRequest = WorkoutPickerRequest.saved()
+                        }
+                    )
+                    if (walkRunQuickLogEnabled) {
+                        SheetGlassDropdownMenuItem(
+                            label = stringResource(R.string.outdoor_activity_walking),
+                            leadingIcon = Icons.AutoMirrored.Outlined.DirectionsWalk,
+                            onClick = {
+                                addMenuExpanded = false
+                                outdoorActivitySheet = OutdoorActivityKind.WALKING
+                            }
+                        )
+                        SheetGlassDropdownMenuItem(
+                            label = stringResource(R.string.outdoor_activity_running),
+                            leadingIcon = Icons.AutoMirrored.Filled.DirectionsRun,
+                            onClick = {
+                                addMenuExpanded = false
+                                outdoorActivitySheet = OutdoorActivityKind.RUNNING
                             }
                         )
                     }
-                }
-                SheetGlassDropdownMenuItem(
-                    label = "Copy from day",
-                    leadingIcon = Icons.Filled.ContentCopy,
-                    onClick = {
-                        addMenuExpanded = false
-                        copySheetVisible = true
-                    }
-                )
-                SheetGlassDropdownMenuItem(
-                    label = "Saved",
-                    leadingIcon = Icons.Filled.Bookmark,
-                    onClick = {
-                        addMenuExpanded = false
-                        pickerRequest = WorkoutPickerRequest.saved()
-                    }
-                )
-                if (walkRunQuickLogEnabled) {
                     SheetGlassDropdownMenuItem(
-                        label = stringResource(R.string.outdoor_activity_walking),
-                        leadingIcon = Icons.AutoMirrored.Outlined.DirectionsWalk,
+                        label = "Create exercise",
+                        leadingIcon = Icons.Filled.AddCircle,
                         onClick = {
                             addMenuExpanded = false
-                            outdoorActivitySheet = OutdoorActivityKind.WALKING
+                            onCreateExercise()
                         }
                     )
-                    SheetGlassDropdownMenuItem(
-                        label = stringResource(R.string.outdoor_activity_running),
-                        leadingIcon = Icons.AutoMirrored.Filled.DirectionsRun,
-                        onClick = {
-                            addMenuExpanded = false
-                            outdoorActivitySheet = OutdoorActivityKind.RUNNING
-                        }
-                    )
-                }
-                SheetGlassDropdownMenuItem(
-                    label = "Create exercise",
-                    leadingIcon = Icons.Filled.AddCircle,
-                    onClick = {
+                    HorizontalDivider(color = workoutsColors().hairline.copy(alpha = 0.45f))
+                    SheetGlassDropdownMenuItem(label = stringResource(R.string.workout_text_voice), leadingIcon = Icons.Filled.Mic, onClick = {
                         addMenuExpanded = false
-                        onCreateExercise()
-                    }
-                )
-                HorizontalDivider(color = workoutsColors().hairline.copy(alpha = 0.45f))
-                SheetGlassDropdownMenuItem(label = stringResource(R.string.workout_text_voice), leadingIcon = Icons.Filled.Mic, onClick = {
-                    addMenuExpanded = false
-                    workoutStartsWithVoice = true
-                    workoutVoiceVisible = true
-                })
-                SheetGlassDropdownMenuItem(label = stringResource(R.string.workout_text_menu), leadingIcon = Icons.Filled.Add, onClick = {
-                    addMenuExpanded = false
-                    workoutStartsWithVoice = false
-                    workoutTextInputVisible = true
-                })
+                        workoutStartsWithVoice = true
+                        workoutVoiceVisible = true
+                    })
+                    SheetGlassDropdownMenuItem(label = stringResource(R.string.workout_text_menu), leadingIcon = Icons.Filled.Add, onClick = {
+                        addMenuExpanded = false
+                        workoutStartsWithVoice = false
+                        workoutTextInputVisible = true
+                    })
+                }
             }
         }
     }

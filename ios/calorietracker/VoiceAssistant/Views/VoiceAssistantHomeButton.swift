@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The orb on Home that opens the voice assistant. It animates gently while Home
-/// is on screen and stops drawing otherwise.
+/// The floating entry point on Home and the workout diary. It animates gently
+/// while its tab is on screen and stops drawing otherwise.
 struct VoiceAssistantHomeButton: View {
     let controller: VoiceAssistantController
     @Environment(\.scenePhase) private var scenePhase

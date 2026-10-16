@@ -19,7 +19,7 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.services.voice.OrbMode
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 
-/** The orb on Home that starts a voice conversation. */
+/** The shared floating entry point on Home and the workout diary. */
 @Composable
 fun VoiceAssistantButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 60.dp) {
     val label = stringResource(R.string.voice_talk_to_fud_ai)
