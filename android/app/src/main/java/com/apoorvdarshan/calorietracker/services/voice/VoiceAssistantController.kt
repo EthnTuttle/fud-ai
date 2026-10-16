@@ -29,6 +29,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.JsonObject
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -69,6 +70,8 @@ data class VoiceUiState(
     val userCaption: String = "",
     val assistantCaption: String = "",
     val camera: VoiceCameraMode? = null,
+    /** The shutter's photo is being taken and scanned. */
+    val capturing: Boolean = false,
     val notice: VoiceNotice? = null,
     /** A non-fatal provider error, shown briefly. */
     val transientError: String? = null,
@@ -148,7 +151,10 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
     private var endingAfterSpeech = false
     private var lastHostedNotice: String? = null
     private var startCounter = 0L
+    private var claimedStart = 0L
+    private var begunStart = 0L
     private var pickCounter = 0L
+    private var claimedPick = 0L
 
     // The current turn.
     private var pendingUserText = ""
@@ -206,9 +212,24 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         )
     }
 
+    /** True once per start request, for the overlay that asks for the microphone. */
+    fun claimStartRequest(id: Long): Boolean {
+        if (id == 0L || id == claimedStart) return false
+        claimedStart = id
+        return true
+    }
+
+    /** True once per pending `pick_photos` request, for the overlay that opens the picker. */
+    fun claimPhotoPickRequest(id: Long): Boolean {
+        if (id == 0L || id == claimedPick || photoWait == null) return false
+        claimedPick = id
+        return true
+    }
+
     /** The microphone is allowed: connect. */
     fun beginSession() {
-        if (_ui.value.phase != VoicePhase.PREPARING || session != null) return
+        if (_ui.value.phase != VoicePhase.PREPARING || session != null || begunStart == startCounter) return
+        begunStart = startCounter
         val number = ++sessionNumber
         scope.launch {
             try {
@@ -835,6 +856,30 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
 
     fun cameraUnbound(handle: VoiceCameraHandle) {
         if (cameraHandle === handle) cameraHandle = null
+    }
+
+    /**
+     * The user tapped the shutter: the same photo and food scan as `capture_photo`, then the
+     * model hears the draft so it can read it back.
+     */
+    fun captureFromShutter() {
+        val executor = executor ?: return
+        if (_ui.value.capturing || _ui.value.camera != VoiceCameraMode.FOOD) return
+        val number = sessionNumber
+        _ui.update { it.copy(capturing = true) }
+        scope.launch {
+            noteActivity()
+            val result = try {
+                executor.execute(LiveToolCall("shutter_${SystemClock.elapsedRealtime()}", "capture_photo", JsonObject(emptyMap())))
+            } finally {
+                _ui.update { it.copy(capturing = false) }
+            }
+            if (number != sessionNumber) return@launch
+            injectNote(
+                "${VoiceToolExecutor.APP_NOTE} The user took a photo with the shutter and the app scanned it: $result. " +
+                    "Read back the main items and the total calories, then ask whether to log it."
+            )
+        }
     }
 
     /** The user closed the camera panel. */

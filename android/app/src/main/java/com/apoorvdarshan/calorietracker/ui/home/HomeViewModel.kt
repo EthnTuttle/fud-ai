@@ -132,7 +132,9 @@ internal class FoodSubmissionGate {
 class HomeViewModel(private val container: AppContainer) : ViewModel() {
     private val _ui = MutableStateFlow(HomeUiState())
     val ui: StateFlow<HomeUiState> = _ui.asStateFlow()
-    private val _selectedDate = MutableStateFlow(LocalDate.now())
+    // App-wide, so the voice assistant sees and sets the same diary day. A new Home still
+    // opens on today, even when the process (and the navigator) outlived the last one.
+    private val _selectedDate = container.navigator.homeDiaryDate.apply { value = LocalDate.now() }
 private val _stepsRefreshEpoch = MutableStateFlow(0)
     private val _burnRefreshTick = MutableStateFlow(0)
     private var retryAction: (() -> Unit)? = null

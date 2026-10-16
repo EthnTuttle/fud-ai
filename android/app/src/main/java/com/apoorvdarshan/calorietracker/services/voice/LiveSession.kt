@@ -119,7 +119,7 @@ class LiveSession(
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             val failure = if (response != null && response.code >= 400) {
                 // A refused upgrade: the hosted Worker answers with JSON like the other routes.
-                val body = runCatching { response.body?.string() }.getOrNull()
+                val body = runCatching { response.body.string() }.getOrNull()
                 LiveFailure.Refused(response.code, body?.let(::errorCode))
             } else {
                 LiveFailure.Network(t.message)
