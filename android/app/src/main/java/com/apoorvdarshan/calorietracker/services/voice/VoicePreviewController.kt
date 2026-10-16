@@ -115,6 +115,10 @@ class VoicePreviewController(
                     _state.value = VoicePreviewState(VoicePreviewPhase.PLAYING)
                 }
                 is LiveEvent.TurnComplete -> if (!completed) {
+                    if (!event.successful) {
+                        finish(id, VoicePreviewError.FAILED)
+                        return
+                    }
                     completed = true
                     // End provider billing promptly, then let already queued output finish.
                     connection?.close()

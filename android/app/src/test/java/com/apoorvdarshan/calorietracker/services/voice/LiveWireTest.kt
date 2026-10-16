@@ -290,7 +290,22 @@ class LiveWireTest {
             """{"type":"response.function_call_arguments.done","response_id":"resp_2","item_id":"fc_2","call_id":"call_2","name":"delete_food_entry","arguments":"{}"}"""
         )
         val events = wire.parse("""{"type":"response.done","response":{"id":"resp_2","status":"cancelled"}}""")
-        assertEquals(listOf(LiveEvent.TurnComplete("resp_2")), events)
+        assertEquals(listOf(LiveEvent.TurnComplete("resp_2", successful = false)), events)
+    }
+
+    @Test
+    fun realtimeCompletionPreservesUnsuccessfulStatusWithoutFailingBargeIn() {
+        for (wire in listOf(OpenAIRealtimeWire(), XAIVoiceWire())) {
+            for (status in listOf("cancelled", "incomplete")) {
+                val events = wire.parse("""{"type":"response.done","response":{"id":"r1","status":"$status"}}""")
+                // A normal conversation can continue after cancellation: no ProviderError.
+                assertEquals(listOf(LiveEvent.TurnComplete("r1", successful = false)), events)
+            }
+            for (status in listOf("\"status\":\"completed\",", "")) {
+                val events = wire.parse("""{"type":"response.done","response":{$status"id":"r1"}}""")
+                assertEquals(listOf(LiveEvent.TurnComplete("r1")), events)
+            }
+        }
     }
 
     @Test
@@ -370,6 +385,6 @@ class LiveWireTest {
               "status_details":{"error":{"message":"Insufficient quota"}},
               "output":[{"type":"function_call","call_id":"c1","name":"log_water","arguments":"{}"}]}
         }""")
-        assertEquals(listOf(LiveEvent.ProviderError("Insufficient quota"), LiveEvent.TurnComplete("r-failed")), events)
+        assertEquals(listOf(LiveEvent.ProviderError("Insufficient quota"), LiveEvent.TurnComplete("r-failed", successful = false)), events)
     }
 }
