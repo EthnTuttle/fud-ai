@@ -103,6 +103,7 @@ final class VoiceAssistantController {
     var sheet: VoiceAssistantSheet?
 
     var isActive: Bool { presentation == .session }
+    var isBusy: Bool { isActive || isStarting }
 
     var orbMode: LiveOrbMode {
         guard presentation == .session else { return .idle }
@@ -119,7 +120,7 @@ final class VoiceAssistantController {
     @ObservationIgnored let camera: any VoiceAssistantCameraIO
     @ObservationIgnored private var appData: AppData?
     @ObservationIgnored private var didRefreshEntitlement = false
-    @ObservationIgnored private var isStarting = false
+    private var isStarting = false
     @ObservationIgnored private let makeSocket: LiveSession.SocketFactory
     @ObservationIgnored private let makeAudio: @MainActor () -> any LiveAudioIO
 
@@ -206,6 +207,7 @@ final class VoiceAssistantController {
             break
         }
         guard let appData, !isStarting else { return }
+        VoicePreviewController.shared.stop()
         isStarting = true
         let number = sessionNumber
         Task {

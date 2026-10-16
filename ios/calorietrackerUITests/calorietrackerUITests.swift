@@ -402,6 +402,30 @@ final class calorietrackerUITests: XCTestCase {
     }
 
     @MainActor
+    func testVoicePreviewRequiresConfiguredKeyAndOffersSavedVoicePicker() throws {
+        let app = makeApp(defaults: ["-voiceAssistant.provider", "gemini"])
+        app.launch()
+        openSettingsCategory("voiceAssistant", in: app)
+
+        let preview = app.buttons["settings.voiceAssistant.preview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 5))
+        XCTAssertEqual(preview.label, "Preview Voice")
+        XCTAssertFalse(preview.isEnabled, "Preview must not connect without the selected provider's key")
+        XCTAssertTrue(app.buttons["settings.voiceAssistant.addKey"].exists)
+        XCTAssertFalse(app.staticTexts["settings.voiceAssistant.preview.preparing"].exists)
+
+        let voice = app.buttons["settings.voiceAssistant.voice"]
+        reveal(voice, in: app)
+        voice.tap()
+        let option = app.buttons["Puck"]
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        option.tap()
+        XCTAssertFalse(preview.isEnabled)
+        XCTAssertTrue(app.buttons["settings.voiceAssistant.model"].exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists, "Choosing a preview voice must not request microphone access")
+    }
+
+    @MainActor
     func testWaterTrackingSettingPersistsAfterRelaunch() throws {
         let app = makeApp()
         app.launch()
