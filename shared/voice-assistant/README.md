@@ -113,10 +113,13 @@ draft, read back the main items and total calories; never call a tool with
 
 ## UI
 
-- Entry points: an orb beside Home's + button in a reserved bottom action row; iOS App Shortcut / Siri phrase
+- Entry points: a floating orb beside Home's + button; iOS App Shortcut / Siri phrase
   ("Talk to Fud AI"), usable from the Action Button, plus a Control Center
   control; Android Quick Settings tile, launcher shortcut and a home-screen
   widget. All open the app straight into a listening session.
+- Home keeps meal calories and macros beneath the meal title on the leading
+  side, away from the floating controls. The diary remains visible behind the
+  buttons and can scroll its final entry above them.
 - Overlay states: **expanded** (dimmed background, large orb, live captions,
   camera panel when open, cards) and **compact** (a floating orb bubble with a
   caption pill above the tab bar, used while the app navigates or the user is
