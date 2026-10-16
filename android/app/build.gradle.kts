@@ -438,6 +438,7 @@ dependencies {
     implementation(libs.revenuecat.purchases)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation("com.squareup.okhttp3:mockwebserver:${libs.versions.okhttp.get()}")
     testImplementation("com.squareup.okhttp3:okhttp-tls:${libs.versions.okhttp.get()}")
     androidTestImplementation(platform(libs.androidx.compose.bom))

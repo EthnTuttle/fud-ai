@@ -113,10 +113,13 @@ draft, read back the main items and total calories; never call a tool with
 
 ## UI
 
-- Entry points: an orb button on Home; iOS App Shortcut / Siri phrase
+- Entry points: a floating orb beside Home's + button; iOS App Shortcut / Siri phrase
   ("Talk to Fud AI"), usable from the Action Button, plus a Control Center
   control; Android Quick Settings tile, launcher shortcut and a home-screen
   widget. All open the app straight into a listening session.
+- Home keeps meal calories and macros beneath the meal title on the leading
+  side, away from the floating controls. The diary remains visible behind the
+  buttons and can scroll its final entry above them.
 - Overlay states: **expanded** (dimmed background, large orb, live captions,
   camera panel when open, cards) and **compact** (a floating orb bubble with a
   caption pill above the tab bar, used while the app navigates or the user is
@@ -132,6 +135,16 @@ draft, read back the main items and total calories; never call a tool with
   Center or tile/shortcut/widget).
 - Each finished turn is added to the Coach chat history when **Save
   conversations to Coach** is on (default on).
+- **Preview Voice**, beside the speaking-voice selection, plays a short sample
+  using the selected live provider, model and voice. It reuses the saved API key
+  for own-key providers or the existing hosted plan; hosted previews use the
+  normal voice allowance and metering. The sample follows the selected response
+  language (Automatic uses the app language).
+- Preview is playback-only: it requests no microphone access and sends no
+  profile, diary, conversation history or app tools. **Stop Preview**, leaving
+  settings, changing the selection, or backgrounding the app cancels it. The
+  connection closes as soon as generation finishes, while already received
+  audio finishes playing; a 30-second deadline bounds the entire preview.
 - All new text is localized in every app language.
 
 ## Hosted relay (Worker)

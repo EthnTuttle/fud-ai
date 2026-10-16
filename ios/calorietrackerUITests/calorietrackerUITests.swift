@@ -374,6 +374,32 @@ final class calorietrackerUITests: XCTestCase {
         let meal = app.staticTexts["CI oat bowl"]
         reveal(meal, in: app)
         XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
+
+        let voiceButton = app.buttons["voiceAssistantButton"]
+        XCTAssertTrue(voiceButton.exists)
+        XCTAssertEqual(voiceButton.frame.midY, addButton.frame.midY, accuracy: 2)
+        XCTAssertEqual(addButton.frame.minX - voiceButton.frame.maxX, 12, accuracy: 2)
+        XCTAssertLessThan(addButton.frame.maxY, app.tabBars.firstMatch.frame.minY)
+
+        // The last diary row can scroll above both floating controls. Its meal
+        // summary stays beneath the title on the leading side, away from them.
+        app.swipeUp()
+        let mealCell = app.cells.containing(.staticText, identifier: "CI oat bowl").firstMatch
+        XCTAssertTrue(mealCell.exists)
+        XCTAssertTrue(meal.isHittable)
+        XCTAssertLessThan(mealCell.frame.maxY, voiceButton.frame.minY)
+        let mealTitle = app.descendants(matching: .any).matching(identifier: "home.meal.title").firstMatch
+        let mealCalories = app.staticTexts.matching(identifier: "home.meal.calories").firstMatch
+        let mealMacros = app.staticTexts.matching(identifier: "home.meal.macros").firstMatch
+        XCTAssertTrue(mealTitle.exists)
+        XCTAssertTrue(mealCalories.exists)
+        XCTAssertTrue(mealMacros.exists)
+        XCTAssertGreaterThanOrEqual(mealCalories.frame.minY, mealTitle.frame.maxY)
+        XCTAssertLessThanOrEqual(mealCalories.frame.minX, mealTitle.frame.minX)
+        XCTAssertEqual(mealCalories.frame.minX, mealMacros.frame.minX, accuracy: 1)
+        XCTAssertLessThan(mealCalories.frame.maxX, voiceButton.frame.minX)
+        XCTAssertLessThan(mealMacros.frame.maxX, voiceButton.frame.minX)
+
         relaunchPreservingData(app)
         reveal(meal, in: app)
         XCTAssertTrue(app.staticTexts.matching(identifier: "321 kcal").firstMatch.exists)
@@ -399,6 +425,30 @@ final class calorietrackerUITests: XCTestCase {
         app.buttons["voiceAssistant.access.notNow"].tap()
         XCTAssertTrue(explanation.waitForNonExistence(timeout: 5))
         XCTAssertTrue(orb.waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testVoicePreviewRequiresConfiguredKeyAndOffersSavedVoicePicker() throws {
+        let app = makeApp(defaults: ["-voiceAssistant.provider", "gemini"])
+        app.launch()
+        openSettingsCategory("voiceAssistant", in: app)
+
+        let preview = app.buttons["settings.voiceAssistant.preview"]
+        XCTAssertTrue(preview.waitForExistence(timeout: 5))
+        XCTAssertEqual(preview.label, "Preview Voice")
+        XCTAssertFalse(preview.isEnabled, "Preview must not connect without the selected provider's key")
+        XCTAssertTrue(app.buttons["settings.voiceAssistant.addKey"].exists)
+        XCTAssertFalse(app.staticTexts["settings.voiceAssistant.preview.preparing"].exists)
+
+        let voice = app.buttons["settings.voiceAssistant.voice"]
+        reveal(voice, in: app)
+        voice.tap()
+        let option = app.buttons["Puck"]
+        XCTAssertTrue(option.waitForExistence(timeout: 5))
+        option.tap()
+        XCTAssertFalse(preview.isEnabled)
+        XCTAssertTrue(app.buttons["settings.voiceAssistant.model"].exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists, "Choosing a preview voice must not request microphone access")
     }
 
     @MainActor

@@ -172,7 +172,8 @@ nonisolated enum LiveEvent: Equatable, Sendable {
     case responseStarted
     /// OpenAI/xAI finished a response. A response that ended in function calls is
     /// not the end of the turn: the reply continues once the results are in.
-    case responseDone(hasToolCalls: Bool)
+    /// `successful` is false for cancelled, incomplete or interrupted responses.
+    case responseDone(hasToolCalls: Bool, successful: Bool = true)
     /// The model wants these functions run.
     case toolCalls([LiveToolCall])
     /// Gemini: the user interrupted, so these calls should be abandoned.

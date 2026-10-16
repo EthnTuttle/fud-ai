@@ -130,4 +130,13 @@
     <string name="voice_settings_add_tile">Adaugă dală în Setări rapide</string>
     <string name="voice_settings_add_widget">Adaugă widget pe ecranul de pornire</string>
     <string name="voice_settings_privacy_footer">Vocea, subtitrările, cadrele camerei văzute de asistent și rezultatele acțiunilor sale sunt trimise furnizorului folosit (Google pentru Fud AI Plus/Pro).  Serverul Fud AI păstrează contoarele de utilizare și înregistrările de facturare, nu conținutul conversațiilor.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Ascultă vocea</string>
+    <string name="voice_preview_stop">Oprește mostra</string>
+    <string name="voice_preview_preparing">Se pregătește mostra…</string>
+    <string name="voice_preview_sample">Bună, sunt asistentul tău Fud AI. Așa sună vocea mea.</string>
+    <string name="voice_preview_failed">Nu s-a putut reda această mostră de voce. Încearcă din nou.</string>
+    <string name="voice_preview_busy">Încheie conversația vocală curentă înainte de a asculta o mostră de voce.</string>
+    <string name="voice_preview_usage">Redă o mostră scurtă fără a folosi microfonul. Consumă credite API sau minute de voce Fud AI.</string>
 </resources>

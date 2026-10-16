@@ -44,6 +44,7 @@ import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelManager
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalWhisperRuntime
 import com.apoorvdarshan.calorietracker.services.speech.SpeechService
 import com.apoorvdarshan.calorietracker.services.voice.VoiceAssistantController
+import com.apoorvdarshan.calorietracker.services.voice.createVoicePreviewController
 import com.apoorvdarshan.calorietracker.ui.navigation.AppNavigator
 import com.apoorvdarshan.calorietracker.widget.WidgetRefreshScheduler
 import kotlin.math.roundToInt
@@ -297,6 +298,8 @@ class AppContainer(app: FudAIApp) {
 
     /** The live voice assistant (the orb). Created on first use. */
     val voiceAssistant: VoiceAssistantController by lazy { VoiceAssistantController(this) }
+    /** Settings sample playback; never starts a conversation or microphone. */
+    val voicePreview by lazy { createVoicePreviewController(this) }
     /**
      * App-scoped flag set by [HomeViewModel] while a food analysis request is
      * in flight. The bottom nav reads this so the bar can hide during the

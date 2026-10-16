@@ -4,6 +4,16 @@ import os
 
 nonisolated private let logger = Logger(subsystem: "com.apoorvdarshan.calorietracker", category: "LiveAudio")
 
+/// Output-only audio for Settings previews. This interface cannot open a microphone.
+protocol LivePlaybackIO: AnyObject {
+    var onPlaybackFinished: (() -> Void)? { get set }
+    var onInterrupted: (() -> Void)? { get set }
+    var isPlaying: Bool { get }
+    func startPlayback(outputSampleRate: Double) throws
+    func play(_ pcm16: Data)
+    func stop()
+}
+
 /// Microphone in, assistant voice out. `VoiceAssistantController` drives it; tests use a fake.
 protocol LiveAudioIO: AnyObject {
     /// Called on the main actor when everything scheduled has finished playing.
@@ -42,7 +52,7 @@ enum LiveAudioError: LocalizedError {
 /// AVAudioEngine with voice processing: the echo canceller removes the assistant's
 /// own voice from the microphone, so it doesn't hear and interrupt itself when the
 /// reply plays through the loudspeaker.
-final class LiveAudioEngine: LiveAudioIO {
+final class LiveAudioEngine: LiveAudioIO, LivePlaybackIO {
     var onPlaybackFinished: (() -> Void)?
     var onInterrupted: (() -> Void)?
 
@@ -68,6 +78,17 @@ final class LiveAudioEngine: LiveAudioIO {
     var microphoneLevel: Double { micLevel.value }
     var playbackLevel: Double { pendingBuffers > 0 ? voiceLevel.value : 0 }
 
+    /// Intentionally never accesses inputNode, installs an input tap, or requests
+    /// recording permission. Preview playback uses the system playback category.
+    func startPlayback(outputSampleRate: Double) throws {
+        self.outputSampleRate = outputSampleRate
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playback, mode: .spokenAudio)
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+        try configurePlayer(outputSampleRate: outputSampleRate)
+        try startEngine()
+    }
+
     func start(inputSampleRate: Double, outputSampleRate: Double, microphone: @escaping @Sendable (Data) -> Void) throws {
         self.outputSampleRate = outputSampleRate
         let session = AVAudioSession.sharedInstance()
@@ -78,6 +99,12 @@ final class LiveAudioEngine: LiveAudioIO {
         usesMicrophone = true
         try engine.inputNode.setVoiceProcessingEnabled(true)
 
+        try configurePlayer(outputSampleRate: outputSampleRate)
+        try installMicrophoneTap(sampleRate: inputSampleRate, sink: microphone)
+        try startEngine()
+    }
+
+    private func configurePlayer(outputSampleRate: Double) throws {
         guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: outputSampleRate, channels: 1, interleaved: false) else {
             throw LiveAudioError.microphoneUnavailable
         }
@@ -87,8 +114,9 @@ final class LiveAudioEngine: LiveAudioIO {
         player.installTap(onBus: 0, bufferSize: 1024, format: format, block: Self.levelTap(voiceLevel))
         hasPlayerTap = true
 
-        try installMicrophoneTap(sampleRate: inputSampleRate, sink: microphone)
+    }
 
+    private func startEngine() throws {
         engine.prepare()
         try engine.start()
         isRunning = true
@@ -205,6 +233,12 @@ final class LiveAudioEngine: LiveAudioIO {
 
     private func restartAfterConfigurationChange() {
         guard isRunning, !engine.isRunning else { return }
+        // A preview has no input stream to resume. Queued playback is lost on a
+        // route change, so end it instead of waiting for buffers that cannot drain.
+        guard usesMicrophone else {
+            onInterrupted?()
+            return
+        }
         generation += 1
         pendingBuffers = 0
         queueEndFrame = 0

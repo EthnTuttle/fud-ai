@@ -129,4 +129,13 @@
     <string name="voice_settings_add_tile">Hızlı Ayarlar Kutusu Ekle</string>
     <string name="voice_settings_add_widget">Ana Ekrana Widget Ekle</string>
     <string name="voice_settings_privacy_footer">Sesiniz, altyazılar, asistanın gördüğü kamera kareleri ve işlemlerinin sonuçları kullandığınız sağlayıcıya gönderilir (Fud AI Plus/Pro için Google). Fud AI sunucusu kullanım sayaçlarını ve faturalandırma kayıtlarını tutar; sohbet içeriğini saklamaz.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Sesi dinle</string>
+    <string name="voice_preview_stop">Önizlemeyi durdur</string>
+    <string name="voice_preview_preparing">Önizleme hazırlanıyor…</string>
+    <string name="voice_preview_sample">Merhaba, ben Fud AI asistanınızım. Sesim böyle duyuluyor.</string>
+    <string name="voice_preview_failed">Bu ses önizlemesi oynatılamadı. Lütfen tekrar deneyin.</string>
+    <string name="voice_preview_busy">Bir sesi dinlemeden önce mevcut sesli konuşmanızı bitirin.</string>
+    <string name="voice_preview_usage">Mikrofonunuzu kullanmadan kısa bir örnek oynatır. API kredisi veya Fud AI ses dakikası kullanır.</string>
 </resources>

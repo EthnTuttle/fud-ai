@@ -252,9 +252,16 @@ struct VoiceAssistantWireTests {
         let completion = LiveJSON.string(["type": "response.done", "response": ["id": "r", "status": status == "interrupted" ? "completed" : status]])
         let events = wire.parse(completion)
         #expect(!events.contains { if case .toolCalls = $0 { return true }; return false })
-        #expect(events.last == .responseDone(hasToolCalls: false))
+        #expect(events.last == .responseDone(hasToolCalls: false, successful: false))
         _ = wire.parse(#"{"type":"response.created","response":{"id":"next"}}"#)
         #expect(wire.parse(#"{"type":"response.done","response":{"id":"next","status":"completed","output":[]}}"#) == [.responseDone(hasToolCalls: false)])
+    }
+
+    @Test(arguments: ["completed", "cancelled", "incomplete", "failed", "interrupted", "in_progress"])
+    func realtimePreservesWhetherTheResponseCompletedSuccessfully(status: String) {
+        let wire = OpenAIRealtimeWire()
+        let message = LiveJSON.string(["type": "response.done", "response": ["id": "preview", "status": status]])
+        #expect(wire.parse(message).last == .responseDone(hasToolCalls: false, successful: status == "completed"))
     }
 
     @Test func cameraFramePoliciesFollowTheContract() {
