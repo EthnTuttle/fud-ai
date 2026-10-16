@@ -30,6 +30,7 @@ import {
   refundToLedger,
   sha256Hex,
   spendFromLedger,
+  voiceQuotaFromRow,
   type LedgerContext,
   type LedgerStore,
   type QuotaSnapshot,
@@ -165,7 +166,9 @@ export async function handleHostedAIRequest(
     if (subpath === "/quota") {
       const refresh = url.searchParams.get("refresh") === "1";
       const row = await loadVerifiedLedger(ledger, client.userId, client.userIdHash, refresh);
-      return json({ quota: quotaFromRow(row, now()) }, 200, quotaHeaders(quotaFromRow(row, now())));
+      const at = now();
+      const quota = quotaFromRow(row, at);
+      return json({ quota, voice: voiceQuotaFromRow(row, at) }, 200, quotaHeaders(quota));
     }
 
     let prepare: RoutePreparer;

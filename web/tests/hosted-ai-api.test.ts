@@ -552,13 +552,17 @@ describe("hosted-ai server-side ledger", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       quota: { plan: "plus", day: "2026-09-13", dailyUsed: 0, dailyLimit: 30, creditBank: 0 },
+      voice: { month: "2026-09", secondsUsed: 0, secondsLimit: 1200, creditBank: 0 },
     });
 
     harness.revenueCat.plan = "pro";
     await call(harness, request());
     expect(harness.calls.filter((c) => c.url.includes("revenuecat"))).toHaveLength(1);
     const refreshed = await call(harness, request("?refresh=1"));
-    await expect(refreshed.json()).resolves.toMatchObject({ quota: { plan: "pro", dailyLimit: 60 } });
+    await expect(refreshed.json()).resolves.toMatchObject({
+      quota: { plan: "pro", dailyLimit: 60 },
+      voice: { month: "2026-09", secondsLimit: 6000 },
+    });
     expect(harness.calls.filter((c) => c.url.includes("revenuecat"))).toHaveLength(2);
   });
 

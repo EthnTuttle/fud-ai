@@ -25,6 +25,11 @@ export class MemoryLedgerStore implements LedgerStore {
   refundAttempts = 0;
   /** Receipt ids that have already been refunded (mirrors `hosted_ai_refunds`). */
   refunded = new Set<string>();
+  voiceSpendAttempts = 0;
+  /** When set, the next `trySpendVoice` call loses the compare-and-swap once. */
+  voiceConflictOnce = false;
+  /** Number of `trySpendVoice` calls that should throw (D1 unavailable). */
+  voiceFailures = 0;
 
   async get(userIdHash: string): Promise<LedgerRow | null> {
     const row = this.rows.get(userIdHash);
@@ -51,6 +56,8 @@ export class MemoryLedgerStore implements LedgerStore {
           daily_used: 0,
           entitlement_verified_at: verifiedAt,
           version: 0,
+          voice_month: "",
+          voice_seconds_used: 0,
         };
     this.rows.set(userIdHash, row);
     return { ...row };
@@ -71,6 +78,30 @@ export class MemoryLedgerStore implements LedgerStore {
     }
     row.usage_day = next.usageDay;
     row.daily_used = next.dailyUsed;
+    row.credits_spent = next.creditsSpent;
+    row.version += 1;
+    return true;
+  }
+
+  async trySpendVoice(
+    userIdHash: string,
+    expectedVersion: number,
+    next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number }
+  ): Promise<boolean> {
+    this.voiceSpendAttempts += 1;
+    if (this.voiceFailures > 0) {
+      this.voiceFailures -= 1;
+      throw new Error("D1_ERROR: transient");
+    }
+    const row = this.rows.get(userIdHash);
+    if (!row || row.version !== expectedVersion) return false;
+    if (this.voiceConflictOnce) {
+      this.voiceConflictOnce = false;
+      row.version += 1;
+      return false;
+    }
+    row.voice_month = next.voiceMonth;
+    row.voice_seconds_used = next.voiceSecondsUsed;
     row.credits_spent = next.creditsSpent;
     row.version += 1;
     return true;
