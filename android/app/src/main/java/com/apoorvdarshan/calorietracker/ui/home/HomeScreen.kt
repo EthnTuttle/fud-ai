@@ -36,6 +36,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -136,7 +139,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
@@ -450,6 +452,12 @@ DisposableEffect(lifecycleOwner, vm) {
         )
     }
 
+    val actionSize = 60.dp
+    val actionGap = 12.dp
+    val actionBottom = 100.dp
+    val diaryBottomClearance = actionBottom + actionSize + actionGap +
+        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
     // No topBar: the empty TopAppBar used to act as the status-bar spacer, but the
     // ad strip above this screen (TabWithBanner) now owns that inset.
     Scaffold(
@@ -509,13 +517,13 @@ DisposableEffect(lifecycleOwner, vm) {
             }
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        Box(Modifier.fillMaxSize().padding(padding)) {
         LazyColumn(
             modifier = Modifier
-                .weight(1f).fillMaxWidth().clipToBounds().testTag("home.diary"),
+                .fillMaxSize().testTag("home.diary"),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 top = 8.dp,
-                bottom = 8.dp
+                bottom = if (selectionMode) 8.dp else diaryBottomClearance
             )
         ) {
             // Week strip — verbatim port of WeekEnergyStrip in HomeComponents.swift,
@@ -704,16 +712,15 @@ CalorieHero(
             }
         }
 
-        // This measured row reserves its own space below the diary viewport. Keeping
-        // both actions out of the scrolling layer prevents them covering meal headers.
-        // The bottom offset preserves the existing "+" position above the docked tabs.
+        // Transparent floating controls preserve the full scrolling diary. Extra end
+        // padding lets its final card scroll clear of both buttons and the docked tabs.
         if (!selectionMode) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 100.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
+                .padding(end = 24.dp, bottom = actionBottom),
+            horizontalArrangement = Arrangement.spacedBy(actionGap),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (!voiceUi.visible) {
@@ -723,7 +730,7 @@ CalorieHero(
             Box(
                 modifier = Modifier
                     .testTag("home.add")
-                    .size(60.dp)
+                    .size(actionSize)
                     .clip(CircleShape)
                     .background(AppColors.Calorie)
                     .clickable {
@@ -1843,80 +1850,86 @@ private fun MealSectionHeader(
     onSortDismiss: () -> Unit = {},
     onSortOrderSelected: (FoodLogSortOrder) -> Unit = {}
 ) {
-    // iOS layout: small dim icon + sentence-case label, regular weight ~17sp.
-    Row(
+    Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 22.dp, end = 30.dp, top = 18.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 22.dp, end = 30.dp, top = 18.dp, bottom = 10.dp)
     ) {
-        Icon(
-            mealIcon(meal),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            stringResource(meal.displayNameRes),
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
-        )
-        if (showSortMenu) {
-            Spacer(Modifier.width(12.dp))
-            Box {
-                Row(
-                    modifier = Modifier.clickable { onSortClick() },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.SwapVert,
-                        contentDescription = null,
-                        tint = AppColors.Calorie,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        stringResource(R.string.sort),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColors.Calorie
-                    )
-                }
-                SheetGlassDropdownMenu(
-                    expanded = sortMenuExpanded,
-                    onDismissRequest = onSortDismiss,
-                    menuWidth = 226.dp
-                ) {
-                    for (order in FoodLogSortOrder.values()) {
-                        SheetGlassDropdownMenuItem(
-                            label = stringResource(order.displayNameRes),
-                            selected = order == sortOrder,
-                            reserveSelectionSlot = true,
-                            onClick = { onSortOrderSelected(order) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                mealIcon(meal),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                stringResource(meal.displayNameRes),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                modifier = Modifier.weight(1f, fill = false).testTag("home.mealHeader.${meal.name}.title")
+            )
+            if (showSortMenu) {
+                Spacer(Modifier.width(12.dp))
+                Box {
+                    Row(
+                        modifier = Modifier.clickable { onSortClick() },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.SwapVert,
+                            contentDescription = null,
+                            tint = AppColors.Calorie,
+                            modifier = Modifier.size(16.dp)
                         )
+                        Text(
+                            stringResource(R.string.sort),
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppColors.Calorie
+                        )
+                    }
+                    SheetGlassDropdownMenu(
+                        expanded = sortMenuExpanded,
+                        onDismissRequest = onSortDismiss,
+                        menuWidth = 226.dp
+                    ) {
+                        for (order in FoodLogSortOrder.values()) {
+                            SheetGlassDropdownMenuItem(
+                                label = stringResource(order.displayNameRes),
+                                selected = order == sortOrder,
+                                reserveSelectionSlot = true,
+                                onClick = { onSortOrderSelected(order) }
+                            )
+                        }
                     }
                 }
             }
-        }
-        // Combined nutrients for this meal (issue #103: chicken + pasta + sauce = one total)
-        if (totalCalories != null) {
-            Spacer(Modifier.weight(1f))
-            // Share the whole meal as a fudai://add-meal link (issue #107)
+            // Share remains a separate target next to the title and sort control.
             if (onShare != null) {
-                Icon(
-                    Icons.Filled.IosShare,
-                    contentDescription = stringResource(R.string.cd_share_meal),
-                    tint = AppColors.Calorie,
-                    modifier = Modifier
-                        .clickable { onShare() }
-                        .padding(4.dp)
-                        .size(18.dp),
-                )
-                Spacer(Modifier.width(14.dp))
+                Spacer(Modifier.width(8.dp))
+                IconButton(onClick = onShare, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        Icons.Filled.IosShare,
+                        contentDescription = stringResource(R.string.cd_share_meal),
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
-            Column(horizontalAlignment = Alignment.End) {
+        }
+        // Keep the combined meal totals under the title on the leading half, clear
+        // of the floating voice/+ controls even while this header scrolls past them.
+        if (totalCalories != null) {
+            Column(
+                modifier = Modifier
+                    .padding(start = 24.dp, end = 24.dp, top = 6.dp)
+                    .fillMaxWidth(0.5f)
+                    .testTag("home.mealHeader.${meal.name}.totals"),
+                horizontalAlignment = Alignment.Start
+            ) {
                 Text(
                     "${totalCalories.formattedWholeNumber()} kcal",
                     fontSize = 15.sp,
