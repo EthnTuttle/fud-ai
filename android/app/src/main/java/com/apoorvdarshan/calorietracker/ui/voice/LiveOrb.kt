@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import kotlinx.coroutines.delay
 import com.apoorvdarshan.calorietracker.services.voice.OrbMode
+import com.apoorvdarshan.calorietracker.services.voice.VoiceLog
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
@@ -148,12 +149,17 @@ class LiveOrbMotion {
 
 // MARK: - AGSL (Android 13+)
 
-private object OrbShader {
+internal object OrbShader {
+    /** Compiles the shader and checks its uniforms; throws with Skia's message if it can't. */
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    fun compile(): RuntimeShader =
+        RuntimeShader(SOURCE).also { bind(it, 1f, 1f, LiveOrbFrame(), Color.White, clear = false) }
+
     /** Null when the shader doesn't compile here; the Canvas version is drawn instead. */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    fun create(): RuntimeShader? = runCatching {
-        RuntimeShader(SOURCE).also { bind(it, 1f, 1f, LiveOrbFrame(), Color.White, clear = false) }
-    }.getOrNull()
+    fun create(): RuntimeShader? = runCatching { compile() }
+        .onFailure { VoiceLog.warn("LiveOrb", "AGSL orb unavailable: ${it.message}") }
+        .getOrNull()
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     fun bind(shader: RuntimeShader, width: Float, height: Float, frame: LiveOrbFrame, tint: Color, clear: Boolean) {
@@ -162,7 +168,7 @@ private object OrbShader {
         shader.setFloatUniform("spin", frame.spin)
         shader.setFloatUniform("flow", frame.flow)
         shader.setFloatUniform("level", frame.level)
-        shader.setFloatUniform("active", frame.active)
+        shader.setFloatUniform("activity", frame.active)
         shader.setFloatUniform("thinking", frame.thinking)
         shader.setFloatUniform("speaking", frame.speaking)
         shader.setFloatUniform("tint", tint.red, tint.green, tint.blue)
@@ -177,7 +183,7 @@ uniform float time;
 uniform float spin;
 uniform float flow;
 uniform float level;
-uniform float active;
+uniform float activity;
 uniform float thinking;
 uniform float speaking;
 uniform float3 tint;
@@ -255,9 +261,9 @@ float sparks(float3 s, float t) {
     float3 cell = floor(s * 8.0);
     float rnd = hash13(cell);
     if (rnd < 0.7) return 0.0;
-    float3 local = fract(s * 8.0) - 0.5;
+    float3 offset = fract(s * 8.0) - 0.5;
     float twinkle = 0.5 + 0.5 * sin(t * (1.5 + rnd * 5.0) + rnd * 40.0);
-    return exp(-dot(local, local) * 90.0) * twinkle * twinkle;
+    return exp(-dot(offset, offset) * 90.0) * twinkle * twinkle;
 }
 
 float iris(float2 p, float radius, float width, float dashes, float shift) {
@@ -272,8 +278,8 @@ half4 main(float2 position) {
     float scale = min(size.x, size.y) * 0.5;
     float2 raw = (position - size * 0.5) / scale;
 
-    float energy = clamp(0.22 * active + 0.9 * level + 0.3 * speaking + 0.25 * thinking, 0.0, 1.3);
-    float breathe = 1.0 + 0.015 * sin(time * 1.7) * (1.0 - active * 0.5);
+    float energy = clamp(0.22 * activity + 0.9 * level + 0.3 * speaking + 0.25 * thinking, 0.0, 1.3);
+    float breathe = 1.0 + 0.015 * sin(time * 1.7) * (1.0 - activity * 0.5);
     float radius = 0.56 * breathe * (1.0 + 0.07 * level);
     float2 p = raw / radius;
     float r = length(p);
@@ -320,7 +326,7 @@ half4 main(float2 position) {
                + exp(-max(r - 1.0, 0.0) * 2.2) * 0.08 * (0.5 + energy);
     glow += core + lens * (0.5 + 0.6 * energy) + halo;
 
-    glow *= 0.62 + 0.38 * active;
+    glow *= 0.62 + 0.38 * activity;
 
     float3 base = tint;
     float3 hot = mix(base, float3(1.0, 0.96, 0.88), 0.75);
