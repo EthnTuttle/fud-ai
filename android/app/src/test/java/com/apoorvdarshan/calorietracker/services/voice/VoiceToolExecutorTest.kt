@@ -71,6 +71,18 @@ class VoiceToolExecutorTest {
     // MARK: - Confirmation
 
     @Test
+    fun foodSaveClosesCameraOnlyAfterConfirmation() {
+        val executor = executor()
+        ports.camera = VoiceCameraMode.FOOD
+        val item = buildJsonObject { put("name", "Banana"); put("calories", 105) }
+        assertEquals("confirmation_required", executor.call("log_food", args("item" to item)).error())
+        assertEquals(VoiceCameraMode.FOOD, ports.camera)
+        assertTrue(executor.call("log_food", args("item" to item, "user_confirmed" to true)).ok())
+        assertNull(ports.camera)
+        assertEquals(1, ports.foods.size)
+    }
+
+    @Test
     fun aCardTapAndModelCallCannotLogTheSameDraftTwice() = runBlocking {
         val executor = executor(confirmSaves = false)
         val draft = executor.call("describe_food", args("description" to "eggs"))

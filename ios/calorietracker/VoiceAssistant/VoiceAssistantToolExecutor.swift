@@ -788,6 +788,7 @@ final class VoiceAssistantToolExecutor {
             pendingText: String(localized: "Log \(entry.name) · \(entry.calories) kcal · \(mealName)"),
             doneText: String(localized: "Logged \(entry.name) · \(entry.calories) kcal"),
             apply: { [self, stores, cards] in
+                if host?.cameraMode == .food { host?.closeCamera() }
                 guard stores.food.addEntry(entry) else {
                     return .failed(Self.failure(.unsupported, "The food couldn't be saved. End any running fast and try again."))
                 }

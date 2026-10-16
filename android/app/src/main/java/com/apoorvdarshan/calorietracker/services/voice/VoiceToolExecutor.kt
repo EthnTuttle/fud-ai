@@ -701,6 +701,7 @@ class VoiceToolExecutor(
         if (draft != null && draft.loggedEntryIds.isNotEmpty()) {
             fail(ToolError.INVALID_ARGUMENTS, "${draft.id} is already logged. Use update_food_entry to change it.")
         }
+        if (ports.cameraMode() == VoiceCameraMode.FOOD) ports.closeCamera()
         val entry = prepared.build(UUID.randomUUID(), timestamp, meal)
         var adopted = false
         try {

@@ -61,6 +61,20 @@ struct VoiceAssistantToolTests {
 
     // MARK: Confirmation and Undo
 
+    @Test func foodSaveClosesCameraOnlyWhenConfirmedAndKeepsConversation() async {
+        let harness = VoiceAssistantHarness(confirmSaves: true)
+        harness.host.cameraMode = .food
+        let item: [String: Any] = ["name": "Banana", "calories": 105]
+        let pending = await harness.executor.execute(name: "log_food", arguments: ["item": item])
+        #expect(pending["error"] as? String == "confirmation_required")
+        #expect(harness.host.cameraMode == .food)
+        let saved = await harness.executor.execute(name: "log_food", arguments: ["item": item, "user_confirmed": true])
+        #expect(saved["ok"] as? Bool == true)
+        #expect(harness.host.cameraMode == nil)
+        #expect(harness.food.entries.count == 1)
+        #expect(!harness.host.ended)
+    }
+
     @Test func unconfirmedSaveChangesNothingAndConfirmedSaveCanBeUndone() async throws {
         let harness = VoiceAssistantHarness(confirmSaves: true)
         let executor = harness.executor

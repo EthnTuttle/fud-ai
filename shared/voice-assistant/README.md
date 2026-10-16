@@ -111,6 +111,8 @@ draft, read back the main items and total calories; never call a tool with
   on completion, cancellation or timeout. These transitions keep the voice
   conversation running. The model is told to close a camera task when finished
   and reopen only when another camera task needs it.
+- Applying a food save also dismisses an open food camera, covering logs made
+  without a capture draft. Awaiting save confirmation does not dismiss it.
 - Navigation is real: `open_screen` switches tabs and pushes the settings
   section; the assistant shrinks to a floating bubble so the screen is visible.
 - Food analysis, barcode lookup and workout parsing use the app's existing

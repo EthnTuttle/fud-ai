@@ -130,7 +130,7 @@
       "name": "log_food",
       "effect": "write",
       "confirm": "setting",
-      "description": "Log food to the diary from exactly one source: a draft_id (from capture_photo, pick_photos, scan_barcode or describe_food), a saved_food_id (from search_foods), or a manual item. Returns the new entry_ids.",
+      "description": "Log food to the diary from exactly one source: a draft_id (from capture_photo, pick_photos, scan_barcode or describe_food), a saved_food_id (from search_foods), or a manual item. Applying the save closes an open food camera without ending the conversation. Returns the new entry_ids.",
       "parameters": {
         "type": "object",
         "properties": {
