@@ -260,13 +260,79 @@ struct ChatService {
         workoutPlans: [StrengthWorkoutDayPlan] = [],
         workoutAccessEnabled: Bool = false
     ) -> String {
-        let forecast = WeightAnalysisService.compute(weights: weights, foods: foods, profile: profile)
+        var lines: [String] = []
+        if workoutAccessEnabled {
+            lines.append("You are Coach, an AI nutrition, weight-change, and strength-training assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        } else {
+            lines.append("You are Coach, an AI nutrition and weight-change assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
+        }
+        lines.append("")
+        lines += currentDateLines()
+        lines.append("")
+        lines.append("## How to use the data tools")
+        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast below cover what's needed for most questions. Call a tool ONLY when the user asks about specific past dates, longer time ranges, individual meals, or trends that need raw data. Examples:")
+        lines.append("- \"How was my weight in March?\" → call get_weight_history(from, to)")
+        lines.append("- \"What did I eat last Tuesday?\" → call get_food_entries(from, to)")
+        lines.append("- \"How consistent has my fasting been?\" → call get_fasting_history(from, to)")
+        lines.append("- \"What's my data range?\" → call get_data_summary")
+        if workoutAccessEnabled {
+            lines.append("- \"How is my training progressing?\" → call get_training_summary(from, to), then get_workout_history only if individual sets are needed")
+            lines.append("- \"What did I bench last?\" / one-lift trends → call get_exercise_lift_history(exercise)")
+            lines.append("- \"What workout do I have planned?\" → call get_workout_plans")
+            lines.append("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
+        }
+        lines.append("Do NOT call tools for questions you can answer from the profile/forecast below.")
+        lines.append("")
+        lines += profileSummaryLines(
+            profile: profile,
+            weights: weights,
+            bodyFats: bodyFats,
+            measurements: measurements,
+            foods: foods,
+            fastingSessions: fastingSessions,
+            heightMetric: heightMetric,
+            weightMetric: weightMetric,
+            workoutSessions: workoutSessions,
+            workoutPlans: workoutPlans,
+            workoutAccessEnabled: workoutAccessEnabled
+        )
+        lines.append("")
+        lines.append("When the user asks how to lose or gain, give a concrete calorie target and at least one actionable food or activity change. When they ask expected weight, reference the forecast numbers above.")
+        lines += userContextLines()
+        return lines.joined(separator: "\n")
+    }
+
+    /// Today's date and time zone, so relative dates resolve the way the user means them.
+    static func currentDateLines(now: Date = Date()) -> [String] {
         let currentDateFormatter = DateFormatter()
         currentDateFormatter.dateFormat = "yyyy-MM-dd"
         currentDateFormatter.locale = Locale(identifier: "en_US_POSIX")
         currentDateFormatter.timeZone = .current
-        let currentDate = currentDateFormatter.string(from: Date())
+        let currentDate = currentDateFormatter.string(from: now)
         let currentTimeZone = TimeZone.current.identifier
+        return [
+            "## Current date",
+            "- Today: \(currentDate) (\(currentTimeZone))",
+            "- Treat \"today\" as \(currentDate) when choosing tool date ranges.",
+        ]
+    }
+
+    /// The profile, formulas, forecast and data overview Coach is given. The voice
+    /// assistant reuses it, so both answer from the same picture of the user.
+    static func profileSummaryLines(
+        profile: UserProfile,
+        weights: [WeightEntry],
+        bodyFats: [BodyFatEntry],
+        measurements: [BodyMeasurement] = [],
+        foods: [FoodEntry],
+        fastingSessions: [FastingSession] = [],
+        heightMetric: Bool,
+        weightMetric: Bool,
+        workoutSessions: [StrengthWorkoutSession] = [],
+        workoutPlans: [StrengthWorkoutDayPlan] = [],
+        workoutAccessEnabled: Bool = false
+    ) -> [String] {
+        let forecast = WeightAnalysisService.compute(weights: weights, foods: foods, profile: profile)
 
         let wUnit: (Double) -> String = { kg in
             weightMetric ? String(format: "%.1f kg", kg) : String(format: "%.1f lbs", kg * 2.20462)
@@ -285,30 +351,6 @@ struct ChatService {
         }
 
         var lines: [String] = []
-        if workoutAccessEnabled {
-            lines.append("You are Coach, an AI nutrition, weight-change, and strength-training assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
-        } else {
-            lines.append("You are Coach, an AI nutrition and weight-change assistant inside a calorie tracking app. Answer in plain English, be specific and factual, and ground your recommendations in the user's own data. Avoid medical advice; when relevant, suggest consulting a doctor. Be concise — 2–5 sentences per response unless the user asks for detail.")
-        }
-        lines.append("")
-        lines.append("## Current date")
-        lines.append("- Today: \(currentDate) (\(currentTimeZone))")
-        lines.append("- Treat \"today\" as \(currentDate) when choosing tool date ranges.")
-        lines.append("")
-        lines.append("## How to use the data tools")
-        lines.append("You have access to functions that fetch the user's history on demand. The user profile + formulas + forecast below cover what's needed for most questions. Call a tool ONLY when the user asks about specific past dates, longer time ranges, individual meals, or trends that need raw data. Examples:")
-        lines.append("- \"How was my weight in March?\" → call get_weight_history(from, to)")
-        lines.append("- \"What did I eat last Tuesday?\" → call get_food_entries(from, to)")
-        lines.append("- \"How consistent has my fasting been?\" → call get_fasting_history(from, to)")
-        lines.append("- \"What's my data range?\" → call get_data_summary")
-        if workoutAccessEnabled {
-            lines.append("- \"How is my training progressing?\" → call get_training_summary(from, to), then get_workout_history only if individual sets are needed")
-            lines.append("- \"What did I bench last?\" / one-lift trends → call get_exercise_lift_history(exercise)")
-            lines.append("- \"What workout do I have planned?\" → call get_workout_plans")
-            lines.append("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
-        }
-        lines.append("Do NOT call tools for questions you can answer from the profile/forecast below.")
-        lines.append("")
         lines.append("## User profile")
         lines.append("- Gender: \(profile.gender.rawValue)")
         lines.append("- Age: \(profile.age)")
@@ -369,14 +411,13 @@ struct ChatService {
             lines.append("- \(summary)")
             lines.append("A shrinking waist alongside steady or rising weight is recomposition (fat down, muscle up) — read it that way instead of calling a flat scale a plateau. Treat the US-Navy body-fat figure as an estimate.")
         }
-        lines.append("")
-        lines.append("When the user asks how to lose or gain, give a concrete calorie target and at least one actionable food or activity change. When they ask expected weight, reference the forecast numbers above.")
-        if let userContext = AIProviderSettings.currentUserContext {
-            lines.append("")
-            lines.append("## User-supplied context (Settings → AI Provider)")
-            lines.append(userContext)
-        }
-        return lines.joined(separator: "\n")
+        return lines
+    }
+
+    /// The user's own instructions from AI provider settings, when they wrote any.
+    static func userContextLines() -> [String] {
+        guard let userContext = AIProviderSettings.currentUserContext else { return [] }
+        return ["", "## User-supplied context (Settings → AI Provider)", userContext]
     }
 
     // MARK: - OpenAI-compatible (/chat/completions) — covers 10 of 13 providers

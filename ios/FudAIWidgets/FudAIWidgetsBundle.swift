@@ -8,5 +8,8 @@ struct FudAIWidgetsBundle: WidgetBundle {
         ProteinWidget()
         WaterWidget()
         LogFoodWidget()
+        if #available(iOS 18.0, *) {
+            VoiceAssistantControl()
+        }
     }
 }

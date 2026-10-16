@@ -54,7 +54,7 @@ jobs:
           # The Android build also packages these as assets (see android/app/build.gradle.kts).
           # Only this workflow (and its checkout helper) can change how these jobs run;
           # other workflows (e.g. iOS release) do not affect Android or web results.
-          echo "android=$(match '^"?(android/|shared/|\.github/workflows/quality\.yml|scripts/ci/|ios/calorietracker/Resources/FreeExerciseDB/dist/|local-models/legal/)')" >> "$GITHUB_OUTPUT"
+          echo "android=$(match '^"?(android/|shared/|\.github/workflows/quality\.yml|scripts/ci/|scripts/check_voice_assistant_tools\.py|ios/calorietracker/Resources/FreeExerciseDB/dist/|ios/calorietracker/VoiceAssistant/VoiceAssistantTools\.json|local-models/legal/)')" >> "$GITHUB_OUTPUT"
           echo "web=$(match '^"?(web/|store/catalog/|\.github/workflows/quality\.yml)')" >> "$GITHUB_OUTPUT"
 
   web:
@@ -97,9 +97,15 @@ jobs:
             /ios/calorietracker/Resources/FreeExerciseDB/dist/
             /local-models/legal/
             /scripts/ci/
+            /scripts/check_voice_assistant_tools.py
+            /shared/voice-assistant/
+            /ios/calorietracker/VoiceAssistant/VoiceAssistantTools.json
             /shared/workout-vectors/
             !/shared/workout-vectors/*_v2_*.png
           persist-credentials: false
+      # Both apps bundle a copy of the voice assistant's tool catalog.
+      - name: Check the voice assistant tool catalog copies
+        run: python3 scripts/check_voice_assistant_tools.py
       # Unit tests and Debug builds use only the small sample pack.
       - name: Add the workout sample frames
         run: python3 scripts/ci/add_workout_sample_frames.py

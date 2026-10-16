@@ -34,6 +34,8 @@ import com.apoorvdarshan.calorietracker.backup.CloudBackupPolicy
 import com.apoorvdarshan.calorietracker.backup.CloudBackupValue
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.models.WorkoutPersistedState
+import com.apoorvdarshan.calorietracker.services.voice.LiveProvider
+import com.apoorvdarshan.calorietracker.services.voice.VoiceProviderChoice
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -58,6 +60,27 @@ private data class HealthEnergyGoalTargetSnapshot(
     val customCarbs: Int? = null,
     val autoBalanceMacro: AutoBalanceMacro? = null
 )
+
+/** Settings → Voice Assistant. */
+data class VoiceAssistantPreferences(
+    val choice: VoiceProviderChoice = VoiceProviderChoice.AUTOMATIC,
+    val models: Map<LiveProvider, String> = LiveProvider.entries.associateWith { it.defaultModel },
+    val voices: Map<LiveProvider, String> = LiveProvider.entries.associateWith { it.defaultVoice },
+    val language: String = LANGUAGE_AUTOMATIC,
+    val autoCapture: Boolean = false,
+    val confirmSaves: Boolean = true,
+    val saveToCoach: Boolean = true
+) {
+    fun model(provider: LiveProvider): String = models[provider] ?: provider.defaultModel
+    fun voice(provider: LiveProvider): String = voices[provider] ?: provider.defaultVoice
+
+    companion object {
+        /** Reply in the language the user speaks. */
+        const val LANGUAGE_AUTOMATIC = "auto"
+        /** Reply in the app's display language. */
+        const val LANGUAGE_APP = "app"
+    }
+}
 
 /** Snapshot of AI settings for one food-analysis request (single DataStore read). */
 data class FoodAiCallSettings(
@@ -201,6 +224,15 @@ class PreferencesStore(
         ds.edit {
             preserveIfUndecodable(it, Keys.USER_PROFILE, UserProfile.serializer())
             it[Keys.USER_PROFILE] = json.encodeToString(UserProfile.serializer(), profile)
+        }
+    }
+
+    /** Reads and changes one profile atomically, preserving unreadable data on failure. */
+    suspend fun updateUserProfile(transform: (UserProfile) -> UserProfile) {
+        ds.edit { prefs ->
+            val raw = prefs[Keys.USER_PROFILE] ?: error("No saved profile")
+            val current = json.decodeFromString<UserProfile>(raw)
+            prefs[Keys.USER_PROFILE] = json.encodeToString(UserProfile.serializer(), transform(current))
         }
     }
 
@@ -1351,6 +1383,53 @@ class PreferencesStore(
         ds.edit { it[Keys.CHAT_HISTORY] = json.encodeToString(ListSerializer(ChatMessage.serializer()), history) }
     }
 
+    // -- Voice assistant --------------------------------------------------
+    /** Settings → Voice Assistant, read together so a session starts from one snapshot. */
+    val voiceAssistantPreferences: Flow<VoiceAssistantPreferences> = ds.data.map { prefs ->
+        VoiceAssistantPreferences(
+            choice = VoiceProviderChoice.fromStorage(prefs[Keys.VOICE_PROVIDER]),
+            models = LiveProvider.entries.associateWith { provider ->
+                provider.supportedModelOrDefault(prefs[Keys.voiceModel(provider)])
+            },
+            voices = LiveProvider.entries.associateWith { provider ->
+                provider.supportedVoiceOrDefault(prefs[Keys.voiceVoice(provider)])
+            },
+            language = prefs[Keys.VOICE_LANGUAGE] ?: VoiceAssistantPreferences.LANGUAGE_AUTOMATIC,
+            autoCapture = prefs[Keys.VOICE_AUTO_CAPTURE] ?: false,
+            confirmSaves = prefs[Keys.VOICE_CONFIRM_SAVES] ?: true,
+            saveToCoach = prefs[Keys.VOICE_SAVE_TO_COACH] ?: true
+        )
+    }
+
+    suspend fun setVoiceAssistantProvider(choice: VoiceProviderChoice) {
+        ds.edit { it[Keys.VOICE_PROVIDER] = choice.storageValue }
+    }
+
+    suspend fun setVoiceAssistantModel(provider: LiveProvider, model: String) {
+        ds.edit { it[Keys.voiceModel(provider)] = provider.supportedModelOrDefault(model) }
+    }
+
+    suspend fun setVoiceAssistantVoice(provider: LiveProvider, voice: String) {
+        ds.edit { it[Keys.voiceVoice(provider)] = provider.supportedVoiceOrDefault(voice) }
+    }
+
+    /** `auto`, `app`, or a BCP-47 tag from [com.apoorvdarshan.calorietracker.models.AppLanguage]. */
+    suspend fun setVoiceAssistantLanguage(language: String) {
+        ds.edit { it[Keys.VOICE_LANGUAGE] = language }
+    }
+
+    suspend fun setVoiceAssistantAutoCapture(enabled: Boolean) {
+        ds.edit { it[Keys.VOICE_AUTO_CAPTURE] = enabled }
+    }
+
+    suspend fun setVoiceAssistantConfirmSaves(enabled: Boolean) {
+        ds.edit { it[Keys.VOICE_CONFIRM_SAVES] = enabled }
+    }
+
+    suspend fun setVoiceAssistantSaveToCoach(enabled: Boolean) {
+        ds.edit { it[Keys.VOICE_SAVE_TO_COACH] = enabled }
+    }
+
     // -- Widget snapshot --------------------------------------------------
     val widgetSnapshot: Flow<WidgetSnapshot?> = ds.data.map { prefs ->
         prefs[Keys.WIDGET_SNAPSHOT]?.let {
@@ -1479,6 +1558,13 @@ class PreferencesStore(
         val BODY_MEASUREMENTS = stringPreferencesKey("bodyMeasurements")
         val CHAT_HISTORY = stringPreferencesKey("coachChatHistory")
         val WIDGET_SNAPSHOT = stringPreferencesKey("widget_snapshot_v1")
+        val VOICE_PROVIDER = stringPreferencesKey("voiceAssistantProvider")
+        val VOICE_LANGUAGE = stringPreferencesKey("voiceAssistantLanguage")
+        val VOICE_AUTO_CAPTURE = booleanPreferencesKey("voiceAssistantAutoCapture")
+        val VOICE_CONFIRM_SAVES = booleanPreferencesKey("voiceAssistantConfirmSaves")
+        val VOICE_SAVE_TO_COACH = booleanPreferencesKey("voiceAssistantSaveToCoach")
+        fun voiceModel(provider: LiveProvider) = stringPreferencesKey("voiceAssistantModel_${provider.storageValue}")
+        fun voiceVoice(provider: LiveProvider) = stringPreferencesKey("voiceAssistantVoice_${provider.storageValue}")
     }
 
     companion object {

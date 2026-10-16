@@ -189,6 +189,7 @@ import com.apoorvdarshan.calorietracker.ui.components.WeekEnergyStrip
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavDockedControlPadding
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantButton
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -409,6 +410,17 @@ DisposableEffect(lifecycleOwner, vm) {
 
     BackHandler(enabled = selectionMode) {
         selectedFoodIds = emptySet()
+    }
+
+    // The voice assistant opens a logged food's edit sheet here (open_food_entry).
+    val voiceUi by container.voiceAssistant.ui.collectAsState()
+    val pendingVoiceEntry by container.navigator.pendingFoodEntry.collectAsState()
+    LaunchedEffect(pendingVoiceEntry, allEntries) {
+        val id = pendingVoiceEntry ?: return@LaunchedEffect
+        val entry = allEntries.firstOrNull { it.id == id } ?: return@LaunchedEffect
+        selectedFoodIds = emptySet()
+        editingEntry = entry
+        container.navigator.pendingFoodEntry.value = null
     }
 
     val today = LocalDate.now()
@@ -826,6 +838,17 @@ CalorieHero(
                 }
             }
         }
+        }
+        // The voice assistant's orb, across from the + button. While a conversation is
+        // open its bubble takes this corner instead.
+        if (!selectionMode && !voiceUi.visible) {
+            VoiceAssistantButton(
+                onClick = container.voiceAssistant::requestStart,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .navigationBarsPadding()
+                    .padding(start = 24.dp, bottom = 100.dp)
+            )
         }
         }
     }

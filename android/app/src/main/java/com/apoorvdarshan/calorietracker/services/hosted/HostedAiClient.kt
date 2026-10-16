@@ -26,6 +26,42 @@ import java.util.Base64
 import java.util.concurrent.TimeUnit
 
 /**
+ * Live voice time from `GET /quota` (`voice: {month, secondsUsed, secondsLimit, creditBank}`).
+ * Sessions are metered in 15-second blocks: the monthly allowance first, then one credit
+ * per block.
+ */
+data class HostedVoiceQuota(
+    val month: String?,
+    val secondsUsed: Int,
+    val secondsLimit: Int,
+    val creditBank: Int
+) {
+    val allowanceSecondsLeft: Int get() = (secondsLimit - secondsUsed).coerceAtLeast(0)
+    val creditSeconds: Int get() = creditBank.coerceAtLeast(0) * SECONDS_PER_CREDIT
+    val totalSecondsLeft: Int get() = allowanceSecondsLeft + creditSeconds
+
+    companion object {
+        const val SECONDS_PER_CREDIT = 15
+
+        /** Reads `voice` from the top level or from inside `quota`; null when absent or malformed. */
+        fun fromQuotaResponse(raw: String): HostedVoiceQuota? {
+            val root = runCatching { Json.parseToJsonElement(raw).jsonObject }.getOrNull() ?: return null
+            val voice = (root["voice"] as? JsonObject)
+                ?: ((root["quota"] as? JsonObject)?.get("voice") as? JsonObject)
+                ?: return null
+            fun int(name: String): Int? = (voice[name] as? JsonPrimitive)?.content?.toDoubleOrNull()?.toInt()
+            val limit = int("secondsLimit") ?: return null
+            return HostedVoiceQuota(
+                month = (voice["month"] as? JsonPrimitive)?.takeIf { it.isString }?.content,
+                secondsUsed = (int("secondsUsed") ?: 0).coerceAtLeast(0),
+                secondsLimit = limit.coerceAtLeast(0),
+                creditBank = (int("creditBank") ?: 0).coerceAtLeast(0)
+            )
+        }
+    }
+}
+
+/**
  * Client for the Fud AI hosted proxy (`web/hosted-ai-api.ts`). The only identity
  * sent is the RevenueCat anonymous app user id; the Worker verifies the plan with
  * RevenueCat and meters every call against its ledger. Each response's
@@ -81,6 +117,17 @@ class HostedAiClient(
         val response = execute(applyQuota = false) { builder(path).get().build() }
         return objectField(response, "quota")?.let { HostedQuotaSnapshot.decode(it.toString()) }
             ?: throw AiError.InvalidResponse
+    }
+
+    /**
+     * Voice minutes for the live assistant: `GET /quota` also reports `voice`. Null when the
+     * Worker does not send it yet. The action quota in the same response is applied too.
+     */
+    suspend fun fetchVoiceQuota(): HostedVoiceQuota? {
+        val sequence = quota.nextRequestSequence()
+        val response = execute(applyQuota = false) { builder("quota").get().build() }
+        objectField(response, "quota")?.let { HostedQuotaSnapshot.decode(it.toString()) }?.let { quota.apply(it, sequence) }
+        return HostedVoiceQuota.fromQuotaResponse(response)
     }
 
     private suspend fun post(path: String, payload: String): String =

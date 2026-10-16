@@ -12,6 +12,7 @@ on:
       - 'shared/workout-vectors/**'
       - 'local-models/legal/**'
       - 'scripts/test-ios.sh'
+      - 'scripts/ci/ensure_metal_toolchain.sh'
       - 'scripts/ci/check_ios_test_counts.py'
       - 'scripts/ci/test_check_ios_test_counts.py'
       - '.github/workflows/ios-tests.yml'
@@ -22,6 +23,7 @@ on:
       - 'shared/workout-vectors/**'
       - 'local-models/legal/**'
       - 'scripts/test-ios.sh'
+      - 'scripts/ci/ensure_metal_toolchain.sh'
       - 'scripts/ci/check_ios_test_counts.py'
       - 'scripts/ci/test_check_ios_test_counts.py'
       - '.github/workflows/ios-tests.yml'
@@ -57,6 +59,7 @@ jobs:
             /ios/
             /local-models/legal/
             /scripts/test-ios.sh
+            /scripts/ci/ensure_metal_toolchain.sh
             /scripts/ci/check_ios_test_counts.py
             /scripts/ci/test_check_ios_test_counts.py
             /shared/workout-vectors/sample-pack.txt
@@ -83,6 +86,8 @@ jobs:
           PY
       - name: Test the zero-test guard (offline)
         run: python3 -m unittest scripts/ci/test_check_ios_test_counts.py
+      - name: Ensure the Metal shader compiler is available
+        run: bash scripts/ci/ensure_metal_toolchain.sh
       - name: Cache pinned Swift packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

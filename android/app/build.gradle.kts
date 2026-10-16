@@ -146,6 +146,8 @@ android {
         compose = true
         // AdsConfig gates real vs test ad units on BuildConfig.DEBUG.
         buildConfig = true
+        // voice_shortcut_package (below) for the static launcher shortcut.
+        resValues = true
     }
 
     lint {
@@ -343,6 +345,12 @@ abstract class PrepareWorkoutVectorAssetsTask : DefaultTask() {
 
 androidComponents {
     onVariants { variant ->
+        // res/xml/shortcuts.xml targets this package, so the "Talk to Fud AI" shortcut opens
+        // the variant it ships in (debug builds carry a .debug suffix).
+        variant.resValues.put(
+            variant.makeResValueKey("string", "voice_shortcut_package"),
+            variant.applicationId.map { com.android.build.api.variant.ResValue(it, "Target package of the voice shortcut") }
+        )
         val isRelease = variant.buildType == "release"
         val requested = workoutVectorsModeProperty.orNull
         // Gradle configures every variant even for `assembleDebug`, so the release variant

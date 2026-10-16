@@ -122,6 +122,13 @@
 			);
 			target = BA8E0DF22F33F197007DD537 /* calorietracker */;
 		};
+		F00D6A00000000000000A001 /* Exceptions for "calorietracker" folder in "FudAIWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppIntents/TalkToFudAIIntent.swift,
+			);
+			target = BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */;
+		};
 		BA8E0E262F33F198007DD537 /* Exceptions for "FudAIWidgets" folder in "FudAIWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -157,6 +164,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				BA8E0E192F33F198007DD537 /* Exceptions for "calorietracker" folder in "calorietracker" target */,
+				F00D6A00000000000000A001 /* Exceptions for "calorietracker" folder in "FudAIWidgetsExtension" target */,
 			);
 			path = calorietracker;
 			sourceTree = "<group>";
@@ -760,7 +768,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Fud AI uses the camera to scan food and barcodes.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read your weight, height, body composition, nutrition, daily steps, and Fud AI workout calories to keep your history in sync.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Write, update, or remove your nutrition, body measurements, and calculated workout calories when you change your logs.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fud AI needs microphone access so you can log food by voice.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fud AI uses the microphone so you can log food by voice and talk with the voice assistant.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Fud AI saves meal photos to your photo library when you tap Save.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fud AI uses speech recognition to convert your voice into text for food logging.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -814,7 +822,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Fud AI uses the camera to scan food and barcodes.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Read your weight, height, body composition, nutrition, daily steps, and Fud AI workout calories to keep your history in sync.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Write, update, or remove your nutrition, body measurements, and calculated workout calories when you change your logs.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fud AI needs microphone access so you can log food by voice.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Fud AI uses the microphone so you can log food by voice and talk with the voice assistant.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Fud AI saves meal photos to your photo library when you tap Save.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Fud AI uses speech recognition to convert your voice into text for food logging.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
