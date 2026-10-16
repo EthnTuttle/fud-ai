@@ -76,6 +76,23 @@ struct VoicePreviewTests {
         #expect(harness.preview.errorMessage == nil)
     }
 
+    @Test(arguments: ["cancelled", "incomplete"])
+    func unsuccessfulResponseStopsPartialPlaybackAndShowsFailure(status: String) async throws {
+        let harness = PreviewHarness(provider: .openai)
+        defer { harness.close() }
+        let session = try await harness.startReady()
+        session.emit(.audio(Data([1, 2]), itemID: "partial"))
+        try await waitUntil { harness.audio.isPlaying }
+        let wire = OpenAIRealtimeWire()
+        let completion = LiveJSON.string(["type": "response.done", "response": ["id": "preview", "status": status]])
+        for event in wire.parse(completion) { session.emit(event) }
+        try await waitUntil { !harness.preview.isRunning }
+        #expect(session.closed)
+        #expect(!harness.audio.isPlaying)
+        #expect(harness.audio.stopCount == 1)
+        #expect(harness.preview.errorMessage == String(localized: "Couldn’t play this voice preview. Please try again."))
+    }
+
     @Test func stopAndRestartRejectOldSocketAndPlaybackCallbacks() async throws {
         let harness = PreviewHarness()
         defer { harness.close() }

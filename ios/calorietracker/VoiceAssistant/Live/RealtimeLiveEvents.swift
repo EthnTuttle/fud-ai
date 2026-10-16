@@ -43,12 +43,13 @@ nonisolated final class RealtimeLiveEvents: @unchecked Sendable {
                 let id = response["id"] as? String ?? currentResponse
                 guard !finished.contains(id) else { return [] }
                 let status = response["status"] as? String ?? "completed"
-                if status == "completed", !interrupted.contains(id) {
+                let successful = status == "completed" && !interrupted.contains(id)
+                if successful {
                     for item in response["output"] as? [[String: Any]] ?? [] where item["type"] as? String == "function_call" {
                         if (item["status"] as? String ?? "completed") == "completed" { collect(item, response: id) }
                     }
                 }
-                let ready = status == "completed" && !interrupted.contains(id) ? calls[id] ?? [] : []
+                let ready = successful ? calls[id] ?? [] : []
                 calls.removeValue(forKey: id)
                 items = items.filter { $0.value.responseID != id }
                 if !id.isEmpty { finished.insert(id) }
@@ -59,7 +60,7 @@ nonisolated final class RealtimeLiveEvents: @unchecked Sendable {
                     let error = details?["error"] as? [String: Any]
                     events.append(.error(error?["message"] as? String ?? "The voice response failed.", code: error?["code"] as? String))
                 }
-                events.append(.responseDone(hasToolCalls: !ready.isEmpty))
+                events.append(.responseDone(hasToolCalls: !ready.isEmpty, successful: successful))
                 return events
             default:
                 return OpenAIRealtimeWire.parseRealtimeEvent(message)

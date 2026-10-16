@@ -512,7 +512,9 @@ final class VoiceAssistantController {
         case .responseStarted:
             responseActive = true
             if !isAssistantSpeaking { isAwaitingReply = true }
-        case .responseDone(let hasToolCalls):
+        case .responseDone(let hasToolCalls, _):
+            // Barge-in cancellation is expected during a conversation; the
+            // preview's stricter completion check must not turn it into a failure.
             responseActive = false
             isAwaitingReply = false
             if !hasToolCalls { finishTurn() }
