@@ -194,7 +194,7 @@ Until the provider keys are set, the proxy responds `503 gemini_not_configured` 
 2. The `HOSTED_AI_USER_RATE_LIMITER` / `HOSTED_AI_ADDRESS_RATE_LIMITER` bindings are declared in `web/wrangler.toml` (namespace ids 61005/61006) and are created on deploy.
 3. `run_worker_first` in `web/wrangler.toml` already includes `/api/hosted-ai/v1/*`. The voice relay needs no other `wrangler.toml` change: no Durable Object, binding, compatibility flag or `[limits]` entry (see [Runtime design](#runtime-design)).
 4. Set the secrets above, then `npx wrangler deploy`.
-5. Run the live check below (`scripts/hosted_ai_smoke.sh`). Unit tests run against mocks and cannot catch a missing migration or a wrong RevenueCat key. The script checks the voice balance on `/quota`; the relay itself is checked from the apps (hosted voice assistant), since it needs a WebSocket client that can send the identity header.
+5. Run the live checks below. `scripts/hosted_ai_smoke.sh` covers hosted actions and the voice balance; `scripts/hosted_ai_voice_smoke.mjs` checks the live WebSocket relay with a synthetic customer. Unit tests run against mocks and cannot catch a missing migration or a wrong RevenueCat key. Verify microphone, camera, playback and app controls separately in the apps.
 
 ## Hosted limits
 
@@ -217,6 +217,14 @@ Against the deployed Worker, end to end (creates a throwaway Plus customer, then
 ```bash
 RC_V2_SECRET_KEY=sk_... scripts/hosted_ai_smoke.sh
 ```
+
+For the live voice relay, first create an isolated RevenueCat anonymous test customer with an active Plus or Pro entitlement. Supply its identity through the `FUD_VOICE_SMOKE_USER_ID` environment variable without printing it. After installing the existing web dependencies, run from the repository root:
+
+```bash
+node scripts/hosted_ai_voice_smoke.mjs
+```
+
+The check requires a setup acknowledgement, a harmless synthetic function call and response, audio bytes, nonempty output transcription and quota changes in 15-second blocks. If the provider issues a signed resumption handle, it reconnects and requires a second acknowledgement; otherwise the summary explicitly reports `not_issued`. It normally takes about 20 seconds and spends 45 seconds of voice allowance, with a 60-second deadline. It never plays or saves audio and prints only summary counters or error codes, never identities, handles, transcripts or response bodies. Revoke the temporary test entitlement after testing; this script does not create or revoke customers or grants.
 
 Manual requests (need a real RevenueCat app user id with an active entitlement):
 
