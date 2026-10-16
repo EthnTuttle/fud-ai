@@ -151,6 +151,7 @@ import com.apoorvdarshan.calorietracker.ui.util.clockTimePattern
 import com.apoorvdarshan.calorietracker.ui.util.formattedWholeNumber
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.pluralStringResource
@@ -1860,7 +1861,7 @@ private fun MealSectionHeader(
                 mealIcon(meal),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(16.dp).testTag("home.mealHeader.${meal.name}.icon")
             )
             Spacer(Modifier.width(8.dp))
             Text(
@@ -1910,14 +1911,15 @@ private fun MealSectionHeader(
             // Share remains a separate target next to the title and sort control.
             if (onShare != null) {
                 Spacer(Modifier.width(8.dp))
-                IconButton(onClick = onShare, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        Icons.Filled.IosShare,
-                        contentDescription = stringResource(R.string.cd_share_meal),
-                        tint = AppColors.Calorie,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+                Icon(
+                    Icons.Filled.IosShare,
+                    contentDescription = stringResource(R.string.cd_share_meal),
+                    tint = AppColors.Calorie,
+                    modifier = Modifier
+                        .clickable(role = Role.Button, onClick = onShare)
+                        .padding(4.dp)
+                        .size(18.dp),
+                )
             }
         }
         // Keep the combined meal totals under the title on the leading half, clear
@@ -1925,7 +1927,7 @@ private fun MealSectionHeader(
         if (totalCalories != null) {
             Column(
                 modifier = Modifier
-                    .padding(start = 24.dp, end = 24.dp, top = 6.dp)
+                    .padding(top = 4.dp)
                     .fillMaxWidth(0.5f)
                     .testTag("home.mealHeader.${meal.name}.totals"),
                 horizontalAlignment = Alignment.Start
@@ -1933,12 +1935,14 @@ private fun MealSectionHeader(
                 Text(
                     "${totalCalories.formattedWholeNumber()} kcal",
                     fontSize = 15.sp,
+                    lineHeight = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.Calorie
                 )
                 Text(
                     "${totalProtein.roundToInt()}P · ${totalCarbs.roundToInt()}C · ${totalFat.roundToInt()}F",
                     fontSize = 12.sp,
+                    lineHeight = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                 )
