@@ -215,8 +215,9 @@ class AppFlowsTest {
             .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
         assertTrue("The final meal card can scroll completely above both buttons", cardBounds.bottom <= voiceBounds.top)
         val titleBounds = compose.onNodeWithTag("home.mealHeader.${saved.mealType.name}.title").fetchSemanticsNode().boundsInRoot
+        val iconBounds = compose.onNodeWithTag("home.mealHeader.${saved.mealType.name}.icon").fetchSemanticsNode().boundsInRoot
         val totalsBounds = compose.onNodeWithTag("home.mealHeader.${saved.mealType.name}.totals").fetchSemanticsNode().boundsInRoot
-        assertEquals("Meal totals align with the title", titleBounds.left, totalsBounds.left, 1f)
+        assertEquals("Meal totals align with the leading edge of the header", iconBounds.left, totalsBounds.left, 1f)
         assertTrue("Meal totals sit below the title", totalsBounds.top >= titleBounds.bottom)
         assertTrue("Meal totals avoid the floating buttons' trailing area", totalsBounds.right < voiceBounds.left)
 
