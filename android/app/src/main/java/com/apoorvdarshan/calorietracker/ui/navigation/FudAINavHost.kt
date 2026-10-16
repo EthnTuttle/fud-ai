@@ -242,8 +242,8 @@ fun FudAINavHost(
     // The Quick Settings tile, launcher shortcut and widget start a conversation.
     LaunchedEffect(voiceLaunchRequest, currentRoute) {
         val request = voiceLaunchRequest ?: return@LaunchedEffect
-        if (currentRoute == null) return@LaunchedEffect
-        if (currentRoute != FudAIRoutes.ONBOARDING) container.voiceAssistant.requestStart()
+        if (currentRoute == null || currentRoute == FudAIRoutes.ONBOARDING) return@LaunchedEffect
+        container.voiceAssistant.requestStart()
         onVoiceLaunchHandled(request)
     }
 

@@ -78,6 +78,11 @@ open class MainActivity : AppCompatActivity() {
         handlePlayStoreIntent(intent)
         handleVoiceIntent(intent)
     }
+    override fun onSaveInstanceState(outState: Bundle) {
+        pendingVoiceLaunch?.let { outState.putLong("pendingVoiceLaunch", it) }
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onStart() {
         super.onStart()
         if (!(application as FudAIApp).backgroundServicesEnabled) return
@@ -143,8 +148,10 @@ open class MainActivity : AppCompatActivity() {
         handleShareIntent(intent)
         handleQuickActionIntent(intent)
         handlePlayStoreIntent(intent)
-        // A restored activity's intent was already handled before it was recreated.
-        if (savedInstanceState == null) handleVoiceIntent(intent)
+        // Preserve an external request while onboarding or activity recreation delays it.
+        if (savedInstanceState?.containsKey("pendingVoiceLaunch") == true) {
+            pendingVoiceLaunch = savedInstanceState.getLong("pendingVoiceLaunch")
+        } else if (savedInstanceState == null) handleVoiceIntent(intent)
 
         lifecycleScope.launch {
             combine(

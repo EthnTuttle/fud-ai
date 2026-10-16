@@ -413,7 +413,10 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
 
     fun expand() = _ui.update { it.copy(expanded = true) }
 
-    fun collapse() = _ui.update { it.copy(expanded = false) }
+    fun collapse() {
+        closeCamera()
+        _ui.update { it.copy(expanded = false) }
+    }
 
     override fun collapseForNavigation() = collapse()
 
@@ -873,6 +876,7 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
 
     /** The camera panel is bound and ready. */
     fun cameraReady(handle: VoiceCameraHandle) {
+        if (!isActive || _ui.value.camera == null) return
         cameraHandle = handle
         // CameraBinding reports ready only after its first frame. Send it before the
         // open_camera result so OpenAI can base its next capture decision on the image.

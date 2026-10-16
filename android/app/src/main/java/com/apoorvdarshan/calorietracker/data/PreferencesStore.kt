@@ -227,6 +227,15 @@ class PreferencesStore(
         }
     }
 
+    /** Reads and changes one profile atomically, preserving unreadable data on failure. */
+    suspend fun updateUserProfile(transform: (UserProfile) -> UserProfile) {
+        ds.edit { prefs ->
+            val raw = prefs[Keys.USER_PROFILE] ?: error("No saved profile")
+            val current = json.decodeFromString<UserProfile>(raw)
+            prefs[Keys.USER_PROFILE] = json.encodeToString(UserProfile.serializer(), transform(current))
+        }
+    }
+
     // -- Onboarding -------------------------------------------------------
     val hasCompletedOnboarding: Flow<Boolean> = ds.data.map { it[Keys.ONBOARDING_COMPLETED] ?: false }
     suspend fun setOnboardingCompleted(value: Boolean) {
