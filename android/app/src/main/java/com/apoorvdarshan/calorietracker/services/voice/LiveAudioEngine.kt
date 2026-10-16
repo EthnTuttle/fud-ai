@@ -25,11 +25,8 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-/** Microphone in, assistant voice out. The controller drives it; tests could use a fake. */
-interface LiveAudioIO {
-    /** Microphone audio (16-bit mono PCM at the input rate), on the recording thread. */
-    var onMicrophoneAudio: ((ByteArray) -> Unit)?
-
+/** Output only: this interface cannot open or read a microphone. */
+interface LivePlaybackIO {
     /** Everything scheduled has played (main thread). */
     var onPlaybackFinished: (() -> Unit)?
 
@@ -38,10 +35,17 @@ interface LiveAudioIO {
 
     val isPlaying: Boolean
 
-    fun start(inputSampleRate: Int, outputSampleRate: Int)
-
-    /** Queues reply audio after anything already scheduled. */
+    fun startPlayback(outputSampleRate: Int)
     fun play(pcm16: ByteArray)
+    fun stop()
+}
+
+/** Microphone in, assistant voice out. The controller drives it; tests could use a fake. */
+interface LiveAudioIO : LivePlaybackIO {
+    /** Microphone audio (16-bit mono PCM at the input rate), on the recording thread. */
+    var onMicrophoneAudio: ((ByteArray) -> Unit)?
+
+    fun start(inputSampleRate: Int, outputSampleRate: Int)
 
     /** Milliseconds played since playback last started from silence. */
     val playbackPositionMs: Long
@@ -55,8 +59,6 @@ interface LiveAudioIO {
     /** 0 (silence) to 1 (loud speech). */
     val microphoneLevel: Float
     val playbackLevel: Float
-
-    fun stop()
 }
 
 class LiveAudioError(message: String) : Exception(message)
@@ -100,6 +102,7 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
     private var focusRequest: AudioFocusRequest? = null
     private var previousMode = AudioManager.MODE_NORMAL
     private var changedSpeakerphone = false
+    private var changedRoute = false
 
     override val isPlaying: Boolean get() = playing.get()
     override val microphoneLevel: Float get() = micLevel
@@ -121,16 +124,34 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
 
     @SuppressLint("MissingPermission")
     override fun start(inputSampleRate: Int, outputSampleRate: Int) {
-        outputRate = outputSampleRate
-        requestFocus()
+        requestFocus(AudioAttributes.USAGE_VOICE_COMMUNICATION)
         routeForConversation()
+        val player = openOutput(outputSampleRate, AudioAttributes.USAGE_VOICE_COMMUNICATION)
+        val recorder = startRecording(inputSampleRate)
+        running.set(true)
+        val chunkBytes = inputSampleRate * 2 * MIC_CHUNK_MS / 1_000
+        recordThread = Thread({ readLoop(recorder, chunkBytes) }, "fudai-live-mic").also { it.start() }
+        playThread = Thread({ playLoop(player) }, "fudai-live-speaker").also { it.start() }
+        VoiceLog.info(TAG, "Audio started (echo canceler: ${echoCanceler != null})")
+    }
+
+    /** Settings previews use media output; no recording, permission request or call routing. */
+    override fun startPlayback(outputSampleRate: Int) {
+        requestFocus(AudioAttributes.USAGE_MEDIA)
+        val player = openOutput(outputSampleRate, AudioAttributes.USAGE_MEDIA)
+        running.set(true)
+        playThread = Thread({ playLoop(player) }, "fudai-voice-preview").also { it.start() }
+    }
+
+    private fun openOutput(outputSampleRate: Int, usage: Int): AudioTrack {
+        outputRate = outputSampleRate
 
         val minOut = AudioTrack.getMinBufferSize(outputRate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minOut <= 0) throw LiveAudioError("The speaker doesn't support $outputRate Hz audio.")
         val player = AudioTrack.Builder()
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setUsage(usage)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build()
             )
@@ -150,7 +171,11 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
         }
         track = player
         player.play()
+        return player
+    }
 
+    @SuppressLint("MissingPermission")
+    private fun startRecording(inputSampleRate: Int): AudioRecord {
         val minIn = AudioRecord.getMinBufferSize(inputSampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
         if (minIn <= 0) throw LiveAudioError("The microphone doesn't support $inputSampleRate Hz audio.")
         val recorder = try {
@@ -179,12 +204,7 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
         if (recorder.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
             throw LiveAudioError("The microphone is in use by another app.")
         }
-
-        running.set(true)
-        val chunkBytes = inputSampleRate * 2 * MIC_CHUNK_MS / 1_000
-        recordThread = Thread({ readLoop(recorder, chunkBytes) }, "fudai-live-mic").also { it.start() }
-        playThread = Thread({ playLoop(player) }, "fudai-live-speaker").also { it.start() }
-        VoiceLog.info(TAG, "Audio started (echo canceler: ${echoCanceler != null})")
+        return recorder
     }
 
     override fun play(pcm16: ByteArray) {
@@ -286,7 +306,12 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
                     if (chunk.generation != generation.get() || !running.get()) 0
                     else player.write(chunk.bytes, offset, length, AudioTrack.WRITE_BLOCKING)
                 }
-                if (written <= 0) break
+                if (written <= 0) {
+                    if (written < 0 && running.get() && chunk.generation == generation.get()) {
+                        mainHandler.post { onInterrupted?.invoke() }
+                    }
+                    break
+                }
                 offset += written
             }
             synchronized(playbackLock) {
@@ -307,20 +332,23 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
 
     // MARK: - Routing and focus
 
-    private fun requestFocus() {
+    private fun requestFocus(usage: Int) {
         val manager = audioManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                 .setAudioAttributes(
                     AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                        .setUsage(usage)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build()
                 )
                 .setOnAudioFocusChangeListener(focusListener, mainHandler)
                 .build()
             focusRequest = request
-            manager.requestAudioFocus(request)
+            val result = manager.requestAudioFocus(request)
+            if (usage == AudioAttributes.USAGE_MEDIA && result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                throw LiveAudioError("Audio focus is unavailable.")
+            }
         }
     }
 
@@ -334,6 +362,7 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
     private fun routeForConversation() {
         val manager = audioManager ?: return
         previousMode = manager.mode
+        changedRoute = true
         runCatching { manager.mode = AudioManager.MODE_IN_COMMUNICATION }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val devices = manager.availableCommunicationDevices
@@ -353,6 +382,8 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
     }
 
     private fun restoreRoute() {
+        if (!changedRoute) return
+        changedRoute = false
         val manager = audioManager ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             runCatching { manager.clearCommunicationDevice() }

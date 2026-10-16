@@ -133,4 +133,13 @@
     <string name="voice_settings_add_tile">إضافة مربع إلى الإعدادات السريعة</string>
     <string name="voice_settings_add_widget">إضافة أداة إلى الشاشة الرئيسية</string>
     <string name="voice_settings_privacy_footer">يُرسل صوتك والنصوص المصاحبة وإطارات الكاميرا التي يراها المساعد ونتائج إجراءاته إلى الموفر الذي تستخدمه (Google لخدمة Fud AI Plus/Pro).  يحتفظ خادم Fud AI بعدادات الاستخدام وإيصالات الفوترة، دون محتوى المحادثات.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">معاينة الصوت</string>
+    <string name="voice_preview_stop">إيقاف المعاينة</string>
+    <string name="voice_preview_preparing">جارٍ تحضير المعاينة…</string>
+    <string name="voice_preview_sample">مرحبًا، أنا مساعدك في Fud AI. هكذا يبدو صوتي.</string>
+    <string name="voice_preview_failed">تعذّر تشغيل معاينة هذا الصوت. يُرجى المحاولة مرة أخرى.</string>
+    <string name="voice_preview_busy">أنهِ محادثتك الصوتية الحالية قبل معاينة صوت.</string>
+    <string name="voice_preview_usage">يشغّل عيّنة قصيرة دون استخدام الميكروفون. يستهلك رصيد API أو دقائق الصوت في Fud AI.</string>
 </resources>

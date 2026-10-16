@@ -131,4 +131,13 @@
     <string name="voice_settings_add_tile">Додати плитку до швидких налаштувань</string>
     <string name="voice_settings_add_widget">Додати віджет на головний екран</string>
     <string name="voice_settings_privacy_footer">Ваш голос, субтитри, кадри камери, які бачить помічник, і результати його дій передаються вибраному постачальнику (Google для Fud AI Plus/Pro). Сервер Fud AI зберігає лічильники використання та записи списань, а не вміст розмов.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Прослухати голос</string>
+    <string name="voice_preview_stop">Зупинити зразок</string>
+    <string name="voice_preview_preparing">Підготовка зразка…</string>
+    <string name="voice_preview_sample">Привіт, я ваш помічник Fud AI. Ось як звучить мій голос.</string>
+    <string name="voice_preview_failed">Не вдалося відтворити цей зразок голосу. Спробуйте ще раз.</string>
+    <string name="voice_preview_busy">Завершіть поточну голосову розмову, перш ніж прослухати зразок голосу.</string>
+    <string name="voice_preview_usage">Відтворює короткий зразок без використання мікрофона. Витрачає кредити API або голосові хвилини Fud AI.</string>
 </resources>

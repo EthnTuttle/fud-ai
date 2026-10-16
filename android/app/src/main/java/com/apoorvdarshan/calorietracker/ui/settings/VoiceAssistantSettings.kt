@@ -27,7 +27,9 @@ import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.RecordVoiceOver
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Tune
@@ -40,6 +42,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -58,6 +61,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -75,6 +81,10 @@ import com.apoorvdarshan.calorietracker.services.voice.VoiceAccess
 import com.apoorvdarshan.calorietracker.services.voice.VoiceAssistantTileService
 import com.apoorvdarshan.calorietracker.services.voice.VoiceProviderChoice
 import com.apoorvdarshan.calorietracker.services.voice.VoiceProviderResolver
+import com.apoorvdarshan.calorietracker.services.voice.VoicePhase
+import com.apoorvdarshan.calorietracker.services.voice.VoicePreviewError
+import com.apoorvdarshan.calorietracker.services.voice.VoicePreviewPhase
+import com.apoorvdarshan.calorietracker.services.voice.VoicePreviewState
 import com.apoorvdarshan.calorietracker.ui.components.FudIconBubble
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import com.apoorvdarshan.calorietracker.ui.voice.minutesText
@@ -101,6 +111,12 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
     val selectedAi by container.prefs.selectedAIProvider.collectAsState(initial = AIProvider.GEMINI)
     val entitlement by container.billing.entitlement.collectAsState()
     val context = LocalContext.current
+    val preview = container.voicePreview
+    val previewState by preview.state.collectAsState()
+    val assistantState by container.voiceAssistant.ui.collectAsState()
+    val assistantActive = assistantState.phase != VoicePhase.IDLE
+    val previewSample = stringResource(R.string.voice_preview_sample)
+    val appLanguage = context.resources.configuration.locales[0].toLanguageTag()
     val talkLabel = stringResource(R.string.voice_talk_to_fud_ai)
     val scope = rememberCoroutineScope()
     var sheet by remember { mutableStateOf<VoiceSheet?>(null) }
@@ -108,6 +124,16 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
     // Which own keys are saved, re-read whenever Settings comes back to the foreground.
     var keyEpoch by remember { mutableIntStateOf(0) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, preview) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) preview.stop()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            preview.stop()
+        }
+    }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) keyEpoch++ }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -122,10 +148,10 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
         }
     }
     var voiceQuota by remember { mutableStateOf<HostedVoiceQuota?>(null) }
-    LaunchedEffect(entitlement.isEntitled) {
-        voiceQuota = if (entitlement.isEntitled) {
+    LaunchedEffect(entitlement.isEntitled, previewState.active) {
+        if (!entitlement.isEntitled) voiceQuota = null
+        else if (!previewState.active) voiceQuota =
             runCatching { withContext(Dispatchers.IO) { container.hostedAiClient.fetchVoiceQuota() } }.getOrNull()
-        } else null
     }
 
     val access = VoiceProviderResolver.resolve(prefs.choice, selectedAi, { it in keys }, entitlement.isEntitled)
@@ -133,6 +159,8 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
     // What a session would use: a stored model or voice the provider no longer offers falls back.
     val model = provider.supportedModelOrDefault(prefs.model(provider))
     val voice = provider.supportedVoiceOrDefault(prefs.voice(provider))
+    LaunchedEffect(prefs, selectedAi, keys, entitlement.isEntitled, appLanguage) { preview.stop() }
+    LaunchedEffect(assistantActive) { if (assistantActive) preview.stop() }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionCard {
@@ -159,6 +187,9 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
                 LiveProvider.voiceDisplayName(voice),
                 icon = Icons.Outlined.GraphicEq
             ) { sheet = VoiceSheet.VOICE }
+            VoicePreviewControls(previewState, access is VoiceAccess.Ready, assistantActive) {
+                if (previewState.active) preview.stop() else preview.start(previewSample, appLanguage)
+            }
             HorizontalDivider()
             SettingRow(
                 stringResource(R.string.voice_settings_language),
@@ -317,6 +348,52 @@ private fun AccessRow(access: VoiceAccess, onAddKey: () -> Unit, onSeePlans: () 
             color = if (action != null) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
             fontWeight = if (action != null) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/** A physical button with a stop action during both setup and playback. */
+@Composable
+internal fun VoicePreviewControls(
+    state: VoicePreviewState,
+    available: Boolean,
+    assistantActive: Boolean,
+    onToggle: () -> Unit
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 12.dp)) {
+        TextButton(
+            onClick = onToggle,
+            enabled = state.active || (available && !assistantActive),
+            modifier = Modifier.testTag("voiceSettings.preview")
+        ) {
+            Icon(if (state.active) Icons.Outlined.Stop else Icons.Outlined.PlayArrow, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(if (state.active) R.string.voice_preview_stop else R.string.voice_preview_start))
+        }
+        if (state.phase == VoicePreviewPhase.PREPARING) {
+            Text(
+                stringResource(R.string.voice_preview_preparing),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("voiceSettings.previewPreparing").semantics { liveRegion = LiveRegionMode.Polite }
+            )
+        }
+        val error = when {
+            assistantActive || state.error == VoicePreviewError.BUSY -> R.string.voice_preview_busy
+            state.error == VoicePreviewError.FAILED -> R.string.voice_preview_failed
+            else -> null
+        }
+        if (error != null) {
+            Text(
+                stringResource(error),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.testTag("voiceSettings.previewError").semantics { liveRegion = LiveRegionMode.Polite }
+            )
+        }
+        Text(
+            stringResource(R.string.voice_preview_usage),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

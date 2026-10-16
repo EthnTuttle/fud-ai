@@ -130,4 +130,13 @@
     <string name="voice_settings_add_tile">Adicionar bloco às Configurações rápidas</string>
     <string name="voice_settings_add_widget">Adicionar widget à tela inicial</string>
     <string name="voice_settings_privacy_footer">Sua voz, legendas, imagens da câmera vistas pelo assistente e resultados das ações dele são enviados ao provedor que você usa (Google para Fud AI Plus/Pro).  O servidor do Fud AI armazena contadores de uso e comprovantes de cobrança, mas não o conteúdo das conversas.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Ouvir voz</string>
+    <string name="voice_preview_stop">Parar amostra</string>
+    <string name="voice_preview_preparing">Preparando amostra…</string>
+    <string name="voice_preview_sample">Olá, sou seu assistente do Fud AI. Minha voz é assim.</string>
+    <string name="voice_preview_failed">Não foi possível reproduzir esta amostra de voz. Tente novamente.</string>
+    <string name="voice_preview_busy">Encerre sua conversa por voz atual antes de ouvir uma amostra.</string>
+    <string name="voice_preview_usage">Reproduz uma amostra curta sem usar seu microfone. Consome créditos de API ou minutos de voz do Fud AI.</string>
 </resources>

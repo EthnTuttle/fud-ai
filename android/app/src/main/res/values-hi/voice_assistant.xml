@@ -129,4 +129,13 @@
     <string name="voice_settings_add_tile">तुरंत सेटिंग में टाइल जोड़ें</string>
     <string name="voice_settings_add_widget">होम स्क्रीन पर विजेट जोड़ें</string>
     <string name="voice_settings_privacy_footer">आपकी आवाज़, कैप्शन, असिस्टेंट को दिखने वाले कैमरा फ़्रेम और उसकी कार्रवाइयों के नतीजे आपके चुने प्रदाता को भेजे जाते हैं (Fud AI Plus/Pro के लिए Google)। Fud AI का सर्वर उपयोग की गणना और बिलिंग रसीदें रखता है, बातचीत की सामग्री नहीं।</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">आवाज़ सुनें</string>
+    <string name="voice_preview_stop">नमूना बंद करें</string>
+    <string name="voice_preview_preparing">नमूना तैयार हो रहा है…</string>
+    <string name="voice_preview_sample">नमस्ते, मैं आपका Fud AI सहायक हूँ। मेरी आवाज़ ऐसी है।</string>
+    <string name="voice_preview_failed">आवाज़ का यह नमूना चलाया नहीं जा सका। कृपया फिर कोशिश करें।</string>
+    <string name="voice_preview_busy">आवाज़ का नमूना सुनने से पहले अपनी मौजूदा वॉइस बातचीत समाप्त करें।</string>
+    <string name="voice_preview_usage">आपके माइक्रोफ़ोन का इस्तेमाल किए बिना एक छोटा नमूना सुनाता है। इसमें API क्रेडिट या Fud AI के वॉइस मिनट खर्च होते हैं।</string>
 </resources>

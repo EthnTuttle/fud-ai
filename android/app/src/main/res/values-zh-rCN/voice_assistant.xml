@@ -128,4 +128,13 @@
     <string name="voice_settings_add_tile">添加快捷设置磁贴</string>
     <string name="voice_settings_add_widget">添加主屏幕小组件</string>
     <string name="voice_settings_privacy_footer">你的语音、字幕、助手看到的相机画面及操作结果会发送给你使用的提供商（Fud AI Plus/Pro 使用 Google）。Fud AI 的服务器保留用量计数和计费凭证，不保存对话内容。</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">试听声音</string>
+    <string name="voice_preview_stop">停止试听</string>
+    <string name="voice_preview_preparing">正在准备试听…</string>
+    <string name="voice_preview_sample">你好，我是你的 Fud AI 助手。这就是我的声音。</string>
+    <string name="voice_preview_failed">无法播放此声音示例，请重试。</string>
+    <string name="voice_preview_busy">试听声音前，请先结束当前的语音对话。</string>
+    <string name="voice_preview_usage">播放一段简短的示例，不使用麦克风。会消耗 API 额度或 Fud AI 语音分钟数。</string>
 </resources>

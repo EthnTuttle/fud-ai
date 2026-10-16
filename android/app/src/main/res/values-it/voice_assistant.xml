@@ -130,4 +130,13 @@
     <string name="voice_settings_add_tile">Aggiungi riquadro alle Impostazioni rapide</string>
     <string name="voice_settings_add_widget">Aggiungi widget alla schermata iniziale</string>
     <string name="voice_settings_privacy_footer">La tua voce, i sottotitoli, le immagini della fotocamera viste dall’assistente e i risultati delle sue azioni vengono inviati al provider che usi (Google per Fud AI Plus/Pro).  Il server di Fud AI conserva i contatori di utilizzo e le ricevute di fatturazione, ma non il contenuto delle conversazioni.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Ascolta la voce</string>
+    <string name="voice_preview_stop">Interrompi anteprima</string>
+    <string name="voice_preview_preparing">Preparazione dell’anteprima…</string>
+    <string name="voice_preview_sample">Ciao, sono il tuo assistente Fud AI. Questa è la mia voce.</string>
+    <string name="voice_preview_failed">Impossibile riprodurre questa anteprima vocale. Riprova.</string>
+    <string name="voice_preview_busy">Termina la conversazione vocale in corso prima di ascoltare una voce.</string>
+    <string name="voice_preview_usage">Riproduce un breve esempio senza usare il microfono. Consuma crediti API o minuti vocali di Fud AI.</string>
 </resources>

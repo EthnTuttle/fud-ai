@@ -101,6 +101,12 @@ class AppFlowsTest {
         launchFresh()
         compose.onNodeWithTag("nav.home").assertIsSelected()
         compose.onNodeWithTag("home.add").assertIsDisplayed()
+        val addBounds = compose.onNodeWithTag("home.add").fetchSemanticsNode().boundsInRoot
+        val voiceBounds = compose.onNodeWithTag("voiceAssistantButton").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        assertEquals(addBounds.right, voiceBounds.right, 1f)
+        assertTrue("Voice sits above the add button", voiceBounds.bottom < addBounds.top)
+        assertTrue("The stack stays above the tabs", addBounds.bottom <=
+            compose.onNodeWithTag("nav.home").fetchSemanticsNode().boundsInRoot.top)
         for (tab in listOf("progress", "coach", "settings", "workouts", "home")) {
             openTab(tab)
             compose.onNodeWithTag("nav.$tab").assertIsSelected()

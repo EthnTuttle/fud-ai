@@ -130,4 +130,13 @@
     <string name="voice_settings_add_tile">Add Quick Settings Tile</string>
     <string name="voice_settings_add_widget">Add Home Screen Widget</string>
     <string name="voice_settings_privacy_footer">Your voice, captions, the camera frames the assistant sees and the results of its actions go to the provider you use (Google for Fud AI Plus/Pro). Fud AI’s server keeps usage counters and billing receipts, not conversation content.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Preview Voice</string>
+    <string name="voice_preview_stop">Stop Preview</string>
+    <string name="voice_preview_preparing">Preparing preview…</string>
+    <string name="voice_preview_sample">Hi, I’m your Fud AI assistant. This is how my voice sounds.</string>
+    <string name="voice_preview_failed">Couldn’t play this voice preview. Please try again.</string>
+    <string name="voice_preview_busy">End your current voice conversation before previewing a voice.</string>
+    <string name="voice_preview_usage">Plays a short sample without using your microphone. Uses API credits or Fud AI voice minutes.</string>
 </resources>
