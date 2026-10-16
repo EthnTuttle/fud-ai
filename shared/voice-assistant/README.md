@@ -132,6 +132,16 @@ draft, read back the main items and total calories; never call a tool with
   Center or tile/shortcut/widget).
 - Each finished turn is added to the Coach chat history when **Save
   conversations to Coach** is on (default on).
+- **Preview Voice**, beside the speaking-voice selection, plays a short sample
+  using the selected live provider, model and voice. It reuses the saved API key
+  for own-key providers or the existing hosted plan; hosted previews use the
+  normal voice allowance and metering. The sample follows the selected response
+  language (Automatic uses the app language).
+- Preview is playback-only: it requests no microphone access and sends no
+  profile, diary, conversation history or app tools. **Stop Preview**, leaving
+  settings, changing the selection, or backgrounding the app cancels it. The
+  connection closes as soon as generation finishes, while already received
+  audio finishes playing; a 30-second deadline bounds the entire preview.
 - All new text is localized in every app language.
 
 ## Hosted relay (Worker)
