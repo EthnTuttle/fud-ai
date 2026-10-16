@@ -5,6 +5,10 @@ import SwiftUI
 /// language, how it behaves, hosted minutes, and how to open it from the system.
 struct VoiceAssistantSettingsView: View {
     private let settings = VoiceAssistantSettings()
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.locale) private var locale
+    @State private var preview = VoicePreviewController.shared
+    @State private var assistant = VoiceAssistantController.shared
 
     @State private var choice = VoiceAssistantSettings().providerChoice
     @State private var language = VoiceAssistantSettings().language
@@ -55,7 +59,22 @@ struct VoiceAssistantSettingsView: View {
             }
         }
         .task {
+            revision += 1
             await loadVoiceQuota()
+        }
+        .onDisappear { preview.stop() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { preview.stop() }
+        }
+        .onChange(of: route) { _, _ in preview.stop() }
+        .onChange(of: locale) { _, _ in preview.stop() }
+        .onChange(of: assistant.isBusy) { _, busy in
+            if busy { preview.stop() }
+        }
+        .onChange(of: preview.isRunning) { wasRunning, running in
+            if wasRunning, !running, rc.hasHostedEntitlement {
+                Task { await loadVoiceQuota() }
+            }
         }
     }
 
@@ -79,6 +98,7 @@ struct VoiceAssistantSettingsView: View {
             .tint(.secondary)
             .accessibilityIdentifier("settings.voiceAssistant.provider")
             .onChange(of: choice) { _, newValue in
+                preview.stop()
                 settings.providerChoice = newValue
                 revision += 1
                 Task { await loadVoiceQuota() }
@@ -173,7 +193,7 @@ struct VoiceAssistantSettingsView: View {
             if provider != .hosted {
                 Picker(selection: Binding(
                     get: { _ = revision; return settings.model(for: provider) },
-                    set: { settings.setModel($0, for: provider); revision += 1 }
+                    set: { preview.stop(); settings.setModel($0, for: provider); revision += 1 }
                 )) {
                     ForEach(provider.models, id: \.self) { model in
                         Text(verbatim: model).tag(model)
@@ -188,11 +208,12 @@ struct VoiceAssistantSettingsView: View {
                 }
                 .pickerStyle(.menu)
                 .tint(.secondary)
+                .accessibilityIdentifier("settings.voiceAssistant.model")
             }
 
             Picker(selection: Binding(
                 get: { _ = revision; return settings.voice(for: provider) },
-                set: { settings.setVoice($0, for: provider); revision += 1 }
+                set: { preview.stop(); settings.setVoice($0, for: provider); revision += 1 }
             )) {
                 ForEach(provider.voices, id: \.self) { voice in
                     Text(verbatim: voice.prefix(1).uppercased() + voice.dropFirst()).tag(voice)
@@ -208,12 +229,49 @@ struct VoiceAssistantSettingsView: View {
             .pickerStyle(.menu)
             .tint(.secondary)
             .accessibilityIdentifier("settings.voiceAssistant.voice")
+
+            Button {
+                if preview.isRunning {
+                    preview.stop()
+                } else {
+                    preview.start(
+                        appLanguageCode: VoiceAssistantLanguage.appLanguageCode,
+                        sample: String(localized: "Hi, I’m your Fud AI assistant. This is how my voice sounds.", locale: locale)
+                    )
+                }
+            } label: {
+                Label {
+                    Text(preview.isRunning ? String(localized: "Stop Preview") : String(localized: "Preview Voice"))
+                } icon: {
+                    Image(systemName: preview.isRunning ? "stop.circle" : "play.circle")
+                }
+            }
+            .disabled(!preview.isRunning && (route != .ready(provider) || assistant.isBusy))
+            .accessibilityIdentifier("settings.voiceAssistant.preview")
+
+            if preview.phase == .preparing {
+                Text("Preparing preview…")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("settings.voiceAssistant.preview.preparing")
+            }
+            if let error = preview.errorMessage {
+                Text(error)
+                    .foregroundStyle(.red)
+                    .accessibilityIdentifier("settings.voiceAssistant.preview.error")
+            }
+            if assistant.isBusy {
+                Text("End your current voice conversation before previewing a voice.")
+                    .foregroundStyle(.secondary)
+            }
         } header: {
             Text(provider.localizedName)
         } footer: {
-            Text(provider == .hosted
-                ? String(localized: "Fud AI chooses the model for Plus and Pro voice. Changes apply to the next conversation.")
-                : String(localized: "Changes apply to the next conversation."))
+            VStack(alignment: .leading, spacing: 8) {
+                Text(provider == .hosted
+                    ? String(localized: "Fud AI chooses the model for Plus and Pro voice. Changes apply to the next conversation.")
+                    : String(localized: "Changes apply to the next conversation."))
+                Text("Plays a short sample without using your microphone. Uses API credits or Fud AI voice minutes.")
+            }
         }
         .listRowBackground(AppColors.appCard)
     }
@@ -239,6 +297,7 @@ struct VoiceAssistantSettingsView: View {
             .pickerStyle(.menu)
             .tint(.secondary)
             .onChange(of: language) { _, newValue in
+                preview.stop()
                 settings.language = newValue
             }
         } footer: {
@@ -258,7 +317,7 @@ struct VoiceAssistantSettingsView: View {
                 isOn: $autoCapture,
                 identifier: "settings.voiceAssistant.autoCapture"
             )
-            .onChange(of: autoCapture) { _, newValue in settings.autoCapture = newValue }
+            .onChange(of: autoCapture) { _, newValue in preview.stop(); settings.autoCapture = newValue }
 
             toggleRow(
                 title: "Confirm Before Saving",
@@ -267,7 +326,7 @@ struct VoiceAssistantSettingsView: View {
                 isOn: $confirmSaves,
                 identifier: "settings.voiceAssistant.confirmSaves"
             )
-            .onChange(of: confirmSaves) { _, newValue in settings.confirmSaves = newValue }
+            .onChange(of: confirmSaves) { _, newValue in preview.stop(); settings.confirmSaves = newValue }
 
             toggleRow(
                 title: "Save Conversations to Coach",
@@ -276,7 +335,7 @@ struct VoiceAssistantSettingsView: View {
                 isOn: $saveToCoach,
                 identifier: "settings.voiceAssistant.saveToCoach"
             )
-            .onChange(of: saveToCoach) { _, newValue in settings.saveToCoach = newValue }
+            .onChange(of: saveToCoach) { _, newValue in preview.stop(); settings.saveToCoach = newValue }
         }
         .listRowBackground(AppColors.appCard)
     }
