@@ -77,8 +77,8 @@ sealed interface LiveEvent {
     /** OpenAI/xAI started a response. */
     data class ResponseStarted(val responseId: String?) : LiveEvent
 
-    /** The model finished its turn (Gemini turnComplete, OpenAI/xAI response.done). */
-    data class TurnComplete(val responseId: String? = null) : LiveEvent
+    /** The turn ended; Realtime can end an incomplete or cancelled response too. */
+    data class TurnComplete(val responseId: String? = null, val successful: Boolean = true) : LiveEvent
 
     data class ToolCalls(val calls: List<LiveToolCall>) : LiveEvent
     data class ToolCallsCancelled(val ids: List<String>) : LiveEvent
@@ -539,7 +539,7 @@ open class OpenAIRealtimeWire : LiveWire {
                         LiveJson.string(error, "message") ?: "The voice response failed. Please try again."
                     )
                 }
-                events += LiveEvent.TurnComplete(responseId)
+                events += LiveEvent.TurnComplete(responseId, successful = status == null || status == "completed")
                 events
             }
             "error" -> {

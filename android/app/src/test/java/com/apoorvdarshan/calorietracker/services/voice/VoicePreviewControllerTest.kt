@@ -100,6 +100,32 @@ class VoicePreviewControllerTest {
         assertEquals(1, connection.closes)
     }
 
+    @Test fun unsuccessfulRealtimeCompletionStopsPartialAudioWithVisibleFailure() = runTest {
+        for (wire in listOf(OpenAIRealtimeWire(), XAIVoiceWire())) {
+            for (status in listOf("cancelled", "incomplete")) {
+                val fixture = Fixture(this)
+                fixture.controller.start("Sample", "en")
+                runCurrent()
+                val connection = fixture.connections.single()
+                connection.emit(LiveEvent.Ready)
+                connection.emit(LiveEvent.Audio(byteArrayOf(1, 2), null))
+                runCurrent()
+                val output = fixture.outputs.single()
+                assertTrue(output.isPlaying)
+                wire.parse("""{"type":"response.done","response":{"id":"r1","status":"$status"}}""")
+                    .forEach(connection.emit)
+                runCurrent()
+                assertEquals(VoicePreviewState(error = VoicePreviewError.FAILED), fixture.controller.state.value)
+                assertEquals(1, connection.closes)
+                assertEquals(1, output.stops)
+                assertFalse(output.isPlaying)
+                output.onPlaybackFinished?.invoke()
+                runCurrent()
+                assertEquals(VoicePreviewError.FAILED, fixture.controller.state.value.error)
+            }
+        }
+    }
+
     @Test fun stopCancelsPreparationAndLateCallbacksCannotAffectTheNextPreview() = runTest {
         val ready = CompletableDeferred<Unit>()
         val fixture = Fixture(this) { ready.await(); config() }
