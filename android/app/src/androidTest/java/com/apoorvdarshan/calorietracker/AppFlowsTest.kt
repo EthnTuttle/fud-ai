@@ -139,7 +139,9 @@ class AppFlowsTest {
     @Test
     fun externalVoiceLaunchRemainsPendingDuringOnboardingAndRecreation() {
         FudAITestState.reset(onboarded = false)
-        activity = ActivityScenario.launch(VoiceEntryPoints.launchIntent(context))
+        // The extra also requests voice. Keep the action stable because ActivityScenario matches
+        // lifecycle events by intent, while MainActivity consumes the TALK action during onCreate.
+        activity = ActivityScenario.launch(VoiceEntryPoints.launchIntent(context).setAction(null))
         waitFor(hasTestTag("onboarding.WELCOME"))
         compose.waitForIdle()
         val saved = Bundle()
