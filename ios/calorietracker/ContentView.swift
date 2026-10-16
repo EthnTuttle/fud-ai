@@ -1403,6 +1403,116 @@ private var dailyStepsTaskKey: String {
         }
     }
 
+    /// A reserved action row keeps diary content above the controls while scrolling.
+    private var homeActionBar: some View {
+        HStack(spacing: 12) {
+            Spacer(minLength: 0)
+            // The live session uses its own floating controls.
+            if !voiceAssistant.isActive {
+                VoiceAssistantHomeButton(controller: voiceAssistant)
+            }
+            Menu {
+                if fastingTrackingEnabled {
+                    Section {
+                        if fastingStore.activeSession != nil {
+                            Menu {
+                                Button {
+                                    endFast()
+                                } label: {
+                                    Label("End Fast", systemImage: "stop.fill")
+                                }
+                                Button(role: .destructive) {
+                                    fastingStore.cancelActive()
+                                    notificationManager.cancelFastingGoal()
+                                } label: {
+                                    Label("Cancel Fast", systemImage: "trash")
+                                }
+                            } label: {
+                                Label("Fasting", systemImage: "timer")
+                            }
+                        } else {
+                            Button {
+                                presentFoodDestination {
+                                    showFastingStart = true
+                                }
+                            } label: {
+                                Label("Start Fast", systemImage: "timer")
+                            }
+                        }
+                    }
+                }
+                if waterTrackingEnabled {
+                    Section {
+                        Menu {
+                            waterQuickMenuItems
+                        } label: {
+                            Label("Water", systemImage: "drop.fill")
+                        }
+                    }
+                }
+                if fastingStore.activeSession == nil {
+                    configuredFoodAddMenuContent
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 60, height: 60)
+                    .background(AppColors.calorie, in: Circle())
+            }
+            .accessibilityIdentifier("home.add")
+            .popover(isPresented: $showTextPopover) {
+                TextFoodInputView(
+                    onCancel: {
+                        showTextPopover = false
+                    },
+                    onSubmit: { description in
+                        showTextPopover = false
+                        currentImage = nil
+                        currentImages = []
+                        currentEmoji = nil
+                        currentFoodSource = .textInput
+                        afterLoggingPresentationDismisses {
+                            startTextAnalysis(description)
+                        }
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+            .popover(isPresented: $showVoicePopover) {
+                VoiceInputView(
+                    onCancel: {
+                        showVoicePopover = false
+                    },
+                    onSubmit: { description in
+                        showVoicePopover = false
+                        currentImage = nil
+                        currentImages = []
+                        currentEmoji = nil
+                        currentFoodSource = .textInput
+                        afterLoggingPresentationDismisses {
+                            startTextAnalysis(description)
+                        }
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+            .popover(isPresented: $showManualPopover) {
+                ManualEntryView(
+                    logDate: logDateForSelectedDay,
+                    onCancel: { showManualPopover = false },
+                    onSave: { entry in
+                        showManualPopover = false
+                        if !foodStore.addEntry(entry) { showFoodLoggingBlocked = true }
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+        }
+        .padding(24)
+        .background(AppColors.appBackground)
+    }
+
     var body: some View {
         homeContent
             .alert(pendingDiaryDeletion?.title ?? "Delete Entry?", isPresented: isDiaryDeletionPresented, presenting: pendingDiaryDeletion) { target in
@@ -1715,7 +1825,7 @@ private var dailyStepsTaskKey: String {
             .task(id: dailyStepsTaskKey) {
                 await refreshDailySteps()
             }
-            .contentMargins(.bottom, isFoodSelectionMode ? 8 : (voiceAssistant.isActive ? 96 : 168), for: .scrollContent)
+            .contentMargins(.bottom, isFoodSelectionMode ? 8 : 12, for: .scrollContent)
             .sensoryFeedback(.selection, trigger: selectedFoodIDs) { _, selection in
                 !selection.isEmpty
             }
@@ -1737,119 +1847,12 @@ private var dailyStepsTaskKey: String {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .background(AppColors.appBackground)
+                } else {
+                    homeActionBar
                 }
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .overlay(alignment: .bottomTrailing) {
-                VStack(spacing: 12) {
-                    // The live session uses its own floating controls.
-                    if !voiceAssistant.isActive {
-                        VoiceAssistantHomeButton(controller: voiceAssistant)
-                    }
-                    Menu {
-                        if fastingTrackingEnabled {
-                            Section {
-                                if fastingStore.activeSession != nil {
-                                    Menu {
-                                        Button {
-                                            endFast()
-                                        } label: {
-                                            Label("End Fast", systemImage: "stop.fill")
-                                        }
-                                        Button(role: .destructive) {
-                                            fastingStore.cancelActive()
-                                            notificationManager.cancelFastingGoal()
-                                        } label: {
-                                            Label("Cancel Fast", systemImage: "trash")
-                                        }
-                                    } label: {
-                                        Label("Fasting", systemImage: "timer")
-                                    }
-                                } else {
-                                    Button {
-                                        presentFoodDestination {
-                                            showFastingStart = true
-                                        }
-                                    } label: {
-                                        Label("Start Fast", systemImage: "timer")
-                                    }
-                                }
-                            }
-                        }
-                        if waterTrackingEnabled {
-                            Section {
-                                Menu {
-                                    waterQuickMenuItems
-                                } label: {
-                                    Label("Water", systemImage: "drop.fill")
-                                }
-                            }
-                        }
-                        if fastingStore.activeSession == nil {
-                            configuredFoodAddMenuContent
-                        }
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 26, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 60, height: 60)
-                            .background(AppColors.calorie, in: Circle())
-                    }
-                    .accessibilityIdentifier("home.add")
-                    .popover(isPresented: $showTextPopover) {
-                        TextFoodInputView(
-                            onCancel: {
-                                showTextPopover = false
-                            },
-                            onSubmit: { description in
-                                showTextPopover = false
-                                currentImage = nil
-                                currentImages = []
-                                currentEmoji = nil
-                                currentFoodSource = .textInput
-                                afterLoggingPresentationDismisses {
-                                    startTextAnalysis(description)
-                                }
-                            }
-                        )
-                        .presentationCompactAdaptation(.popover)
-                    }
-                    .popover(isPresented: $showVoicePopover) {
-                        VoiceInputView(
-                            onCancel: {
-                                showVoicePopover = false
-                            },
-                            onSubmit: { description in
-                                showVoicePopover = false
-                                currentImage = nil
-                                currentImages = []
-                                currentEmoji = nil
-                                currentFoodSource = .textInput
-                                afterLoggingPresentationDismisses {
-                                    startTextAnalysis(description)
-                                }
-                            }
-                        )
-                        .presentationCompactAdaptation(.popover)
-                    }
-                    .popover(isPresented: $showManualPopover) {
-                        ManualEntryView(
-                            logDate: logDateForSelectedDay,
-                            onCancel: { showManualPopover = false },
-                            onSave: { entry in
-                                showManualPopover = false
-                                if !foodStore.addEntry(entry) { showFoodLoggingBlocked = true }
-                            }
-                        )
-                        .presentationCompactAdaptation(.popover)
-                    }
-                }
-                .opacity(isFoodSelectionMode ? 0 : 1)
-                .disabled(isFoodSelectionMode)
-                .allowsHitTesting(!isFoodSelectionMode)
-                .padding(24)
-            }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraView(
                     image: $capturedImage,
