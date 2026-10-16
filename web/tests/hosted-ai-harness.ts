@@ -1,10 +1,11 @@
 /**
- * Shared test doubles for the hosted AI Worker: an in-memory ledger and a
- * fetch mock for RevenueCat / Gemini / Deepgram.
+ * Shared test doubles for the hosted AI Worker: an in-memory ledger, a fetch
+ * mock for RevenueCat / Gemini / Deepgram / Gemini Live, fake WebSockets and a
+ * fake clock with timers for the voice relay.
  */
 
 import { vi } from "vitest";
-import { handleHostedAIRequest, type HostedAIDependencies } from "../hosted-ai-api";
+import { GEMINI_LIVE_URL, handleHostedAIRequest, type HostedAIDependencies } from "../hosted-ai-api";
 import type { EntitlementSnapshot, LedgerRow, LedgerStore, SpendReceipt } from "../hosted-ai-ledger";
 
 export const USER_ID = "$RCAnonymousID:0123456789abcdef0123456789abcdef";
@@ -133,6 +134,117 @@ export class MemoryLedgerStore implements LedgerStore {
   }
 }
 
+type Listener = (event: { data?: unknown; code?: number; reason?: string; wasClean?: boolean }) => void;
+
+/**
+ * Stand-in for one Workers `WebSocket` end. `receive` delivers a frame from the
+ * peer; `sent` and `closeCalls` record what the Worker did with this end.
+ */
+export class FakeSocket {
+  binaryType: "blob" | "arraybuffer" = "blob";
+  readyState = 0;
+  accepted = false;
+  sent: Array<string | ArrayBuffer> = [];
+  closeCalls: Array<{ code: number | undefined; reason: string | undefined }> = [];
+  private readonly listeners = new Map<string, Listener[]>();
+
+  accept(): void {
+    this.accepted = true;
+    this.readyState = 1;
+  }
+
+  addEventListener(type: string, listener: Listener): void {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+  }
+
+  send(data: string | ArrayBuffer): void {
+    if (this.readyState !== 1) throw new TypeError("WebSocket is not open");
+    this.sent.push(data);
+  }
+
+  close(code?: number, reason?: string): void {
+    if (this.readyState === 3) return;
+    this.closeCalls.push({ code, reason });
+    this.readyState = 3;
+  }
+
+  receive(data: string | ArrayBuffer): void {
+    for (const listener of this.listeners.get("message") ?? []) listener({ data });
+  }
+
+  receiveJson(message: unknown): void {
+    this.receive(JSON.stringify(message));
+  }
+
+  /** The peer closed the connection (the Workers runtime has already replied). */
+  remoteClose(code: number, reason = ""): void {
+    this.readyState = 3;
+    for (const listener of this.listeners.get("close") ?? []) listener({ code, reason, wasClean: code !== 1006 });
+  }
+
+  get closedWith(): number | undefined {
+    return this.closeCalls[0]?.code;
+  }
+
+  /** Every frame sent, decoded as JSON (text and binary alike). */
+  sentJson(): Array<Record<string, unknown>> {
+    return this.sent.map(
+      (frame) => JSON.parse(typeof frame === "string" ? frame : new TextDecoder().decode(frame)) as Record<string, unknown>
+    );
+  }
+
+  /** The Worker's own `{"fudVoice": …}` messages. */
+  fudVoice(): Array<Record<string, unknown>> {
+    return this.sentJson()
+      .filter((message) => message.fudVoice !== undefined)
+      .map((message) => message.fudVoice as Record<string, unknown>);
+  }
+}
+
+/** Lets promise chains (in-memory ledger writes) run to completion. */
+export async function settle(): Promise<void> {
+  for (let turn = 0; turn < 5; turn += 1) {
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  }
+}
+
+/** Timers driven by the harness clock, so a 15-minute session runs instantly. */
+export class FakeTimers {
+  private timers: Array<{ at: number; order: number; callback: () => void; cancelled: boolean }> = [];
+  private order = 0;
+
+  constructor(private readonly clock: { now: Date }) {}
+
+  readonly setTimer = (callback: () => void, ms: number): (() => void) => {
+    const timer = { at: this.clock.now.getTime() + Math.max(0, ms), order: this.order++, callback, cancelled: false };
+    this.timers.push(timer);
+    return () => {
+      timer.cancelled = true;
+    };
+  };
+
+  get pending(): number {
+    return this.timers.filter((timer) => !timer.cancelled).length;
+  }
+
+  /** Moves the clock forward, firing due timers in order and letting their async work settle. */
+  async advance(ms: number): Promise<void> {
+    const target = this.clock.now.getTime() + ms;
+    for (;;) {
+      await settle();
+      const due = this.timers
+        .filter((timer) => !timer.cancelled && timer.at <= target)
+        .sort((left, right) => left.at - right.at || left.order - right.order)[0];
+      if (!due) break;
+      due.cancelled = true;
+      this.clock.now = new Date(due.at);
+      due.callback();
+    }
+    this.clock.now = new Date(target);
+    await settle();
+  }
+}
+
 export interface Harness {
   env: Parameters<typeof handleHostedAIRequest>[1];
   deps: HostedAIDependencies;
@@ -141,10 +253,17 @@ export interface Harness {
   revenueCat: { plan: "none" | "plus" | "pro"; credits?: Array<{ product: string; id: string }>; status?: number };
   gemini: { status?: number; body?: unknown; throwName?: string };
   deepgram: { status?: number; body?: unknown };
+  /** Gemini Live handshake: succeeds with a fake socket unless a status, error or hang is set. */
+  geminiLive: { status?: number; body?: unknown; throwName?: string; hang?: boolean };
   rateLimit: { user: boolean; address: boolean };
   clock: { now: Date };
-  /** Promises handed to `waitUntil` (refund retries). */
+  timers: FakeTimers;
+  /** Promises handed to `waitUntil` (refund retries, voice block charges). */
   background: Promise<unknown>[];
+  /** Worker ends of the WebSocketPairs the relay created (the app talks to these). */
+  appSockets: FakeSocket[];
+  /** Gemini Live sockets the relay opened. */
+  upstreamSockets: FakeSocket[];
 }
 
 function subscriberPayload(harness: Harness): unknown {
@@ -162,8 +281,11 @@ function subscriberPayload(harness: Harness): unknown {
   return { subscriber: { entitlements, non_subscriptions: nonSubscriptions } };
 }
 
-export function createHarness(overrides: Partial<Pick<Harness, "revenueCat" | "gemini" | "deepgram">> = {}): Harness {
+export function createHarness(
+  overrides: Partial<Pick<Harness, "revenueCat" | "gemini" | "deepgram" | "geminiLive">> = {}
+): Harness {
   const store = new MemoryLedgerStore();
+  const clock = { now: new Date("2026-09-13T01:00:00.000Z") };
   const harness: Harness = {
     store,
     calls: [],
@@ -174,11 +296,15 @@ export function createHarness(overrides: Partial<Pick<Harness, "revenueCat" | "g
     deepgram: overrides.deepgram ?? {
       body: { results: { channels: [{ alternatives: [{ transcript: "two eggs" }] }] } },
     },
+    geminiLive: overrides.geminiLive ?? {},
     rateLimit: { user: true, address: true },
-    clock: { now: new Date("2026-09-13T01:00:00.000Z") },
+    clock,
+    timers: new FakeTimers(clock),
     env: undefined as unknown as Harness["env"],
     deps: {},
     background: [],
+    appSockets: [],
+    upstreamSockets: [],
   };
 
   const fetchImpl: typeof fetch = async (input, init) => {
@@ -187,6 +313,26 @@ export function createHarness(overrides: Partial<Pick<Harness, "revenueCat" | "g
     if (url.startsWith("https://api.revenuecat.com/")) {
       const status = harness.revenueCat.status ?? 200;
       return new Response(status === 200 ? JSON.stringify(subscriberPayload(harness)) : "{}", { status });
+    }
+    if (url === GEMINI_LIVE_URL) {
+      const live = harness.geminiLive;
+      if (live.hang) {
+        return await new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+        });
+      }
+      if (live.throwName) {
+        const error = new Error("connect failed");
+        error.name = live.throwName;
+        throw error;
+      }
+      if (live.status !== undefined) {
+        return new Response(JSON.stringify(live.body ?? {}), { status: live.status });
+      }
+      const socket = new FakeSocket();
+      harness.upstreamSockets.push(socket);
+      // Node's Response cannot carry status 101 or a socket; the relay only reads these two fields.
+      return { status: 101, webSocket: socket } as unknown as Response;
     }
     if (url.startsWith("https://generativelanguage.googleapis.com/")) {
       if (harness.gemini.throwName) {
@@ -221,6 +367,15 @@ export function createHarness(overrides: Partial<Pick<Harness, "revenueCat" | "g
     sleep: async () => {},
     waitUntil: (promise) => {
       harness.background.push(promise);
+    },
+    live: {
+      webSocketPair: () => {
+        const server = new FakeSocket();
+        harness.appSockets.push(server);
+        return { client: new FakeSocket() as unknown as WebSocket, server: server as unknown as WebSocket };
+      },
+      upgradeResponse: (client) => ({ status: 101, webSocket: client }) as unknown as Response,
+      setTimer: harness.timers.setTimer,
     },
   };
   return harness;

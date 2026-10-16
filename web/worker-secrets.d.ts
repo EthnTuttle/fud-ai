@@ -9,8 +9,17 @@ interface Env {
    * `/bug` and `/feature` need `issues:write` on `apoorvdarshan/fud-ai`.
    */
   GITHUB_TOKEN: string;
-  /** Google AI Studio key for the hosted Gemini path. Set at production time. */
+  /**
+   * Google AI Studio key for the hosted Gemini path, including the live voice
+   * relay (sent to Gemini Live in the `x-goog-api-key` header). Set at production time.
+   */
   GEMINI_API_KEY?: string;
+  /**
+   * Optional plain variable (not a secret): the Gemini Live model the voice
+   * relay pins, without the `models/` prefix. Defaults to `gemini-3.8-live`;
+   * override under `[vars]` in wrangler.toml.
+   */
+  HOSTED_AI_LIVE_MODEL?: string;
   /** Deepgram key for hosted voice STT. Set at production time. */
   DEEPGRAM_API_KEY?: string;
   /**
