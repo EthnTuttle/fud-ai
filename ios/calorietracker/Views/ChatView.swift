@@ -28,6 +28,7 @@ struct ChatView: View {
     @State private var showHostedCredits = false
     @State private var showResetConfirmation = false
     @State private var showCamera = false
+    @State private var showLiveOrbPreview = false
     @State private var showPhotoPicker = false
     @State private var voice = CoachVoiceRecorder()
     @State private var voicePressStart: Date?
@@ -65,6 +66,17 @@ struct ChatView: View {
             .navigationTitle("Coach")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if LiveOrbPreviewScreen.isAvailable {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            showLiveOrbPreview = true
+                        } label: {
+                            Image(systemName: "waveform.circle")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                        .accessibilityLabel(Text(verbatim: "Live voice preview"))
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         if !messages.isEmpty { showResetConfirmation = true }
@@ -106,6 +118,9 @@ struct ChatView: View {
             .fullScreenCover(isPresented: $showCamera) {
                 CameraView(image: $capturedImage)
                     .ignoresSafeArea()
+            }
+            .fullScreenCover(isPresented: $showLiveOrbPreview) {
+                LiveOrbPreviewScreen()
             }
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
             .onChange(of: capturedImage) { _, newValue in
