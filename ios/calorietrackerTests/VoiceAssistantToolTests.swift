@@ -488,8 +488,10 @@ struct VoiceAssistantToolTests {
 
     @Test func goalUndoRestoresOnlyItsOwnUnchangedFields() async throws {
         let harness = VoiceAssistantHarness(confirmSaves: false)
+        harness.defaults.set(false, forKey: AdaptiveGoalSettings.enabledKey)
         let before = harness.profile
-        _ = await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 2100])
+        let changed = await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 2100])
+        try #require(changed["ok"] as? Bool == true)
         let undo = try #require(harness.cards.cards.first { $0.isUndo })
         var edited = harness.profile
         edited.name = "Later name"
@@ -501,7 +503,8 @@ struct VoiceAssistantToolTests {
         #expect(harness.profile.name == "Later name")
         #expect(harness.profile.weightKg == edited.weightKg)
 
-        _ = await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 2200])
+        let changedAgain = await harness.executor.execute(name: "update_setting", arguments: ["key": "calorie_goal", "value": 2200])
+        try #require(changedAgain["ok"] as? Bool == true)
         let secondUndo = try #require(harness.cards.cards.first { $0.isUndo })
         var laterGoal = harness.profile
         laterGoal.applyCaloriesEdit(2300)
