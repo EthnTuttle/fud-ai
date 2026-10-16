@@ -106,8 +106,8 @@ class AppFlowsTest {
         assertEquals(addBounds.top, voiceBounds.top, 1f)
         assertEquals(addBounds.bottom, voiceBounds.bottom, 1f)
         assertTrue("Voice sits beside the add button", voiceBounds.right < addBounds.left)
-        assertTrue("The diary viewport ends above both controls",
-            compose.onNodeWithTag("home.diary").fetchSemanticsNode().boundsInRoot.bottom <= voiceBounds.top)
+        assertTrue("The diary keeps its full viewport behind the floating controls",
+            compose.onNodeWithTag("home.diary").fetchSemanticsNode().boundsInRoot.bottom > addBounds.bottom)
         assertTrue("The action row stays above the tabs", addBounds.bottom <=
             compose.onNodeWithTag("nav.home").fetchSemanticsNode().boundsInRoot.top)
         for (tab in listOf("progress", "coach", "settings", "workouts", "home")) {
@@ -207,6 +207,18 @@ class AppFlowsTest {
         assertEquals("CI oat bowl", saved.name)
         assertEquals(321, saved.calories)
         assertFoodVisible(saved.name)
+        compose.onNodeWithTag("home.diary").performTouchInput {
+            swipeUp(startY = height * 0.55f, endY = height * 0.15f)
+        }
+        val voiceBounds = compose.onNodeWithTag("voiceAssistantButton").fetchSemanticsNode().boundsInRoot
+        val cardBounds = compose.onNodeWithTag("diary.food.${saved.id}", useUnmergedTree = true)
+            .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        assertTrue("The final meal card can scroll completely above both buttons", cardBounds.bottom <= voiceBounds.top)
+        val titleBounds = compose.onNodeWithTag("home.mealHeader.${saved.mealType.name}.title").fetchSemanticsNode().boundsInRoot
+        val totalsBounds = compose.onNodeWithTag("home.mealHeader.${saved.mealType.name}.totals").fetchSemanticsNode().boundsInRoot
+        assertEquals("Meal totals align with the title", titleBounds.left, totalsBounds.left, 1f)
+        assertTrue("Meal totals sit below the title", totalsBounds.top >= titleBounds.bottom)
+        assertTrue("Meal totals avoid the floating buttons' trailing area", totalsBounds.right < voiceBounds.left)
 
         activity!!.recreate()
         waitForHome()
