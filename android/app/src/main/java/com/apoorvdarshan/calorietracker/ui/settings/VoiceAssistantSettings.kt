@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -116,7 +117,7 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
     val assistantState by container.voiceAssistant.ui.collectAsState()
     val assistantActive = assistantState.phase != VoicePhase.IDLE
     val previewSample = stringResource(R.string.voice_preview_sample)
-    val appLanguage = context.resources.configuration.locales[0].toLanguageTag()
+    val appLanguage = LocalConfiguration.current.locales[0].toLanguageTag()
     val talkLabel = stringResource(R.string.voice_talk_to_fud_ai)
     val scope = rememberCoroutineScope()
     var sheet by remember { mutableStateOf<VoiceSheet?>(null) }
