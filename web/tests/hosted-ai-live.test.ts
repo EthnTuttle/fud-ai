@@ -476,6 +476,44 @@ describe("hosted voice relay: messages", () => {
     expect(reconnect.gemini.sentJson()[0]).toMatchObject({ setup: { sessionResumption: { handle: "provider-handle" } } });
   });
 
+  it.each(["text", "binary"])("caps accumulated %s provider output while the first charge is pending", async (format) => {
+    const harness = createHarness();
+    const { app, gemini } = await openSession(harness);
+    const original = harness.store.trySpendVoice.bind(harness.store);
+    let releaseCharge!: () => void;
+    const chargePending = new Promise<void>((resolve) => { releaseCharge = resolve; });
+    vi.spyOn(harness.store, "trySpendVoice").mockImplementation(async (...args) => {
+      await chargePending;
+      return original(...args);
+    });
+    app.receiveJson(SETUP);
+    gemini.receiveJson({ setupComplete: {} });
+    const text = JSON.stringify({ serverContent: { outputTranscription: { text: "食".repeat(200_000) } } });
+    const bytes = bytesOf(text);
+    const frame = format === "text" ? text : bytes;
+    const fittingFrames = Math.floor(LIVE_LIMITS.maxPendingUpstreamBytes / bytes.byteLength);
+    for (let index = 0; index < fittingFrames; index += 1) gemini.receive(frame);
+    expect(app.sent).toHaveLength(0);
+    expect(app.closeCalls).toHaveLength(0);
+
+    const logs = captureLogs();
+    gemini.receive(frame);
+    logs.restore();
+    expect(app.closedWith).toBe(1011);
+    expect(app.sentJson()).toEqual([{ fudVoice: { error: "upstream_error" } }]);
+    expect(gemini.closedWith).toBe(1000);
+    expect(logs.lines.join("\n")).toContain("starting_buffer_limit");
+    expect(logs.lines.join("\n")).not.toContain("食");
+    expect(harness.timers.pending).toBe(0);
+
+    // A late billing result must not reopen or flush the discarded conversation.
+    releaseCharge();
+    await Promise.all(harness.background);
+    await settle();
+    expect(app.sentJson()).toEqual([{ fudVoice: { error: "upstream_error" } }]);
+    expect(harness.timers.pending).toBe(0);
+  });
+
   it("rejects a handle from another subscriber before sending setup to Gemini", async () => {
     const harness = createHarness();
     const first = await startConversation(harness);

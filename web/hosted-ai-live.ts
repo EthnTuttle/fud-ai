@@ -62,6 +62,8 @@ export const LIVE_LIMITS = {
   chargeTimeoutMs: 5_000,
   /** Client input sent before the first block is paid is held up to this size. */
   maxPendingClientBytes: 2 * 1024 * 1024,
+  /** Provider output held while the first block is paid has its own byte cap. */
+  maxPendingUpstreamBytes: 2 * 1024 * 1024,
   /**
    * Abuse guards, about 3× what the apps send (16 kHz PCM plus at most one
    * ≤ 768 px JPEG a second); legitimate sessions never reach them.
@@ -648,6 +650,7 @@ export class LiveRelaySession {
   private pendingClient: Frame[] = [];
   private pendingClientBytes = 0;
   private pendingUpstream: Frame[] = [];
+  private pendingUpstreamBytes = 0;
   private upstreamTransforming = false;
   private queuedUpstream: Array<{ frame: Frame } | { closeCode: number }> = [];
   private queuedUpstreamBytes = 0;
@@ -816,6 +819,11 @@ export class LiveRelaySession {
         return;
       case "starting":
         // Keep server order: these follow setupComplete, which waits for block 0.
+        this.pendingUpstreamBytes += frameBytes(data);
+        if (this.pendingUpstreamBytes > LIVE_LIMITS.maxPendingUpstreamBytes) {
+          this.upstreamFailed("starting_buffer_limit");
+          return;
+        }
         this.pendingUpstream.push(data);
         return;
       case "awaiting_setup_complete":
@@ -936,6 +944,7 @@ export class LiveRelaySession {
     this.heldSetupComplete = null;
     if (setupComplete !== null && !this.sendClient(setupComplete)) return false;
     if (!this.sendClient(fudVoice({ secondsRemaining }))) return false;
+    this.pendingUpstreamBytes = 0;
     for (const frame of this.pendingUpstream.splice(0)) {
       if (!this.sendClient(frame)) return false;
     }
@@ -1000,6 +1009,7 @@ export class LiveRelaySession {
     this.pendingClient = [];
     this.pendingClientBytes = 0;
     this.pendingUpstream = [];
+    this.pendingUpstreamBytes = 0;
     this.queuedUpstream = [];
     this.queuedUpstreamBytes = 0;
   }
