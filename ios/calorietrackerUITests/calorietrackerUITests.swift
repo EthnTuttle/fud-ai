@@ -408,22 +408,28 @@ final class calorietrackerUITests: XCTestCase {
         openSettingsCategory("trackingReminders", in: app)
 
         let toggle = app.switches["settings.water.enabled"]
+        let waterGoal = app.staticTexts["Daily Water Goal"]
         reveal(toggle, in: app)
         waitForValue("0", in: toggle)
+        XCTAssertFalse(waterGoal.exists)
         toggle.tap()
-        waitForValue("1", in: toggle)
+        // Toggling rebuilds the list. Verify committed state through its dependent
+        // rows here, then check the native switch's value again after relaunch.
+        XCTAssertTrue(waterGoal.waitForExistence(timeout: 5))
 
         relaunchPreservingData(app)
         XCTAssertTrue(app.staticTexts["Water"].waitForExistence(timeout: 5))
         openSettingsCategory("trackingReminders", in: app)
         reveal(toggle, in: app)
         waitForValue("1", in: toggle)
+        XCTAssertTrue(waterGoal.exists)
         toggle.tap()
-        waitForValue("0", in: toggle)
+        XCTAssertTrue(waterGoal.waitForNonExistence(timeout: 5))
 
         relaunchPreservingData(app)
         openSettingsCategory("trackingReminders", in: app)
         reveal(toggle, in: app)
         waitForValue("0", in: toggle)
+        XCTAssertFalse(waterGoal.exists)
     }
 }
