@@ -73,7 +73,13 @@ final class VoiceAssistantController {
 
     // MARK: Observed state
 
-    private(set) var presentation: Presentation = .hidden
+    private(set) var presentation: Presentation = .hidden {
+        didSet {
+            // Keep both expanded and minimized conversations awake, then
+            // restore Auto-Lock on every exit, including connection failures.
+            UIApplication.shared.isIdleTimerDisabled = presentation == .session
+        }
+    }
     /// Expanded fills the screen; compact is a floating bubble with a caption pill.
     var isExpanded = true {
         didSet {
