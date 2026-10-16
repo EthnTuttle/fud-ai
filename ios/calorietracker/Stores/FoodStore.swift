@@ -684,8 +684,10 @@ class FoodStore {
 
     @discardableResult
     private func saveEntries() -> Bool {
-        guard entriesBlob.save(entries) else { return false }
-        return defaults.synchronize()
+        // UserDefaults accepts this value immediately and flushes asynchronously.
+        // A synchronize() failure would not undo that accepted write, so it must
+        // not trigger an in-memory rollback or deletion of the saved photos.
+        entriesBlob.save(entries)
     }
 
     private func loadEntries(isInitialLoad: Bool) {
