@@ -63,6 +63,21 @@ interface LiveAudioIO : LivePlaybackIO {
 
 class LiveAudioError(message: String) : Exception(message)
 
+private const val DRAIN_TOLERANCE_FRAMES = 240L
+
+/** Enqueue, written-frame accounting and the idle transition share this same lock. */
+internal fun markLivePlaybackDrained(
+    lock: Any,
+    playing: AtomicBoolean,
+    queue: Collection<*>,
+    framesWritten: AtomicLong,
+    playbackHead: () -> Long,
+): Boolean = synchronized(lock) {
+    if (!playing.get() || queue.isNotEmpty()) return@synchronized false
+    if (playbackHead() + DRAIN_TOLERANCE_FRAMES < framesWritten.get()) return@synchronized false
+    playing.compareAndSet(true, false)
+}
+
 /**
  * Android audio for the live session. Recording uses the `VOICE_COMMUNICATION` source with
  * the platform's acoustic echo canceler and noise suppressor when the device has them, so
@@ -321,11 +336,12 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
     }
 
     private fun checkDrained(player: AudioTrack) {
-        if (!playing.get() || queue.isNotEmpty()) return
-        val head = runCatching { player.playbackHeadPosition.toLong() and 0xFFFFFFFFL }.getOrDefault(Long.MAX_VALUE)
-        if (head + DRAIN_TOLERANCE_FRAMES < framesWritten.get()) return
-        if (playing.compareAndSet(true, false)) {
+        val drained = markLivePlaybackDrained(playbackLock, playing, queue, framesWritten) {
+            runCatching { player.playbackHeadPosition.toLong() and 0xFFFFFFFFL }.getOrDefault(Long.MAX_VALUE)
+        }
+        if (drained) {
             speakerLevel = 0f
+            // A new chunk may arrive after unlocking; the controller rechecks isPlaying.
             mainHandler.post { onPlaybackFinished?.invoke() }
         }
     }
@@ -400,7 +416,6 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
         private const val MIC_CHUNK_MS = 40
         private const val PLAYBACK_SLICE_MS = 20
         private const val QUEUE_POLL_MS = 40L
-        private const val DRAIN_TOLERANCE_FRAMES = 240L
 
         private val HEADSET_TYPES = listOf(
             AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
