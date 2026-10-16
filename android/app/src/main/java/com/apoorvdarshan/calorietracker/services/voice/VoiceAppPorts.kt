@@ -80,7 +80,10 @@ sealed interface PickOutcome {
 enum class SavedFoodKind(val wireValue: String) { FAVORITE("favorite"), FREQUENT("frequent"), RECENT("recent") }
 
 /** A saved meal, favorite or recent food `search_foods` can return. */
-data class SavedFood(val entry: FoodEntry, val kind: SavedFoodKind, val timesLogged: Int? = null)
+data class SavedFood(val entry: FoodEntry, val kind: SavedFoodKind, val timesLogged: Int? = null) {
+    // A favorite preserves a snapshot independently of the diary entry it came from.
+    val savedId: String get() = "${if (kind == SavedFoodKind.FAVORITE) "favorite" else "food"}-${entry.id}"
+}
 
 class BarcodeProduct(val analysis: FoodAnalysis, val imageBytes: ByteArray?)
 
@@ -172,6 +175,8 @@ interface VoiceAppPorts {
     suspend fun maxFoodPhotos(): Int
     /** Stores photos for a new entry and returns their filenames. */
     suspend fun storeFoodImages(images: List<ByteArray>): List<String>
+    /** Discards only this attempt's newly stored files that no persisted record adopted. */
+    suspend fun discardFoodImages(filenames: List<String>)
     suspend fun analyzeFoodPhotos(images: List<ByteArray>, note: String?): FoodAnalysis
     suspend fun analyzeFoodText(description: String): FoodAnalysis
     suspend fun lookupBarcode(barcode: String): BarcodeProduct

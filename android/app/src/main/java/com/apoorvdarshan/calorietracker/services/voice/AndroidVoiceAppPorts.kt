@@ -29,6 +29,7 @@ import com.apoorvdarshan.calorietracker.ui.components.autoSaveMealPhotoIfEnabled
 import com.apoorvdarshan.calorietracker.ui.navigation.FudAIRoutes
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -149,9 +150,34 @@ class AndroidVoiceAppPorts(
         return favorites + frequent + recent
     }
 
-    override suspend fun storeFoodImages(images: List<ByteArray>): List<String> = withContext(Dispatchers.IO) {
-        images.mapNotNull { bytes ->
-            container.imageStore.storeBytes(bytes, UUID.randomUUID())?.also { freshImages.add(it) }
+    override suspend fun storeFoodImages(images: List<ByteArray>): List<String> {
+        val stored = mutableListOf<String>()
+        try {
+            return withContext(Dispatchers.IO) {
+                images.forEach { bytes ->
+                    val id = UUID.randomUUID()
+                    val filename = container.imageStore.storeBytes(bytes, id)
+                    if (filename == null) container.imageStore.delete("$id.jpg")
+                    else {
+                        stored += filename
+                        freshImages.add(filename)
+                    }
+                }
+                stored.toList()
+            }
+        } catch (error: Throwable) {
+            // withContext may be cancelled after writing files, before returning their names.
+            discardFoodImages(stored)
+            throw error
+        }
+    }
+
+    override suspend fun discardFoodImages(filenames: List<String>) = withContext(NonCancellable + Dispatchers.IO) {
+        // A write can commit before a later step throws: preserve every persisted owner.
+        val referenced = prefs.foodImageReferenceFilenames() ?: return@withContext
+        filenames.forEach { filename ->
+            freshImages.remove(filename)
+            if (filename !in referenced) container.imageStore.delete(filename)
         }
     }
 
@@ -368,8 +394,11 @@ class AndroidVoiceAppPorts(
             VoiceSettingKey.CALORIE_GOAL -> {
                 val profile = profile() ?: return noProfile()
                 val calories = (value as SettingValue.Amount).value
-                container.profileRepository.save(profile.applyCaloriesEdit(calories).copy(caloriesLocked = true))
-                SettingApplied.Done(restore = { container.profileRepository.save(profile) })
+                val next = profile.applyCaloriesEdit(calories).copy(caloriesLocked = true)
+                container.profileRepository.save(next)
+                SettingApplied.Done(restore = {
+                    prefs.updateUserProfile { current -> restoreVoiceGoalEdit(current, profile, next) }
+                })
             }
             VoiceSettingKey.PROTEIN_GOAL_G, VoiceSettingKey.CARBS_GOAL_G, VoiceSettingKey.FAT_GOAL_G -> {
                 val profile = profile() ?: return noProfile()
@@ -386,7 +415,9 @@ class AndroidVoiceAppPorts(
                     )
                 val next = if (rebalanced.isMacroLocked(macro)) rebalanced else rebalanced.toggledMacroLock(macro)
                 container.profileRepository.save(next)
-                SettingApplied.Done(restore = { container.profileRepository.save(profile) })
+                SettingApplied.Done(restore = {
+                    prefs.updateUserProfile { current -> restoreVoiceGoalEdit(current, profile, next) }
+                })
             }
             VoiceSettingKey.WATER_GOAL_ML -> {
                 val previous = prefs.waterDailyGoalMl.first()

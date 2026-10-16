@@ -689,6 +689,9 @@ fun SettingsScreen(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
+                // Keep voice switches in the touchable viewport above the floating tabs.
+                // Padding inside the scroll content alone cannot constrain bring-into-view.
+                .padding(bottom = if (selectedCategory == SettingsCategory.VOICE_ASSISTANT) BottomNavScrollPadding else 0.dp)
                 .verticalScroll(
                     if (selectedCategory == null) settingsHomeScrollState
                     else settingsDetailScrollState
@@ -1684,7 +1687,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(Modifier.height(BottomNavScrollPadding))
+            Spacer(Modifier.height(if (selectedCategory == SettingsCategory.VOICE_ASSISTANT) 0.dp else BottomNavScrollPadding))
         }
     }
 

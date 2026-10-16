@@ -2,6 +2,7 @@ package com.apoorvdarshan.calorietracker
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.os.Bundle
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
@@ -9,11 +10,17 @@ import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
+import com.apoorvdarshan.calorietracker.services.voice.VoiceEntryPoints
+import com.apoorvdarshan.calorietracker.services.voice.VoiceCameraHandle
+import com.apoorvdarshan.calorietracker.services.voice.VoiceCameraMode
+import com.apoorvdarshan.calorietracker.services.voice.BarcodeOutcome
+import com.apoorvdarshan.calorietracker.services.voice.PhotoOutcome
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -21,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -102,12 +110,61 @@ class AppFlowsTest {
     }
 
     @Test
+    fun minimizingVoiceClosesCameraAndCancelsBarcodeWaitWithoutStartingAudio() {
+        FudAITestState.reset()
+        val controller = (context.applicationContext as FudAIApp).container.voiceAssistant
+        // Exercise the UI bridge without an overlay, permissions, sockets or camera hardware.
+        runBlocking(Dispatchers.Main) {
+            controller.requestStart()
+            try {
+                val scan = async(start = CoroutineStart.UNDISPATCHED) { controller.scanBarcode() }
+                assertEquals(VoiceCameraMode.BARCODE, controller.cameraMode())
+                val camera = object : VoiceCameraHandle {
+                    override fun latestFrame() = null
+                    override suspend fun takePhoto() = byteArrayOf(1)
+                }
+                controller.cameraReady(camera)
+                yield()
+                controller.collapse()
+                assertEquals(BarcodeOutcome.Cancelled, scan.await())
+                assertEquals(null, controller.cameraMode())
+                controller.cameraReady(camera) // A late CameraX callback cannot reopen a hidden camera.
+                assertEquals(PhotoOutcome.NotOpen, controller.takePhoto())
+            } finally {
+                controller.close()
+            }
+        }
+    }
+
+    @Test
+    fun externalVoiceLaunchRemainsPendingDuringOnboardingAndRecreation() {
+        FudAITestState.reset(onboarded = false)
+        activity = ActivityScenario.launch(VoiceEntryPoints.launchIntent(context))
+        waitFor(hasTestTag("onboarding.WELCOME"))
+        compose.waitForIdle()
+        val saved = Bundle()
+        activity!!.onActivity { instrumentation.callActivityOnSaveInstanceState(it, saved) }
+        assertTrue(saved.containsKey("pendingVoiceLaunch"))
+        assertTrue(!(context.applicationContext as FudAIApp).container.voiceAssistant.isActive)
+
+        activity!!.recreate()
+        waitFor(hasTestTag("onboarding.WELCOME"))
+        val restored = Bundle()
+        activity!!.onActivity { instrumentation.callActivityOnSaveInstanceState(it, restored) }
+        assertEquals(saved.getLong("pendingVoiceLaunch"), restored.getLong("pendingVoiceLaunch"))
+    }
+
+    @Test
     fun voiceAssistantSettingsPersistWithoutStartingAMicrophoneSession() {
         launchFresh()
         openVoiceSettings()
         compose.onNodeWithTag("voiceSettings.confirmSaves").performScrollTo().assertIsOn().performClick()
         awaitPreference(prefs.voiceAssistantPreferences) { !it.confirmSaves }
-        compose.onNodeWithTag("voiceSettings.saveToCoach").performScrollTo().assertIsOn().performClick()
+        val saveToCoach = compose.onNodeWithTag("voiceSettings.saveToCoach").performScrollTo().assertIsOn()
+        assertTrue("The switch must be above the floating tabs",
+            saveToCoach.fetchSemanticsNode().boundsInRoot.bottom <=
+                compose.onNodeWithTag("nav.workouts").fetchSemanticsNode().boundsInRoot.top)
+        saveToCoach.performClick()
         awaitPreference(prefs.voiceAssistantPreferences) { !it.saveToCoach }
         compose.onNodeWithTag("voiceSettings.autoCapture").performScrollTo().assertIsOff().performClick()
         awaitPreference(prefs.voiceAssistantPreferences) { it.autoCapture }

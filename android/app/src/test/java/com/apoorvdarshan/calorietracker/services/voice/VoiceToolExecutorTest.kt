@@ -12,6 +12,7 @@ import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.serialization.json.JsonObject
@@ -369,6 +370,98 @@ class VoiceToolExecutorTest {
     }
 
     @Test
+    fun rejectedOrThrowingPhotoLogsDiscardNewImagesAndCanBeRetried() {
+        val executor = executor(confirmSaves = false)
+        val draft = executor.call("pick_photos")["draft_id"]!!.jsonPrimitive.content
+        ports.fasts += FastingSession(startedAt = ports.instant, goalMinutes = 960)
+        assertEquals("unsupported", executor.call("log_food", args("draft_id" to draft)).error())
+        assertTrue(ports.storedImages.isEmpty())
+        ports.fasts.clear()
+        ports.foodWriteError = IllegalStateException("write rejected")
+        assertEquals("unsupported", executor.call("log_food", args("draft_id" to draft)).error())
+        assertTrue(ports.storedImages.isEmpty())
+        ports.foodWriteError = CancellationException("session ended")
+        try {
+            executor.call("log_food", args("draft_id" to draft))
+            throw AssertionError("Cancellation must propagate")
+        } catch (_: CancellationException) { }
+        assertTrue(ports.storedImages.isEmpty())
+        ports.foodWriteError = null
+        assertTrue(executor.call("log_food", args("draft_id" to draft)).ok())
+        assertEquals(ports.foods.single().allImageFilenames, ports.storedImages)
+    }
+
+    @Test
+    fun failedPhotoWritePreservesFilesAlreadyAdoptedByPersistedData() {
+        val executor = executor(confirmSaves = false)
+        val draft = executor.call("pick_photos")["draft_id"]!!.jsonPrimitive.content
+        ports.foodWriteGate = {
+            ports.foods += FoodEntry(name = "Persisted owner", calories = 1, protein = 0.0, carbs = 0.0,
+                fat = 0.0, source = FoodSource.MANUAL, imageFilename = ports.storedImages.single())
+        }
+        ports.foodWriteError = IllegalStateException("failure after commit")
+        assertEquals("unsupported", executor.call("log_food", args("draft_id" to draft)).error())
+        assertEquals(ports.foods.single().allImageFilenames, ports.storedImages)
+    }
+
+    @Test
+    fun searchPreservesDistinctMealsAndIndependentFavoriteSnapshots() {
+        val favorite = FoodEntry(name = "Oats", calories = 350, protein = 12.0, carbs = 55.0,
+            fat = 9.0, source = FoodSource.MANUAL)
+        val diary = favorite.copy(protein = 20.0, servingSizeGrams = 250.0)
+        val other = favorite.copy(id = UUID.randomUUID(), carbs = 45.0)
+        ports.foods += listOf(diary, other)
+        ports.saved += listOf(SavedFood(favorite, SavedFoodKind.FAVORITE),
+            SavedFood(diary, SavedFoodKind.FREQUENT), SavedFood(diary, SavedFoodKind.RECENT),
+            SavedFood(other, SavedFoodKind.RECENT))
+        val executor = executor(confirmSaves = false)
+        val results = executor.call("search_foods", args("query" to "oats"))["results"]!!.jsonArray
+        val ids = results.map { it.jsonObject["saved_food_id"]!!.jsonPrimitive.content }
+        assertEquals(3, ids.size)
+        assertTrue(ids.containsAll(listOf("favorite-${favorite.id}", "food-${diary.id}", "food-${other.id}")))
+        executor.call("log_food", args("saved_food_id" to "favorite-${favorite.id}"))
+        executor.call("log_food", args("saved_food_id" to "food-${diary.id}"))
+        assertEquals(12.0, ports.foods[2].protein, 0.001)
+        assertEquals(20.0, ports.foods[3].protein, 0.001)
+    }
+
+    @Test
+    fun searchedDiaryFoodIsResolvedFreshAndCannotBeLoggedAfterDeletion() {
+        val original = FoodEntry(name = "Oats", calories = 350, protein = 12.0, carbs = 55.0,
+            fat = 9.0, source = FoodSource.MANUAL)
+        ports.foods += original
+        ports.saved += SavedFood(original, SavedFoodKind.RECENT)
+        val executor = executor(confirmSaves = false)
+        val id = executor.call("search_foods", args("query" to "oats"))["results"]!!.jsonArray
+            .single().jsonObject["saved_food_id"]!!.jsonPrimitive.content
+        ports.foods[0] = original.copy(calories = 400)
+        assertTrue(executor.call("log_food", args("saved_food_id" to id)).ok())
+        assertEquals(400, ports.foods.last().calories)
+        ports.foods.removeAt(0)
+        assertEquals("not_found", executor.call("log_food", args("saved_food_id" to id, "servings" to 2)).error())
+        assertEquals(1, ports.foods.size)
+    }
+
+    @Test
+    fun savedFoodConfirmationAndFoodLogUndoPreserveLaterEdits() = runBlocking {
+        val original = FoodEntry(name = "Oats", calories = 350, protein = 12.0, carbs = 55.0,
+            fat = 9.0, source = FoodSource.MANUAL)
+        ports.foods += original
+        val executor = executor()
+        executor.call("log_food", args("saved_food_id" to "food-${original.id}"))
+        val confirmation = executor.cards.value.single() as VoiceCard.Confirmation
+        ports.foods[0] = original.copy(calories = 400)
+        assertTrue(executor.confirmCard(confirmation.id)!!.contains("but it failed"))
+        assertEquals(1, ports.foods.size)
+        assertTrue(executor.call("log_food", args("saved_food_id" to "food-${original.id}", "user_confirmed" to true)).ok())
+        val undo = executor.cards.value.last() as VoiceCard.Undo
+        val edited = ports.foods.last().copy(name = "Edited after logging")
+        ports.foods[1] = edited
+        assertTrue(executor.undoCard(undo.id)!!.contains("Undo failed"))
+        assertEquals(edited, ports.foods[1])
+    }
+
+    @Test
     fun searchFoodsRanksAndLogsSavedFoods() {
         val oats = FoodEntry(name = "Overnight oats", calories = 350, protein = 12.0, carbs = 55.0, fat = 9.0, source = FoodSource.MANUAL)
         val oatMilk = FoodEntry(name = "Oat milk latte", calories = 140, protein = 3.0, carbs = 20.0, fat = 5.0, source = FoodSource.MANUAL)
@@ -611,6 +704,14 @@ class VoiceToolExecutorTest {
         val entries = executor.call("get_food_entries", args("from" to "2026-10-16", "to" to "2026-10-16"))
         assertTrue(entries.ok())
         assertEquals("Toast", entries["foods"]!!.jsonArray[0].jsonObject["name"]!!.jsonPrimitive.content)
+        val entryId = entries["foods"]!!.jsonArray[0].jsonObject["entry_id"]!!.jsonPrimitive.content
+        assertEquals(ports.foods.single().id.toString(), entryId)
+        assertTrue(executor.call("open_food_entry", args("entry_id" to entryId)).ok())
+        assertTrue(executor.call("update_food_entry", args("entry_id" to entryId, "calories" to 150,
+            "user_confirmed" to true)).ok())
+        assertEquals(150, ports.foods.single().calories)
+        assertTrue(executor.call("delete_food_entry", args("entry_id" to entryId, "user_confirmed" to true)).ok())
+        assertTrue(ports.foods.isEmpty())
         assertEquals("invalid_arguments", executor.call("get_exercise_lift_history").error())
     }
 

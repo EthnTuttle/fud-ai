@@ -14,6 +14,8 @@ import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.services.ai.ToolResultLimiter
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,7 +73,6 @@ class VoiceToolExecutor(
     private val undo = UndoRegistry(clock)
     private val pending = LinkedHashMap<String, PendingConfirmation>()
     private val completed = LinkedHashMap<String, Completed>()
-    private val savedFoodIndex = HashMap<String, FoodEntry>()
     // Model calls and card taps can interleave while a repository write suspends.
     // Serialize writes only; a photo picker must not prevent close_camera/navigation.
     private val mutationMutex = Mutex()
@@ -161,7 +162,6 @@ class VoiceToolExecutor(
         undo.clear()
         pending.clear()
         completed.clear()
-        savedFoodIndex.clear()
         _cards.value = emptyList()
     }
 
@@ -624,16 +624,15 @@ class VoiceToolExecutor(
                     .thenByDescending { it.first.entry.timestamp }
             )
             .map { it.first }
-            .distinctBy { it.entry.favoriteKey }
+            .distinctBy { it.savedId }
             .take(limit)
-        matches.forEach { savedFoodIndex[it.entry.id.toString()] = it.entry }
         return ToolResults.ok {
             put("query", query)
             put("count", matches.size)
             putJsonArray("results") {
                 matches.forEach { saved ->
                     add(buildJsonObject {
-                        put("saved_food_id", saved.entry.id.toString())
+                        put("saved_food_id", saved.savedId)
                         put("name", saved.entry.name)
                         put("kind", saved.kind.wireValue)
                         put("calories", saved.entry.calories)
@@ -653,6 +652,7 @@ class VoiceToolExecutor(
     private class PreparedFood(
         val name: String,
         val calories: Int,
+        val discard: suspend (FoodEntry) -> Unit = {},
         val build: suspend (UUID, Instant, MealType) -> FoodEntry
     ) {
         fun change(meal: MealType, date: LocalDate) = VoiceChange.LogFood(name, calories, meal, date)
@@ -703,8 +703,14 @@ class VoiceToolExecutor(
             fail(ToolError.INVALID_ARGUMENTS, "${draft.id} is already logged. Use update_food_entry to change it.")
         }
         val entry = prepared.build(UUID.randomUUID(), timestamp, meal)
-        if (!ports.addFoodEntry(entry)) {
-            fail(ToolError.UNSUPPORTED, "Food logging is paused while a fast is running. Offer to end the fast first.")
+        var adopted = false
+        try {
+            if (!ports.addFoodEntry(entry)) {
+                fail(ToolError.UNSUPPORTED, "Food logging is paused while a fast is running. Offer to end the fast first.")
+            }
+            adopted = true
+        } finally {
+            if (!adopted) withContext(NonCancellable) { prepared.discard(entry) }
         }
         draft?.let { food ->
             food.loggedEntryIds = food.loggedEntryIds + entry.id.toString()
@@ -723,6 +729,7 @@ class VoiceToolExecutor(
                 put("time", VoiceArguments.formatTime(localTime(entry.timestamp)))
             },
             undo = {
+                requireUnchangedFood(entry)
                 ports.deleteFoodEntry(entry.id)
                 draft?.let { food ->
                     food.loggedEntryIds = food.loggedEntryIds - entry.id.toString()
@@ -740,20 +747,37 @@ class VoiceToolExecutor(
 
     private fun prepareDraftFood(draft: VoiceDraft.Food, servings: Double): PreparedFood {
         val analysis = draft.analysis
-        return PreparedFood(analysis.name, (analysis.calories * servings).roundToInt()) { id, timestamp, meal ->
+        return PreparedFood(analysis.name, (analysis.calories * servings).roundToInt(),
+            discard = { ports.discardFoodImages(it.allImageFilenames) }
+        ) { id, timestamp, meal ->
             val filenames = if (draft.images.isEmpty()) emptyList() else ports.storeFoodImages(draft.images)
             foodEntryFromAnalysis(analysis, id, timestamp, meal, servings, draft.source, filenames)
         }
     }
 
     private suspend fun prepareSavedFood(savedId: String, servings: Double): PreparedFood {
-        val template = savedFoodIndex[savedId]
-            ?: ports.savedFoods().firstOrNull { it.entry.id.toString() == savedId }?.entry
-            ?: ports.foodEntries().firstOrNull { it.id.toString() == savedId }
-            ?: fail(ToolError.NOT_FOUND, "No saved food $savedId. Call search_foods first.")
+        val template = findSavedFood(savedId)
         return PreparedFood(template.name, (template.calories * servings).roundToInt()) { id, timestamp, meal ->
+            if (findSavedFood(savedId) != template) {
+                fail(ToolError.INVALID_ARGUMENTS, "That saved food changed. Search again before logging it.")
+            }
             template.duplicatedForLogging(timestamp, meal).scaledBy(servings).copy(id = id)
         }
+    }
+
+    private suspend fun findSavedFood(savedId: String): FoodEntry {
+        val entry = when {
+            savedId.startsWith("favorite-") -> ports.savedFoods().firstOrNull {
+                it.kind == SavedFoodKind.FAVORITE && it.savedId == savedId
+            }?.entry
+            savedId.startsWith("food-") -> ports.foodEntries().firstOrNull {
+                it.id.toString() == savedId.removePrefix("food-")
+            }
+            // Accept an unprefixed id from older conversation context, but never a cached copy.
+            else -> ports.foodEntries().firstOrNull { it.id.toString() == savedId }
+                ?: ports.savedFoods().firstOrNull { it.entry.id.toString() == savedId }?.entry
+        }
+        return entry ?: fail(ToolError.NOT_FOUND, "No saved food $savedId. Call search_foods first.")
     }
 
     private fun prepareManualFood(item: ToolArgs, servings: Double): PreparedFood {

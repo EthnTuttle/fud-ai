@@ -47,6 +47,7 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     var requestedMaxPhotos: Int? = null
     var analyzedPhotoCount = 0
     var foodWriteGate: (suspend () -> Unit)? = null
+    var foodWriteError: Throwable? = null
     var waterWriteError: Throwable? = null
     var analysis: FoodAnalysis = FoodAnalysis(
         name = "Eggs and toast",
@@ -104,6 +105,7 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     override suspend fun maxFoodPhotos(): Int = maxPhotos
     override suspend fun addFoodEntry(entry: FoodEntry): Boolean {
         foodWriteGate?.invoke()
+        foodWriteError?.let { throw it }
         if (fasts.any { it.isActive }) return false
         foods += entry
         return true
@@ -118,6 +120,10 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     override suspend fun savedFoods(): List<SavedFood> = saved.toList()
     override suspend fun storeFoodImages(images: List<ByteArray>): List<String> =
         images.map { "img-${storedImages.size}.jpg".also(storedImages::add) }
+    override suspend fun discardFoodImages(filenames: List<String>) {
+        val referenced = (foods + saved.map { it.entry }).flatMap { it.allImageFilenames }.toSet()
+        storedImages.removeAll(filenames.filterNot { it in referenced }.toSet())
+    }
     override suspend fun analyzeFoodPhotos(images: List<ByteArray>, note: String?): FoodAnalysis {
         analyzedPhotoCount = images.size
         analysisError?.let { throw it }
