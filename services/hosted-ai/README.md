@@ -47,7 +47,7 @@ There is **no shared client secret**. The previous `FUD_HOSTED_AI_APP_SECRET` wa
 - Damage is bounded to the victim's own ledger (30/60 actions per day plus credits), and further capped by the per-user and per-address rate limiters.
 - The raw id is never persisted or logged; D1 and logs hold only a SHA-256 hash (12-char prefix in logs).
 
-The voice relay adds one bearer value of the same kind: Gemini Live session-resumption handles are scoped to the Worker's API key, not to a subscriber, so whoever holds a handle can resume that conversation (paying with their own voice balance) while Gemini keeps it valid. Handles only ever travel over the subscriber's own relay socket.
+The voice relay wraps Gemini resumption handles in an HMAC-SHA256 authenticated token bound to the subscriber hash, with a two-hour expiry. The signing key is derived for this purpose from `GEMINI_API_KEY`; rotating that key invalidates existing wrappers. A handle issued to one subscriber cannot be resumed using another subscriber identity. Apps treat the wrapper as opaque; the Worker verifies it and unwraps the provider handle before forwarding setup. Raw provider handles, modified tokens and expired tokens are rejected. Neither wrapper nor provider handle is stored or logged. Someone who obtains both the subscriber bearer id and its resumption token can still act as that subscriber.
 
 What would close the gap is a device-bound proof that the request originates from a genuine Fud AI install holding that RevenueCat account: Apple **App Attest** (attestation on first launch, then a per-request assertion over `X-Fud-User-Id` + body hash + nonce) verified in `identifyClient()` in `web/hosted-ai-api.ts`. That needs no new secrets — only Apple's public App Attest root certificate plus the team/bundle id — but it is a sizeable piece of work (CBOR/X.509 parsing, key storage in D1, nonce handling, a fallback for devices where App Attest is unsupported) and is deliberately out of scope for this change.
 
@@ -102,8 +102,8 @@ After the upgrade the app speaks the Gemini Live wire protocol through the Worke
   - `systemInstruction`: text parts only, at most 60 000 characters in total (`role` is dropped).
   - `tools`: `functionDeclarations` only (no Google Search, code execution or URL context), at most 64 declarations and 64 KB serialized; a declaration may have `name`, `description`, `parameters` (at most 12 levels deep) and `behavior` (`BLOCKING` / `NON_BLOCKING`).
   - `inputAudioTranscription` / `outputAudioTranscription`: `{}` or `{"languageCodes": [...]}`.
-  - `contextWindowCompression` (`triggerTokens`, `slidingWindow.targetTokens`), `sessionResumption` (`handle`), and `realtimeInputConfig` (`automaticActivityDetection`, `activityHandling`, `turnCoverage`).
-- **Later messages** must be exactly one of `realtimeInput`, `clientContent` or `toolResponse`, at most 1 MiB each, in text or binary frames (binary must be UTF-8 JSON). They are forwarded unchanged, in the frame type they arrived in. `clientContent` and `toolResponse` may not contain `fileData` (Gemini fetching content by reference). Each client message is parsed once for these checks; server messages are not parsed at all once the conversation is live, and are forwarded unchanged in their own frame type (Gemini sends JSON in binary frames).
+  - `contextWindowCompression` (`triggerTokens`, `slidingWindow.targetTokens`), `sessionResumption` (`handle`, an authenticated wrapper issued by this relay), and `realtimeInputConfig` (`automaticActivityDetection`, `activityHandling`, `turnCoverage`).
+- **Later messages** must be exactly one of `realtimeInput`, `clientContent` or `toolResponse`, at most 1 MiB each, in text or binary frames (binary must be UTF-8 JSON). They are forwarded unchanged, in the frame type they arrived in. `clientContent` and `toolResponse` may not contain `fileData` (Gemini fetching content by reference). Each client message is parsed once for these checks; server messages keep their own frame type (Gemini sends JSON in binary frames). Frames containing a `sessionResumptionUpdate` are inspected and `newHandle` is replaced with the subscriber-bound wrapper; other frames pass through unchanged. Following frames and close events retain their order while the handle is signed, with a 2 MiB queue limit.
 - **Abuse guards**, about 3× what the apps send (16 kHz PCM plus at most one 768 px JPEG a second): 1 MiB/s of client input with a 4 MiB burst, and 2 video frames a second with a burst of 10.
 - **The unmetered phases are bounded:** `setup` must arrive within 10 s of the upgrade and Gemini's `setupComplete` within 15 s of the setup. Input the app sends between `setup` and the first paid block is held (up to 2 MiB), not forwarded, then released in order right after `setupComplete`.
 
@@ -122,7 +122,7 @@ The Worker adds its own text frames:
 | 1008 | `setup_timeout` | No `setup` within 10 s |
 | 1008 | `rate_limited` | An abuse guard tripped |
 | 1011 | `upstream_error` (+ `upstreamCode` when Gemini closed) | Gemini closed abnormally or before the conversation started, a send to Gemini failed, or no `setupComplete` within 15 s |
-| 1011 | `voice_unavailable` | The ledger could not be charged after 3 attempts, or an internal error |
+| 1011 | `voice_unavailable` | The ledger could not be charged after 3 attempts or within 5 s total, or an internal error |
 | 4402 | `voice_quota_exceeded` | A block could not be paid |
 | 4408 | `session_limit` | 15 minutes after `setupComplete` |
 
@@ -132,9 +132,10 @@ The Worker adds its own text frames:
 
 - Time is charged in **15-second blocks from `setupComplete` until close, each block when it starts**: block 0 is paid before `setupComplete` is forwarded to the app. A 15-minute session is exactly 60 blocks; the block that would start at 15:00 closes the session with 4408 instead.
 - A block comes from the **monthly voice allowance** (Plus 20 min = 1 200 s, Pro 100 min = 6 000 s, per UTC calendar month) while a whole block of it is left, and otherwise from the **credit bank at 1 credit per block** (4 credits a minute), the same bank hosted actions use. With neither, the session closes with 4402.
-- Charging is a compare-and-swap on the ledger row `version`, like `spendFromLedger`, so voice sessions and hosted actions of one user running at once cannot double-spend. A D1 failure is retried twice (after 250 ms and 1 s) while the conversation continues, and every charge is handed to `ctx.waitUntil` so a disconnect cannot cancel a write in flight. Concurrent sessions per subscriber are not capped: each pays for its own blocks, so parallel sessions only drain that subscriber's balance faster (while sharing Gemini's per-project session limit).
+- Charging is a compare-and-swap on the ledger row `version`, like `spendFromLedger`, so voice sessions and hosted actions of one user running at once cannot double-spend. A D1 failure is retried twice (after 250 ms and 1 s), with one stable random receipt per block. The debit and receipt commit in one transaction, so retrying after a committed write whose response was lost cannot debit again, even when that was the last available credit. The conversation can continue during this short retry window; a five-second total charge deadline closes both sockets if D1 stalls. An independent timer enforces the 15-minute session cap even while a charge is pending. Every charge is handed to `ctx.waitUntil` so a disconnect cannot cancel a write in flight. Concurrent sessions per subscriber are not capped: each pays for its own blocks, so parallel sessions only drain that subscriber's balance faster (while sharing Gemini's per-project session limit).
 - Blocks are **not refunded**: each one pays for the provider time that follows it. A reconnect (for example session resumption after Gemini's `goAway`) is a new session that starts with a new block.
 - The allowance lives in two ledger columns added by migration `0004_hosted_ai_voice.sql`: `voice_month` (`YYYY-MM`) and `voice_seconds_used` (allowance seconds used in that month; a new month starts from zero). Credit-paid blocks only raise `credits_spent`. Every charge bumps `updated_at`, so the 180-day retention rule and its exception for rows that spent credits apply unchanged.
+- Migration `0005_hosted_ai_voice_spends.sql` adds random billing receipts with the user hash, charge source (`allowance` / `credits`) and timestamp. These contain no conversation content, are retained for 30 days, and are pruned by the hourly cleanup.
 - `GET /quota` returns the voice balance next to the action quota:
 
   ```json
@@ -152,13 +153,13 @@ The relay runs in the **stateless Worker invocation that accepted the upgrade, w
 
 - Sessions share nothing but the ledger, which the D1 compare-and-swap already serializes. A Durable Object would add a hop and per-session duration billing without coordinating anything.
 - An HTTP invocation has no wall-time limit while the client stays connected, and Workers runtime updates give open connections up to 20 minutes to finish, more than the 15-minute session cap. A Durable Object instead drops all of its WebSockets when it restarts on a deploy.
-- A stateless invocation's CPU limit covers the whole session (Durable Objects reset it per message; plain Workers do not), so per-message work is kept minimal: client messages are parsed once and server messages not at all. Measured locally, the relay's own code used about 65 ms of CPU for a 15-minute session at the apps' rates (25 audio chunks a second each way plus one 60 KB JPEG a second, about 46 000 messages), far below the default 30 s per invocation, so `wrangler.toml` needs no `[limits]` entry. If `exceededCpu` outcomes ever appear on `/live`, raise `[limits] cpu_ms`.
+- A stateless invocation's CPU limit covers the whole session (Durable Objects reset it per message; plain Workers do not), so per-message work is kept small: client messages are parsed once and server messages are parsed only when they may contain a resumption update. The subscriber-bound handle code has not been profiled in production; `wrangler.toml` keeps the default CPU limit. If `exceededCpu` outcomes ever appear on `/live`, raise `[limits] cpu_ms`.
 - The compatibility date (`2026-07-10`) already brings `web_socket_auto_reply_to_close` (no half-open mode is needed: each side's close is mirrored to the other) and Blob as the default `binaryType`, which the relay sets back to `arraybuffer` on both sockets before `accept()`. No compatibility flags are added.
 - The upstream handshake timeout is an `AbortController` cancelled as soon as the response arrives, so it can never tear down an established socket.
 
 ### Logging
 
-Nothing a user says, shows, or receives is stored or logged. Log lines carry structured fields only (event, codes, phase, `platform`, 12-character user-hash prefix): `hosted_ai_live_rejected` (policy closes, with the sanitized `detail`), `hosted_ai_live_upstream_failed` (the Gemini close code, never its reason text), `hosted_ai_live_charge_failed`, `hosted_ai_live_connect_failed`, `hosted_ai_live_misconfigured`, and `hosted_ai_live_internal_error`. Sessions that end normally log nothing.
+No conversation content or resumption handles are stored or logged. The ledger retains quota counters and the random billing receipts described above. Log lines carry structured fields only (event, codes, phase, `platform`, 12-character user-hash prefix): `hosted_ai_live_rejected` (policy closes, with the sanitized `detail`), `hosted_ai_live_upstream_failed` (the Gemini close code, never its reason text), `hosted_ai_live_charge_failed`, `hosted_ai_live_connect_failed`, `hosted_ai_live_misconfigured`, and `hosted_ai_live_internal_error`. Sessions that end normally log nothing.
 
 ## Required secrets (Wrangler)
 
@@ -183,7 +184,7 @@ Until the provider keys are set, the proxy responds `503 gemini_not_configured` 
 
 ## Deploy checklist
 
-1. Apply the D1 migrations to the `fud-ai-challenge` database (the hosted ledger shares it) **before** deploying the Worker. The current Worker reads the voice columns from `0004_hosted_ai_voice.sql` on every hosted request, so deploying it first would fail all hosted routes until the migration lands; the migration is additive, so the previous Worker keeps working once it is applied.
+1. Apply the D1 migrations to the `fud-ai-challenge` database (the hosted ledger shares it) **before** deploying the Worker. The current Worker reads the voice columns from `0004_hosted_ai_voice.sql` on every hosted request and needs the receipts table from `0005_hosted_ai_voice_spends.sql` to charge live sessions. Apply both before deployment; they are additive, so the previous Worker keeps working once they are applied.
 
    ```bash
    cd web

@@ -500,12 +500,14 @@ describe("hosted-ai server-side ledger", () => {
 
     const now = new Date("2026-09-13T01:00:00.000Z");
     await cleanupHostedAILedger(database, now);
-    expect(statements).toHaveLength(2);
+    expect(statements).toHaveLength(3);
     expect(statements[0]!.sql).toMatch(/DELETE FROM hosted_ai_ledger/);
     expect(statements[0]!.sql).toMatch(/credits_spent = 0/);
     expect(statements[0]!.binds).toEqual([new Date(now.getTime() - LEDGER_RETENTION_MS).toISOString()]);
     expect(statements[1]!.sql).toMatch(/DELETE FROM hosted_ai_refunds/);
     expect(statements[1]!.binds).toEqual([new Date(now.getTime() - REFUND_MARKER_RETENTION_MS).toISOString()]);
+    expect(statements[2]!.sql).toMatch(/DELETE FROM hosted_ai_voice_spends/);
+    expect(statements[2]!.binds).toEqual(statements[1]!.binds);
   });
 
   it("D1 refund is a single transaction whose ledger update is gated on the receipt marker", async () => {

@@ -19,8 +19,8 @@
  *   - Metering is time-based: 15-second blocks, each charged when it starts,
  *     from `setupComplete` until close. Client input is held, not forwarded,
  *     until the first block is paid.
- *   - Once live, server messages are forwarded unchanged and unparsed, in the
- *     frame type they arrived in. Nothing a user says, shows or receives is
+ *   - Server messages keep their frame type. Resumption handles are signed
+ *     for this subscriber; other frames pass through unchanged. Nothing a user says, shows or receives is
  *     stored; logs carry structured codes and a hashed user id prefix only.
  */
 
@@ -32,6 +32,7 @@ import {
   type LedgerRow,
   type VoiceSpendOutcome,
 } from "./hosted-ai-ledger";
+import { MAX_RESUMPTION_TOKEN_CHARS, type LiveResumptionCodec } from "./hosted-ai-live-resumption";
 
 export const DEFAULT_LIVE_MODEL = "gemini-3.8-live";
 
@@ -47,7 +48,7 @@ export const LIVE_LIMITS = {
   maxFunctionDescriptionChars: 4_096,
   maxJsonDepth: 12,
   maxLanguageCodes: 8,
-  maxResumptionHandleChars: 4_096,
+  maxResumptionHandleChars: MAX_RESUMPTION_TOKEN_CHARS,
   maxActivityTimingMs: 60_000,
   maxContextTokens: 100_000_000,
   /** Metered length of one session; the block that would start here closes with 4408 instead. */
@@ -57,6 +58,8 @@ export const LIVE_LIMITS = {
   /** The unmetered phases are bounded: setup must arrive, and be answered, in time. */
   setupTimeoutMs: 10_000,
   setupCompleteTimeoutMs: 15_000,
+  /** Close instead of serving an unbounded session while D1 is stalled. */
+  chargeTimeoutMs: 5_000,
   /** Client input sent before the first block is paid is held up to this size. */
   maxPendingClientBytes: 2 * 1024 * 1024,
   /**
@@ -539,10 +542,10 @@ function isSetupComplete(frame: Frame): boolean {
   }
 }
 
-/** UTF-8 size of a frame; text is only counted exactly when its UTF-16 length could exceed the cap. */
+/** Exact UTF-8 size for both the per-frame limit and the shared byte budget. */
 function frameBytes(frame: Frame): number {
   if (typeof frame !== "string") return frame.byteLength;
-  return frame.length * 3 <= LIVE_LIMITS.maxMessageBytes ? frame.length : utf8ByteLength(frame);
+  return utf8ByteLength(frame);
 }
 
 function isFrame(value: unknown): value is Frame {
@@ -621,9 +624,10 @@ export interface LiveRelayOptions {
   redact: (text: string) => string;
   /** `X-Fud-Platform`, for logs only. */
   platform: string;
+  resumption: LiveResumptionCodec;
 }
 
-export type LiveRelayPhase = "awaiting_setup" | "awaiting_setup_complete" | "starting" | "live" | "closed";
+export type LiveRelayPhase = "awaiting_setup" | "validating_setup" | "awaiting_setup_complete" | "starting" | "live" | "closed";
 
 /**
  * One relayed conversation. Phases:
@@ -638,10 +642,15 @@ export class LiveRelaySession {
   private meterStartMs = 0;
   private blocks = 0;
   private cancelTimer: (() => void) | null = null;
+  private cancelChargeTimer: (() => void) | null = null;
+  private cancelSessionTimer: (() => void) | null = null;
   private heldSetupComplete: Frame | null = null;
   private pendingClient: Frame[] = [];
   private pendingClientBytes = 0;
   private pendingUpstream: Frame[] = [];
+  private upstreamTransforming = false;
+  private queuedUpstream: Array<{ frame: Frame } | { closeCode: number }> = [];
+  private queuedUpstreamBytes = 0;
   private readonly inputBytes: TokenBucket;
   private readonly videoFrames: TokenBucket;
 
@@ -707,7 +716,7 @@ export class LiveRelaySession {
       return;
     }
     if (awaitingSetup) {
-      this.onSetup(parsed.value);
+      void this.onSetup(parsed.value).catch((error: unknown) => this.internalError(error));
       return;
     }
 
@@ -735,20 +744,72 @@ export class LiveRelaySession {
     this.pendingClient.push(data);
   }
 
-  private onSetup(message: unknown): void {
+  private async onSetup(message: unknown): Promise<void> {
     const result = sanitizeLiveSetup(message, this.options.model);
     if (!result.ok) {
       this.reject("invalid_setup", result.error);
       return;
     }
+    this.phase = "validating_setup";
+    let forwarded = result.message;
+    const setup = (JSON.parse(result.message) as { setup: JsonObject }).setup;
+    const resumption = setup.sessionResumption;
+    if (isObject(resumption) && typeof resumption.handle === "string") {
+      const handle = await this.options.resumption.open(resumption.handle);
+      if (this.isClosed()) return;
+      if (handle === null) {
+        this.reject("invalid_setup", "invalid_resumption:setup.sessionResumption.handle");
+        return;
+      }
+      resumption.handle = handle;
+      forwarded = JSON.stringify({ setup });
+    }
     this.clearTimer();
-    if (!this.sendUpstream(result.message)) return;
+    if (!this.sendUpstream(forwarded)) return;
     this.phase = "awaiting_setup_complete";
     this.startTimer(LIVE_LIMITS.setupCompleteTimeoutMs, () => this.upstreamFailed("setup_complete_timeout"));
   }
 
   private onUpstreamFrame(data: unknown): void {
     if (this.isClosed() || !isFrame(data)) return;
+    if (this.upstreamTransforming) {
+      this.queuedUpstreamBytes += frameBytes(data);
+      if (this.queuedUpstreamBytes > LIVE_LIMITS.maxPendingClientBytes) {
+        this.upstreamFailed("resumption_buffer_limit");
+        return;
+      }
+      this.queuedUpstream.push({ frame: data });
+      return;
+    }
+    const text = typeof data === "string" ? data : lenientUtf8.decode(data);
+    if (text.includes("sessionResumptionUpdate")) {
+      let parsed: unknown;
+      try { parsed = JSON.parse(text) as unknown; } catch { /* Forward other provider frames unchanged. */ }
+      const update = isObject(parsed) ? parsed.sessionResumptionUpdate : undefined;
+      if (isObject(update) && typeof update.newHandle === "string" && update.newHandle.length > 0) {
+        this.upstreamTransforming = true;
+        void this.options.resumption.seal(update.newHandle).then((handle) => {
+          if (this.isClosed()) return;
+          update.newHandle = handle;
+          const transformed = JSON.stringify(parsed);
+          this.relayUpstreamFrame(typeof data === "string" ? transformed : new TextEncoder().encode(transformed).buffer as ArrayBuffer);
+          this.upstreamTransforming = false;
+          while (!this.upstreamTransforming && !this.isClosed() && this.queuedUpstream.length > 0) {
+            const event = this.queuedUpstream.shift()!;
+            if ("frame" in event) {
+              this.queuedUpstreamBytes -= frameBytes(event.frame);
+              this.onUpstreamFrame(event.frame);
+            } else this.onUpstreamClosed(event.closeCode);
+          }
+        }).catch((error: unknown) => this.internalError(error));
+        return;
+      }
+    }
+    this.relayUpstreamFrame(data);
+  }
+
+  private relayUpstreamFrame(data: Frame): void {
+    if (this.isClosed()) return;
     switch (this.phase) {
       case "live":
         this.sendClient(data);
@@ -763,6 +824,10 @@ export class LiveRelaySession {
           this.phase = "starting";
           this.heldSetupComplete = data;
           this.meterStartMs = this.options.clock();
+          this.cancelSessionTimer = this.options.setTimer(
+            () => this.endWith("session_limit", LIVE_CLOSE_CODES.sessionLimit),
+            LIVE_LIMITS.sessionSeconds * 1000
+          );
           this.runBlockSafely(0);
           return;
         }
@@ -775,6 +840,10 @@ export class LiveRelaySession {
 
   private onUpstreamClosed(code: number): void {
     if (this.isClosed()) return;
+    if (this.upstreamTransforming) {
+      this.queuedUpstream.push({ closeCode: code });
+      return;
+    }
     // A clean upstream close of a running conversation (for example after
     // `goAway`) ends the session normally; anything else is an upstream failure.
     if (this.phase === "live" && (code === 1000 || code === 1001)) {
@@ -804,7 +873,16 @@ export class LiveRelaySession {
       this.endWith("session_limit", LIVE_CLOSE_CODES.sessionLimit);
       return;
     }
+    this.cancelChargeTimer = this.options.setTimer(
+      () => {
+        this.options.log({ event: "hosted_ai_live_charge_failed", reason: "charge_timeout", blocksCharged: this.blocks, ...this.logContext() });
+        this.endWith("voice_unavailable", LIVE_CLOSE_CODES.upstreamFailure);
+      },
+      LIVE_LIMITS.chargeTimeoutMs
+    );
     const outcome = await this.chargeBlock();
+    this.cancelChargeTimer?.();
+    this.cancelChargeTimer = null;
     if (outcome === null || this.isClosed()) return;
     if (outcome.status === "quota_exceeded") {
       this.endWith("voice_quota_exceeded", LIVE_CLOSE_CODES.quotaExceeded);
@@ -826,10 +904,11 @@ export class LiveRelaySession {
   /** Pays for the next block, retrying D1 failures; null when the session is over. */
   private async chargeBlock(): Promise<VoiceSpendOutcome | null> {
     let lastError: unknown = null;
+    const receiptId = crypto.randomUUID();
     for (let attempt = 0; attempt <= CHARGE_RETRY_DELAYS_MS.length; attempt += 1) {
       if (attempt > 0) await this.options.sleep(CHARGE_RETRY_DELAYS_MS[attempt - 1]!);
       if (this.isClosed()) return null;
-      const charge = spendVoiceBlock(this.options.ledger, this.options.userIdHash, this.row);
+      const charge = spendVoiceBlock(this.options.ledger, this.options.userIdHash, this.row, receiptId);
       this.options.waitUntil?.(charge.catch(() => undefined));
       try {
         return await charge;
@@ -913,10 +992,16 @@ export class LiveRelaySession {
   private shutDown(): void {
     this.phase = "closed";
     this.clearTimer();
+    this.cancelChargeTimer?.();
+    this.cancelChargeTimer = null;
+    this.cancelSessionTimer?.();
+    this.cancelSessionTimer = null;
     this.heldSetupComplete = null;
     this.pendingClient = [];
     this.pendingClientBytes = 0;
     this.pendingUpstream = [];
+    this.queuedUpstream = [];
+    this.queuedUpstreamBytes = 0;
   }
 
   // MARK: Plumbing

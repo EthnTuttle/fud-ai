@@ -452,9 +452,48 @@ describe("hosted voice relay: messages", () => {
     expect(app.sentJson()).toEqual([
       { setupComplete: {} },
       { fudVoice: { secondsRemaining: 1200 } },
-      { sessionResumptionUpdate: { newHandle: "h1", resumable: true } },
+      { sessionResumptionUpdate: { newHandle: expect.stringMatching(/^fudv1\./), resumable: true } },
     ]);
     expect(gemini.sentJson().slice(1)).toEqual([AUDIO, FRAME]);
+  });
+
+  it("wraps binary resumption updates, preserves following frames and unwraps on reconnect", async () => {
+    const harness = createHarness();
+    const { app, gemini } = await startConversation(harness);
+    gemini.receive(bytesOf(JSON.stringify({ sessionResumptionUpdate: { newHandle: "provider-handle", resumable: true } })));
+    const later = JSON.stringify({ goAway: { timeLeft: "1s" } });
+    gemini.receive(later);
+    gemini.remoteClose(1000);
+    await until(() => app.closedWith === 1000);
+    expect(app.sent[2]).toBeInstanceOf(ArrayBuffer);
+    const update = app.sentJson()[2]!.sessionResumptionUpdate as { newHandle: string };
+    expect(update.newHandle).toMatch(/^fudv1\./);
+    expect(update.newHandle).not.toBe("provider-handle");
+    expect(app.sent[3]).toBe(later);
+    const reconnect = await openSession(harness);
+    reconnect.app.receiveJson({ setup: { sessionResumption: { handle: update.newHandle } } });
+    await until(() => reconnect.gemini.sent.length > 0);
+    expect(reconnect.gemini.sentJson()[0]).toMatchObject({ setup: { sessionResumption: { handle: "provider-handle" } } });
+  });
+
+  it("rejects a handle from another subscriber before sending setup to Gemini", async () => {
+    const harness = createHarness();
+    const first = await startConversation(harness);
+    first.gemini.receiveJson({ sessionResumptionUpdate: { newHandle: "private-provider-handle", resumable: true } });
+    await until(() => first.app.sent.length === 3);
+    const token = (first.app.sentJson()[2]!.sessionResumptionUpdate as { newHandle: string }).newHandle;
+    const response = await call(harness, liveRequest({ "X-Fud-User-Id": "$RCAnonymousID:11111111111111111111111111111111" }));
+    expect(response.status).toBe(101);
+    const otherApp = harness.appSockets.at(-1)!;
+    const otherGemini = harness.upstreamSockets.at(-1)!;
+    const logs = captureLogs();
+    otherApp.receiveJson({ setup: { sessionResumption: { handle: token } } });
+    await until(() => otherApp.closedWith !== undefined);
+    logs.restore();
+    expect(otherApp.closedWith).toBe(1008);
+    expect(otherGemini.sent).toEqual([]);
+    expect(logs.lines.join("\n")).not.toContain(token);
+    expect(logs.lines.join("\n")).not.toContain("private-provider-handle");
   });
 
   it.each([
@@ -534,6 +573,17 @@ describe("hosted voice relay: messages", () => {
     session.app.receiveJson(FRAME);
     expect(session.app.fudVoice().at(-1)).toEqual({ error: "rate_limited" });
     logs.restore();
+  });
+
+  it("counts UTF-8 bytes in the input rate budget even for frames below the size limit", async () => {
+    const harness = createHarness();
+    const { app } = await startConversation(harness);
+    const logs = captureLogs();
+    const frame = JSON.stringify({ realtimeInput: { text: "食".repeat(330_000) } });
+    for (let index = 0; index < 5; index += 1) app.receive(frame);
+    logs.restore();
+    expect(app.fudVoice().at(-1)).toEqual({ error: "rate_limited" });
+    expect(app.closedWith).toBe(1008);
   });
 
   it("counts deprecated mediaChunks images as video frames", () => {
@@ -692,6 +742,35 @@ describe("hosted voice relay: metering", () => {
     await harness.timers.advance(30_000);
     expect(harness.background).toHaveLength(3);
     await Promise.all(harness.background);
+  });
+
+  it.each([0, 49])("does not debit twice when a block write commits and its response is lost (spent %i)", async (creditsSpent) => {
+    const harness = createHarness({ revenueCat: { plan: "plus", credits: [{ product: "credits_50", id: "t-1" }] } });
+    await seedRow(harness, { voice_month: "2026-09", voice_seconds_used: 1200, credits_spent: creditsSpent });
+    const original = harness.store.trySpendVoice.bind(harness.store);
+    let failAfterCommit = true;
+    vi.spyOn(harness.store, "trySpendVoice").mockImplementation(async (...args) => {
+      const committed = await original(...args);
+      if (committed && failAfterCommit) {
+        failAfterCommit = false;
+        throw new Error("D1_ERROR: network error after commit");
+      }
+      return committed;
+    });
+    const { app } = await startConversation(harness);
+    expect(harness.store.only().credits_spent).toBe(creditsSpent + 1);
+    expect(app.sentJson()[0]).toEqual({ setupComplete: {} });
+  });
+
+  it("closes both sockets when a later block write never settles", async () => {
+    const harness = createHarness();
+    const { app, gemini } = await startConversation(harness);
+    vi.spyOn(harness.store, "trySpendVoice").mockImplementation(() => new Promise(() => {}));
+    await harness.timers.advance(20_000);
+    expect(app.closedWith).toBe(1011);
+    expect(app.fudVoice().at(-1)).toEqual({ error: "voice_unavailable" });
+    expect(gemini.closedWith).toBe(1000);
+    expect(harness.timers.pending).toBe(0);
   });
 });
 

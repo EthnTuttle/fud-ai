@@ -49,7 +49,7 @@ function database(migrations: string[]): DatabaseSync {
   return db;
 }
 
-const ALL_MIGRATIONS = ["0002_hosted_ai_ledger.sql", "0003_hosted_ai_refunds.sql", "0004_hosted_ai_voice.sql"];
+const ALL_MIGRATIONS = ["0002_hosted_ai_ledger.sql", "0003_hosted_ai_refunds.sql", "0004_hosted_ai_voice.sql", "0005_hosted_ai_voice_spends.sql"];
 const HASH = "a".repeat(64);
 const NOW = new Date("2026-09-13T12:00:00.000Z");
 
@@ -88,13 +88,31 @@ describe("hosted AI ledger on SQLite (D1 schema and queries)", () => {
     expect(created).toMatchObject({ version: 0, voice_month: "", voice_seconds_used: 0 });
 
     const next = { voiceMonth: "2026-09", voiceSecondsUsed: 15, creditsSpent: 0 };
-    await expect(store.trySpendVoice(HASH, 0, next, NOW.toISOString())).resolves.toBe(true);
-    await expect(store.trySpendVoice(HASH, 0, { ...next, voiceSecondsUsed: 30 }, NOW.toISOString())).resolves.toBe(false);
+    const receipt = { id: crypto.randomUUID(), source: "allowance" as const };
+    await expect(store.trySpendVoice(HASH, 0, next, NOW.toISOString(), receipt)).resolves.toBe(true);
+    await expect(store.trySpendVoice(HASH, 0, { ...next, voiceSecondsUsed: 30 }, NOW.toISOString(), receipt)).resolves.toBe(false);
     expect(await store.get(HASH)).toMatchObject({ voice_month: "2026-09", voice_seconds_used: 15, version: 1 });
 
     // A later RevenueCat re-verification returns the voice counters untouched.
     const reverified = await store.upsertEntitlement(HASH, { plan: "pro", creditsGranted: 50 }, "2026-09-13T12:30:00.000Z");
     expect(reverified).toMatchObject({ plan: "pro", voice_month: "2026-09", voice_seconds_used: 15, version: 2 });
+  });
+
+  it("records a voice debit and receipt atomically and replays it without another debit", async () => {
+    const db = database(ALL_MIGRATIONS);
+    const store = new D1LedgerStore(sqliteD1(db));
+    const initial = await store.upsertEntitlement(HASH, { plan: "plus", creditsGranted: 0 }, NOW.toISOString());
+    const receiptId = crypto.randomUUID();
+    await spendVoiceBlock(context(store), HASH, initial, receiptId);
+    await spendVoiceBlock(context(store), HASH, initial, receiptId);
+    expect(await store.get(HASH)).toMatchObject({ voice_seconds_used: 15, version: 1 });
+    expect(await store.getVoiceSpend(HASH, receiptId)).toBe("allowance");
+    expect(await store.getVoiceSpend("b".repeat(64), receiptId)).toBeNull();
+    expect(db.prepare("SELECT count(*) AS count FROM hosted_ai_voice_spends").get()?.count).toBe(1);
+
+    // A failed receipt insert rolls its ledger debit back too.
+    await expect(store.trySpendVoice(HASH, 1, { voiceMonth: "2026-09", voiceSecondsUsed: 30, creditsSpent: 0 }, NOW.toISOString(), { id: "invalid", source: "allowance" })).rejects.toThrow();
+    expect(await store.get(HASH)).toMatchObject({ voice_seconds_used: 15, version: 1 });
   });
 
   it("pays voice blocks from the allowance, then the shared credit bank, then refuses", async () => {

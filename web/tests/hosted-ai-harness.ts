@@ -31,6 +31,12 @@ export class MemoryLedgerStore implements LedgerStore {
   voiceConflictOnce = false;
   /** Number of `trySpendVoice` calls that should throw (D1 unavailable). */
   voiceFailures = 0;
+  voiceReceipts = new Map<string, { userIdHash: string; source: "allowance" | "credits" }>();
+
+  async getVoiceSpend(userIdHash: string, receiptId: string): Promise<"allowance" | "credits" | null> {
+    const receipt = this.voiceReceipts.get(receiptId);
+    return receipt?.userIdHash === userIdHash ? receipt.source : null;
+  }
 
   async get(userIdHash: string): Promise<LedgerRow | null> {
     const row = this.rows.get(userIdHash);
@@ -87,7 +93,9 @@ export class MemoryLedgerStore implements LedgerStore {
   async trySpendVoice(
     userIdHash: string,
     expectedVersion: number,
-    next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number }
+    next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number },
+    _now: string,
+    receipt: { id: string; source: "allowance" | "credits" }
   ): Promise<boolean> {
     this.voiceSpendAttempts += 1;
     if (this.voiceFailures > 0) {
@@ -95,7 +103,7 @@ export class MemoryLedgerStore implements LedgerStore {
       throw new Error("D1_ERROR: transient");
     }
     const row = this.rows.get(userIdHash);
-    if (!row || row.version !== expectedVersion) return false;
+    if (!row || row.version !== expectedVersion || this.voiceReceipts.has(receipt.id)) return false;
     if (this.voiceConflictOnce) {
       this.voiceConflictOnce = false;
       row.version += 1;
@@ -105,6 +113,7 @@ export class MemoryLedgerStore implements LedgerStore {
     row.voice_seconds_used = next.voiceSecondsUsed;
     row.credits_spent = next.creditsSpent;
     row.version += 1;
+    this.voiceReceipts.set(receipt.id, { userIdHash, source: receipt.source });
     return true;
   }
 

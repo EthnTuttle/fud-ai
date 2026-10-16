@@ -26,6 +26,7 @@
 
 import { audioContainerForMimeType, measureAudioDurationSeconds } from "./hosted-ai-audio";
 import { GEMINI_REQUEST_LIMITS, sanitizeGeminiRequestBody } from "./hosted-ai-gemini-request";
+import { createLiveResumptionCodec } from "./hosted-ai-live-resumption";
 import {
   D1LedgerStore,
   fetchRevenueCatEntitlement,
@@ -347,6 +348,7 @@ async function openLiveSession(
       log: (event) => console.error(JSON.stringify(event)),
       redact: (text) => redactSecrets(text, env),
       platform: clientPlatform(request),
+      resumption: createLiveResumptionCodec(apiKey, client.userIdHash, () => ledger.now().getTime()),
     });
     return (runtime.upgradeResponse ?? webSocketUpgradeResponse)(pair.client);
   } catch (error) {

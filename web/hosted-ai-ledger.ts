@@ -138,6 +138,8 @@ export type VoiceSpendOutcome =
 /** Storage abstraction so tests can run against an in-memory ledger. */
 export interface LedgerStore {
   get(userIdHash: string): Promise<LedgerRow | null>;
+  /** A stable receipt makes retries after an uncertain write outcome idempotent. */
+  getVoiceSpend(userIdHash: string, receiptId: string): Promise<"allowance" | "credits" | null>;
   /**
    * Records a RevenueCat verification. Must be monotonic in `verifiedAt`: when
    * the stored row was verified more recently (overlapping refreshes finishing
@@ -165,7 +167,8 @@ export interface LedgerStore {
     userIdHash: string,
     expectedVersion: number,
     next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number },
-    now: string
+    now: string,
+    receipt: { id: string; source: "allowance" | "credits" }
   ): Promise<boolean>;
   /**
    * Reverses `receipt`. Must be idempotent: applying the same receipt again
@@ -179,6 +182,14 @@ export const REFUND_MARKER_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
 export class D1LedgerStore implements LedgerStore {
   constructor(private readonly database: D1Database | D1DatabaseSession) {}
+
+  async getVoiceSpend(userIdHash: string, receiptId: string): Promise<"allowance" | "credits" | null> {
+    const receipt = await this.database
+      .prepare("SELECT source FROM hosted_ai_voice_spends WHERE receipt_id = ?1 AND user_id_hash = ?2")
+      .bind(receiptId, userIdHash)
+      .first<{ source: "allowance" | "credits" }>();
+    return receipt?.source ?? null;
+  }
 
   async get(userIdHash: string): Promise<LedgerRow | null> {
     return await this.database
@@ -243,18 +254,26 @@ export class D1LedgerStore implements LedgerStore {
     userIdHash: string,
     expectedVersion: number,
     next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number },
-    now: string
+    now: string,
+    receipt: { id: string; source: "allowance" | "credits" }
   ): Promise<boolean> {
-    const result = await this.database
-      .prepare(
+    // D1 batches are atomic. Only the update that matched this version writes
+    // a receipt; a retry after commit cannot apply that receipt a second time.
+    const results = await this.database.batch([
+      this.database.prepare(
         `UPDATE hosted_ai_ledger
             SET voice_month = ?1, voice_seconds_used = ?2, credits_spent = ?3,
                 version = version + 1, updated_at = ?4
-          WHERE user_id_hash = ?5 AND version = ?6`
+          WHERE user_id_hash = ?5 AND version = ?6
+            AND NOT EXISTS (SELECT 1 FROM hosted_ai_voice_spends WHERE receipt_id = ?7)`
       )
-      .bind(next.voiceMonth, next.voiceSecondsUsed, next.creditsSpent, now, userIdHash, expectedVersion)
-      .run();
-    return (result.meta?.changes ?? 0) === 1;
+      .bind(next.voiceMonth, next.voiceSecondsUsed, next.creditsSpent, now, userIdHash, expectedVersion, receipt.id),
+      this.database.prepare(
+        `INSERT INTO hosted_ai_voice_spends (receipt_id, user_id_hash, source, created_at)
+         SELECT ?1, ?2, ?3, ?4 WHERE changes() = 1`
+      ).bind(receipt.id, userIdHash, receipt.source, now),
+    ]);
+    return (results[0]?.meta?.changes ?? 0) === 1;
   }
 
   /**
@@ -310,6 +329,7 @@ export async function cleanupHostedAILedger(
     .run();
   const refundCutoff = new Date(now.getTime() - REFUND_MARKER_RETENTION_MS).toISOString();
   await database.prepare("DELETE FROM hosted_ai_refunds WHERE created_at < ?1").bind(refundCutoff).run();
+  await database.prepare("DELETE FROM hosted_ai_voice_spends WHERE created_at < ?1").bind(refundCutoff).run();
 }
 
 export function utcDayKey(date: Date): string {
@@ -544,11 +564,18 @@ export async function spendFromLedger(
 export async function spendVoiceBlock(
   context: LedgerContext,
   userIdHash: string,
-  initialRow: LedgerRow
+  initialRow: LedgerRow,
+  receiptId: string = crypto.randomUUID()
 ): Promise<VoiceSpendOutcome> {
   let row = initialRow;
   for (let attempt = 0; attempt < SPEND_RETRY_ATTEMPTS; attempt += 1) {
     const now = context.now();
+    const paidSource = await context.store.getVoiceSpend(userIdHash, receiptId);
+    if (paidSource !== null) {
+      const paidRow = await context.store.get(userIdHash);
+      if (!paidRow) throw new Error("ledger_row_missing");
+      return { status: "spent", source: paidSource, voice: voiceQuotaFromRow(paidRow, now), row: paidRow };
+    }
     const voice = voiceQuotaFromRow(row, now);
     let source: "allowance" | "credits";
     let next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number };
@@ -570,7 +597,7 @@ export async function spendVoiceBlock(
       return { status: "quota_exceeded", voice };
     }
 
-    const committed = await context.store.trySpendVoice(userIdHash, row.version, next, now.toISOString());
+    const committed = await context.store.trySpendVoice(userIdHash, row.version, next, now.toISOString(), { id: receiptId, source });
     if (committed) {
       const updated: LedgerRow = {
         ...row,
