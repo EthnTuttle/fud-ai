@@ -1,6 +1,7 @@
 /**
  * Fud AI hosted path — proxies Gemini Flash-Lite + Deepgram STT for Plus/Pro
- * subscribers.
+ * subscribers, and relays the live voice assistant to Gemini Live
+ * (`GET /live`, WebSocket; session logic in hosted-ai-live.ts).
  *
  * Security model (see services/hosted-ai/README.md):
  *   - No shared client secret. The app only sends its RevenueCat app user id.
@@ -18,6 +19,9 @@
  *   - Per-action cost is bounded: output tokens are capped, transcription
  *     audio is limited by measured duration, and upstream calls the provider
  *     may still bill (timeouts, empty 200s) are not refunded.
+ *   - The voice relay passes the same identity, rate-limit and plan checks,
+ *     plus a voice balance check, before upgrading; failures are plain JSON
+ *     responses. It is metered by time (15-second blocks), not per action.
  */
 
 import { audioContainerForMimeType, measureAudioDurationSeconds } from "./hosted-ai-audio";
@@ -30,13 +34,27 @@ import {
   refundToLedger,
   sha256Hex,
   spendFromLedger,
+  voiceBlocksRemaining,
+  voiceQuotaFromRow,
   type LedgerContext,
   type LedgerStore,
   type QuotaSnapshot,
   type SpendReceipt,
 } from "./hosted-ai-ledger";
+import {
+  createWebSocketPair,
+  resolveLiveModel,
+  setRuntimeTimer,
+  startLiveRelay,
+  webSocketUpgradeResponse,
+} from "./hosted-ai-live";
 
 export const HOSTED_AI_API_PREFIX = "/api/hosted-ai/v1";
+
+/** Gemini Live endpoint; the key goes in the `x-goog-api-key` header, never in this URL. */
+export const GEMINI_LIVE_URL =
+  "https://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent";
+const LIVE_CONNECT_TIMEOUT_MS = 10_000;
 
 const HOSTED_GEMINI_MODEL = "gemini-3.5-flash-lite";
 const MAX_HOSTED_IMAGES = 3;
@@ -81,6 +99,7 @@ type HostedAIEnv = Pick<
   | "GEMINI_API_KEY"
   | "DEEPGRAM_API_KEY"
   | "REVENUECAT_API_KEY"
+  | "HOSTED_AI_LIVE_MODEL"
   | "CHALLENGE_DB"
   | "HOSTED_AI_USER_RATE_LIMITER"
   | "HOSTED_AI_ADDRESS_RATE_LIMITER"
@@ -91,9 +110,22 @@ export interface HostedAIDependencies {
   fetch?: typeof fetch;
   store?: LedgerStore;
   now?: () => Date;
-  /** `ExecutionContext.waitUntil`; lets refund retries outlive the response. */
+  /**
+   * `ExecutionContext.waitUntil`; lets refund retries outlive the response and
+   * keeps a voice block charge alive if the app disconnects mid-write.
+   */
   waitUntil?: (promise: Promise<unknown>) => void;
   sleep?: (ms: number) => Promise<void>;
+  /** Workers-only WebSocket APIs used by the voice relay. */
+  live?: LiveRuntime;
+}
+
+export interface LiveRuntime {
+  webSocketPair?: () => { client: WebSocket; server: WebSocket };
+  /** Builds the `101 Switching Protocols` response handing `client` to the app. */
+  upgradeResponse?: (client: WebSocket) => Response;
+  /** Schedules `callback`; returns a function that cancels it. */
+  setTimer?: (callback: () => void, ms: number) => () => void;
 }
 
 class HostedAIError extends Error {
@@ -153,10 +185,13 @@ export async function handleHostedAIRequest(
 
   let client: HostedClientContext | null = null;
   try {
-    if (subpath === "/quota") {
+    if (subpath === "/quota" || subpath === "/live") {
       if (request.method !== "GET") throw new HostedAIError(405, "method_not_allowed", undefined, { Allow: "GET" });
     } else if (request.method !== "POST") {
       throw new HostedAIError(405, "method_not_allowed", undefined, { Allow: "POST" });
+    }
+    if (subpath === "/live" && request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
+      throw new HostedAIError(426, "upgrade_required", undefined, { Upgrade: "websocket" });
     }
 
     client = await identifyClient(request, env);
@@ -165,7 +200,13 @@ export async function handleHostedAIRequest(
     if (subpath === "/quota") {
       const refresh = url.searchParams.get("refresh") === "1";
       const row = await loadVerifiedLedger(ledger, client.userId, client.userIdHash, refresh);
-      return json({ quota: quotaFromRow(row, now()) }, 200, quotaHeaders(quotaFromRow(row, now())));
+      const at = now();
+      const quota = quotaFromRow(row, at);
+      return json({ quota, voice: voiceQuotaFromRow(row, at) }, 200, quotaHeaders(quota));
+    }
+
+    if (subpath === "/live") {
+      return await openLiveSession(request, env, deps, client, ledger, fetchImpl);
     }
 
     let prepare: RoutePreparer;
@@ -255,6 +296,131 @@ async function identifyClient(request: Request, env: HostedAIEnv): Promise<Hoste
   }
 
   return { userId, userIdHash };
+}
+
+// MARK: Voice relay (WebSocket)
+
+/**
+ * Runs every check before the upgrade, so a refused session is a plain JSON
+ * response and costs nothing: verified plan (403), relay configuration (503),
+ * at least one payable voice block (402), and a working upstream socket (503).
+ * Charging starts at `setupComplete` (see hosted-ai-live.ts).
+ */
+async function openLiveSession(
+  request: Request,
+  env: HostedAIEnv,
+  deps: HostedAIDependencies,
+  client: HostedClientContext,
+  ledger: LedgerContext,
+  fetchImpl: typeof fetch
+): Promise<Response> {
+  const row = await loadVerifiedLedger(ledger, client.userId, client.userIdHash);
+  const at = ledger.now();
+  const quota = quotaFromRow(row, at);
+  const voice = voiceQuotaFromRow(row, at);
+  if (row.plan === "none") throw new HostedAIError(403, "subscription_required", { quota, voice });
+
+  const apiKey = env.GEMINI_API_KEY;
+  const model = resolveLiveModel(env.HOSTED_AI_LIVE_MODEL);
+  if (!apiKey || !model) {
+    if (apiKey) console.error(JSON.stringify({ event: "hosted_ai_live_misconfigured", setting: "HOSTED_AI_LIVE_MODEL" }));
+    throw new HostedAIError(503, "voice_unavailable");
+  }
+  if (voiceBlocksRemaining(voice) < 1) throw new HostedAIError(402, "voice_quota_exceeded", { quota, voice });
+
+  const runtime = deps.live ?? {};
+  const setTimer = runtime.setTimer ?? setRuntimeTimer;
+  const upstream = await connectGeminiLive(apiKey, fetchImpl, setTimer, client, env);
+  try {
+    const pair = (runtime.webSocketPair ?? createWebSocketPair)();
+    startLiveRelay({
+      client: pair.server,
+      upstream,
+      model,
+      ledger,
+      userIdHash: client.userIdHash,
+      row,
+      clock: () => ledger.now().getTime(),
+      setTimer,
+      sleep: deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))),
+      ...(deps.waitUntil ? { waitUntil: deps.waitUntil } : {}),
+      log: (event) => console.error(JSON.stringify(event)),
+      redact: (text) => redactSecrets(text, env),
+      platform: clientPlatform(request),
+    });
+    return (runtime.upgradeResponse ?? webSocketUpgradeResponse)(pair.client);
+  } catch (error) {
+    try {
+      upstream.close(1011, "relay_failed");
+    } catch {
+      // Not accepted yet; dropped with the invocation.
+    }
+    throw error;
+  }
+}
+
+/**
+ * Opens the upstream Gemini Live socket with the key in a header. The timeout
+ * covers the handshake only: it is cancelled once the response arrives, so it
+ * can never tear down an established socket. Failures are logged with
+ * structured fields only and surface as 503 `voice_unavailable`.
+ */
+async function connectGeminiLive(
+  apiKey: string,
+  fetchImpl: typeof fetch,
+  setTimer: (callback: () => void, ms: number) => () => void,
+  client: HostedClientContext,
+  env: HostedAIEnv
+): Promise<WebSocket> {
+  const controller = new AbortController();
+  const cancelTimeout = setTimer(() => controller.abort(), LIVE_CONNECT_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetchImpl(GEMINI_LIVE_URL, {
+      headers: { Upgrade: "websocket", "x-goog-api-key": apiKey },
+      signal: controller.signal,
+    });
+  } catch (error) {
+    const detail = controller.signal.aborted
+      ? "connect_timeout"
+      : `connect_failed:${error instanceof Error ? error.name : typeof error}`;
+    throw liveConnectFailure(0, detail, true, client, env);
+  } finally {
+    cancelTimeout();
+  }
+
+  const socket = response.webSocket;
+  if (!socket) {
+    const raw = await response.text().catch(() => "");
+    const transient = response.status === 429 || response.status >= 500;
+    throw liveConnectFailure(response.status, summarizeUpstreamErrorBody(raw), transient, client, env);
+  }
+  return socket;
+}
+
+function liveConnectFailure(
+  upstreamStatus: number,
+  detail: string,
+  transient: boolean,
+  client: HostedClientContext,
+  env: HostedAIEnv
+): HostedAIError {
+  console.error(
+    JSON.stringify({
+      event: "hosted_ai_live_connect_failed",
+      upstreamStatus,
+      detail: redactSecrets(detail.slice(0, 200), env),
+      userIdHash: client.userIdHash.slice(0, 12),
+    })
+  );
+  return new HostedAIError(503, "voice_unavailable", undefined, transient ? { "Retry-After": "30" } : undefined);
+}
+
+/** `X-Fud-Platform` (ios|android); informational, used in relay logs only. */
+function clientPlatform(request: Request): string {
+  const value = request.headers.get("X-Fud-Platform")?.trim().toLowerCase();
+  if (!value) return "unknown";
+  return value === "ios" || value === "android" ? value : "other";
 }
 
 /**

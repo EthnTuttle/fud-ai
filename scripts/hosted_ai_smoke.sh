@@ -90,6 +90,7 @@ PY
 }
 
 check "quota (plan lookup + D1 ledger)" "quota?refresh=1" - 'r["quota"]["plan"] == "plus" and r["quota"]["dailyLimit"] == 30'
+check "voice balance (migration 0004)"   quota    -                   'r["voice"]["secondsLimit"] == 1200 and r["voice"]["secondsUsed"] == 0'
 check "text log"                         generate "$WORK/text.json"   'json.loads(text)["calories"] > 0'
 check "photo log"                        generate "$WORK/photo.json"  '"banana" in text.lower()'
 check "two photos"                       generate "$WORK/photos.json" 'len(json.loads(text)["items"]) >= 2'

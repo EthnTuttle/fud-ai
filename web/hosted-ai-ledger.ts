@@ -13,6 +13,10 @@
  * id, so grants are idempotent and survive reinstalls/backups. Spending is a
  * compare-and-swap on the ledger row `version`, so concurrent requests from
  * the same user cannot double-spend.
+ *
+ * The live voice relay meters the same row in 15-second blocks:
+ *
+ *   monthly voice allowance (UTC calendar month) → credit bank (1 per block) → 4402
  */
 
 /**
@@ -36,6 +40,19 @@ export const HOSTED_AI_DAILY_LIMITS: Readonly<Record<HostedPlan, number>> = {
   none: 0,
   plus: 30,
   pro: 60,
+};
+
+/** One metered voice block; each block is charged when it starts. */
+export const VOICE_BLOCK_SECONDS = 15;
+
+/** Credits a voice block costs once the monthly allowance is used up (4 a minute). */
+export const VOICE_CREDITS_PER_BLOCK = 1;
+
+/** Monthly voice allowance per plan in seconds, reset each UTC calendar month. */
+export const HOSTED_AI_VOICE_MONTHLY_SECONDS: Readonly<Record<HostedPlan, number>> = {
+  none: 0,
+  plus: 20 * 60,
+  pro: 100 * 60,
 };
 
 const PLUS_ENTITLEMENT_ID = "plus";
@@ -67,6 +84,10 @@ export interface LedgerRow {
   daily_used: number;
   entitlement_verified_at: string;
   version: number;
+  /** UTC month (YYYY-MM) `voice_seconds_used` applies to; '' before the first voice block. */
+  voice_month: string;
+  /** Seconds drawn from the monthly voice allowance in `voice_month`. */
+  voice_seconds_used: number;
 }
 
 export interface EntitlementSnapshot {
@@ -94,6 +115,26 @@ export type SpendOutcome =
   | { status: "spent"; receipt: SpendReceipt; quota: QuotaSnapshot }
   | { status: "quota_exceeded"; quota: QuotaSnapshot };
 
+/** Voice balance for the current UTC month, as returned by `GET /quota`. */
+export interface VoiceQuotaSnapshot {
+  month: string;
+  /** Seconds drawn from this month's allowance (credit-paid blocks are not counted here). */
+  secondsUsed: number;
+  secondsLimit: number;
+  /** The same credit bank hosted actions use. */
+  creditBank: number;
+}
+
+export type VoiceSpendOutcome =
+  | {
+      status: "spent";
+      source: "allowance" | "credits";
+      voice: VoiceQuotaSnapshot;
+      /** The row as committed, so the next block can start its compare-and-swap from it. */
+      row: LedgerRow;
+    }
+  | { status: "quota_exceeded"; voice: VoiceQuotaSnapshot };
+
 /** Storage abstraction so tests can run against an in-memory ledger. */
 export interface LedgerStore {
   get(userIdHash: string): Promise<LedgerRow | null>;
@@ -116,6 +157,17 @@ export interface LedgerStore {
     now: string
   ): Promise<boolean>;
   /**
+   * Compare-and-swap update of the voice counters and `credits_spent` (which
+   * grows when a voice block is paid from the credit bank); resolves `true`
+   * when `expectedVersion` matched.
+   */
+  trySpendVoice(
+    userIdHash: string,
+    expectedVersion: number,
+    next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number },
+    now: string
+  ): Promise<boolean>;
+  /**
    * Reverses `receipt`. Must be idempotent: applying the same receipt again
    * (a retry after a write that committed but reported an error) is a no-op.
    */
@@ -132,7 +184,7 @@ export class D1LedgerStore implements LedgerStore {
     return await this.database
       .prepare(
         `SELECT user_id_hash, plan, credits_granted, credits_spent, usage_day, daily_used,
-                entitlement_verified_at, version
+                entitlement_verified_at, version, voice_month, voice_seconds_used
            FROM hosted_ai_ledger WHERE user_id_hash = ?`
       )
       .bind(userIdHash)
@@ -161,7 +213,7 @@ export class D1LedgerStore implements LedgerStore {
            version = hosted_ai_ledger.version + 1,
            updated_at = MAX(hosted_ai_ledger.updated_at, excluded.updated_at)
          RETURNING user_id_hash, plan, credits_granted, credits_spent, usage_day, daily_used,
-                   entitlement_verified_at, version`
+                   entitlement_verified_at, version, voice_month, voice_seconds_used`
       )
       .bind(userIdHash, snapshot.plan, snapshot.creditsGranted, utcDayKey(new Date(verifiedAt)), verifiedAt)
       .first<LedgerRow>();
@@ -183,6 +235,24 @@ export class D1LedgerStore implements LedgerStore {
           WHERE user_id_hash = ?5 AND version = ?6`
       )
       .bind(next.usageDay, next.dailyUsed, next.creditsSpent, now, userIdHash, expectedVersion)
+      .run();
+    return (result.meta?.changes ?? 0) === 1;
+  }
+
+  async trySpendVoice(
+    userIdHash: string,
+    expectedVersion: number,
+    next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number },
+    now: string
+  ): Promise<boolean> {
+    const result = await this.database
+      .prepare(
+        `UPDATE hosted_ai_ledger
+            SET voice_month = ?1, voice_seconds_used = ?2, credits_spent = ?3,
+                version = version + 1, updated_at = ?4
+          WHERE user_id_hash = ?5 AND version = ?6`
+      )
+      .bind(next.voiceMonth, next.voiceSecondsUsed, next.creditsSpent, now, userIdHash, expectedVersion)
       .run();
     return (result.meta?.changes ?? 0) === 1;
   }
@@ -222,8 +292,11 @@ export class D1LedgerStore implements LedgerStore {
  * ever spent purchased credits are kept indefinitely: `credits_granted` is
  * re-derived from RevenueCat's lifetime `non_subscriptions`, but
  * `credits_spent` exists only here, so deleting such a row would hand every
- * previously consumed credit back on the next visit. Refund markers only need
- * to outlive the refund retry window (seconds), so they are pruned after
+ * previously consumed credit back on the next visit (voice blocks paid with
+ * credits count too: they raise `credits_spent`). Every voice block bumps
+ * `updated_at`, and the voice allowance resets monthly, so an idle row never
+ * carries voice usage worth keeping. Refund markers only need to outlive the
+ * refund retry window (seconds), so they are pruned after
  * `REFUND_MARKER_RETENTION_MS`.
  */
 export async function cleanupHostedAILedger(
@@ -243,6 +316,10 @@ export function utcDayKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+export function utcMonthKey(date: Date): string {
+  return date.toISOString().slice(0, 7);
+}
+
 export async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -258,6 +335,24 @@ export function quotaFromRow(row: LedgerRow, now: Date): QuotaSnapshot {
     dailyLimit: HOSTED_AI_DAILY_LIMITS[row.plan],
     creditBank: Math.max(0, row.credits_granted - row.credits_spent),
   };
+}
+
+export function voiceQuotaFromRow(row: LedgerRow, now: Date): VoiceQuotaSnapshot {
+  const month = utcMonthKey(now);
+  return {
+    month,
+    secondsUsed: row.voice_month === month ? row.voice_seconds_used : 0,
+    secondsLimit: HOSTED_AI_VOICE_MONTHLY_SECONDS[row.plan],
+    creditBank: Math.max(0, row.credits_granted - row.credits_spent),
+  };
+}
+
+/** Whole voice blocks the balance can still pay for: allowance first, then credits. */
+export function voiceBlocksRemaining(voice: VoiceQuotaSnapshot): number {
+  const allowanceSeconds = Math.max(0, voice.secondsLimit - voice.secondsUsed);
+  return (
+    Math.floor(allowanceSeconds / VOICE_BLOCK_SECONDS) + Math.floor(voice.creditBank / VOICE_CREDITS_PER_BLOCK)
+  );
 }
 
 // MARK: RevenueCat verification
@@ -428,6 +523,63 @@ export async function spendFromLedger(
           creditBank: Math.max(0, row.credits_granted - next.creditsSpent),
         },
       };
+    }
+
+    const reloaded = await context.store.get(userIdHash);
+    if (!reloaded) throw new Error("ledger_row_missing");
+    row = reloaded;
+  }
+  throw new Error("ledger_contention");
+}
+
+/**
+ * Atomically pays for one voice block: `VOICE_BLOCK_SECONDS` from this UTC
+ * month's allowance when a whole block is left, otherwise
+ * `VOICE_CREDITS_PER_BLOCK` from the credit bank. A new month starts the
+ * allowance counter from zero. Same compare-and-swap and retry as
+ * `spendFromLedger`, so voice sessions and hosted actions running at once for
+ * one user cannot double-spend. Blocks are never refunded: each is charged when
+ * it starts and covers the provider time that follows.
+ */
+export async function spendVoiceBlock(
+  context: LedgerContext,
+  userIdHash: string,
+  initialRow: LedgerRow
+): Promise<VoiceSpendOutcome> {
+  let row = initialRow;
+  for (let attempt = 0; attempt < SPEND_RETRY_ATTEMPTS; attempt += 1) {
+    const now = context.now();
+    const voice = voiceQuotaFromRow(row, now);
+    let source: "allowance" | "credits";
+    let next: { voiceMonth: string; voiceSecondsUsed: number; creditsSpent: number };
+    if (voice.secondsLimit - voice.secondsUsed >= VOICE_BLOCK_SECONDS) {
+      source = "allowance";
+      next = {
+        voiceMonth: voice.month,
+        voiceSecondsUsed: voice.secondsUsed + VOICE_BLOCK_SECONDS,
+        creditsSpent: row.credits_spent,
+      };
+    } else if (voice.creditBank >= VOICE_CREDITS_PER_BLOCK) {
+      source = "credits";
+      next = {
+        voiceMonth: voice.month,
+        voiceSecondsUsed: voice.secondsUsed,
+        creditsSpent: row.credits_spent + VOICE_CREDITS_PER_BLOCK,
+      };
+    } else {
+      return { status: "quota_exceeded", voice };
+    }
+
+    const committed = await context.store.trySpendVoice(userIdHash, row.version, next, now.toISOString());
+    if (committed) {
+      const updated: LedgerRow = {
+        ...row,
+        voice_month: next.voiceMonth,
+        voice_seconds_used: next.voiceSecondsUsed,
+        credits_spent: next.creditsSpent,
+        version: row.version + 1,
+      };
+      return { status: "spent", source, voice: voiceQuotaFromRow(updated, now), row: updated };
     }
 
     const reloaded = await context.store.get(userIdHash);
