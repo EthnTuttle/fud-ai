@@ -90,6 +90,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
@@ -134,6 +135,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -189,6 +191,7 @@ import com.apoorvdarshan.calorietracker.services.health.HealthAvailabilityMessag
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectAvailability
 import com.apoorvdarshan.calorietracker.services.health.healthAvailabilityMessageKind
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelId
+import com.apoorvdarshan.calorietracker.services.voice.VoiceSettingsSection
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelIneligibility
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelInstallStatus
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelState
@@ -280,6 +283,7 @@ internal enum class SettingsCategory(
     AI_ACCESS(R.string.settings_category_ai_access, Icons.Outlined.WorkspacePremium),
     AI_PROVIDERS(R.string.settings_category_ai_providers, Icons.Outlined.SmartToy),
     SPEECH_TO_TEXT(R.string.settings_section_speech, Icons.Outlined.Mic),
+    VOICE_ASSISTANT(R.string.settings_category_voice_assistant, Icons.Outlined.RecordVoiceOver),
     APP_PREFERENCES(R.string.settings_section_app, Icons.Outlined.Palette),
     WORKOUT(R.string.settings_section_workout, Icons.Outlined.FitnessCenter),
     HEALTH_DATA(R.string.settings_section_health, Icons.Outlined.Favorite),
@@ -310,9 +314,42 @@ internal enum class SettingsCategory(
         AboutSettingsCategory.LEGAL
     );
 
+    /** The voice assistant's name for this category (`open_screen` / `get_app_state`). */
+    val voiceSection: VoiceSettingsSection?
+        get() = when (this) {
+            PERSONAL_INFO -> VoiceSettingsSection.PROFILE
+            GOALS_NUTRITION -> VoiceSettingsSection.GOALS
+            TRACKING_REMINDERS -> VoiceSettingsSection.REMINDERS
+            NOTIFICATIONS -> VoiceSettingsSection.NOTIFICATIONS
+            AI_ACCESS, AI_PROVIDERS -> VoiceSettingsSection.AI_PROVIDERS
+            SPEECH_TO_TEXT -> VoiceSettingsSection.SPEECH
+            VOICE_ASSISTANT -> VoiceSettingsSection.VOICE_ASSISTANT
+            APP_PREFERENCES -> VoiceSettingsSection.APPEARANCE
+            WORKOUT -> VoiceSettingsSection.WORKOUTS
+            HEALTH_DATA -> VoiceSettingsSection.HEALTH
+            DATA_MANAGEMENT -> VoiceSettingsSection.DATA
+            APP_UPDATES, SUPPORT, HELP_FEEDBACK, COMMUNITY, LEGAL -> VoiceSettingsSection.ABOUT
+        }
+
     companion object {
         val preferenceEntries = entries.filter { it.aboutCategory == null }
         val appInfoEntries = entries.filter { it.aboutCategory != null }
+
+        /** Where the voice assistant's settings section opens; About lands on App Updates. */
+        fun forVoiceSection(section: VoiceSettingsSection): SettingsCategory = when (section) {
+            VoiceSettingsSection.PROFILE -> PERSONAL_INFO
+            VoiceSettingsSection.GOALS -> GOALS_NUTRITION
+            VoiceSettingsSection.REMINDERS -> TRACKING_REMINDERS
+            VoiceSettingsSection.NOTIFICATIONS -> NOTIFICATIONS
+            VoiceSettingsSection.AI_PROVIDERS -> AI_PROVIDERS
+            VoiceSettingsSection.SPEECH -> SPEECH_TO_TEXT
+            VoiceSettingsSection.APPEARANCE -> APP_PREFERENCES
+            VoiceSettingsSection.WORKOUTS -> WORKOUT
+            VoiceSettingsSection.HEALTH -> HEALTH_DATA
+            VoiceSettingsSection.DATA -> DATA_MANAGEMENT
+            VoiceSettingsSection.VOICE_ASSISTANT -> VOICE_ASSISTANT
+            VoiceSettingsSection.ABOUT -> APP_UPDATES
+        }
     }
 }
 
@@ -358,6 +395,21 @@ fun SettingsScreen(
         if (popToRootTick > 0) {
             selectedCategory = null
         }
+    }
+    // The voice assistant opens a section through the app navigator and reads back which
+    // one is on screen.
+    val pendingVoiceSection by container.navigator.pendingSettingsSection.collectAsState()
+    LaunchedEffect(pendingVoiceSection) {
+        pendingVoiceSection?.let { section ->
+            selectedCategory = SettingsCategory.forVoiceSection(section)
+            container.navigator.pendingSettingsSection.value = null
+        }
+    }
+    LaunchedEffect(selectedCategory) {
+        container.navigator.settingsSection.value = selectedCategory?.voiceSection
+    }
+    DisposableEffect(Unit) {
+        onDispose { container.navigator.settingsSection.value = null }
     }
     val settingsHomeScrollState = rememberScrollState()
     val settingsDetailScrollState = remember(selectedCategory) { ScrollState(initial = 0) }
@@ -1377,6 +1429,13 @@ fun SettingsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
             }
+            }
+
+            if (selectedCategory == SettingsCategory.VOICE_ASSISTANT) {
+                VoiceAssistantSettings(
+                    container = container,
+                    onOpenAiProviders = { selectedCategory = SettingsCategory.AI_PROVIDERS }
+                )
             }
 
             // Section 6 — Health & Data (matches iOS Section "Health & Data")
