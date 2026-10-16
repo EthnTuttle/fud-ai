@@ -122,6 +122,13 @@
 			);
 			target = BA8E0DF22F33F197007DD537 /* calorietracker */;
 		};
+		F00D6A00000000000000A001 /* Exceptions for "calorietracker" folder in "FudAIWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				AppIntents/TalkToFudAIIntent.swift,
+			);
+			target = BA8E0E282F33F198007DD537 /* FudAIWidgetsExtension */;
+		};
 		BA8E0E262F33F198007DD537 /* Exceptions for "FudAIWidgets" folder in "FudAIWidgetsExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -157,6 +164,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				BA8E0E192F33F198007DD537 /* Exceptions for "calorietracker" folder in "calorietracker" target */,
+				F00D6A00000000000000A001 /* Exceptions for "calorietracker" folder in "FudAIWidgetsExtension" target */,
 			);
 			path = calorietracker;
 			sourceTree = "<group>";
