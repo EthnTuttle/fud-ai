@@ -75,7 +75,11 @@ final class VoiceAssistantController {
 
     private(set) var presentation: Presentation = .hidden
     /// Expanded fills the screen; compact is a floating bubble with a caption pill.
-    var isExpanded = true
+    var isExpanded = true {
+        didSet {
+            if !isExpanded { closeCamera() }
+        }
+    }
     private(set) var phase: Phase = .idle
     private(set) var provider: LiveProvider?
     private(set) var isAssistantSpeaking = false
@@ -112,7 +116,7 @@ final class VoiceAssistantController {
 
     @ObservationIgnored let navigator: VoiceAssistantNavigator
     @ObservationIgnored let settings: VoiceAssistantSettings
-    @ObservationIgnored let camera = VoiceAssistantCamera()
+    @ObservationIgnored let camera: any VoiceAssistantCameraIO
     @ObservationIgnored private var appData: AppData?
     @ObservationIgnored private var didRefreshEntitlement = false
     @ObservationIgnored private var isStarting = false
@@ -158,19 +162,22 @@ final class VoiceAssistantController {
     @ObservationIgnored private var pickerContinuation: CheckedContinuation<VoiceAssistantWait<[UIImage]>, Never>?
     @ObservationIgnored private var pickerNumber = 0
     @ObservationIgnored private var isLoadingPickedPhotos = false
-    @ObservationIgnored private var barcodeContinuation: CheckedContinuation<VoiceAssistantWait<String>, Never>?
+    @ObservationIgnored private let barcodeRequest = VoiceAssistantBarcodeRequest()
+    @ObservationIgnored private var cameraNumber = 0
 
     init(
         navigator: VoiceAssistantNavigator? = nil,
         settings: VoiceAssistantSettings = VoiceAssistantSettings(),
+        camera: (any VoiceAssistantCameraIO)? = nil,
         makeSocket: @escaping LiveSession.SocketFactory = { URLSessionLiveSocket(request: $0) },
         makeAudio: @escaping @MainActor () -> any LiveAudioIO = { LiveAudioEngine() }
     ) {
         self.navigator = navigator ?? .shared
         self.settings = settings
+        self.camera = camera ?? VoiceAssistantCamera()
         self.makeSocket = makeSocket
         self.makeAudio = makeAudio
-        camera.onBarcode = { [weak self] code in
+        self.camera.onBarcode = { [weak self] code in
             MainActor.assumeIsolated {
                 self?.finishBarcode(.value(code))
             }
@@ -727,11 +734,13 @@ final class VoiceAssistantController {
 
     /// After some tools the model should see the camera straight away.
     private func followUp(_ call: LiveToolCall) async {
-        guard call.name == "open_camera", cameraMode != nil, provider?.cameraFrames == .perTurn else { return }
+        guard call.name == "open_camera", isExpanded, cameraMode != nil, provider?.cameraFrames == .perTurn else { return }
         let number = sessionNumber
+        let cameraNumber = cameraNumber
         for _ in 0..<10 where camera.latestJPEG() == nil {
             try? await Task.sleep(for: .milliseconds(150))
-            guard !Task.isCancelled, number == sessionNumber else { return }
+            guard !Task.isCancelled, number == sessionNumber, cameraNumber == self.cameraNumber,
+                  isExpanded, cameraMode != nil else { return }
         }
         if let frame = camera.latestJPEG() {
             session?.send(image: frame)
@@ -829,11 +838,16 @@ final class VoiceAssistantController {
 
     /// The close button on the camera panel.
     func closeCameraTapped() {
-        let wasScanning = barcodeContinuation != nil
+        let wasScanning = barcodeRequest.isWaiting
         closeCamera()
         if !wasScanning {
             tellModel("[App] The user closed the camera.")
         }
+    }
+
+    func minimize() {
+        if cameraMode != nil { closeCameraTapped() }
+        isExpanded = false
     }
 
     // MARK: - Access screens
@@ -896,9 +910,7 @@ final class VoiceAssistantController {
     }
 
     private func finishBarcode(_ result: VoiceAssistantWait<String>) {
-        guard let continuation = barcodeContinuation else { return }
-        barcodeContinuation = nil
-        continuation.resume(returning: result)
+        barcodeRequest.finish(result)
     }
 
     // MARK: - Camera frames
@@ -909,7 +921,7 @@ final class VoiceAssistantController {
         let number = sessionNumber
         frameLoop = Task { [weak self] in
             while !Task.isCancelled {
-                guard let self, number == self.sessionNumber, self.cameraMode != nil else { return }
+                guard let self, number == self.sessionNumber, self.isExpanded, self.cameraMode != nil else { return }
                 if self.phase == .live, let frame = self.camera.latestJPEG() {
                     self.session?.send(image: frame)
                 }
@@ -920,7 +932,7 @@ final class VoiceAssistantController {
 
     /// OpenAI sees the latest frame with each thing the user says.
     private func sendCameraFrameForTurn() {
-        guard provider?.cameraFrames == .perTurn, cameraMode != nil, let frame = camera.latestJPEG() else { return }
+        guard provider?.cameraFrames == .perTurn, isExpanded, cameraMode != nil, let frame = camera.latestJPEG() else { return }
         session?.send(image: frame)
     }
 
@@ -1013,6 +1025,8 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
 
     func openCamera(_ mode: VoiceAssistantCamera.Mode) async -> VoiceAssistantCamera.StartResult {
         let number = sessionNumber
+        cameraNumber += 1
+        let cameraNumber = cameraNumber
         isExpanded = true
         if cameraMode == mode { return .started }
         if cameraMode != nil {
@@ -1021,8 +1035,9 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
             return .started
         }
         let result = await camera.start(mode: mode)
-        guard number == sessionNumber, presentation == .session, !Task.isCancelled else {
-            if number == sessionNumber { camera.stop() }
+        guard number == sessionNumber, cameraNumber == self.cameraNumber,
+              presentation == .session, isExpanded, !Task.isCancelled else {
+            if number == sessionNumber, cameraNumber == self.cameraNumber { camera.stop() }
             return .unavailable
         }
         if result == .started {
@@ -1034,7 +1049,8 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
 
     func closeCamera() {
         finishBarcode(.cancelled)
-        guard cameraMode != nil else { return }
+        cameraNumber += 1
+        // Also invalidate a permission/start request whose mode is not set yet.
         camera.stop()
         cameraMode = nil
         frameLoop?.cancel()
@@ -1042,7 +1058,7 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
     }
 
     func captureStill() async -> UIImage? {
-        await camera.captureStill()
+        await camera.captureStill(timeout: 3)
     }
 
     func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> {
@@ -1075,30 +1091,32 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
     }
 
     func scanBarcode(timeout: TimeInterval) async -> VoiceAssistantWait<String> {
-        finishBarcode(.cancelled)
+        let request = barcodeRequest.begin()
         switch await openCamera(.barcode) {
         case .denied: return .denied
         case .unavailable: return .unavailable
         case .started: break
+        }
+        guard barcodeRequest.isCurrent(request), !Task.isCancelled else {
+            if barcodeRequest.isCurrent(request), cameraMode == .barcode { closeCamera() }
+            return .cancelled
         }
         waitingForUser += 1
         defer { waitingForUser = max(0, waitingForUser - 1) }
         let timeoutTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(timeout))
             guard !Task.isCancelled else { return }
-            self?.finishBarcode(.timeout)
+            self?.barcodeRequest.finish(.timeout, request: request)
         }
         defer { timeoutTask.cancel() }
         let result: VoiceAssistantWait<String> = await withTaskCancellationHandler {
-            await withCheckedContinuation { continuation in
-                barcodeContinuation = continuation
-            }
+            await barcodeRequest.wait(for: request)
         } onCancel: {
             Task { @MainActor [weak self] in
-                self?.finishBarcode(.cancelled)
+                self?.barcodeRequest.finish(.cancelled, request: request)
             }
         }
-        if cameraMode == .barcode {
+        if barcodeRequest.isCurrent(request), cameraMode == .barcode {
             closeCamera()
         }
         return result

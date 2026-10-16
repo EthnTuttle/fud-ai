@@ -389,10 +389,18 @@ class FoodStore {
         guard !isPersistenceBlocked else { return false }
         guard FastingStore.persistedActiveSession(defaults: defaults) == nil else { return false }
         var entry = entry
+        let previousFilenames = Set(entry.allImageFilenames)
         let photosToExport = (entry.imageData.map { [$0] } ?? []) + entry.additionalImageData
         offloadImageToDiskIfNeeded(&entry)
         entries.append(entry)
-        saveEntries()
+        guard saveEntries() else {
+            entries.removeLast()
+            for filename in Set(entry.allImageFilenames).subtracting(previousFilenames)
+                where !isImageStillReferenced(filename: filename, excludingEntryID: entry.id) {
+                FoodImageStore.shared.delete(filename: filename)
+            }
+            return false
+        }
         exportLoggedMealPhotos(photosToExport)
         onEntriesChanged?()
         onEntryAdded?(entry)
@@ -407,27 +415,43 @@ class FoodStore {
         }
     }
 
-    func updateEntry(_ entry: FoodEntry) {
-        guard !isPersistenceBlocked else { return }
-        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return }
-        let previousFilenames = Set(entries[index].allImageFilenames)
+    @discardableResult
+    func updateEntry(_ entry: FoodEntry) -> Bool {
+        guard !isPersistenceBlocked else { return false }
+        guard let index = entries.firstIndex(where: { $0.id == entry.id }) else { return false }
+        let previous = entries[index]
+        let previousFilenames = Set(previous.allImageFilenames)
         var entry = entry
         offloadImageToDiskIfNeeded(&entry)
         entries[index] = entry
-        if saveEntries() {
-            let removedFilenames = previousFilenames.subtracting(entry.allImageFilenames)
-            for filename in removedFilenames where !isImageStillReferenced(filename: filename, excludingEntryID: entry.id) {
+        guard saveEntries() else {
+            entries[index] = previous
+            for filename in Set(entry.allImageFilenames).subtracting(previousFilenames)
+                where !isImageStillReferenced(filename: filename, excludingEntryID: entry.id) {
                 FoodImageStore.shared.delete(filename: filename)
             }
+            return false
+        }
+        let removedFilenames = previousFilenames.subtracting(entry.allImageFilenames)
+        for filename in removedFilenames where !isImageStillReferenced(filename: filename, excludingEntryID: entry.id) {
+            FoodImageStore.shared.delete(filename: filename)
         }
         onEntriesChanged?()
         // Single callback so HealthKit can serialize delete-then-write atomically.
         onEntryUpdated?(entry)
+        return true
     }
 
-    func deleteEntry(_ entry: FoodEntry) {
-        guard !isPersistenceBlocked else { return }
+    @discardableResult
+    func deleteEntry(_ entry: FoodEntry) -> Bool {
+        guard !isPersistenceBlocked, entries.contains(where: { $0.id == entry.id }) else { return false }
         let id = entry.id
+        let previous = entries
+        entries.removeAll { $0.id == id }
+        guard saveEntries() else {
+            entries = previous
+            return false
+        }
         // Skip the disk-delete when a favorite (or another entry) still
         // references this filename. Without this guard, favoriting a meal,
         // deleting the log entry, and relaunching wipes the favorite's image
@@ -435,10 +459,9 @@ class FoodStore {
         for filename in entry.allImageFilenames where !isImageStillReferenced(filename: filename, excludingEntryID: id) {
             FoodImageStore.shared.delete(filename: filename)
         }
-        entries.removeAll { $0.id == id }
-        saveEntries()
         onEntriesChanged?()
         onEntryDeleted?(id)
+        return true
     }
 
     /// Merge selected diary foods into one combined meal and remove the originals.

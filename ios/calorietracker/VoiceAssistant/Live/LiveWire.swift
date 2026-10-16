@@ -461,6 +461,7 @@ nonisolated struct HostedLiveWire: LiveWire {
 
 /// OpenAI's Realtime API (GA event names) over a WebSocket.
 nonisolated struct OpenAIRealtimeWire: LiveWire {
+    private let events = RealtimeLiveEvents()
     let inputSampleRate = 24_000.0
     let outputSampleRate = 24_000.0
     let waitsForSetupAcknowledgement = true
@@ -552,7 +553,7 @@ nonisolated struct OpenAIRealtimeWire: LiveWire {
     }
 
     func parse(_ message: String) -> [LiveEvent] {
-        Self.parseRealtimeEvent(message)
+        events.parse(message)
     }
 
     static func userTextItem(_ text: String) -> [String] {
@@ -593,14 +594,6 @@ nonisolated struct OpenAIRealtimeWire: LiveWire {
             return [.userSpeechStarted]
         case "response.created":
             return [.responseStarted]
-        case "response.function_call_arguments.done":
-            guard let name = json["name"] as? String, !name.isEmpty,
-                  let callID = (json["call_id"] as? String) ?? (json["item_id"] as? String) else { return [] }
-            let arguments = (json["arguments"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "{}"
-            return [.toolCalls([LiveToolCall(id: callID, name: name, argumentsJSON: arguments)])]
-        case "response.done":
-            let output = (json["response"] as? [String: Any])?["output"] as? [[String: Any]] ?? []
-            return [.responseDone(hasToolCalls: output.contains { ($0["type"] as? String) == "function_call" })]
         case "error":
             let error = json["error"] as? [String: Any]
             return [.error(error?["message"] as? String ?? "The provider reported an error.", code: error?["code"] as? String)]
@@ -615,6 +608,7 @@ nonisolated struct OpenAIRealtimeWire: LiveWire {
 /// xAI's Grok Voice Agent API, which follows the Realtime event shape. It takes
 /// function tools like OpenAI but no images.
 nonisolated struct XAIVoiceWire: LiveWire {
+    private let events = RealtimeLiveEvents()
     let inputSampleRate = 24_000.0
     let outputSampleRate = 24_000.0
     let waitsForSetupAcknowledgement = true
@@ -676,7 +670,7 @@ nonisolated struct XAIVoiceWire: LiveWire {
     }
 
     func parse(_ message: String) -> [LiveEvent] {
-        OpenAIRealtimeWire.parseRealtimeEvent(message)
+        events.parse(message)
     }
 }
 
