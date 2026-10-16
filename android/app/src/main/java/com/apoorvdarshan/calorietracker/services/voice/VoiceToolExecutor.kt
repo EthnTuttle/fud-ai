@@ -17,6 +17,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -70,6 +72,9 @@ class VoiceToolExecutor(
     private val pending = LinkedHashMap<String, PendingConfirmation>()
     private val completed = LinkedHashMap<String, Completed>()
     private val savedFoodIndex = HashMap<String, FoodEntry>()
+    // Model calls and card taps can interleave while a repository write suspends.
+    // Serialize writes only; a photo picker must not prevent close_camera/navigation.
+    private val mutationMutex = Mutex()
     private var nextCard = 1
 
     private val _cards = MutableStateFlow<List<VoiceCard>>(emptyList())
@@ -85,7 +90,7 @@ class VoiceToolExecutor(
         val perform: suspend () -> Performed
     )
 
-    private class Completed(val result: JsonObject, val expiresAtMillis: Long)
+    private class Completed(val result: JsonObject, val change: VoiceChange, val expiresAtMillis: Long)
 
     private val handlers: Map<String, suspend (ToolArgs, VoiceToolSpec) -> JsonObject> = mapOf(
         "get_app_state" to { _, _ -> appState() },
@@ -119,6 +124,13 @@ class VoiceToolExecutor(
     val handledToolNames: Set<String> get() = handlers.keys + VoiceToolCatalog.coachDataTools().map { it.name }
 
     suspend fun execute(call: LiveToolCall): JsonObject {
+        val effect = specs[call.name]?.effect
+        return if (effect == ToolEffect.WRITE || effect == ToolEffect.DESTRUCTIVE) {
+            mutationMutex.withLock { executeCall(call) }
+        } else executeCall(call)
+    }
+
+    private suspend fun executeCall(call: LiveToolCall): JsonObject {
         val spec = specs[call.name]
             ?: return ToolResults.error(ToolError.UNSUPPORTED, "Unknown tool: ${call.name}.")
         if (spec.workout && !(context.workoutDiaryEnabled && ports.workoutDiaryEnabled())) {
@@ -156,7 +168,9 @@ class VoiceToolExecutor(
     // MARK: - Cards
 
     /** The user tapped Confirm. Performs the change and returns a note for the model. */
-    suspend fun confirmCard(cardId: String): String? {
+    suspend fun confirmCard(cardId: String): String? = mutationMutex.withLock { confirmCardLocked(cardId) }
+
+    private suspend fun confirmCardLocked(cardId: String): String? {
         val confirmation = pending.remove(cardId) ?: return null
         removeCard(cardId)
         val result = try {
@@ -165,9 +179,14 @@ class VoiceToolExecutor(
             throw cancelled
         } catch (failure: ToolFailure) {
             failure.result
+        } catch (error: Throwable) {
+            VoiceLog.warn(TAG, "Confirmed change failed", error)
+            ToolResults.error(ToolError.UNSUPPORTED, "That change could not be saved. Please try again.")
         }
         pruneCompleted()
-        completed[confirmation.signature] = Completed(result, clock() + COMPLETED_MEMORY_MILLIS)
+        if (ToolResults.isOk(result)) {
+            completed[confirmation.signature] = Completed(result, confirmation.change, clock() + COMPLETED_MEMORY_MILLIS)
+        }
         return if (ToolResults.isOk(result)) {
             "$APP_NOTE The user tapped Confirm on the card to ${confirmation.change.modelSummary}. It is done; " +
                 "do not call ${confirmation.toolName} again for it. Result: $result"
@@ -184,16 +203,28 @@ class VoiceToolExecutor(
     }
 
     /** The user tapped Undo within its window. */
-    suspend fun undoCard(cardId: String): String? {
+    suspend fun undoCard(cardId: String): String? = mutationMutex.withLock { undoCardLocked(cardId) }
+
+    private suspend fun undoCardLocked(cardId: String): String? {
         val entry = undo.take(cardId)
         removeCard(cardId)
         entry ?: return null
-        entry.restore()
-        return "$APP_NOTE The user tapped Undo, so this was reverted: ${entry.change.modelSummary}."
+        return try {
+            entry.restore()
+            completed.entries.removeAll { it.value.change == entry.change }
+            "$APP_NOTE The user tapped Undo, so this was reverted: ${entry.change.modelSummary}."
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Throwable) {
+            VoiceLog.warn(TAG, "Undo failed", error)
+            "$APP_NOTE Undo failed for ${entry.change.modelSummary}. Do not say it was reverted."
+        }
     }
 
     /** The user tapped Log on a draft card (the tap is their consent). */
-    suspend fun logDraftFromCard(cardId: String): String? {
+    suspend fun logDraftFromCard(cardId: String): String? = mutationMutex.withLock { logDraftFromCardLocked(cardId) }
+
+    private suspend fun logDraftFromCardLocked(cardId: String): String? {
         val card = _cards.value.firstOrNull { it.id == cardId } as? VoiceCard.Draft ?: return null
         val result = try {
             when (val draft = drafts.get(card.draftId)) {
@@ -217,6 +248,9 @@ class VoiceToolExecutor(
             throw cancelled
         } catch (failure: ToolFailure) {
             failure.result
+        } catch (error: Throwable) {
+            VoiceLog.warn(TAG, "Draft could not be logged", error)
+            ToolResults.error(ToolError.UNSUPPORTED, "That draft could not be saved. Please try again.")
         }
         return if (ToolResults.isOk(result)) {
             "$APP_NOTE The user tapped Log on the draft card ${card.draftId}. It is logged; do not log it again. Result: $result"
@@ -290,8 +324,8 @@ class VoiceToolExecutor(
                 "Nothing changed yet. Ask the user to confirm, then call again with user_confirmed: true."
             ) { put("summary", change.modelSummary) }
         }
-        // The model's own confirmed call replaces any card still asking about this tool.
-        dropPending { it.toolName == spec.name }
+        // Other pending changes using the same tool still need their own consent.
+        dropPending { it.signature == signature }
         return run(spec.effect, change, perform)
     }
 
@@ -464,8 +498,9 @@ class VoiceToolExecutor(
 
     private suspend fun pickPhotos(args: ToolArgs): JsonObject {
         val note = args.string("note")?.take(MAX_NOTE_CHARS)
-        val images = when (val outcome = ports.pickPhotos(MAX_PICKED_PHOTOS)) {
-            is PickOutcome.Picked -> outcome.images.take(MAX_PICKED_PHOTOS)
+        val maxPhotos = ports.maxFoodPhotos().coerceIn(1, MAX_PICKED_PHOTOS)
+        val images = when (val outcome = ports.pickPhotos(maxPhotos)) {
+            is PickOutcome.Picked -> outcome.images.take(maxPhotos)
             PickOutcome.Cancelled -> return ToolResults.error(ToolError.CANCELLED, "The user closed the photo picker.")
             PickOutcome.TimedOut -> return ToolResults.error(ToolError.TIMEOUT, "No photos were chosen in time.")
         }
@@ -664,6 +699,9 @@ class VoiceToolExecutor(
         meal: MealType,
         draft: VoiceDraft.Food?
     ): Performed {
+        if (draft != null && draft.loggedEntryIds.isNotEmpty()) {
+            fail(ToolError.INVALID_ARGUMENTS, "${draft.id} is already logged. Use update_food_entry to change it.")
+        }
         val entry = prepared.build(UUID.randomUUID(), timestamp, meal)
         if (!ports.addFoodEntry(entry)) {
             fail(ToolError.UNSUPPORTED, "Food logging is paused while a fast is running. Offer to end the fast first.")
@@ -784,6 +822,7 @@ class VoiceToolExecutor(
         if (updated == entry) fail(ToolError.INVALID_ARGUMENTS, "Nothing to change. Give at least one field.")
         val final = updated
         return confirmable(spec, args, VoiceChange.UpdateFood(final.name, final.calories)) {
+            requireUnchangedFood(entry)
             ports.updateFoodEntry(final)
             Performed(
                 ToolResults.ok {
@@ -797,7 +836,10 @@ class VoiceToolExecutor(
                     put("date", VoiceArguments.formatDate(localDate(final.timestamp)))
                     put("time", VoiceArguments.formatTime(localTime(final.timestamp)))
                 },
-                undo = { ports.updateFoodEntry(entry) }
+                undo = {
+                    requireUnchangedFood(final)
+                    ports.updateFoodEntry(entry)
+                }
             )
         }
     }
@@ -805,12 +847,20 @@ class VoiceToolExecutor(
     private suspend fun deleteFoodEntry(args: ToolArgs, spec: VoiceToolSpec): JsonObject {
         val entry = findEntry(args.requireString("entry_id"))
         return confirmable(spec, args, VoiceChange.DeleteFood(entry.name, entry.calories)) {
+            requireUnchangedFood(entry)
             ports.deleteFoodEntry(entry.id)
             Performed(ToolResults.ok {
                 put("deleted_entry_id", entry.id.toString())
                 put("name", entry.name)
             })
         }
+    }
+
+    /** A confirmation card must not overwrite or delete a later edit made in the diary. */
+    private suspend fun requireUnchangedFood(expected: FoodEntry) {
+        val current = ports.foodEntries().firstOrNull { it.id == expected.id }
+            ?: fail(ToolError.NOT_FOUND, "That food entry no longer exists.")
+        if (current != expected) fail(ToolError.INVALID_ARGUMENTS, "That food entry changed. Read it again before changing it.")
     }
 
     // MARK: - Water, fasting and body
@@ -866,6 +916,9 @@ class VoiceToolExecutor(
         val active = ports.activeFast() ?: fail(ToolError.NOT_FOUND, "No fast is running.")
         val elapsed = active.durationSeconds(ports.now()) / 60
         return confirmable(spec, args, VoiceChange.EndFast(elapsed)) {
+            if (ports.activeFast()?.id != active.id) {
+                fail(ToolError.INVALID_ARGUMENTS, "The running fast changed. Read its current state before ending it.")
+            }
             val ended = ports.endFast() ?: fail(ToolError.NOT_FOUND, "No fast is running.")
             val seconds = ended.durationSeconds(ports.now())
             Performed(
@@ -874,7 +927,9 @@ class VoiceToolExecutor(
                     put("goal_hours", ended.goalMinutes / 60.0)
                     put("goal_reached", seconds >= ended.goalMinutes * 60L)
                 },
-                undo = { ports.reopenFast(ended) }
+                undo = {
+                    if (!ports.reopenFast(ended)) fail(ToolError.UNSUPPORTED, "The fast could not be reopened.")
+                }
             )
         }
     }

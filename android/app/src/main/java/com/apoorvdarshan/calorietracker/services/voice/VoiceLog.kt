@@ -13,6 +13,8 @@ internal object VoiceLog {
     }
 
     fun warn(tag: String, message: String, error: Throwable? = null) {
-        runCatching { if (error == null) Log.w(tag, message) else Log.w(tag, message, error) }
+        // Provider/HTTP exceptions can include a request, transcript or credential in
+        // their message/cause. Only the exception type is useful diagnostic metadata.
+        runCatching { Log.w(tag, message + (error?.let { " (${it.javaClass.simpleName})" } ?: "")) }
     }
 }

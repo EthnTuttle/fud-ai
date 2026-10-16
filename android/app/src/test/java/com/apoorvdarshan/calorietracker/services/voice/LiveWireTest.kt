@@ -350,6 +350,26 @@ class LiveWireTest {
         assertTrue(OpenAIRealtimeWire().toolOutputsNeedResponseCreate)
         assertFalse(GeminiLiveWire().toolOutputsNeedResponseCreate)
         assertTrue(GeminiLiveWire().waitsForSetupAcknowledgement)
-        assertFalse(XAIVoiceWire().waitsForSetupAcknowledgement)
+        assertTrue(XAIVoiceWire().waitsForSetupAcknowledgement)
+        assertTrue(OpenAIRealtimeWire().waitsForSetupAcknowledgement)
+    }
+
+    @Test
+    fun realtimeProvidersAcknowledgeTheSessionConfiguration() {
+        listOf(OpenAIRealtimeWire(), XAIVoiceWire()).forEach { wire ->
+            assertTrue(wire.parse("""{"type":"session.created","session":{}}""").isEmpty())
+            assertEquals(listOf(LiveEvent.Ready), wire.parse("""{"type":"session.updated","session":{}}"""))
+        }
+    }
+
+    @Test
+    fun failedResponseReportsTheReasonWithoutRunningItsTools() {
+        val events = OpenAIRealtimeWire().parse("""{
+            "type":"response.done",
+            "response":{"id":"r-failed","status":"failed",
+              "status_details":{"error":{"message":"Insufficient quota"}},
+              "output":[{"type":"function_call","call_id":"c1","name":"log_water","arguments":"{}"}]}
+        }""")
+        assertEquals(listOf(LiveEvent.ProviderError("Insufficient quota"), LiveEvent.TurnComplete("r-failed")), events)
     }
 }

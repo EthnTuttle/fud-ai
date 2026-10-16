@@ -1,7 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.voice
 
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SdkSuppress
 import org.junit.Test
@@ -13,7 +12,6 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 @SdkSuppress(minSdkVersion = Build.VERSION_CODES.TIRAMISU)
-@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class LiveOrbShaderTest {
     @Test
     fun orbShaderCompilesWithItsUniforms() {

@@ -553,6 +553,37 @@ class WorkoutRepository(
         deletedBurn?.let { performHealthDelete(it.first, it.second) }
     }
 
+    /** Restore the saved burn after undoing a voice log, without replacing subsequent plan edits. */
+    suspend fun restoreBurnAfterUndo(previous: WorkoutSession, expectedPlan: WorkoutDayPlan): Boolean {
+        require(previous.diaryDateKey == expectedPlan.dateKey)
+        require(previous.caloriesBurned != null)
+        var restored: WorkoutSession? = null
+        var replaced = emptyList<WorkoutSession>()
+        stateMutex.withLock {
+            val current = store.workoutState.first().sanitized()
+            val plan = current.dayPlans[expectedPlan.dateKey] ?: WorkoutDayPlan(expectedPlan.dateKey)
+            if (plan != expectedPlan) return@withLock
+            val burns = current.completedSessions.filter {
+                it.diaryDateKey == previous.diaryDateKey && it.caloriesBurned != null
+            }
+            replaced = burns.filter { it.id != previous.id }
+            val restoredVersion = maxOf(previous.healthSyncVersion ?: 0, burns.maxOfOrNull { it.healthSyncVersion ?: 0 } ?: 0) + 1
+            restored = previous.copy(healthSyncVersion = restoredVersion)
+            val restoredId = previous.id.toString()
+            val replacedIds = replaced.mapTo(mutableSetOf()) { it.id.toString() }
+            store.setWorkoutState(current.copy(
+                completedSessions = current.completedSessions.filterNot { it in burns } + restored!!,
+                healthDeletionTombstones = (current.healthDeletionTombstones - restoredId) +
+                    replaced.associate { it.id.toString() to it.diaryDateKey },
+                pendingHealthDeleteIds = (current.pendingHealthDeleteIds - restoredId) + replacedIds,
+                pendingHealthUpsertIds = (current.pendingHealthUpsertIds - replacedIds) + restoredId
+            ))
+        }
+        replaced.forEach { performHealthDelete(it.id, it.diaryDateKey) }
+        restored?.let { performHealthUpsert(it.id) }
+        return restored != null
+    }
+
     /** Health imports never trigger a write callback, preventing an echo loop. */
     suspend fun importWorkoutBurnSessions(imported: List<WorkoutSession>) {
         if (imported.isEmpty()) return

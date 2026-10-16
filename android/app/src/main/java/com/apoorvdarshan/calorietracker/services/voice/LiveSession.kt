@@ -7,12 +7,14 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
 
 /**
  * One live speech-to-speech connection (Scowld's LiveSession, on OkHttp).
  *
  * Setup messages go out first. Everything else waits in a queue until the provider is
- * ready (Gemini acknowledges the setup; OpenAI and xAI are ready at once); microphone
+ * ready (Gemini sends setupComplete; OpenAI and xAI send session.updated); microphone
  * audio in that queue is capped, so a slow connection keeps only the latest seconds of
  * speech. Gemini's goAway moves the session to a new connection with its resumption
  * handle. Events arrive on OkHttp's reader thread through [onEvent], in order.
@@ -21,6 +23,7 @@ class LiveSession(
     val config: LiveSessionConfig,
     val wire: LiveWire = LiveWire.forConfig(config),
     private val client: OkHttpClient = defaultClient,
+    private val setupTimeoutMillis: Long = 20_000,
     private val onEvent: (LiveEvent) -> Unit
 ) {
     private val lock = Any()
@@ -31,6 +34,7 @@ class LiveSession(
     private val queued = ArrayDeque<Queued>()
     private var queuedAudioBytes = 0
     private var resumptionHandle: String? = null
+    private var setupDeadline: ScheduledFuture<*>? = null
 
     private class Queued(val message: String, val audioBytes: Int)
 
@@ -67,6 +71,8 @@ class LiveSession(
         val current = synchronized(lock) {
             closed = true
             connection += 1
+            setupDeadline?.cancel(false)
+            setupDeadline = null
             queued.clear()
             queuedAudioBytes = 0
             socket.also { socket = null }
@@ -97,6 +103,14 @@ class LiveSession(
             // OkHttp holds frames sent before the upgrade and writes them, in order, once
             // connected, so setup always goes first.
             setup.forEach { webSocket.send(it) }
+            setupDeadline?.cancel(false)
+            setupDeadline = deadlines.schedule({
+                synchronized(lock) {
+                    if (id == connection && !closed && !ready) {
+                        ended(id, LiveFailure.Network("setup_timeout"))
+                    }
+                }
+            }, setupTimeoutMillis, TimeUnit.MILLISECONDS)
             !wire.waitsForSetupAcknowledgement
         }
         if (becomeReady) markReady(id)
@@ -146,8 +160,10 @@ class LiveSession(
     private fun markReady(id: Int) {
         synchronized(lock) {
             val current = socket
-            if (id != connection || closed || current == null) return
+            if (id != connection || closed || current == null || ready) return
             ready = true
+            setupDeadline?.cancel(false)
+            setupDeadline = null
             while (queued.isNotEmpty()) current.send(queued.removeFirst().message)
             queuedAudioBytes = 0
         }
@@ -187,6 +203,8 @@ class LiveSession(
             if (id != connection || closed) return
             // Retire the old connection first, so its closing can't end the session.
             connection += 1
+            setupDeadline?.cancel(false)
+            setupDeadline = null
             ready = false
             socket.also { socket = null }
         }
@@ -199,6 +217,8 @@ class LiveSession(
         val current = synchronized(lock) {
             if (id != connection || closed) return
             closed = true
+            setupDeadline?.cancel(false)
+            setupDeadline = null
             queued.clear()
             queuedAudioBytes = 0
             socket.also { socket = null }
@@ -214,6 +234,10 @@ class LiveSession(
 
         /** Audio waiting for a connection beyond this is dropped, oldest first (six seconds at 24 kHz). */
         const val MAX_QUEUED_AUDIO_BYTES = 24_000 * 2 * 6
+
+        private val deadlines = Executors.newSingleThreadScheduledExecutor { task ->
+            Thread(task, "fudai-live-setup-timeout").apply { isDaemon = true }
+        }
 
         val defaultClient: OkHttpClient by lazy {
             SecureHttpClient.builder()

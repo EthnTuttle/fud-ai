@@ -11,6 +11,9 @@ import com.apoorvdarshan.calorietracker.models.WorkoutTextExercise
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
@@ -65,6 +68,93 @@ class VoiceToolExecutorTest {
     private fun JsonObject.error(): String? = this["error"]?.jsonPrimitive?.content
 
     // MARK: - Confirmation
+
+    @Test
+    fun aCardTapAndModelCallCannotLogTheSameDraftTwice() = runBlocking {
+        val executor = executor(confirmSaves = false)
+        val draft = executor.call("describe_food", args("description" to "eggs"))
+        val draftId = draft["draft_id"]!!.jsonPrimitive.content
+        val card = executor.cards.value.single() as VoiceCard.Draft
+        val writeStarted = CompletableDeferred<Unit>()
+        val allowWrite = CompletableDeferred<Unit>()
+        ports.foodWriteGate = {
+            writeStarted.complete(Unit)
+            allowWrite.await()
+        }
+        val tapped = async(start = CoroutineStart.UNDISPATCHED) { executor.logDraftFromCard(card.id) }
+        writeStarted.await()
+        val called = async(start = CoroutineStart.UNDISPATCHED) {
+            executor.execute(LiveToolCall("log-after-tap", "log_food", args("draft_id" to draftId)))
+        }
+        allowWrite.complete(Unit)
+        assertTrue(tapped.await()!!.contains("It is logged"))
+        assertEquals("invalid_arguments", called.await().error())
+        assertEquals(1, ports.foods.size)
+
+        executor.undoCard((executor.cards.value.last() as VoiceCard.Undo).id)
+        assertTrue(ports.foods.isEmpty())
+        assertTrue(executor.call("log_food", args("draft_id" to draftId)).ok())
+        assertEquals(1, ports.foods.size)
+    }
+
+    @Test
+    fun confirmingOneWaterChangePreservesOtherPendingChanges() {
+        val executor = executor()
+        executor.call("log_water", args("amount" to 100, "unit" to "ml"))
+        executor.call("log_water", args("amount" to 200, "unit" to "ml"))
+        executor.call("log_water", args("amount" to 100, "unit" to "ml", "user_confirmed" to true))
+        val remaining = executor.cards.value.filterIsInstance<VoiceCard.Confirmation>().single()
+        assertEquals(VoiceChange.LogWater(200), remaining.change)
+        assertEquals(100, ports.water.single().milliliters)
+    }
+
+    @Test
+    fun failedCardConfirmationCanBeRetriedAndDoesNotClaimSuccess() = runBlocking {
+        val executor = executor()
+        executor.call("log_water", args("amount" to 100, "unit" to "ml"))
+        val card = executor.cards.value.single() as VoiceCard.Confirmation
+        ports.waterWriteError = IllegalStateException("storage unavailable")
+        assertTrue(executor.confirmCard(card.id)!!.contains("but it failed"))
+        assertTrue(ports.water.isEmpty())
+        ports.waterWriteError = null
+        assertTrue(executor.call("log_water", args("amount" to 100, "unit" to "ml", "user_confirmed" to true)).ok())
+        assertEquals(1, ports.water.size)
+    }
+
+    @Test
+    fun photoPickerUsesTheFoodPipelineLimit() {
+        val executor = executor()
+        ports.maxPhotos = 3
+        ports.picked = PickOutcome.Picked(List(4) { byteArrayOf(1) })
+        assertTrue(executor.call("pick_photos").ok())
+        assertEquals(3, ports.requestedMaxPhotos)
+        assertEquals(3, ports.analyzedPhotoCount)
+    }
+
+    @Test
+    fun anOldConfirmationCannotOverwriteALaterDiaryEdit() = runBlocking {
+        val executor = executor()
+        val original = FoodEntry(name = "Lunch", calories = 300, protein = 10.0, carbs = 20.0, fat = 5.0,
+            timestamp = ports.instant, source = FoodSource.MANUAL)
+        ports.foods += original
+        executor.call("update_food_entry", args("entry_id" to original.id.toString(), "calories" to 400))
+        val card = executor.cards.value.single() as VoiceCard.Confirmation
+        val edited = original.copy(name = "Edited in diary", calories = 500)
+        ports.foods[0] = edited
+        assertTrue(executor.confirmCard(card.id)!!.contains("but it failed"))
+        assertEquals(edited, ports.foods.single())
+    }
+
+    @Test
+    fun undoAllowsTheSameChangeToBeConfirmedAgain() = runBlocking {
+        val executor = executor()
+        executor.call("log_water", args("amount" to 250, "unit" to "ml"))
+        executor.confirmCard((executor.cards.value.single() as VoiceCard.Confirmation).id)
+        executor.undoCard((executor.cards.value.single() as VoiceCard.Undo).id)
+        assertTrue(ports.water.isEmpty())
+        assertTrue(executor.call("log_water", args("amount" to 250, "unit" to "ml", "user_confirmed" to true)).ok())
+        assertEquals(250, ports.water.single().milliliters)
+    }
 
     @Test
     fun aWriteNeedingConfirmationChangesNothingAndShowsACard() {

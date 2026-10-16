@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -53,7 +54,6 @@ import com.apoorvdarshan.calorietracker.services.voice.VoiceSettingKey
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.delay
-import java.util.Locale
 import kotlin.math.roundToInt
 
 private val CardShape = RoundedCornerShape(22.dp)
@@ -282,10 +282,10 @@ internal fun changeText(change: VoiceChange, units: CardUnits): String = when (c
     is VoiceChange.EndFast -> stringResource(R.string.voice_change_end_fast, formatFastingDuration(change.elapsedMinutes * 60))
     is VoiceChange.LogWeight -> stringResource(
         R.string.voice_change_weight,
-        if (change.metric) String.format(Locale.getDefault(), "%.1f kg", change.kilograms)
-        else String.format(Locale.getDefault(), "%.1f lb", change.kilograms / 0.45359237)
+        if (change.metric) String.format(LocalConfiguration.current.locales[0], "%.1f kg", change.kilograms)
+        else String.format(LocalConfiguration.current.locales[0], "%.1f lb", change.kilograms / 0.45359237)
     )
-    is VoiceChange.LogBodyFat -> stringResource(R.string.voice_change_body_fat, String.format(Locale.getDefault(), "%.1f%%", change.percent))
+    is VoiceChange.LogBodyFat -> stringResource(R.string.voice_change_body_fat, String.format(LocalConfiguration.current.locales[0], "%.1f%%", change.percent))
     is VoiceChange.LogWorkout -> pluralStringResource(R.plurals.voice_change_workout, change.exerciseCount, change.exerciseCount)
     is VoiceChange.LogCardio -> stringResource(R.string.voice_change_cardio, change.activity, change.minutes)
     is VoiceChange.UpdateSetting -> stringResource(R.string.voice_change_setting, settingLabel(change.key), settingValue(change.key, change.value))

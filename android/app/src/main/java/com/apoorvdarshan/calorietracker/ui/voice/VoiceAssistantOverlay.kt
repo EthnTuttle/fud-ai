@@ -128,7 +128,10 @@ fun VoiceAssistantHost(container: AppContainer) {
         }
     }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(4)) { uris ->
+    val pickerContract = remember(ui.photoPickMax) {
+        ActivityResultContracts.PickMultipleVisualMedia(ui.photoPickMax.coerceAtLeast(2))
+    }
+    val picker = rememberLauncherForActivityResult(pickerContract) { uris ->
         controller.photosPicked(uris)
     }
     LaunchedEffect(ui.photoPickRequest) {

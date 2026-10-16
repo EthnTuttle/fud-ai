@@ -286,8 +286,8 @@ object VoiceSettingValues {
     private fun wholeNumber(key: VoiceSettingKey, value: String, range: IntRange): Int {
         val compact = value.replace(" ", "").replace(" ", "")
         // "2,250" and "2.250" are thousands groupings here; "2.5" is a decimal.
-        val grouped = Regex("""\d{1,3}(?:[,.]\d{3})+(?!\d)""").find(compact)?.value
-        val number = grouped?.filter { it.isDigit() }?.toDoubleOrNull()
+        val grouped = Regex("""-?\d{1,3}(?:[,.]\d{3})+(?!\d)""").find(compact)?.value
+        val number = grouped?.replace(",", "")?.replace(".", "")?.toDoubleOrNull()
             ?: Regex("""-?\d+(?:[.,]\d+)?""").find(compact)?.value?.replace(',', '.')?.toDoubleOrNull()
             ?: fail(ToolError.INVALID_ARGUMENTS, "${key.wireValue} must be a number.")
         val rounded = number.roundToInt()

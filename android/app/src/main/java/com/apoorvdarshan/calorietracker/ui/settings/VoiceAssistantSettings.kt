@@ -101,6 +101,7 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
     val selectedAi by container.prefs.selectedAIProvider.collectAsState(initial = AIProvider.GEMINI)
     val entitlement by container.billing.entitlement.collectAsState()
     val context = LocalContext.current
+    val talkLabel = stringResource(R.string.voice_talk_to_fud_ai)
     val scope = rememberCoroutineScope()
     var sheet by remember { mutableStateOf<VoiceSheet?>(null) }
 
@@ -217,7 +218,7 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
                     runCatching {
                         context.getSystemService(StatusBarManager::class.java)?.requestAddTileService(
                             ComponentName(context, VoiceAssistantTileService::class.java),
-                            context.getString(R.string.voice_talk_to_fud_ai),
+                            talkLabel,
                             Icon.createWithResource(context, R.drawable.ic_voice_orb),
                             context.mainExecutor
                         ) { }

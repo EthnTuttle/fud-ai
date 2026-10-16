@@ -201,6 +201,7 @@ private class CameraBinding(
     private val latest = AtomicReference<CameraFrame?>(null)
     private val released = AtomicBoolean(false)
     private val scanned = AtomicBoolean(false)
+    private val notifiedReady = AtomicBoolean(false)
     private var provider: ProcessCameraProvider? = null
     private var boundUseCases: Array<UseCase> = emptyArray()
     private var analysisUseCase: ImageAnalysis? = null
@@ -252,7 +253,6 @@ private class CameraBinding(
                 return@addListener
             }
             capture = if (withPhoto) photo else null
-            controller.cameraReady(this)
         }, ContextCompat.getMainExecutor(context))
     }
 
@@ -308,7 +308,9 @@ private class CameraBinding(
                 val result = runCatching { Tasks.await(barcodeScanner.process(input)) }.getOrNull()
                 val code = result?.firstNotNullOfOrNull { it.rawValue?.trim()?.takeIf(String::isNotEmpty) }
                 if (code != null && scanned.compareAndSet(false, true)) {
-                    ContextCompat.getMainExecutor(context).execute { controller.barcodeDetected(code) }
+                    ContextCompat.getMainExecutor(context).execute {
+                        if (!released.get()) controller.barcodeDetected(this, code)
+                    }
                 }
             }
         } finally {
@@ -322,6 +324,11 @@ private class CameraBinding(
         latest.set(CameraFrame(jpeg(upright, MAX_FRAME_SIDE, FRAME_QUALITY), SystemClock.elapsedRealtime()))
         // Without ImageCapture, the shutter uses the largest analysis frame.
         if (capture == null && mode == VoiceCameraMode.FOOD) fullFrame = jpeg(upright, MAX_PHOTO_SIDE, PHOTO_QUALITY)
+        if (notifiedReady.compareAndSet(false, true)) {
+            ContextCompat.getMainExecutor(context).execute {
+                if (!released.get()) controller.cameraReady(this)
+            }
+        }
         if (upright !== bitmap) upright.recycle()
         bitmap.recycle()
     }

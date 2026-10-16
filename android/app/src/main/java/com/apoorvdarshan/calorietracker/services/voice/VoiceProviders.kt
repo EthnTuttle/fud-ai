@@ -116,9 +116,8 @@ sealed interface VoiceAccess {
 
 /**
  * The contract's provider rule. Automatic picks the selected own-key provider when its
- * key is saved, otherwise Fud AI hosting when subscribed. Android goes one step further
- * before giving up: a Gemini, OpenAI or xAI key saved for another role (text provider,
- * fallback) still works, so the user is never told to add a key they already have.
+ * key is saved, otherwise Fud AI hosting when subscribed. A key saved for another
+ * provider is not selected implicitly: the user can choose it in Voice Assistant settings.
  */
 object VoiceProviderResolver {
     fun resolve(
@@ -138,9 +137,7 @@ object VoiceProviderResolver {
             when {
                 selected != null && hasKey(selected) -> VoiceAccess.Ready(selected)
                 hostedEntitled -> VoiceAccess.Ready(LiveProvider.HOSTED)
-                else -> LiveProvider.ownKeyProviders.firstOrNull(hasKey)
-                    ?.let { VoiceAccess.Ready(it) }
-                    ?: VoiceAccess.NeedsSetup
+                else -> VoiceAccess.NeedsSetup
             }
         }
     }

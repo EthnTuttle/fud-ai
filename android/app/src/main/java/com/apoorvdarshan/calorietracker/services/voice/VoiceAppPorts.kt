@@ -168,6 +168,8 @@ interface VoiceAppPorts {
     suspend fun updateFoodEntry(entry: FoodEntry)
     suspend fun deleteFoodEntry(id: UUID)
     suspend fun savedFoods(): List<SavedFood>
+    /** The selected food-analysis pipeline may have a lower limit than live voice. */
+    suspend fun maxFoodPhotos(): Int
     /** Stores photos for a new entry and returns their filenames. */
     suspend fun storeFoodImages(images: List<ByteArray>): List<String>
     suspend fun analyzeFoodPhotos(images: List<ByteArray>, note: String?): FoodAnalysis

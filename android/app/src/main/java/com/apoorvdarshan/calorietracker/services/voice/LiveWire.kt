@@ -350,7 +350,7 @@ class HostedLiveWire : GeminiLiveWire() {
  */
 open class OpenAIRealtimeWire : LiveWire {
     override val provider: LiveProvider = LiveProvider.OPENAI
-    override val waitsForSetupAcknowledgement = false
+    override val waitsForSetupAcknowledgement = true
     override val toolOutputsNeedResponseCreate = true
 
     private val functionNames = HashMap<String, String>()
@@ -471,6 +471,7 @@ open class OpenAIRealtimeWire : LiveWire {
         val json = LiveJson.objectOrNull(message) ?: return emptyList()
         val type = LiveJson.string(json, "type") ?: return emptyList()
         return when (type) {
+            "session.updated" -> listOf(LiveEvent.Ready)
             "response.output_audio.delta", "response.audio.delta" -> {
                 val data = LiveJson.string(json, "delta") ?: return emptyList()
                 val pcm = runCatching { Base64.getDecoder().decode(data) }.getOrNull() ?: return emptyList()
@@ -530,6 +531,13 @@ open class OpenAIRealtimeWire : LiveWire {
                 val events = mutableListOf<LiveEvent>()
                 if (calls.isNotEmpty() && (status == null || status == "completed")) {
                     events += LiveEvent.ToolCalls(calls)
+                }
+                if (status == "failed") {
+                    val details = response?.get("status_details") as? JsonObject
+                    val error = details?.get("error") as? JsonObject
+                    events += LiveEvent.ProviderError(
+                        LiveJson.string(error, "message") ?: "The voice response failed. Please try again."
+                    )
                 }
                 events += LiveEvent.TurnComplete(responseId)
                 events

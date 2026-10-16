@@ -83,6 +83,7 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
     private var recordThread: Thread? = null
     private var playThread: Thread? = null
     private val running = AtomicBoolean(false)
+    private val playbackLock = Any()
 
     private class Chunk(val bytes: ByteArray, val generation: Int)
 
@@ -187,26 +188,30 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
     }
 
     override fun play(pcm16: ByteArray) {
-        if (!running.get() || pcm16.size < 2) return
-        playing.set(true)
-        framesQueued.addAndGet((pcm16.size / 2).toLong())
-        queue.offer(Chunk(pcm16, generation.get()))
+        synchronized(playbackLock) {
+            if (!running.get() || pcm16.size < 2) return
+            playing.set(true)
+            framesQueued.addAndGet((pcm16.size / 2).toLong())
+            queue.offer(Chunk(pcm16, generation.get()))
+        }
     }
 
     override fun stopPlayback() {
-        generation.incrementAndGet()
-        queue.clear()
-        track?.let { player ->
-            runCatching {
-                player.pause()
-                player.flush()
-                player.play()
+        synchronized(playbackLock) {
+            generation.incrementAndGet()
+            queue.clear()
+            track?.let { player ->
+                runCatching {
+                    player.pause()
+                    player.flush()
+                    player.play()
+                }
             }
+            framesQueued.set(0)
+            framesWritten.set(0)
+            speakerLevel = 0f
+            playing.set(false)
         }
-        framesQueued.set(0)
-        framesWritten.set(0)
-        speakerLevel = 0f
-        playing.set(false)
     }
 
     override fun stop() {
@@ -214,6 +219,9 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
         generation.incrementAndGet()
         queue.clear()
         runCatching { record?.stop() }
+        // Unblock a speaker write before waiting for its thread to exit.
+        runCatching { track?.pause() }
+        runCatching { track?.flush() }
         recordThread?.join(500)
         playThread?.join(500)
         recordThread = null
@@ -247,7 +255,10 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
         while (running.get()) {
             val read = recorder.read(buffer, 0, buffer.size)
             if (read < 0) {
-                if (running.get()) VoiceLog.warn(TAG, "Microphone read failed: $read")
+                if (running.get()) {
+                    VoiceLog.warn(TAG, "Microphone read failed: $read")
+                    mainHandler.post { onInterrupted?.invoke() }
+                }
                 break
             }
             if (read == 0) continue
@@ -271,11 +282,16 @@ class LiveAudioEngine(context: Context) : LiveAudioIO {
             // Small slices keep a barge-in from letting much stale audio through.
             while (offset < chunk.bytes.size && running.get() && chunk.generation == generation.get()) {
                 val length = min(sliceBytes, chunk.bytes.size - offset)
-                val written = player.write(chunk.bytes, offset, length, AudioTrack.WRITE_BLOCKING)
+                val written = synchronized(playbackLock) {
+                    if (chunk.generation != generation.get() || !running.get()) 0
+                    else player.write(chunk.bytes, offset, length, AudioTrack.WRITE_BLOCKING)
+                }
                 if (written <= 0) break
                 offset += written
             }
-            if (chunk.generation == generation.get()) framesWritten.addAndGet((offset / 2).toLong())
+            synchronized(playbackLock) {
+                if (chunk.generation == generation.get()) framesWritten.addAndGet((offset / 2).toLong())
+            }
         }
     }
 

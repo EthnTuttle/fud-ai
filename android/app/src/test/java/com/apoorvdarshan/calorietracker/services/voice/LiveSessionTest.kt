@@ -194,7 +194,31 @@ class LiveSessionTest {
     }
 
     @Test
-    fun openAIIsReadyAtOnceAndSendsSessionUpdatesFirst() {
+    fun aReconnectedSocketMustAlsoAcknowledgeSetupBeforeTheDeadline() {
+        val first = ServerSide()
+        val second = ServerSide()
+        server.enqueue(MockResponse().withWebSocketUpgrade(first))
+        server.enqueue(MockResponse().withWebSocketUpgrade(second))
+        val events = LinkedBlockingQueue<LiveEvent>()
+        val live = LiveSession(hostedConfig(), client = client, setupTimeoutMillis = 2_000) { events.add(it) }
+        live.connect()
+        val firstSocket = first.awaitOpen()
+        first.next()
+        firstSocket.send("""{"setupComplete":{}}""")
+        assertEquals(LiveEvent.Ready, events.next())
+        firstSocket.send("""{"sessionResumptionUpdate":{"newHandle":"resume-7","resumable":true}}""")
+        firstSocket.send("""{"goAway":{"timeLeft":"5s"}}""")
+        second.awaitOpen()
+        second.next()
+        live.sendAudio(byteArrayOf(1, 2))
+        val event = events.next() as LiveEvent.Closed
+        assertEquals(LiveFailure.Network("setup_timeout"), event.failure)
+        assertNull("Audio never crosses an unacknowledged resumed session", second.messages.poll(100, TimeUnit.MILLISECONDS))
+        live.close()
+    }
+
+    @Test
+    fun openAIWaitsForSessionUpdateAcknowledgementBeforeAudio() {
         val provider = ServerSide()
         server.enqueue(MockResponse().withWebSocketUpgrade(provider))
         val events = LinkedBlockingQueue<LiveEvent>()
@@ -210,16 +234,21 @@ class LiveSessionTest {
         }
         val live = LiveSession(config, wire, client) { events.add(it) }
         live.connect()
-        assertEquals(LiveEvent.Ready, events.next())
         live.sendAudio(byteArrayOf(1, 2))
 
         val request = server.takeRequest(5, TimeUnit.SECONDS)!!
         assertEquals("Bearer sk-test", request.getHeader("Authorization"))
         assertEquals("gpt-realtime-2.1-mini", request.requestUrl!!.queryParameter("model"))
-        provider.awaitOpen()
+        val socket = provider.awaitOpen()
         assertEquals("session.update", Json.parseToJsonElement(provider.next()).jsonObject["type"]!!.jsonPrimitive.content)
         assertEquals("session.update", Json.parseToJsonElement(provider.next()).jsonObject["type"]!!.jsonPrimitive.content)
+        assertNull("Audio waits for the configuration to be accepted", provider.messages.poll(300, TimeUnit.MILLISECONDS))
+        assertNull("Connecting is not yet a listening session", events.poll(300, TimeUnit.MILLISECONDS))
+        socket.send("""{"type":"session.updated","session":{}}""")
+        assertEquals(LiveEvent.Ready, events.next())
         assertEquals("input_audio_buffer.append", Json.parseToJsonElement(provider.next()).jsonObject["type"]!!.jsonPrimitive.content)
+        socket.send("""{"type":"session.updated","session":{}}""")
+        assertNull("A transcription-only update must not restart the session", events.poll(300, TimeUnit.MILLISECONDS))
         live.close()
     }
 

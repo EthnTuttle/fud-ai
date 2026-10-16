@@ -38,9 +38,9 @@ class VoiceProviderResolverTest {
     }
 
     @Test
-    fun automaticUsesAnySavedLiveKeyBeforeAskingForSetup() {
+    fun automaticDoesNotSelectAnUnrelatedSavedKey() {
         assertEquals(
-            VoiceAccess.Ready(LiveProvider.GEMINI),
+            VoiceAccess.NeedsSetup,
             resolve(VoiceProviderChoice.AUTOMATIC, AIProvider.ANTHROPIC, setOf(LiveProvider.GEMINI, LiveProvider.XAI))
         )
         assertEquals(VoiceAccess.NeedsSetup, resolve(VoiceProviderChoice.AUTOMATIC, AIProvider.ANTHROPIC))

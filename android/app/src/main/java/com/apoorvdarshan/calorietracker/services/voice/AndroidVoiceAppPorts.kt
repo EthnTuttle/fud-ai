@@ -14,6 +14,8 @@ import com.apoorvdarshan.calorietracker.models.WaterEntry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
+import com.apoorvdarshan.calorietracker.models.WorkoutDayPlan
+import com.apoorvdarshan.calorietracker.models.WorkoutPersistedState
 import com.apoorvdarshan.calorietracker.models.WorkoutTextDraft
 import com.apoorvdarshan.calorietracker.models.WorkoutTextExercise
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -21,6 +23,8 @@ import com.apoorvdarshan.calorietracker.services.AndroidAppIconManager
 import com.apoorvdarshan.calorietracker.services.OpenFoodFactsService
 import com.apoorvdarshan.calorietracker.services.ai.CoachTools
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
+import com.apoorvdarshan.calorietracker.services.hosted.AiAccessMode
+import com.apoorvdarshan.calorietracker.services.hosted.HostedAiConstants
 import com.apoorvdarshan.calorietracker.ui.components.autoSaveMealPhotoIfEnabled
 import com.apoorvdarshan.calorietracker.ui.navigation.FudAIRoutes
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
@@ -33,6 +37,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /** What the tools need from the assistant's on-screen UI (the controller provides it). */
 interface VoiceUiBridge {
@@ -55,7 +60,9 @@ class AndroidVoiceAppPorts(
     private val prefs get() = container.prefs
 
     /** Photos stored for this session's logs; saved to the gallery once logged, like Home. */
-    private val freshImages = HashMap<String, ByteArray>()
+    private val freshImages = ConcurrentHashMap.newKeySet<String>()
+
+    fun clearSessionImages() = freshImages.clear()
 
     override fun now(): Instant = Instant.now()
     override fun zone(): ZoneId = ZoneId.systemDefault()
@@ -116,10 +123,16 @@ class AndroidVoiceAppPorts(
 
     override suspend fun foodEntries(): List<FoodEntry> = container.foodRepository.entries.first()
 
+    override suspend fun maxFoodPhotos(): Int =
+        if (prefs.foodAiCallSettings(forImages = true).accessMode == AiAccessMode.HOSTED) HostedAiConstants.MAX_IMAGES else 4
+
     override suspend fun addFoodEntry(entry: FoodEntry): Boolean {
         if (!container.foodRepository.addEntry(entry)) return false
         entry.allImageFilenames.forEach { filename ->
-            freshImages.remove(filename)?.let { autoSaveMealPhotoIfEnabled(container.appContext, it) }
+            if (freshImages.remove(filename)) {
+                val bytes = withContext(Dispatchers.IO) { container.imageStore.loadBytes(filename) }
+                bytes?.let { autoSaveMealPhotoIfEnabled(container.appContext, it) }
+            }
         }
         return true
     }
@@ -138,7 +151,7 @@ class AndroidVoiceAppPorts(
 
     override suspend fun storeFoodImages(images: List<ByteArray>): List<String> = withContext(Dispatchers.IO) {
         images.mapNotNull { bytes ->
-            container.imageStore.storeBytes(bytes, UUID.randomUUID())?.also { freshImages[it] = bytes }
+            container.imageStore.storeBytes(bytes, UUID.randomUUID())?.also { freshImages.add(it) }
         }
     }
 
@@ -230,14 +243,14 @@ class AndroidVoiceAppPorts(
         val library = library()
         val planned = draft.planned(library)
         val date = LocalDate.parse(draft.date)
-        val hadBurn = hasBurn(date)
+        val before = container.workoutRepository.snapshot()
         container.workoutRepository.addTextWorkout(draft, library)
         return WorkoutWrite(
             name = planned.joinToString(", ") { it.name },
             exerciseCount = planned.size,
             date = date,
             caloriesBurned = null,
-            restore = { removeWorkoutExercises(date, planned.map { it.id }, hadBurn) }
+            restore = { removeWorkoutExercises(date, planned.map { it.id }, before) }
         )
     }
 
@@ -258,7 +271,7 @@ class AndroidVoiceAppPorts(
             )
         )
         val planned = draft.planned(library)
-        val hadBurn = hasBurn(date)
+        val before = container.workoutRepository.snapshot()
         val repository = container.workoutRepository
         repository.addTextWorkout(draft, library)
         val bodyWeight = bodyWeightKg()
@@ -277,22 +290,22 @@ class AndroidVoiceAppPorts(
             exerciseCount = 1,
             date = date,
             caloriesBurned = session?.caloriesBurned,
-            restore = { removeWorkoutExercises(date, planned.map { it.id }, hadBurn) }
+            restore = { removeWorkoutExercises(date, planned.map { it.id }, before) }
         )
     }
 
-    private suspend fun hasBurn(date: LocalDate): Boolean {
-        val key = WorkoutDate.key(date)
-        return container.workoutRepository.snapshot().completedSessions.any {
-            it.diaryDateKey == key && it.caloriesBurned != null
-        }
-    }
-
-    /** Takes exercises back out; the day's burn, invalidated by the change, is recalculated if it existed. */
-    private suspend fun removeWorkoutExercises(date: LocalDate, ids: List<UUID>, hadBurn: Boolean) {
+    /** Preserve the user's actual saved calories, which can differ from an estimated burn. */
+    private suspend fun removeWorkoutExercises(date: LocalDate, ids: List<UUID>, before: WorkoutPersistedState) {
         val repository = container.workoutRepository
         ids.forEach { repository.removeExercise(it, date, container.imageStore) }
-        if (hadBurn) repository.calculateBurn(date, bodyWeightKg(), workoutUnit())
+        val key = WorkoutDate.key(date)
+        val previous = before.completedSessions.filter { it.diaryDateKey == key && it.caloriesBurned != null }
+            .maxByOrNull { it.completedAt }
+        if (previous != null) {
+            val restored = repository.restoreBurnAfterUndo(previous, before.dayPlans[key] ?: WorkoutDayPlan(key))
+            // A diary edit made since the voice log stays intact and gets a fresh estimate.
+            if (!restored) repository.calculateBurn(date, bodyWeightKg(), workoutUnit())
+        }
     }
 
     // MARK: - Settings

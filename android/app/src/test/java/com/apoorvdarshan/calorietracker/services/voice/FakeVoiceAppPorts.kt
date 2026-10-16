@@ -43,6 +43,11 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     var photo: PhotoOutcome = PhotoOutcome.Taken(byteArrayOf(1, 2, 3))
     var barcode: BarcodeOutcome = BarcodeOutcome.Scanned("737628064502")
     var picked: PickOutcome = PickOutcome.Picked(listOf(byteArrayOf(4, 5)))
+    var maxPhotos = 4
+    var requestedMaxPhotos: Int? = null
+    var analyzedPhotoCount = 0
+    var foodWriteGate: (suspend () -> Unit)? = null
+    var waterWriteError: Throwable? = null
     var analysis: FoodAnalysis = FoodAnalysis(
         name = "Eggs and toast",
         calories = 320,
@@ -89,11 +94,16 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     }
     override suspend fun takePhoto(): PhotoOutcome = if (camera == null) PhotoOutcome.NotOpen else photo
     override suspend fun scanBarcode(): BarcodeOutcome = barcode
-    override suspend fun pickPhotos(maxCount: Int): PickOutcome = picked
+    override suspend fun pickPhotos(maxCount: Int): PickOutcome {
+        requestedMaxPhotos = maxCount
+        return picked
+    }
 
     override suspend fun profile(): UserProfile? = profile
     override suspend fun foodEntries(): List<FoodEntry> = foods.toList()
+    override suspend fun maxFoodPhotos(): Int = maxPhotos
     override suspend fun addFoodEntry(entry: FoodEntry): Boolean {
+        foodWriteGate?.invoke()
         if (fasts.any { it.isActive }) return false
         foods += entry
         return true
@@ -109,6 +119,7 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     override suspend fun storeFoodImages(images: List<ByteArray>): List<String> =
         images.map { "img-${storedImages.size}.jpg".also(storedImages::add) }
     override suspend fun analyzeFoodPhotos(images: List<ByteArray>, note: String?): FoodAnalysis {
+        analyzedPhotoCount = images.size
         analysisError?.let { throw it }
         return analysis
     }
@@ -121,6 +132,7 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     override suspend fun trackingPrefs() = TrackingPrefs(waterEnabled, 2_000, WaterUnit.MILLILITERS, fastingEnabled, metric)
     override suspend fun waterEntries(): List<WaterEntry> = water.toList()
     override suspend fun addWater(entry: WaterEntry) {
+        waterWriteError?.let { throw it }
         water += entry
     }
     override suspend fun deleteWater(id: UUID) {

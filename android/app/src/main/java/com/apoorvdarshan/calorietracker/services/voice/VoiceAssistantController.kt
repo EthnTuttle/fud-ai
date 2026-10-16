@@ -334,6 +334,24 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
             )
         }
         sessionScope.launch { executor.cards.collect { _cards.value = it } }
+        sessionScope.launch {
+            container.prefs.voiceAssistantPreferences.collect { latest ->
+                // Settings remain reachable from the compact assistant. In particular,
+                // disabling Coach history must take effect in this conversation.
+                val changedControls = preferences.confirmSaves != latest.confirmSaves ||
+                    preferences.autoCapture != latest.autoCapture
+                preferences = latest
+                executor.context = executor.context.copy(
+                    confirmSaves = latest.confirmSaves,
+                    autoCapture = latest.autoCapture
+                )
+                if (changedControls) session.sendText(
+                    "${VoiceToolExecutor.APP_NOTE} Voice settings changed: confirm before saving is " +
+                        "${if (latest.confirmSaves) "on" else "off"}; auto-capture is ${if (latest.autoCapture) "on" else "off"}.",
+                    respond = false
+                )
+            }
+        }
         sessionScope.launch { watchdog(number) }
         sessionScope.launch { cameraFrames(number) }
         sessionScope.launch { orbTicker(number) }
@@ -360,6 +378,7 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         audio = null
         executor?.reset()
         executor = null
+        ports.clearSessionImages()
         _cards.value = emptyList()
         cameraOpening?.complete(CameraOutcome.Unavailable)
         cameraOpening = null
@@ -428,7 +447,7 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
     private fun cardAction(action: suspend (VoiceToolExecutor) -> String?) {
         val executor = executor ?: return
         val number = sessionNumber
-        scope.launch {
+        sessionScope?.launch {
             noteActivity()
             val note = action(executor) ?: return@launch
             if (number == sessionNumber) injectNote(note)
@@ -515,7 +534,11 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
             is LiveEvent.ProviderError -> {
                 VoiceLog.warn(TAG, "The provider reported an error")
                 responseInProgress = false
-                showTransientError(event.message)
+                if (_ui.value.phase == VoicePhase.CONNECTING) {
+                    end(VoiceNotice.ProviderMessage(event.message.take(300)))
+                } else {
+                    showTransientError(event.message)
+                }
             }
             is LiveEvent.Closed -> {
                 val provider = _ui.value.provider
@@ -576,8 +599,10 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
                     noteActivity()
                 }
             } finally {
-                toolsRunning -= 1
-                updateOrb()
+                if (number == sessionNumber) {
+                    toolsRunning -= 1
+                    updateOrb()
+                }
             }
             if (number != sessionNumber || results.isEmpty()) return@launch
             val current = session ?: return@launch
@@ -768,6 +793,7 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
 
     override suspend fun openCamera(mode: VoiceCameraMode): CameraOutcome {
         if (!isActive) return CameraOutcome.Unavailable
+        val number = sessionNumber
         if (_ui.value.camera == mode && cameraHandle != null) return CameraOutcome.Opened
         val opening = CompletableDeferred<CameraOutcome>()
         cameraOpening?.complete(CameraOutcome.Unavailable)
@@ -778,10 +804,12 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         val outcome = try {
             withTimeoutOrNull(CAMERA_OPEN_TIMEOUT_MS) { opening.await() } ?: CameraOutcome.TimedOut
         } finally {
-            waitingForUser -= 1
-            if (cameraOpening === opening) cameraOpening = null
+            if (number == sessionNumber) waitingForUser -= 1
+            if (cameraOpening === opening) {
+                cameraOpening = null
+            }
         }
-        if (outcome != CameraOutcome.Opened) closeCamera()
+        if (number == sessionNumber && cameraOpening == null && outcome != CameraOutcome.Opened) closeCamera()
         return outcome
     }
 
@@ -798,27 +826,33 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
     }
 
     override suspend fun scanBarcode(): BarcodeOutcome {
-        when (openCamera(VoiceCameraMode.BARCODE)) {
-            CameraOutcome.Opened -> Unit
-            CameraOutcome.PermissionDenied -> return BarcodeOutcome.PermissionDenied
-            CameraOutcome.TimedOut -> return BarcodeOutcome.TimedOut
-            CameraOutcome.Unavailable -> return BarcodeOutcome.Unavailable
-        }
+        val number = sessionNumber
         val wait = CompletableDeferred<BarcodeOutcome>()
+        barcodeWait?.complete(BarcodeOutcome.Cancelled)
         barcodeWait = wait
         waitingForUser += 1
         val outcome = try {
+            // Register before opening: the first analyzed frame can already contain a barcode.
+            when (openCamera(VoiceCameraMode.BARCODE)) {
+                CameraOutcome.Opened -> Unit
+                CameraOutcome.PermissionDenied -> return BarcodeOutcome.PermissionDenied
+                CameraOutcome.TimedOut -> return BarcodeOutcome.TimedOut
+                CameraOutcome.Unavailable -> return BarcodeOutcome.Unavailable
+            }
             withTimeoutOrNull(WAIT_FOR_USER_MS) { wait.await() } ?: BarcodeOutcome.TimedOut
         } finally {
-            waitingForUser -= 1
-            if (barcodeWait === wait) barcodeWait = null
+            if (number == sessionNumber) waitingForUser -= 1
+            if (barcodeWait === wait) {
+                barcodeWait = null
+                if (_ui.value.camera == VoiceCameraMode.BARCODE) closeCamera()
+            }
         }
-        if (_ui.value.camera == VoiceCameraMode.BARCODE) closeCamera()
         return outcome
     }
 
     override suspend fun pickPhotos(maxCount: Int): PickOutcome {
         if (!isActive) return PickOutcome.Cancelled
+        val number = sessionNumber
         val wait = CompletableDeferred<PickOutcome>()
         photoWait?.complete(PickOutcome.Cancelled)
         photoWait = wait
@@ -829,23 +863,23 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         return try {
             withTimeoutOrNull(WAIT_FOR_USER_MS) { wait.await() } ?: PickOutcome.TimedOut
         } finally {
-            waitingForUser -= 1
-            externalActivityPending = false
-            if (photoWait === wait) photoWait = null
+            if (number == sessionNumber) waitingForUser -= 1
+            if (photoWait === wait) {
+                externalActivityPending = false
+                photoWait = null
+            }
         }
     }
 
     /** The camera panel is bound and ready. */
     fun cameraReady(handle: VoiceCameraHandle) {
         cameraHandle = handle
-        cameraOpening?.complete(CameraOutcome.Opened)
-        // OpenAI decides on capture from the latest frame; give it one once there is something to see.
-        if (_ui.value.provider?.cameraFrames == CameraFrames.PER_TURN && preferences.autoCapture) {
-            sessionScope?.launch {
-                delay(PER_TURN_FIRST_FRAME_MS)
-                if (cameraHandle === handle) sendLatestFrame()
-            }
+        // CameraBinding reports ready only after its first frame. Send it before the
+        // open_camera result so OpenAI can base its next capture decision on the image.
+        if (_ui.value.provider?.cameraFrames == CameraFrames.PER_TURN) {
+            sendLatestFrame()
         }
+        cameraOpening?.complete(CameraOutcome.Opened)
     }
 
     fun cameraFailed(permissionDenied: Boolean) {
@@ -867,12 +901,12 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         if (_ui.value.capturing || _ui.value.camera != VoiceCameraMode.FOOD) return
         val number = sessionNumber
         _ui.update { it.copy(capturing = true) }
-        scope.launch {
+        sessionScope?.launch {
             noteActivity()
             val result = try {
                 executor.execute(LiveToolCall("shutter_${SystemClock.elapsedRealtime()}", "capture_photo", JsonObject(emptyMap())))
             } finally {
-                _ui.update { it.copy(capturing = false) }
+                if (number == sessionNumber) _ui.update { it.copy(capturing = false) }
             }
             if (number != sessionNumber) return@launch
             injectNote(
@@ -888,7 +922,8 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         closeCamera()
     }
 
-    fun barcodeDetected(code: String) {
+    fun barcodeDetected(handle: VoiceCameraHandle, code: String) {
+        if (cameraHandle !== handle) return
         barcodeWait?.complete(BarcodeOutcome.Scanned(code))
     }
 
@@ -986,7 +1021,6 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
         /** Tools that wait for the user give up after 90 s. */
         const val WAIT_FOR_USER_MS = 90_000L
         private const val FRAME_INTERVAL_MS = 1_000L
-        private const val PER_TURN_FIRST_FRAME_MS = 900L
         private const val GOODBYE_GRACE_MS = 600L
         private const val GOODBYE_MAX_MS = 8_000L
         private const val REPLY_WAIT_MS = 10_000L

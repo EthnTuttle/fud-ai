@@ -101,6 +101,8 @@ class VoiceArgumentsTest {
         rejects(VoiceSettingKey.APPEARANCE, "sepia")
         rejects(VoiceSettingKey.UNITS, "nautical")
         rejects(VoiceSettingKey.CALORIE_GOAL, "500")
+        rejects(VoiceSettingKey.CALORIE_GOAL, "-1,000")
+        rejects(VoiceSettingKey.CALORIE_GOAL, "-1.000")
         rejects(VoiceSettingKey.CALORIE_GOAL, "lots")
         rejects(VoiceSettingKey.FAT_GOAL_G, "900")
         rejects(VoiceSettingKey.WATER_GOAL_ML, "20000")
