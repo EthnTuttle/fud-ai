@@ -47,6 +47,7 @@ interface VoiceUiBridge {
     fun cameraMode(): VoiceCameraMode?
     suspend fun openCamera(mode: VoiceCameraMode): CameraOutcome
     fun closeCamera()
+    /** Captures once and closes only that camera, without ending the voice session. */
     suspend fun takePhoto(): PhotoOutcome
     suspend fun scanBarcode(): BarcodeOutcome
     suspend fun pickPhotos(maxCount: Int): PickOutcome

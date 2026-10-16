@@ -907,6 +907,8 @@ final class VoiceAssistantController {
 
     private func finishPicker(_ result: VoiceAssistantWait<[UIImage]>) {
         guard let continuation = pickerContinuation else { return }
+        photoPickerPresented = false
+        photoPickerItems = []
         pickerContinuation = nil
         pickerNumber += 1
         isLoadingPickedPhotos = false
@@ -1062,10 +1064,17 @@ extension VoiceAssistantController: VoiceAssistantToolHost {
     }
 
     func captureStill() async -> UIImage? {
-        await camera.captureStill(timeout: 3)
+        let number = sessionNumber
+        let request = cameraNumber
+        let photo = await camera.captureStill(timeout: 3)
+        // A late capture must neither return an old image nor close a replacement camera.
+        guard number == sessionNumber, request == cameraNumber else { return nil }
+        closeCamera()
+        return Task.isCancelled ? nil : photo
     }
 
     func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> {
+        closeCamera()
         finishPicker(.cancelled)
         pickerNumber += 1
         let number = pickerNumber

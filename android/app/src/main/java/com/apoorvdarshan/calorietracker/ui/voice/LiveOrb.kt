@@ -18,12 +18,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
@@ -46,7 +48,7 @@ import kotlin.math.sqrt
  * are off.
  *
  * [clearBackground] lets the orb glow over the overlay's dark scrim; otherwise it draws
- * its own deep background (for the Home button and the bubble).
+ * its own deep background.
  */
 @Composable
 fun LiveOrb(
@@ -87,7 +89,19 @@ fun LiveOrb(
             drawRect(brush)
         }
     } else {
-        Canvas(modifier) { drawFallbackOrb(frame, tint, clearBackground) }
+        FallbackLiveOrb(frame, tint, modifier, clearBackground)
+    }
+}
+
+/** Shared fallback entry point, also rendered directly by the visual regression tests. */
+@Composable
+internal fun FallbackLiveOrb(frame: LiveOrbFrame, tint: Color, modifier: Modifier, clearBackground: Boolean) {
+    Canvas(modifier.graphicsLayer {
+        // Add the filaments together in a transparent buffer, rather than into
+        // the screen behind them, where Plus would wash out on light themes.
+        compositingStrategy = if (clearBackground) CompositingStrategy.Offscreen else CompositingStrategy.Auto
+    }) {
+        drawFallbackOrb(frame, tint, clearBackground)
     }
 }
 
@@ -334,6 +348,7 @@ half4 main(float2 position) {
     light = 1.0 - exp(-light * 1.25);
 
     if (clearBackground > 0.5) {
+        // RuntimeShader expects premultiplied RGB; light already contains its intensity.
         float alpha = clamp(max(light.r, max(light.g, light.b)), 0.0, 1.0);
         return half4(half3(light), half(alpha));
     }

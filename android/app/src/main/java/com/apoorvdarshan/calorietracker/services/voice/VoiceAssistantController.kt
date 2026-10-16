@@ -20,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -826,7 +827,16 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
 
     override suspend fun takePhoto(): PhotoOutcome {
         val handle = cameraHandle ?: return PhotoOutcome.NotOpen
-        return handle.takePhoto()?.let { PhotoOutcome.Taken(it) } ?: PhotoOutcome.Failed
+        val number = sessionNumber
+        return try {
+            val photo = handle.takePhoto()
+            currentCoroutineContext().ensureActive()
+            if (number != sessionNumber || cameraHandle !== handle) PhotoOutcome.NotOpen
+            else photo?.let { PhotoOutcome.Taken(it) } ?: PhotoOutcome.Failed
+        } finally {
+            // Do not dismiss a camera opened while this capture was suspended.
+            if (number == sessionNumber && cameraHandle === handle) closeCamera()
+        }
     }
 
     override suspend fun scanBarcode(): BarcodeOutcome {
@@ -856,6 +866,7 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
 
     override suspend fun pickPhotos(maxCount: Int): PickOutcome {
         if (!isActive) return PickOutcome.Cancelled
+        closeCamera()
         val number = sessionNumber
         val wait = CompletableDeferred<PickOutcome>()
         photoWait?.complete(PickOutcome.Cancelled)

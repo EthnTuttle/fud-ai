@@ -15,19 +15,23 @@ import com.apoorvdarshan.calorietracker.services.voice.VoiceCameraHandle
 import com.apoorvdarshan.calorietracker.services.voice.VoiceCameraMode
 import com.apoorvdarshan.calorietracker.services.voice.BarcodeOutcome
 import com.apoorvdarshan.calorietracker.services.voice.PhotoOutcome
+import com.apoorvdarshan.calorietracker.services.voice.CameraOutcome
 import com.apoorvdarshan.calorietracker.testing.FudAITestState
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -140,6 +144,74 @@ class AppFlowsTest {
                 controller.cameraReady(camera) // A late CameraX callback cannot reopen a hidden camera.
                 assertEquals(PhotoOutcome.NotOpen, controller.takePhoto())
             } finally {
+                controller.close()
+            }
+        }
+    }
+
+    @Test
+    fun voicePhotoCaptureReleasesCameraOnSuccessAndFailureWithoutEndingConversation() {
+        FudAITestState.reset()
+        val controller = (context.applicationContext as FudAIApp).container.voiceAssistant
+        runBlocking(Dispatchers.Main) {
+            controller.requestStart()
+            try {
+                for (image in listOf(byteArrayOf(1, 2, 3), null)) {
+                    val camera = object : VoiceCameraHandle {
+                        override fun latestFrame() = null
+                        override suspend fun takePhoto() = image
+                    }
+                    val opening = async(start = CoroutineStart.UNDISPATCHED) { controller.openCamera(VoiceCameraMode.FOOD) }
+                    controller.cameraReady(camera)
+                    assertEquals(CameraOutcome.Opened, opening.await())
+                    val result = controller.takePhoto()
+                    if (image == null) assertEquals(PhotoOutcome.Failed, result)
+                    else assertTrue(result is PhotoOutcome.Taken && result.jpeg.contentEquals(image))
+                    assertEquals(null, controller.cameraMode())
+                    assertTrue(controller.isActive)
+                }
+            } finally {
+                controller.close()
+            }
+        }
+    }
+
+    @Test
+    fun cancelledVoiceCaptureCannotCloseReplacementAndPhotoPickerClosesCamera() {
+        FudAITestState.reset()
+        val controller = (context.applicationContext as FudAIApp).container.voiceAssistant
+        val captured = CompletableDeferred<ByteArray?>()
+        runBlocking(Dispatchers.Main) {
+            controller.requestStart()
+            try {
+                val oldCamera = object : VoiceCameraHandle {
+                    override fun latestFrame() = null
+                    override suspend fun takePhoto() = withContext(NonCancellable) { captured.await() }
+                }
+                val opening = async(start = CoroutineStart.UNDISPATCHED) { controller.openCamera(VoiceCameraMode.FOOD) }
+                controller.cameraReady(oldCamera)
+                assertEquals(CameraOutcome.Opened, opening.await())
+                val capture = async(start = CoroutineStart.UNDISPATCHED) { controller.takePhoto() }
+                capture.cancel()
+                controller.closeCamera()
+                val replacement = object : VoiceCameraHandle {
+                    override fun latestFrame() = null
+                    override suspend fun takePhoto() = byteArrayOf(4, 5, 6)
+                }
+                val reopening = async(start = CoroutineStart.UNDISPATCHED) { controller.openCamera(VoiceCameraMode.FOOD) }
+                controller.cameraReady(replacement)
+                assertEquals(CameraOutcome.Opened, reopening.await())
+                captured.complete(byteArrayOf(1))
+                capture.join()
+                assertEquals(VoiceCameraMode.FOOD, controller.cameraMode())
+
+                val picker = async(start = CoroutineStart.UNDISPATCHED) { controller.pickPhotos(1) }
+                assertEquals(null, controller.cameraMode())
+                picker.cancel()
+                picker.join()
+                assertTrue(controller.isActive)
+            } finally {
+                captured.complete(null)
                 controller.close()
             }
         }

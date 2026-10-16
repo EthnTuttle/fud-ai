@@ -159,6 +159,7 @@ interface VoiceAppPorts {
     fun cameraMode(): VoiceCameraMode?
     suspend fun openCamera(mode: VoiceCameraMode): CameraOutcome
     fun closeCamera()
+    /** A single capture; releases its own camera before returning, including on failure. */
     suspend fun takePhoto(): PhotoOutcome
     suspend fun scanBarcode(): BarcodeOutcome
     suspend fun pickPhotos(maxCount: Int): PickOutcome

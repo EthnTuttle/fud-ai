@@ -463,12 +463,11 @@ private fun CompactOverlay(
                     Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .border(1.dp, AppColors.Calorie.copy(alpha = 0.45f), CircleShape)
                         .clickable(onClick = controller::expand)
                         .semantics { contentDescription = expandLabel }
                         .testTag("voiceAssistantBubble")
                 ) {
-                    LiveOrb(mode = ui.orb, tint = AppColors.Calorie, level = controller::orbLevel, modifier = Modifier.fillMaxSize())
+                    LiveOrb(mode = ui.orb, tint = AppColors.Calorie, level = controller::orbLevel, modifier = Modifier.fillMaxSize(), clearBackground = true)
                 }
                 Spacer(Modifier.width(8.dp))
                 val caption = ui.assistantCaption.ifBlank { ui.userCaption }.ifBlank { statusText(ui) }

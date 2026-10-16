@@ -67,7 +67,7 @@
       "name": "capture_photo",
       "effect": "read",
       "confirm": "never",
-      "description": "Take a photo with the open camera and analyze the food in it with the app's normal food scan. Returns a draft (draft_id, items, totals) shown to the user as a card; nothing is logged until log_food. With auto-capture on you may call this as soon as the food is clearly in frame; otherwise wait until the user says to take it.",
+      "description": "Take one photo with the open camera, close its preview, then analyze the food with the app's normal food scan. Reopen the camera only for another camera task. The voice conversation continues. Returns a draft (draft_id, items, totals) shown to the user as a card; nothing is logged until log_food. With auto-capture on you may call this as soon as the food is clearly in frame; otherwise wait until the user says to take it.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -130,7 +130,7 @@
       "name": "log_food",
       "effect": "write",
       "confirm": "setting",
-      "description": "Log food to the diary from exactly one source: a draft_id (from capture_photo, pick_photos, scan_barcode or describe_food), a saved_food_id (from search_foods), or a manual item. Returns the new entry_ids.",
+      "description": "Log food to the diary from exactly one source: a draft_id (from capture_photo, pick_photos, scan_barcode or describe_food), a saved_food_id (from search_foods), or a manual item. Applying the save closes an open food camera without ending the conversation. Returns the new entry_ids.",
       "parameters": {
         "type": "object",
         "properties": {

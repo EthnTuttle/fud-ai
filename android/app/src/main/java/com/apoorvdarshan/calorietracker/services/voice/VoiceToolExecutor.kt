@@ -486,7 +486,6 @@ class VoiceToolExecutor(
             PhotoOutcome.NotOpen -> fail(ToolError.CAMERA_UNAVAILABLE, "The camera isn't open. Call open_camera first.")
             PhotoOutcome.Failed -> fail(ToolError.CAMERA_UNAVAILABLE, "The photo could not be taken.")
         }
-        ports.closeCamera()
         val analysis = analyzing { ports.analyzeFoodPhotos(listOf(photo), note) }.copy(customNote = note)
         return foodDraft(analysis, listOf(photo), FoodSource.SNAP_FOOD) { put("camera", "closed") }
     }
@@ -702,6 +701,7 @@ class VoiceToolExecutor(
         if (draft != null && draft.loggedEntryIds.isNotEmpty()) {
             fail(ToolError.INVALID_ARGUMENTS, "${draft.id} is already logged. Use update_food_entry to change it.")
         }
+        if (ports.cameraMode() == VoiceCameraMode.FOOD) ports.closeCamera()
         val entry = prepared.build(UUID.randomUUID(), timestamp, meal)
         var adopted = false
         try {

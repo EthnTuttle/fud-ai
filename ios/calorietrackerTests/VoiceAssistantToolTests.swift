@@ -61,6 +61,20 @@ struct VoiceAssistantToolTests {
 
     // MARK: Confirmation and Undo
 
+    @Test func foodSaveClosesCameraOnlyWhenConfirmedAndKeepsConversation() async {
+        let harness = VoiceAssistantHarness(confirmSaves: true)
+        harness.host.cameraMode = .food
+        let item: [String: Any] = ["name": "Banana", "calories": 105]
+        let pending = await harness.executor.execute(name: "log_food", arguments: ["item": item])
+        #expect(pending["error"] as? String == "confirmation_required")
+        #expect(harness.host.cameraMode == .food)
+        let saved = await harness.executor.execute(name: "log_food", arguments: ["item": item, "user_confirmed": true])
+        #expect(saved["ok"] as? Bool == true)
+        #expect(harness.host.cameraMode == nil)
+        #expect(harness.food.entries.count == 1)
+        #expect(!harness.host.ended)
+    }
+
     @Test func unconfirmedSaveChangesNothingAndConfirmedSaveCanBeUndone() async throws {
         let harness = VoiceAssistantHarness(confirmSaves: true)
         let executor = harness.executor
@@ -552,7 +566,8 @@ struct VoiceAssistantToolTests {
         #expect(harness.host.cameraMode == nil)
         let result = await harness.executor.execute(name: "capture_photo", arguments: ["note": "cooked in olive oil"])
         #expect(result["draft_id"] is String)
-        #expect(harness.host.cameraMode == .food)
+        #expect(harness.host.cameraMode == nil)
+        #expect(result["camera"] as? String == "closed")
         #expect(harness.analyzer.lastNote == "cooked in olive oil")
 
         harness.host.still = nil
@@ -859,7 +874,10 @@ final class StubVoiceAssistantHost: VoiceAssistantToolHost {
         cameraMode = nil
     }
 
-    func captureStill() async -> UIImage? { still }
+    func captureStill() async -> UIImage? {
+        defer { closeCamera() }
+        return still
+    }
     func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> {
         lastPickLimit = limit
         return pickResult

@@ -22,6 +22,8 @@ struct LiveOrbView: View {
     var isPaused = false
     /// Seconds between frames; nil follows the display.
     var minimumFrameInterval: Double?
+    /// Draw only the glowing orb, without its dark backing.
+    var clearBackground = false
 
     @State private var motion = LiveOrbMotion()
 
@@ -39,7 +41,8 @@ struct LiveOrbView: View {
                         .float(frame.active),
                         .float(frame.thinking),
                         .float(frame.speaking),
-                        .color(tint)
+                        .color(tint),
+                        .float(clearBackground ? 1 : 0)
                     ))
             }
         }
