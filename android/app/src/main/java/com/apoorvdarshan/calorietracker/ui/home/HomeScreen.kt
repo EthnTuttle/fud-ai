@@ -513,7 +513,10 @@ DisposableEffect(lifecycleOwner, vm) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize().testTag("home.diary"),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = if (selectionMode) 8.dp else BottomNavScrollPadding + 72.dp)
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                top = 8.dp,
+                bottom = if (selectionMode) 8.dp else BottomNavScrollPadding + (if (voiceUi.visible) 72.dp else 144.dp)
+            )
         ) {
             // Week strip — verbatim port of WeekEnergyStrip in HomeComponents.swift,
             // with horizontal pagination across 53 weeks of history.
@@ -701,17 +704,23 @@ CalorieHero(
             }
         }
 
-        // Floating "+" add button — overlaid bottom-right and lifted above the docked
+        // Voice and "+" share a right-aligned stack lifted above the docked
         // bottom nav bar. The parent Scaffold renders content full-screen behind the
         // bar, so the Scaffold FAB slot would sit hidden underneath it. Mirrors the iOS
         // ContentView FAB: .overlay(alignment: .bottomTrailing) + .padding(.bottom).
         if (!selectionMode) {
-        Box(
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(end = 24.dp, bottom = 100.dp)
+                .padding(end = 24.dp, bottom = 100.dp),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (!voiceUi.visible) {
+                VoiceAssistantButton(onClick = container.voiceAssistant::requestStart)
+            }
+            Box {
             Box(
                 modifier = Modifier
                     .testTag("home.add")
@@ -839,16 +848,6 @@ CalorieHero(
             }
         }
         }
-        // The voice assistant's orb, across from the + button. While a conversation is
-        // open its bubble takes this corner instead.
-        if (!selectionMode && !voiceUi.visible) {
-            VoiceAssistantButton(
-                onClick = container.voiceAssistant::requestStart,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .navigationBarsPadding()
-                    .padding(start = 24.dp, bottom = 100.dp)
-            )
         }
         }
     }

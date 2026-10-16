@@ -129,4 +129,13 @@
     <string name="voice_settings_add_tile">Tegel toevoegen aan Snelle instellingen</string>
     <string name="voice_settings_add_widget">Widget toevoegen aan startscherm</string>
     <string name="voice_settings_privacy_footer">Je stem, ondertiteling, de camerabeelden die de assistent ziet en de resultaten van zijn acties gaan naar de provider die je gebruikt (Google voor Fud AI Plus/Pro). De server van Fud AI bewaart gebruikstellers en factureringsbewijzen, geen gespreksinhoud.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Stem beluisteren</string>
+    <string name="voice_preview_stop">Voorbeeld stoppen</string>
+    <string name="voice_preview_preparing">Voorbeeld voorbereiden…</string>
+    <string name="voice_preview_sample">Hoi, ik ben je Fud AI-assistent. Zo klinkt mijn stem.</string>
+    <string name="voice_preview_failed">Dit stemvoorbeeld kon niet worden afgespeeld. Probeer het opnieuw.</string>
+    <string name="voice_preview_busy">Beëindig je huidige spraakgesprek voordat je een stem beluistert.</string>
+    <string name="voice_preview_usage">Speelt een kort voorbeeld af zonder je microfoon te gebruiken. Verbruikt API-tegoed of Fud AI-spraakminuten.</string>
 </resources>

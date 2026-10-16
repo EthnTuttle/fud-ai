@@ -128,4 +128,13 @@
     <string name="voice_settings_add_tile">빠른 설정 타일 추가</string>
     <string name="voice_settings_add_widget">홈 화면 위젯 추가</string>
     <string name="voice_settings_privacy_footer">음성, 자막, 어시스턴트가 보는 카메라 화면, 작업 결과는 사용하는 제공업체로 전송됩니다(Fud AI Plus/Pro는 Google).  Fud AI 서버는 사용량 집계와 과금 기록을 보관하며 대화 내용은 저장하지 않습니다.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">목소리 미리 듣기</string>
+    <string name="voice_preview_stop">미리 듣기 중지</string>
+    <string name="voice_preview_preparing">미리 듣기 준비 중…</string>
+    <string name="voice_preview_sample">안녕하세요, 저는 Fud AI 도우미입니다. 제 목소리는 이렇게 들려요.</string>
+    <string name="voice_preview_failed">이 목소리 샘플을 재생할 수 없어요. 다시 시도해 주세요.</string>
+    <string name="voice_preview_busy">목소리를 미리 들으려면 현재 음성 대화를 먼저 종료해 주세요.</string>
+    <string name="voice_preview_usage">마이크를 사용하지 않고 짧은 샘플을 재생합니다. API 크레딧 또는 Fud AI 음성 이용 시간이 사용됩니다.</string>
 </resources>

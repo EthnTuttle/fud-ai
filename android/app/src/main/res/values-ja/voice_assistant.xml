@@ -128,4 +128,13 @@
     <string name="voice_settings_add_tile">クイック設定タイルを追加</string>
     <string name="voice_settings_add_widget">ホーム画面にウィジェットを追加</string>
     <string name="voice_settings_privacy_footer">音声、字幕、アシスタントが見るカメラ画像、操作の結果は、利用するプロバイダー（Fud AI Plus/ProではGoogle）に送信されます。Fud AIのサーバーには使用量カウンターと課金記録が保存され、会話の内容は保存されません。</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">音声を試聴</string>
+    <string name="voice_preview_stop">試聴を停止</string>
+    <string name="voice_preview_preparing">試聴を準備中…</string>
+    <string name="voice_preview_sample">こんにちは、あなたのFud AIアシスタントです。これが私の声です。</string>
+    <string name="voice_preview_failed">この音声サンプルを再生できませんでした。もう一度お試しください。</string>
+    <string name="voice_preview_busy">音声を試聴する前に、現在の音声会話を終了してください。</string>
+    <string name="voice_preview_usage">マイクを使わずに短いサンプルを再生します。APIクレジットまたはFud AIの音声利用時間を消費します。</string>
 </resources>

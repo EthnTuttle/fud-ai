@@ -131,4 +131,13 @@
     <string name="voice_settings_add_tile">Přidat dlaždici do Rychlého nastavení</string>
     <string name="voice_settings_add_widget">Přidat widget na plochu</string>
     <string name="voice_settings_privacy_footer">Váš hlas, titulky, záběry z kamery, které asistent vidí, a výsledky jeho akcí se odesílají zvolenému poskytovateli (u Fud AI Plus/Pro společnosti Google). Server Fud AI uchovává počítadla využití a záznamy účtování, nikoli obsah konverzací.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Poslechnout hlas</string>
+    <string name="voice_preview_stop">Zastavit ukázku</string>
+    <string name="voice_preview_preparing">Připravuji ukázku…</string>
+    <string name="voice_preview_sample">Ahoj, jsem váš asistent Fud AI. Takhle zní můj hlas.</string>
+    <string name="voice_preview_failed">Tuto hlasovou ukázku se nepodařilo přehrát. Zkuste to prosím znovu.</string>
+    <string name="voice_preview_busy">Před poslechem hlasové ukázky ukončete aktuální hlasovou konverzaci.</string>
+    <string name="voice_preview_usage">Přehraje krátkou ukázku bez použití mikrofonu. Čerpá kredity API nebo hlasové minuty Fud AI.</string>
 </resources>

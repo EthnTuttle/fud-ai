@@ -129,4 +129,13 @@
     <string name="voice_settings_add_tile">Kachel zu Schnelleinstellungen hinzufügen</string>
     <string name="voice_settings_add_widget">Widget zum Startbildschirm hinzufügen</string>
     <string name="voice_settings_privacy_footer">Deine Stimme, Untertitel, die vom Assistenten gesehenen Kamerabilder und die Ergebnisse seiner Aktionen werden an deinen Anbieter gesendet (Google bei Fud AI Plus/Pro).  Der Fud AI-Server speichert Nutzungszähler und Abrechnungsbelege, aber keine Gesprächsinhalte.</string>
+
+    <!-- Voice preview -->
+    <string name="voice_preview_start">Stimme anhören</string>
+    <string name="voice_preview_stop">Vorschau stoppen</string>
+    <string name="voice_preview_preparing">Vorschau wird vorbereitet…</string>
+    <string name="voice_preview_sample">Hallo, ich bin dein Fud AI-Assistent. So klingt meine Stimme.</string>
+    <string name="voice_preview_failed">Diese Sprachvorschau konnte nicht abgespielt werden. Bitte versuche es erneut.</string>
+    <string name="voice_preview_busy">Beende dein aktuelles Sprachgespräch, bevor du eine Stimme anhörst.</string>
+    <string name="voice_preview_usage">Spielt eine kurze Hörprobe ab, ohne dein Mikrofon zu verwenden. Verbraucht API-Guthaben oder Fud AI-Sprachminuten.</string>
 </resources>
