@@ -50,6 +50,7 @@ enum VoiceAssistantInstructions {
         lines.append("")
         lines.append("## This session")
         lines.append("- Camera: \(cameraRule(session))")
+        lines.append("- capture_photo closes the camera after taking the image. Reopen it only for another camera task. When a camera task is finished or the user moves on, call close_camera and continue talking. Finishing a tool is not a request to end_conversation.")
         lines.append(session.autoCapture && session.cameraFrames != .none
             ? "- Auto-capture is on: call capture_photo as soon as the food is clearly in frame."
             : "- Auto-capture is off: call capture_photo only when the user says to take the photo.")

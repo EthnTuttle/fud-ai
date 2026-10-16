@@ -5,6 +5,54 @@ import UIKit
 
 @MainActor
 struct VoiceAssistantCameraLifecycleTests {
+    @Test func stillCaptureClosesCameraWithoutCollapsingAssistant() async {
+        let camera = StubVoiceCamera()
+        camera.still = UIImage()
+        camera.frame = Data([1, 2, 3])
+        let controller = VoiceAssistantController(camera: camera)
+        controller.isExpanded = true
+        #expect(await controller.captureStill() != nil)
+        #expect(camera.stops == 1)
+        #expect(camera.latestJPEG() == nil)
+        #expect(controller.isExpanded)
+    }
+
+    @Test func failedStillCaptureAlsoClosesCamera() async {
+        let camera = StubVoiceCamera()
+        let controller = VoiceAssistantController(camera: camera)
+        #expect(await controller.captureStill() == nil)
+        #expect(camera.stops == 1)
+    }
+
+    @Test func cancelledLateCaptureCannotStopReplacementCamera() async {
+        let camera = StubVoiceCamera()
+        let gate = DeferredStillCapture()
+        camera.capture = { await gate.capture() }
+        let controller = VoiceAssistantController(camera: camera)
+        let capture = Task { await controller.captureStill() }
+        await gate.waitUntilStarted()
+        controller.closeCamera()
+        let replacementFrame = Data([4, 5, 6])
+        camera.frame = replacementFrame
+        capture.cancel()
+        await gate.finish(UIImage())
+        #expect(await capture.value == nil)
+        #expect(camera.stops == 1)
+        #expect(camera.latestJPEG() == replacementFrame)
+    }
+
+    @Test func photoPickerClosesCameraAndDismissesOnCancellation() async {
+        let camera = StubVoiceCamera()
+        let controller = VoiceAssistantController(camera: camera)
+        let picker = Task { await controller.pickPhotos(limit: 1, timeout: 5) }
+        await Task.yield()
+        #expect(camera.stops == 1)
+        #expect(controller.photoPickerPresented)
+        picker.cancel()
+        if case .cancelled = await picker.value {} else { Issue.record("Picker was not cancelled") }
+        #expect(!controller.photoPickerPresented)
+    }
+
     @Test func minimizingStopsCaptureAndDiscardsFrames() {
         let camera = StubVoiceCamera()
         let controller = VoiceAssistantController(camera: camera)
@@ -52,9 +100,37 @@ nonisolated private final class StubVoiceCamera: VoiceAssistantCameraIO, @unchec
     var onBarcode: (@Sendable (String) -> Void)?
     var frame: Data?
     var stops = 0
+    var still: UIImage?
+    var capture: (@Sendable () async -> UIImage?)?
     func start(mode: VoiceAssistantCamera.Mode) async -> VoiceAssistantCamera.StartResult { .started }
     func setMode(_ mode: VoiceAssistantCamera.Mode) {}
     func stop() { stops += 1; frame = nil }
     func latestJPEG() -> Data? { frame }
-    func captureStill(timeout: TimeInterval) async -> UIImage? { nil }
+    func captureStill(timeout: TimeInterval) async -> UIImage? {
+        if let capture { return await capture() }
+        return still
+    }
+}
+
+private actor DeferredStillCapture {
+    private var continuation: CheckedContinuation<UIImage?, Never>?
+    private var started: [CheckedContinuation<Void, Never>] = []
+
+    func capture() async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            self.continuation = continuation
+            started.forEach { $0.resume() }
+            started.removeAll()
+        }
+    }
+
+    func waitUntilStarted() async {
+        if continuation != nil { return }
+        await withCheckedContinuation { started.append($0) }
+    }
+
+    func finish(_ image: UIImage?) {
+        continuation?.resume(returning: image)
+        continuation = nil
+    }
 }

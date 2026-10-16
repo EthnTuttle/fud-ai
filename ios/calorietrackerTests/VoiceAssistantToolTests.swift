@@ -552,7 +552,8 @@ struct VoiceAssistantToolTests {
         #expect(harness.host.cameraMode == nil)
         let result = await harness.executor.execute(name: "capture_photo", arguments: ["note": "cooked in olive oil"])
         #expect(result["draft_id"] is String)
-        #expect(harness.host.cameraMode == .food)
+        #expect(harness.host.cameraMode == nil)
+        #expect(result["camera"] as? String == "closed")
         #expect(harness.analyzer.lastNote == "cooked in olive oil")
 
         harness.host.still = nil
@@ -859,7 +860,10 @@ final class StubVoiceAssistantHost: VoiceAssistantToolHost {
         cameraMode = nil
     }
 
-    func captureStill() async -> UIImage? { still }
+    func captureStill() async -> UIImage? {
+        defer { closeCamera() }
+        return still
+    }
     func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]> {
         lastPickLimit = limit
         return pickResult

@@ -49,6 +49,7 @@ object VoiceInstructions {
         lines += ""
         lines += "## This session"
         lines += "- Camera: " + cameraLine(input.context)
+        lines += "- capture_photo closes the camera after taking the image. Reopen it only for another camera task. When a camera task is finished or the user moves on, call close_camera and continue talking. Finishing a tool is not a request to end_conversation."
         lines += "- Confirm before saving: " + if (input.context.confirmSaves) {
             "on. Saving tools answer confirmation_required until the user agrees."
         } else {

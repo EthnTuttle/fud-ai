@@ -43,7 +43,7 @@ protocol VoiceAssistantToolHost: AnyObject {
     func openFoodEntry(_ entry: FoodEntry)
     func openCamera(_ mode: VoiceAssistantCamera.Mode) async -> VoiceAssistantCamera.StartResult
     func closeCamera()
-    /// A full-size photo from the open camera.
+    /// A full-size photo; closes only this capture's camera before returning.
     func captureStill() async -> UIImage?
     func pickPhotos(limit: Int, timeout: TimeInterval) async -> VoiceAssistantWait<[UIImage]>
     func scanBarcode(timeout: TimeInterval) async -> VoiceAssistantWait<String>
@@ -484,14 +484,17 @@ final class VoiceAssistantToolExecutor {
             let opened = await openCamera([:])
             guard opened["ok"] as? Bool == true else { return opened }
         }
-        guard let photo = await host.captureStill() else {
+        let captured = await host.captureStill()
+        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
+        guard let photo = captured else {
             return Self.failure(.cameraUnavailable, "Couldn't take a photo. Try again.")
         }
-        guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
         let note = VoiceAssistantParsing.string(arguments["note"])
         do {
             let analysis = try await analyzer.analyzeImages([photo], note: note)
-            return foodDraft(analysis, images: [photo], source: .snapFood)
+            var result = foodDraft(analysis, images: [photo], source: .snapFood)
+            result["camera"] = "closed"
+            return result
         } catch {
             return analysisFailure(error)
         }

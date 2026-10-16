@@ -106,7 +106,7 @@ using namespace liveorb;
 /// - active, thinking, speaking: how much of each mood shows, 0...1.
 [[ stitchable ]] half4 liveOrb(float2 position, half4 color, float2 size, float time,
                                float spin, float flow, float level, float active,
-                               float thinking, float speaking, half4 tint) {
+                               float thinking, float speaking, half4 tint, float clearBackground) {
     float scale = min(size.x, size.y) * 0.5;
     float2 raw = (position - size * 0.5) / scale;
 
@@ -169,6 +169,10 @@ using namespace liveorb;
     float3 light = base * glow + hot * glow * glow * 0.35;
     light = 1.0 - exp(-light * 1.25);
 
+    if (clearBackground > 0.5) {
+        float alpha = clamp(max(light.r, max(light.g, light.b)), 0.0, 1.0);
+        return half4(half3(light), half(alpha));
+    }
     float3 background = float3(0.006, 0.008, 0.014) + base * 0.035 * exp(-dot(raw, raw) * 1.4);
     return half4(half3(background + light), 1.0);
 }

@@ -486,7 +486,6 @@ class VoiceToolExecutor(
             PhotoOutcome.NotOpen -> fail(ToolError.CAMERA_UNAVAILABLE, "The camera isn't open. Call open_camera first.")
             PhotoOutcome.Failed -> fail(ToolError.CAMERA_UNAVAILABLE, "The photo could not be taken.")
         }
-        ports.closeCamera()
         val analysis = analyzing { ports.analyzeFoodPhotos(listOf(photo), note) }.copy(customNote = note)
         return foodDraft(analysis, listOf(photo), FoodSource.SNAP_FOOD) { put("camera", "closed") }
     }

@@ -17,12 +17,10 @@ struct VoiceAssistantHomeButton: View {
                 mode: .idle,
                 tint: AppColors.calorie,
                 isPaused: !isVisible || scenePhase != .active || reduceMotion,
-                minimumFrameInterval: 1.0 / 30
+                minimumFrameInterval: 1.0 / 30,
+                clearBackground: true
             )
             .frame(width: 60, height: 60)
-            .clipShape(Circle())
-            .overlay(Circle().strokeBorder(AppColors.calorie.opacity(0.45), lineWidth: 1))
-            .shadow(color: AppColors.calorie.opacity(0.35), radius: 10, y: 3)
             .contentShape(Circle())
         }
         .buttonStyle(.plain)

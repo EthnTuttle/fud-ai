@@ -93,7 +93,10 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     override fun closeCamera() {
         camera = null
     }
-    override suspend fun takePhoto(): PhotoOutcome = if (camera == null) PhotoOutcome.NotOpen else photo
+    override suspend fun takePhoto(): PhotoOutcome {
+        if (camera == null) return PhotoOutcome.NotOpen
+        return photo.also { closeCamera() }
+    }
     override suspend fun scanBarcode(): BarcodeOutcome = barcode
     override suspend fun pickPhotos(maxCount: Int): PickOutcome {
         requestedMaxPhotos = maxCount

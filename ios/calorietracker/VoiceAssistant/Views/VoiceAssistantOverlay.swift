@@ -334,7 +334,7 @@ private struct VoiceAssistantCompactView: View {
     }
 }
 
-/// The orb in a round bubble, shared by the compact assistant and the Home button.
+/// The floating orb in the compact assistant, without a surrounding disc.
 struct VoiceAssistantOrbBubble: View {
     let controller: VoiceAssistantController
     var size: CGFloat = 60
@@ -343,12 +343,11 @@ struct VoiceAssistantOrbBubble: View {
         LiveOrbView(
             mode: controller.orbMode,
             levelSource: { controller.currentLevel() },
-            tint: AppColors.calorie
+            tint: AppColors.calorie,
+            clearBackground: true
         )
         .frame(width: size, height: size)
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(AppColors.calorie.opacity(0.45), lineWidth: 1))
-        .shadow(color: AppColors.calorie.opacity(0.35), radius: 10, y: 3)
+        .contentShape(Circle())
     }
 }
 

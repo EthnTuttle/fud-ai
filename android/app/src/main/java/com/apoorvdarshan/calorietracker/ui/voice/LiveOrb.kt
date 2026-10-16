@@ -46,7 +46,7 @@ import kotlin.math.sqrt
  * are off.
  *
  * [clearBackground] lets the orb glow over the overlay's dark scrim; otherwise it draws
- * its own deep background (for the Home button and the bubble).
+ * its own deep background.
  */
 @Composable
 fun LiveOrb(

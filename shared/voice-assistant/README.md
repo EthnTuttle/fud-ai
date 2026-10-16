@@ -105,6 +105,12 @@ draft, read back the main items and total calories; never call a tool with
   as a card the user can also tap to log.
 - Tools that wait for the user (`pick_photos`, `scan_barcode`) time out after
   90 s with `timeout`; closing the picker/scanner returns `cancelled`.
+- `capture_photo` releases its camera before food analysis, including failed or
+  cancelled capture attempts. Late callbacks cannot close a replacement camera.
+  Photo picking closes any camera first; barcode scanning closes its scanner
+  on completion, cancellation or timeout. These transitions keep the voice
+  conversation running. The model is told to close a camera task when finished
+  and reopen only when another camera task needs it.
 - Navigation is real: `open_screen` switches tabs and pushes the settings
   section; the assistant shrinks to a floating bubble so the screen is visible.
 - Food analysis, barcode lookup and workout parsing use the app's existing
@@ -117,6 +123,9 @@ draft, read back the main items and total calories; never call a tool with
   ("Talk to Fud AI"), usable from the Action Button, plus a Control Center
   control; Android Quick Settings tile, launcher shortcut and a home-screen
   widget. All open the app straight into a listening session.
+- The Home and compact conversation orbs render their glowing filaments over a
+  transparent background, without an outer border or dark disc. Their accessible
+  touch targets stay the same.
 - Home keeps meal calories and macros beneath the meal title on the leading
   side, away from the floating controls. The diary remains visible behind the
   buttons and can scroll its final entry above them.

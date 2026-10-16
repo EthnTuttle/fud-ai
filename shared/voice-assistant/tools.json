@@ -67,7 +67,7 @@
       "name": "capture_photo",
       "effect": "read",
       "confirm": "never",
-      "description": "Take a photo with the open camera and analyze the food in it with the app's normal food scan. Returns a draft (draft_id, items, totals) shown to the user as a card; nothing is logged until log_food. With auto-capture on you may call this as soon as the food is clearly in frame; otherwise wait until the user says to take it.",
+      "description": "Take one photo with the open camera, close its preview, then analyze the food with the app's normal food scan. Reopen the camera only for another camera task. The voice conversation continues. Returns a draft (draft_id, items, totals) shown to the user as a card; nothing is logged until log_food. With auto-capture on you may call this as soon as the food is clearly in frame; otherwise wait until the user says to take it.",
       "parameters": {
         "type": "object",
         "properties": {
