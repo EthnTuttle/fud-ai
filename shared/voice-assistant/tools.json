@@ -86,7 +86,7 @@
       "name": "pick_photos",
       "effect": "read",
       "confirm": "never",
-      "description": "Open the photo library so the user can choose up to 4 photos of one meal, then analyze them. Waits for the user; returns a draft, or cancelled.",
+      "description": "Open the photo library to choose photos of one meal, then analyze them. The food-analysis mode allows up to 3 photos with hosted AI or 4 with the user's own API key. Waits for the user; returns a draft, or cancelled.",
       "parameters": {
         "type": "object",
         "properties": {
