@@ -102,6 +102,25 @@ class AppFlowsTest {
     }
 
     @Test
+    fun voiceAssistantSettingsPersistWithoutStartingAMicrophoneSession() {
+        launchFresh()
+        openVoiceSettings()
+        compose.onNodeWithTag("voiceSettings.confirmSaves").performScrollTo().assertIsOn().performClick()
+        awaitPreference(prefs.voiceAssistantPreferences) { !it.confirmSaves }
+        compose.onNodeWithTag("voiceSettings.saveToCoach").performScrollTo().assertIsOn().performClick()
+        awaitPreference(prefs.voiceAssistantPreferences) { !it.saveToCoach }
+        compose.onNodeWithTag("voiceSettings.autoCapture").performScrollTo().assertIsOff().performClick()
+        awaitPreference(prefs.voiceAssistantPreferences) { it.autoCapture }
+
+        activity!!.recreate()
+        openVoiceSettings()
+        compose.onNodeWithTag("voiceSettings.autoCapture").performScrollTo().assertIsOn()
+        compose.onNodeWithTag("voiceSettings.confirmSaves").performScrollTo().assertIsOff()
+        compose.onNodeWithTag("voiceSettings.saveToCoach").performScrollTo().assertIsOff()
+        assertTrue(!(context.applicationContext as FudAIApp).container.voiceAssistant.isActive)
+    }
+
+    @Test
     fun manualFoodRequiresNameAndCaloriesAndPersistsAcrossActivityRestarts() {
         launchFresh()
         openManualEntry()
@@ -277,6 +296,14 @@ class AppFlowsTest {
         compose.onNodeWithTag("settings.category.TRACKING_REMINDERS").performScrollTo().performClick()
         waitFor(hasTestTag("settings.water.enabled"))
         compose.onNodeWithTag("settings.water.enabled").performScrollTo()
+    }
+
+    private fun openVoiceSettings() {
+        openTab("settings")
+        compose.onNodeWithTag("nav.settings").performClick()
+        waitFor(hasTestTag("settings.category.VOICE_ASSISTANT"))
+        compose.onNodeWithTag("settings.category.VOICE_ASSISTANT").performScrollTo().performClick()
+        waitFor(hasTestTag("voiceSettings.autoCapture"))
     }
 
     private fun waitForWaterSetting(enabled: Boolean) {

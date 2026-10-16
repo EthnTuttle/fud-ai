@@ -52,6 +52,7 @@ import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.QuickActionRequest
 import com.apoorvdarshan.calorietracker.ui.settings.AddMenuSettingsScreen
 import com.apoorvdarshan.calorietracker.ui.settings.QuickActionsScreen
+import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantHost
 
 /**
  * Increments each time the app is opened: 1 on cold launch, then +1 on every
@@ -70,7 +71,9 @@ fun FudAINavHost(
     container: AppContainer,
     startOnboarding: Boolean,
     quickActionRequest: QuickActionRequest? = null,
-    onQuickActionHandled: (Long) -> Unit = {}
+    onQuickActionHandled: (Long) -> Unit = {},
+    voiceLaunchRequest: Long? = null,
+    onVoiceLaunchHandled: (Long) -> Unit = {}
 ) {
     val nav = rememberNavController()
     // Warm the app-scoped Settings state while Home is visible. By the time the user changes
@@ -99,7 +102,10 @@ fun FudAINavHost(
     // Nested settings/* screens keep the tab bar visible and highlight Settings,
     // so re-tapping the Settings icon can return to the hub (iOS parity).
     val selectedTabRoute = FudAIRoutes.selectedBottomTab(currentRoute)
-    val showTabs = selectedTabRoute != null && !analyzing
+    // The expanded voice assistant dims the whole app, tab bar included; its compact
+    // bubble sits above the bar.
+    val voiceUi by container.voiceAssistant.ui.collectAsState()
+    val showTabs = selectedTabRoute != null && !analyzing && !(voiceUi.visible && voiceUi.expanded)
     // Bumped when the Settings tab is re-tapped so SettingsScreen can pop back to the hub
     // (matches iOS TabView + NavigationStack reselect → root behavior).
     var settingsPopToRootTick by remember { mutableIntStateOf(0) }
@@ -170,6 +176,77 @@ fun FudAINavHost(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Shows a tab like a tap on the bar. It reads the live route, so requests from outside
+    // composition (the voice assistant) act on what is on screen now.
+    fun selectTab(target: String) {
+        val route = nav.current()
+        // Re-tapping Settings while already in Settings (hub category or a
+        // nested settings/* destination) returns to the Settings hub — same
+        // as iOS re-tapping the Settings tab to pop the navigation stack.
+        if (target == FudAIRoutes.SETTINGS) {
+            val onSettingsRoot = route == FudAIRoutes.SETTINGS
+            val onSettingsChild = route?.startsWith("settings/") == true
+            if (onSettingsRoot || onSettingsChild) {
+                settingsPopToRootTick++
+                if (onSettingsChild) {
+                    nav.popBackStack(FudAIRoutes.SETTINGS, inclusive = false)
+                }
+                return
+            }
+        }
+        if (target == FudAIRoutes.selectedBottomTab(route)) return
+        // Tapping HOME (the start destination) needs popBackStack
+        // — `navigate(HOME) { popUpTo(HOME); launchSingleTop = true }`
+        // is a no-op because NavController sees HOME at the top of
+        // the stack and skips re-emitting currentBackStackEntry, so
+        // the bar stays selected on the previous tab.
+        if (target == FudAIRoutes.HOME) {
+            nav.popBackStack(FudAIRoutes.HOME, inclusive = false)
+        } else {
+            nav.navigate(target) {
+                popUpTo(FudAIRoutes.HOME) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    // What is on screen, for the voice assistant's get_app_state.
+    LaunchedEffect(currentRoute) {
+        container.navigator.currentRoute.value = currentRoute
+    }
+
+    // Tabs and Settings sections the voice assistant opens, performed like the user's taps.
+    LaunchedEffect(nav) {
+        container.navigator.requests.collect { request ->
+            val route = nav.current()
+            if (route == null || route == FudAIRoutes.ONBOARDING) return@collect
+            when (request) {
+                is NavRequest.Tab -> selectTab(request.route)
+                is NavRequest.Settings -> {
+                    when {
+                        route.startsWith("settings/") -> nav.popBackStack(FudAIRoutes.SETTINGS, inclusive = false)
+                        route != FudAIRoutes.SETTINGS -> nav.navigate(FudAIRoutes.SETTINGS) {
+                            popUpTo(FudAIRoutes.HOME) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                    // A section opens from the Settings screen itself; none means the hub.
+                    if (request.section == null) settingsPopToRootTick++
+                }
+            }
+        }
+    }
+
+    // The Quick Settings tile, launcher shortcut and widget start a conversation.
+    LaunchedEffect(voiceLaunchRequest, currentRoute) {
+        val request = voiceLaunchRequest ?: return@LaunchedEffect
+        if (currentRoute == null) return@LaunchedEffect
+        if (currentRoute != FudAIRoutes.ONBOARDING) container.voiceAssistant.requestStart()
+        onVoiceLaunchHandled(request)
+    }
+
     CompositionLocalProvider(LocalLaunchFillEpoch provides launchFillEpoch) {
     Scaffold(
         bottomBar = {
@@ -178,37 +255,7 @@ fun FudAINavHost(
                     currentRoute = selectedTabRoute,
                     showAboutBadge = updateAvailable,
                     workoutMode = workoutMode,
-                    onTap = { target ->
-                        // Re-tapping Settings while already in Settings (hub category or a
-                        // nested settings/* destination) returns to the Settings hub — same
-                        // as iOS re-tapping the Settings tab to pop the navigation stack.
-                        if (target == FudAIRoutes.SETTINGS) {
-                            val onSettingsRoot = currentRoute == FudAIRoutes.SETTINGS
-                            val onSettingsChild = currentRoute?.startsWith("settings/") == true
-                            if (onSettingsRoot || onSettingsChild) {
-                                settingsPopToRootTick++
-                                if (onSettingsChild) {
-                                    nav.popBackStack(FudAIRoutes.SETTINGS, inclusive = false)
-                                }
-                                return@FudAIBottomNavBar
-                            }
-                        }
-                        if (target == selectedTabRoute) return@FudAIBottomNavBar
-                        // Tapping HOME (the start destination) needs popBackStack
-                        // — `navigate(HOME) { popUpTo(HOME); launchSingleTop = true }`
-                        // is a no-op because NavController sees HOME at the top of
-                        // the stack and skips re-emitting currentBackStackEntry, so
-                        // the bar stays selected on the previous tab.
-                        if (target == FudAIRoutes.HOME) {
-                            nav.popBackStack(FudAIRoutes.HOME, inclusive = false)
-                        } else {
-                            nav.navigate(target) {
-                                popUpTo(FudAIRoutes.HOME) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    }
+                    onTap = ::selectTab
                 )
             }
         }
@@ -280,6 +327,10 @@ fun FudAINavHost(
                 container = container,
                 enabled = !startOnboarding && container.backgroundServicesEnabled
             )
+            // The live voice assistant over every tab (never during onboarding).
+            if (currentRoute != null && currentRoute != FudAIRoutes.ONBOARDING) {
+                VoiceAssistantHost(container = container)
+            }
             // Paywall, credits, and out-of-quota UI for Hosted AI, reachable from any screen
             // (including onboarding).
             HostedUiHost(container = container)

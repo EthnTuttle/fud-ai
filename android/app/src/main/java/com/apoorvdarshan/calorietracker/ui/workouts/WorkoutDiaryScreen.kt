@@ -68,6 +68,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -189,6 +190,14 @@ internal fun WorkoutDiaryScreen(
 
     LaunchedEffect(state.exercises.map { it.id }) {
         exerciseCardBounds.keys.retainAll(state.exercises.mapTo(mutableSetOf()) { it.id })
+    }
+
+    // The voice assistant logs workouts to the day shown here while the diary is open.
+    LaunchedEffect(state.selectedDate) {
+        container.navigator.workoutDiaryDate.value = state.selectedDate
+    }
+    DisposableEffect(Unit) {
+        onDispose { container.navigator.workoutDiaryDate.value = null }
     }
 
     Box(

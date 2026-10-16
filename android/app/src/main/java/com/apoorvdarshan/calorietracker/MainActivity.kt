@@ -23,6 +23,7 @@ import com.apoorvdarshan.calorietracker.services.MealShare
 import com.apoorvdarshan.calorietracker.services.QuickActionShortcutManager
 import com.apoorvdarshan.calorietracker.services.ReviewPrompter
 import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateChecker
+import com.apoorvdarshan.calorietracker.services.voice.VoiceEntryPoints
 import com.apoorvdarshan.calorietracker.ui.home.ImportSharedMealSheet
 import com.apoorvdarshan.calorietracker.ui.navigation.FudAINavHost
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
@@ -41,6 +42,8 @@ open class MainActivity : AppCompatActivity() {
     // Shared-meal deep link (issue #107). Non-empty -> the confirm sheet is shown over the app.
     private var pendingSharedMeals by mutableStateOf<List<FoodEntry>>(emptyList())
     private var pendingQuickAction by mutableStateOf<QuickActionRequest?>(null)
+    // Tile, launcher shortcut or widget: open straight into a voice conversation.
+    private var pendingVoiceLaunch by mutableStateOf<Long?>(null)
 
     /** Decode a `fudai://add-meal` link (if that's what launched us) into pending meals. */
     private fun handleShareIntent(intent: Intent?) {
@@ -55,6 +58,12 @@ open class MainActivity : AppCompatActivity() {
         intent?.action = null
     }
 
+    private fun handleVoiceIntent(intent: Intent?) {
+        if (!VoiceEntryPoints.isVoiceLaunch(intent)) return
+        pendingVoiceLaunch = System.nanoTime()
+        VoiceEntryPoints.consume(intent)
+    }
+
     private fun handlePlayStoreIntent(intent: Intent?) {
         if (intent?.action != AndroidUpdateChecker.ACTION_OPEN_PLAY_STORE) return
         AndroidUpdateChecker.openPlayStore(this)
@@ -67,6 +76,7 @@ open class MainActivity : AppCompatActivity() {
         handleShareIntent(intent)
         handleQuickActionIntent(intent)
         handlePlayStoreIntent(intent)
+        handleVoiceIntent(intent)
     }
     override fun onStart() {
         super.onStart()
@@ -133,6 +143,8 @@ open class MainActivity : AppCompatActivity() {
         handleShareIntent(intent)
         handleQuickActionIntent(intent)
         handlePlayStoreIntent(intent)
+        // A restored activity's intent was already handled before it was recreated.
+        if (savedInstanceState == null) handleVoiceIntent(intent)
 
         lifecycleScope.launch {
             combine(
@@ -182,6 +194,10 @@ open class MainActivity : AppCompatActivity() {
                         quickActionRequest = pendingQuickAction,
                         onQuickActionHandled = { requestID ->
                             if (pendingQuickAction?.id == requestID) pendingQuickAction = null
+                        },
+                        voiceLaunchRequest = pendingVoiceLaunch,
+                        onVoiceLaunchHandled = { requestID ->
+                            if (pendingVoiceLaunch == requestID) pendingVoiceLaunch = null
                         }
                     )
 
