@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.models
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -103,5 +104,79 @@ class RecipeServingsTest {
         assertEquals("serving", unitId)
         assertEquals(400.0, servingOption.gramsPerUnit, 0.0)
         assertEquals(2.0, 2 * servingOption.gramsPerUnit / decoded.reviewServingReference, 0.0)
+    }
+
+    private val chili = listOf(
+        MealIngredient("Beans", 1000.0, 1100, 70.0, 200.0, 5.0),
+        MealIngredient("Beef", 800.0, 2000, 200.0, 0.0, 130.0),
+        MealIngredient("Tomato", 200.0, 40, 2.0, 8.0, 0.0)
+    )
+
+    /** What the sheets show and hand back after the user edits the second ingredient. */
+    private fun editedPortion(scale: Double, beefGrams: Double): List<MealIngredient> {
+        val shown = chili.map { it.scaled(scale) }.toMutableList()
+        shown[1] = shown[1].scaled(beefGrams / shown[1].grams)
+        return shown
+    }
+
+    @Test
+    fun ingredientEditAfterASplitKeepsTheServingsInsteadOfSplittingTheServingAgain() {
+        val split = RecipeServings.split(emptyList(), chili.totals().grams, servings = 5)
+        val scale = split.servingGrams / chili.totals().grams
+        // One serving shows 160 g of beef; the user corrects it to 180 g.
+        val edited = editedPortion(scale, beefGrams = 180.0)
+
+        val kept = requireNotNull(
+            RecipeServings.keepingSplit(edited, scale, split.servings, split.options, split.selectedUnitId)
+        )
+
+        val whole = kept.ingredients.totals()
+        assertEquals(5, kept.split.servings)
+        assertEquals(2100.0, whole.grams, 0.000_001)
+        assertEquals(900.0, kept.ingredients[1].grams, 0.000_001)
+        assertEquals("serving", kept.split.selectedUnitId)
+        assertEquals("1", kept.split.quantityText)
+        assertEquals(420.0, kept.split.options.single { it.unit == "serving" }.gramsPerUnit, 0.000_001)
+        // The logged portion is still exactly the edited serving, not a fifth of it.
+        assertEquals(420.0, kept.split.servingGrams, 0.000_001)
+        val loggedPortion = kept.ingredients.map { it.scaled(kept.split.servingGrams / whole.grams) }
+        assertEquals(180.0, loggedPortion[1].grams, 0.000_001)
+        assertEquals(edited.totals().calories, loggedPortion.totals().calories)
+
+        // Pressing the stepper again re-divides the whole recipe, never the serving.
+        val again = RecipeServings.split(kept.split.options, whole.grams, kept.split.servings)
+        assertEquals(420.0, again.servingGrams, 0.000_001)
+    }
+
+    @Test
+    fun ingredientEditKeepsTheSelectedUnitAndShowsTheEditedPortion() {
+        val split = RecipeServings.split(emptyList(), chili.totals().grams, servings = 4)
+
+        // Two servings selected: 1000 g of the 2000 g pot.
+        val twoServings = editedPortion(scale = 0.5, beefGrams = 500.0)
+        val keptServings = RecipeServings.keepingSplit(twoServings, 0.5, 4, split.options, "serving")!!
+        assertEquals("serving", keptServings.split.selectedUnitId)
+        assertEquals("2", keptServings.split.quantityText)
+        assertEquals(twoServings.totals().grams, keptServings.split.servingGrams, 0.000_001)
+        assertEquals(550.0, keptServings.split.options.first().gramsPerUnit, 0.000_001)
+
+        // Grams selected: 300 g of the pot.
+        val grams = editedPortion(scale = 0.15, beefGrams = 130.0)
+        val keptGrams = RecipeServings.keepingSplit(grams, 0.15, 4, split.options, "g")!!
+        assertEquals("g", keptGrams.split.selectedUnitId)
+        assertEquals("310", keptGrams.split.quantityText)
+        assertEquals(310.0, keptGrams.split.servingGrams, 0.000_001)
+        assertEquals("serving", keptGrams.split.options.first().unit)
+    }
+
+    @Test
+    fun ingredientEditWithoutAnActiveSplitMakesTheEditedListTheWholeMeal() {
+        val edited = editedPortion(scale = 0.2, beefGrams = 180.0)
+
+        assertNull(RecipeServings.keepingSplit(edited, 0.2, servings = 1, options = emptyList(), selectedUnitId = "g"))
+        assertNull(RecipeServings.keepingSplit(edited, 0.0, servings = 5, options = emptyList(), selectedUnitId = "serving"))
+        assertNull(RecipeServings.keepingSplit(edited, Double.NaN, servings = 5, options = emptyList(), selectedUnitId = "serving"))
+        // Removing ingredients down to one leaves nothing to split.
+        assertNull(RecipeServings.keepingSplit(edited.take(1), 0.2, servings = 5, options = emptyList(), selectedUnitId = "serving"))
     }
 }

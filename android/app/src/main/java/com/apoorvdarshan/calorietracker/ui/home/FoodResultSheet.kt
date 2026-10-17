@@ -296,6 +296,11 @@ fun FoodResultSheet(
         editableOmega3 = snapshot.omega3
     }
     fun applyIngredientChanges(displayedIngredients: List<MealIngredient>) {
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        val keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients, scale, recipeServings, servingUnitOptions, selectedServingUnitId
+        )
+        val nextIngredients = keptSplit?.ingredients ?: displayedIngredients
         applyMicronutrients(
             MealMicronutrientSnapshot(
                 sugar = editableSugar,
@@ -322,15 +327,23 @@ fun FoodResultSheet(
                 vitaminK = editableVitaminK,
                 folate = editableFolate,
                 omega3 = editableOmega3
-            ).stretched(editableIngredients.totals().grams, displayedIngredients.totals().grams)
+            ).stretched(editableIngredients.totals().grams, nextIngredients.totals().grams)
         )
-        editableIngredients = displayedIngredients
-        val totals = displayedIngredients.totals()
+        editableIngredients = nextIngredients
+        val totals = nextIngredients.totals()
         editableCalories = totals.calories
         editableProtein = totals.protein
         editableCarbs = totals.carbs
         editableFat = totals.fat
-        if (totals.grams > 0) {
+        if (keptSplit != null) {
+            baseServingGrams = totals.grams
+            recipeServings = keptSplit.split.servings
+            servingUnitOptions = keptSplit.split.options
+            selectedServingUnitId = keptSplit.split.selectedUnitId
+            servingGrams = keptSplit.split.servingGrams
+            servingQuantityText = keptSplit.split.quantityText
+            servingSizeIsKnown = true
+        } else if (totals.grams > 0) {
             baseServingGrams = totals.grams
             servingGrams = totals.grams
             servingQuantityText = ServingUnitOption.formatQuantity(totals.grams)

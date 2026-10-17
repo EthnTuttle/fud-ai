@@ -76,6 +76,7 @@ import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
 import com.apoorvdarshan.calorietracker.models.ProductInfoField
+import com.apoorvdarshan.calorietracker.models.RecipeServingSplit
 import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
@@ -143,9 +144,14 @@ fun EditFoodEntrySheet(
             currentBaseEntry.reviewServingUnitOptions
         }
     }
+    // An ingredient edit made while a recipe split is active rebuilds the whole
+    // recipe; this seeds the serving state below so the split survives it (#458).
+    var keptRecipeSplit by remember(entry) { mutableStateOf<RecipeServingSplit?>(null) }
     // The sheet can swap in a recipe "serving" unit (#458) without rebuilding the entry.
-    var servingUnitOptions by remember(currentBaseEntry, entryServingUnitOptions) { mutableStateOf(entryServingUnitOptions) }
-    var recipeServings by remember(currentBaseEntry) { mutableStateOf(1) }
+    var servingUnitOptions by remember(currentBaseEntry, entryServingUnitOptions) {
+        mutableStateOf(keptRecipeSplit?.options ?: entryServingUnitOptions)
+    }
+    var recipeServings by remember(currentBaseEntry) { mutableStateOf(keptRecipeSplit?.servings ?: 1) }
     var name by remember(currentBaseEntry) { mutableStateOf(currentBaseEntry.name) }
     val initialServingUnit = if (servingSizeIsKnown && preferGramsByDefault) {
         ServingUnitOption.grams.unit
@@ -153,12 +159,15 @@ fun EditFoodEntrySheet(
         currentBaseEntry.reviewSelectedServingUnit
     }
     var selectedServingUnitId by remember(currentBaseEntry, entryServingUnitOptions, preferGramsByDefault) {
-        mutableStateOf(ServingUnitOption.initialUnitId(initialServingUnit, entryServingUnitOptions))
+        mutableStateOf(
+            keptRecipeSplit?.selectedUnitId
+                ?: ServingUnitOption.initialUnitId(initialServingUnit, entryServingUnitOptions)
+        )
     }
-    var servingGrams by remember(currentBaseEntry, baseServing) { mutableStateOf(baseServing) }
+    var servingGrams by remember(currentBaseEntry, baseServing) { mutableStateOf(keptRecipeSplit?.servingGrams ?: baseServing) }
     var servingQuantityText by remember(currentBaseEntry, entryServingUnitOptions, preferGramsByDefault) {
         mutableStateOf(
-            ServingUnitOption.initialQuantityText(
+            keptRecipeSplit?.quantityText ?: ServingUnitOption.initialQuantityText(
                 totalGrams = baseServing,
                 selectedUnitId = selectedServingUnitId,
                 selectedQuantity = currentBaseEntry.reviewSelectedServingQuantity,
@@ -199,7 +208,12 @@ fun EditFoodEntrySheet(
     fun scaledIngredients() = currentBaseEntry.withoutImages(removedImageFilenames)
         .ingredients.map { it.scaled(scale) }
     fun applyIngredientChanges(displayedIngredients: List<MealIngredient>) {
-        currentBaseEntry = currentBaseEntry.applyingIngredientChanges(displayedIngredients)
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        val keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients, scale, recipeServings, servingUnitOptions, selectedServingUnitId
+        )
+        keptRecipeSplit = keptSplit?.split
+        currentBaseEntry = currentBaseEntry.applyingIngredientChanges(keptSplit?.ingredients ?: displayedIngredients)
     }
     fun applyRecipeServings(servings: Int) {
         val split = RecipeServings.split(servingUnitOptions, baseServing, servings)
@@ -269,6 +283,7 @@ fun EditFoodEntrySheet(
             errorText = null
             try {
                 val newAnalysis = onReprocess(buildUpdated(), noteText)
+                keptRecipeSplit = null
                 currentBaseEntry = currentBaseEntry.copy(
                     name = newAnalysis.name,
                     calories = newAnalysis.calories,

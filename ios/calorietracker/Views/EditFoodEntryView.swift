@@ -242,18 +242,37 @@ struct EditFoodEntryView: View {
     }
 
     private func applyIngredientChanges(_ displayedIngredients: [MealIngredient]) {
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        let keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients: displayedIngredients,
+            scale: scale,
+            servings: recipeServings,
+            options: servingUnitOptions,
+            selectedUnitID: selectedServingUnitID
+        )
+        let nextIngredients = keptSplit?.ingredients ?? displayedIngredients
         applyMicros(
             currentMicros.stretched(
                 oldGrams: baseIngredients.ingredientTotals.grams,
-                newGrams: displayedIngredients.ingredientTotals.grams
+                newGrams: nextIngredients.ingredientTotals.grams
             )
         )
-        baseIngredients = displayedIngredients
-        let totals = displayedIngredients.ingredientTotals
+        baseIngredients = nextIngredients
+        let totals = nextIngredients.ingredientTotals
         baseCalories = totals.calories
         baseProtein = totals.protein
         baseCarbs = totals.carbs
         baseFat = totals.fat
+        if let keptSplit {
+            baseServingSizeGrams = totals.grams
+            recipeServings = keptSplit.split.servings
+            servingUnitOptions = keptSplit.split.options
+            selectedServingUnitID = keptSplit.split.selectedUnitID
+            servingSizeGrams = keptSplit.split.servingSizeGrams
+            servingSizeText = keptSplit.split.quantityText
+            servingSizeIsKnown = true
+            return
+        }
         guard totals.grams > 0 else { return }
         baseServingSizeGrams = totals.grams
         servingSizeGrams = totals.grams
