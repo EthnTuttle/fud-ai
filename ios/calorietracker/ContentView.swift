@@ -4252,6 +4252,9 @@ struct ProgressTabView: View {
                 if progressOverviewMode == .myProgress {
                     ScrollView {
                         VStack(spacing: 18) {
+                    WeeklyRecapCard()
+                        .padding(.horizontal)
+
                     // Segmented Picker
                     Picker("Time Range", selection: timeRangeSelection) {
                         ForEach(TimeRange.allCases, id: \.self) { range in

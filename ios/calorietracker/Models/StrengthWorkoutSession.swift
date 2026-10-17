@@ -379,6 +379,11 @@ struct StrengthPlannedExercise: Identifiable, Codable, Equatable, Hashable {
 
     var isCardio: Bool { category.caseInsensitiveCompare("cardio") == .orderedSame }
 
+    /// Work the user actually did: a saved timer, or a strength set with reps.
+    var hasCalculableWork: Bool {
+        timer?.isSaved == true || (!isCardio && sets.contains { (Int($0.reps) ?? 0) > 0 })
+    }
+
     var libraryItem: ExerciseLibraryItem {
         ExerciseLibraryItem(
             id: itemID,

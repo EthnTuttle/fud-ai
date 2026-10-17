@@ -494,10 +494,7 @@ final class StrengthWorkoutStore {
         guard !isPersistenceBlocked else { return nil }
         let planned = exercises(for: date)
         let logs = completedExerciseLogs(from: planned, weightUnit: weightUnit)
-        guard planned.contains(where: {
-            $0.timer?.isSaved == true
-                || (!$0.isCardio && $0.sets.contains { (Int($0.reps) ?? 0) > 0 })
-        }) else { return nil }
+        guard planned.contains(where: \.hasCalculableWork) else { return nil }
 
         let key = Self.dateKey(for: date)
         let existingBurns = sortedCompletedSessions.filter {
