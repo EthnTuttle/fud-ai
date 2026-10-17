@@ -160,6 +160,57 @@ class NotificationManager {
         PendingNotificationRequests.add(UNNotificationRequest(identifier: "water.reminder", content: content, trigger: trigger))
     }
 
+    // MARK: - Repeating Reminders: refresh text
+
+    /// The saved meal and water reminder settings, with the same defaults as the
+    /// Notifications settings screen and onboarding.
+    struct RepeatingReminderSettings: Equatable {
+        struct Time: Equatable {
+            var enabled: Bool
+            var hour: Int
+            var minute: Int
+        }
+
+        var breakfast: Time
+        var lunch: Time
+        var dinner: Time
+        /// Enabled only while water tracking and its reminder are both on.
+        var water: Time
+
+        init(defaults: UserDefaults) {
+            func time(_ name: String, enabled: Bool, hour: Int) -> Time {
+                Time(
+                    enabled: defaults.object(forKey: "\(name)ReminderEnabled") as? Bool ?? enabled,
+                    hour: defaults.object(forKey: "\(name)ReminderHour") as? Int ?? hour,
+                    minute: defaults.object(forKey: "\(name)ReminderMinute") as? Int ?? 0
+                )
+            }
+            breakfast = time("breakfast", enabled: true, hour: 8)
+            lunch = time("lunch", enabled: true, hour: 12)
+            dinner = time("dinner", enabled: true, hour: 19)
+            water = Time(
+                enabled: defaults.bool(forKey: WaterSettings.enabledKey)
+                    && defaults.bool(forKey: WaterSettings.reminderEnabledKey),
+                hour: defaults.object(forKey: WaterSettings.reminderHourKey) as? Int ?? 14,
+                minute: defaults.object(forKey: WaterSettings.reminderMinuteKey) as? Int ?? 0
+            )
+        }
+    }
+
+    /// Meal and water reminders repeat daily, so they keep the text of the language
+    /// the app ran in when they were added. Re-adding them from the saved settings
+    /// whenever the app becomes active moves reminders added by an older version, or
+    /// before a language change (iOS relaunches the app then), to the current language.
+    func rescheduleRepeatingReminders(defaults: UserDefaults = .standard) {
+        let settings = RepeatingReminderSettings(defaults: defaults)
+        scheduleMealReminders(
+            breakfastEnabled: settings.breakfast.enabled, breakfastHour: settings.breakfast.hour, breakfastMinute: settings.breakfast.minute,
+            lunchEnabled: settings.lunch.enabled, lunchHour: settings.lunch.hour, lunchMinute: settings.lunch.minute,
+            dinnerEnabled: settings.dinner.enabled, dinnerHour: settings.dinner.hour, dinnerMinute: settings.dinner.minute
+        )
+        scheduleWaterReminder(enabled: settings.water.enabled, hour: settings.water.hour, minute: settings.water.minute)
+    }
+
     // MARK: - Fasting Goal (one-shot)
 
     func scheduleFastingGoal(enabled: Bool, session: FastingSession?) {

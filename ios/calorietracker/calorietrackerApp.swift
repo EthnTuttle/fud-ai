@@ -147,10 +147,13 @@ struct calorietrackerApp: App {
                     Task {
                         await notificationManager.refreshAuthorizationStatus()
                     }
-                    if notificationsEnabled, let profile = UserProfile.load() {
-                        notificationManager.rescheduleDataDependentNotifications(
-                            foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
-                        )
+                    if notificationsEnabled {
+                        notificationManager.rescheduleRepeatingReminders()
+                        if let profile = UserProfile.load() {
+                            notificationManager.rescheduleDataDependentNotifications(
+                                foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
+                            )
+                        }
                     }
                 }
                 if hasCompletedOnboarding {
