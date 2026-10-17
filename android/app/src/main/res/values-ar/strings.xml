@@ -552,6 +552,7 @@
     <string name="settings_clear_key">مسح المفتاح</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">سجلات الوزن الأقدم</string>
     <string name="settings_clear_food_log">مسح سجل الطعام</string>
     <string name="settings_delete_all_data">حذف جميع البيانات</string>
 

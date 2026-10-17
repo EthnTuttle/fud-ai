@@ -175,6 +175,7 @@ class HealthConnectManager(
     private val totalEnergyRead = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
     private val stepsRead = HealthPermission.getReadPermission(StepsRecord::class)
     private val backgroundRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+    private val historyRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
 
     val permissions: Set<String> = setOf(
         weightRead, weightWrite, nutritionRead, nutritionWrite,
@@ -182,9 +183,18 @@ class HealthConnectManager(
         stepsRead
     )
 
+    /** What the connect flows request: [permissions] plus history access where supported.
+     *  Without history, Health Connect hides other apps' records older than 30 days before
+     *  Fud AI's first grant, so weigh-ins from a previous phone, a scale app, or entries
+     *  backfilled elsewhere never reached Progress (#519). Kept out of [permissions] so a
+     *  history-only grant doesn't count as "connected". */
+    val connectPermissions: Set<String>
+        get() = permissions + if (supportsNutritionHistory()) setOf(historyRead) else emptySet()
+
     /** Requested only when Daily Summary is enabled. Keeping it out of [permissions]
      *  avoids asking every Health Connect user for background access. */
-    val dailySummaryPermissions: Set<String> = permissions + backgroundRead
+    val dailySummaryPermissions: Set<String>
+        get() = connectPermissions + backgroundRead
 
     fun supportsNutritionHistory(): Boolean = runCatching {
         client?.features?.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY) ==
@@ -193,10 +203,14 @@ class HealthConnectManager(
 
     val nutritionImportPermissions: Set<String>
         get() = setOf(nutritionRead) + if (supportsNutritionHistory())
-            setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY) else emptySet()
+            setOf(historyRead) else emptySet()
 
     suspend fun hasNutritionHistory(): Boolean = supportsNutritionHistory() &&
-        HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted()
+        historyRead in granted()
+
+    /** History access is supported here but not granted (e.g. connected before it was asked). */
+    suspend fun isHistoryAccessMissing(): Boolean = supportsNutritionHistory() &&
+        historyRead !in granted()
 
     /**
      * Granted permissions, or null when the permission probe itself failed.
@@ -257,7 +271,8 @@ class HealthConnectManager(
             nutritionWrite = nutritionWrite in g,
             energyRead = activeEnergyRead in g && totalEnergyRead in g,
             activeEnergyWrite = activeEnergyWrite in g,
-            stepsRead = stepsRead in g
+            stepsRead = stepsRead in g,
+            historyRead = historyRead in g
         )
     }
 
@@ -967,7 +982,9 @@ data class HealthCapabilities(
     val nutritionWrite: Boolean,
     val energyRead: Boolean,
     val activeEnergyWrite: Boolean,
-    val stepsRead: Boolean
+    val stepsRead: Boolean,
+    /** PERMISSION_READ_HEALTH_DATA_HISTORY: reads may go past the 30-day pre-grant window. */
+    val historyRead: Boolean = false
 )
 
 data class WorkoutBurnIdentity(

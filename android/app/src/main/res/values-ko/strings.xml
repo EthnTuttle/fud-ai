@@ -539,6 +539,7 @@
     <string name="settings_clear_key">키 지우기</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">이전 체중 기록</string>
     <string name="settings_clear_food_log">음식 기록 지우기</string>
     <string name="settings_delete_all_data">모든 데이터 삭제</string>
 

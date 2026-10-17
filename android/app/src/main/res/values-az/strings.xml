@@ -540,6 +540,7 @@
     <string name="settings_clear_key">Açarı təmizlə</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Köhnə çəki qeydləri</string>
     <string name="settings_clear_food_log">Yemək Qeydlərini Təmizlə</string>
     <string name="settings_delete_all_data">Bütün Məlumatları Sil</string>
 

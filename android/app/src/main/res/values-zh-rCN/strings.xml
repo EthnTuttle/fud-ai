@@ -539,6 +539,7 @@
     <string name="settings_clear_key">清除密钥</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">较早的体重记录</string>
     <string name="settings_clear_food_log">清除饮食记录</string>
     <string name="settings_delete_all_data">删除所有数据</string>
 

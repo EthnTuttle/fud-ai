@@ -806,6 +806,7 @@
     <string name="settings_fallback_footer">Used only when an AI request includes a photo. Same provider as primary is allowed — just pick a different model.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Older Weigh-ins</string>
     <string name="settings_manage_health_access">Manage Health Connect Access</string>
     <string name="settings_permissions">Permissions</string>
     <string name="settings_energy_goals">Energy Burn Goals</string>

@@ -539,6 +539,7 @@
     <string name="settings_clear_key">キーを消去</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">過去の体重記録</string>
     <string name="settings_clear_food_log">食事ログを消去</string>
     <string name="settings_delete_all_data">すべてのデータを削除</string>
 

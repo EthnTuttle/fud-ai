@@ -541,6 +541,7 @@
     <string name="settings_clear_key">Borrar clave</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesajes anteriores</string>
     <string name="settings_clear_food_log">Borrar diario de comidas</string>
     <string name="settings_delete_all_data">Eliminar todos los datos</string>
 

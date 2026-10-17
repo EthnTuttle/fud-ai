@@ -540,6 +540,7 @@
     <string name="settings_clear_key">Sleutel wissen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Oudere gewichtsmetingen</string>
     <string name="settings_clear_food_log">Voedingsdagboek wissen</string>
     <string name="settings_delete_all_data">Alle gegevens verwijderen</string>
 

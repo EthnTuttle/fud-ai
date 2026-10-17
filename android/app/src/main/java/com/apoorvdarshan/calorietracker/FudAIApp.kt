@@ -30,6 +30,7 @@ import com.apoorvdarshan.calorietracker.models.CurrentMealSchedule
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.services.ai.ChatService
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
+import com.apoorvdarshan.calorietracker.services.health.HealthCapabilities
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectManager
 import com.apoorvdarshan.calorietracker.services.hosted.AiAccessMode
 import com.apoorvdarshan.calorietracker.services.hosted.BillingManager
@@ -199,6 +200,22 @@ open class FudAIApp : Application() {
  *  persisted alongside the token so we can detect a newly-granted read capability. */
 private const val HEALTH_READ_TYPE_WEIGHT = "weight"
 private const val HEALTH_READ_TYPE_BODY_FAT = "bodyfat"
+private const val HEALTH_READ_TYPE_HISTORY = "history"
+
+/** Weight/body-fat backfill window — the Progress "All" range (TimeRange.ALL_TIME). */
+internal const val HEALTH_BODY_BACKFILL_DAYS = 3650L
+
+/** Labels for what the weight/body-fat changes token can see. History access is tracked
+ *  too: granting it later unlocks records older than the 30-day pre-grant window, which
+ *  the token (it only reports new changes) would never deliver. */
+internal fun healthReadTokenTypes(caps: HealthCapabilities): Set<String> = buildSet {
+    if (caps.weightRead) add(HEALTH_READ_TYPE_WEIGHT)
+    if (caps.bodyFatRead) add(HEALTH_READ_TYPE_BODY_FAT)
+    if (caps.historyRead && isNotEmpty()) add(HEALTH_READ_TYPE_HISTORY)
+}
+
+internal fun healthReadsNeedBackfill(seededTypes: Set<String>, desiredTypes: Set<String>): Boolean =
+    !seededTypes.containsAll(desiredTypes)
 
 data class GoalCalculationEvidenceContext(
     val evidence: GoalEvidence,
@@ -363,22 +380,22 @@ class AppContainer(app: FudAIApp) {
 
             if (!caps.weightRead && !caps.bodyFatRead) return
 
-            val desiredTypes = buildSet {
-                if (caps.weightRead) add(HEALTH_READ_TYPE_WEIGHT)
-                if (caps.bodyFatRead) add(HEALTH_READ_TYPE_BODY_FAT)
-            }
-            // If a read type was granted AFTER the token was seeded, the existing token never
-            // observes it. Drop the token so we re-enter the backfill branch and import that
-            // metric's history + re-seed a token covering everything now granted.
-            if (!prefs.healthChangesTokenTypes.first().containsAll(desiredTypes)) {
+            val desiredTypes = healthReadTokenTypes(caps)
+            // If a read type (or history access) was granted AFTER the token was seeded, the
+            // existing token never observes the newly readable records. Drop the token so we
+            // re-enter the backfill branch and import that history + re-seed a token covering
+            // everything now granted.
+            if (healthReadsNeedBackfill(prefs.healthChangesTokenTypes.first(), desiredTypes)) {
                 prefs.clearHealthChangesToken()
             }
 
             val token = prefs.healthChangesToken.first()
             if (token == null) {
-                // First sync: backfill recent history (two years) so existing scale data shows up.
+                // First sync: backfill history so existing scale data and older weigh-ins show
+                // up. Matches Progress "All"; without history access Health Connect itself
+                // still caps other apps' records at 30 days before the first grant.
                 val now = Instant.now()
-                val from = now.minus(Duration.ofDays(730))
+                val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
                 if (caps.weightRead) {
                     weightRepository.importExternalWeights(health.readWeights(from, now))
                 }

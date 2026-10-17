@@ -798,6 +798,7 @@
     <string name="settings_fallback_footer">Якщо основний постачальник не відповідає (перевантаження, ліміт запитів, помилка мережі), застосунок автоматично повторить спробу з цим резервним постачальником. Можна вибрати того ж постачальника, що й основний — просто вкажіть іншу модель.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Старіші записи ваги</string>
     <string name="settings_manage_health_access">Керувати доступом до Health Connect</string>
     <string name="settings_permissions">Дозволи</string>
     <string name="settings_energy_goals">Цілі спалювання енергії</string>

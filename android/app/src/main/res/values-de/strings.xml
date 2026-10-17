@@ -540,6 +540,7 @@
     <string name="settings_clear_key">Schlüssel löschen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Ältere Gewichtseinträge</string>
     <string name="settings_clear_food_log">Ernährungstagebuch löschen</string>
     <string name="settings_delete_all_data">Alle Daten löschen</string>
 

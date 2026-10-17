@@ -541,6 +541,7 @@
     <string name="settings_clear_key">Cancella chiave</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesate precedenti</string>
     <string name="settings_clear_food_log">Cancella registro cibo</string>
     <string name="settings_delete_all_data">Elimina tutti i dati</string>
 

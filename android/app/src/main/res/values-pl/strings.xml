@@ -546,6 +546,7 @@
     <string name="settings_clear_key">Wyczyść klucz</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Starsze pomiary wagi</string>
     <string name="settings_clear_food_log">Wyczyść dziennik jedzenia</string>
     <string name="settings_delete_all_data">Usuń wszystkie dane</string>
 

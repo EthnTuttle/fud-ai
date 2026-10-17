@@ -540,6 +540,7 @@
     <string name="settings_clear_key">कुंजी साफ़ करें</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">पुराने वज़न रिकॉर्ड</string>
     <string name="settings_clear_food_log">खाद्य लॉग साफ़ करें</string>
     <string name="settings_delete_all_data">सभी डेटा हटाएं</string>
 
