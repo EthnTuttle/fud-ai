@@ -150,6 +150,10 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     /** Goal-input fingerprint captured at the last Recalculate (or seeded on first load). */
     private var lastRecalcSignature: String? = null
 
+    /** Set once the live collectors below have delivered a value, so the startup snapshot keeps it. */
+    private var hiddenTabsCollected = false
+    private var waterQuickAddPresetsCollected = false
+
     /** True when [profile]'s goal inputs differ from the last-recalculated baseline. */
     private fun needsRecalc(profile: com.apoorvdarshan.calorietracker.models.UserProfile?): Boolean =
         lastRecalcSignature != null && profile != null && lastRecalcSignature != profile.goalInputSignature
@@ -179,6 +183,21 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.addMenuConfig.collect { config ->
                 _ui.value = _ui.value.copy(addMenuConfig = config, addMenuLoaded = true)
+            }
+        }
+
+        // Follow the stored values (a cloud restore can change them while Settings is open).
+        viewModelScope.launch {
+            container.prefs.hiddenTabs.collect { hidden ->
+                hiddenTabsCollected = true
+                _ui.value = _ui.value.copy(hiddenTabs = hidden)
+            }
+        }
+
+        viewModelScope.launch {
+            container.prefs.waterQuickAddPresetsMl.collect { presets ->
+                waterQuickAddPresetsCollected = true
+                _ui.value = _ui.value.copy(waterQuickAddPresetsMl = presets)
             }
         }
 
@@ -270,6 +289,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 container.prefs.setLastRecalcGoalSignature(profile.goalInputSignature)
             }
             val openRouterReasoningEffort = container.prefs.openRouterReasoningEffort.first()
+            // Values the live collectors (menu, hidden tabs, water amounts) already delivered
+            // are newer than the reads above, so the snapshot keeps them.
             val menuOnScreen = _ui.value
             _ui.value = SettingsUiState(
                 selectedAI = provider,
@@ -302,7 +323,11 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 waterTrackingEnabled = waterTracking,
                 waterDailyGoalMl = waterGoal,
                 waterUnit = waterUnit,
-                waterQuickAddPresetsMl = waterQuickAddPresets,
+                waterQuickAddPresetsMl = if (waterQuickAddPresetsCollected) {
+                    menuOnScreen.waterQuickAddPresetsMl
+                } else {
+                    waterQuickAddPresets
+                },
                 waterReminderEnabled = waterReminder,
                 fastingTrackingEnabled = fastingTracking,
                 walkRunQuickLogEnabled = walkRunQuickLog,
@@ -335,7 +360,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     diskRead = addMenuConfig,
                 ),
                 addMenuLoaded = menuOnScreen.addMenuLoaded,
-                hiddenTabs = hiddenTabs,
+                hiddenTabs = if (hiddenTabsCollected) menuOnScreen.hiddenTabs else hiddenTabs,
                 workoutSplit = workoutPreferences.split,
                 workoutRpeScale = workoutPreferences.rpeScale,
                 localModelStates = container.localModels.states.value,
@@ -611,10 +636,11 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
 
     fun setTabHidden(route: String, hidden: Boolean) {
         if (route !in TabBarSettings.Hideable) return
-        val updated = if (hidden) _ui.value.hiddenTabs + route else _ui.value.hiddenTabs - route
-        _ui.value = _ui.value.copy(hiddenTabs = updated)
+        // Flip the switch right away; the hiddenTabs collector then shows what was stored.
+        val shown = _ui.value.hiddenTabs
+        _ui.value = _ui.value.copy(hiddenTabs = if (hidden) shown + route else shown - route)
         viewModelScope.launch {
-            container.prefs.setHiddenTabs(updated)
+            container.prefs.setTabHidden(route, hidden)
         }
     }
 

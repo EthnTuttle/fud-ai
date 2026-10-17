@@ -13,4 +13,14 @@ object TabBarSettings {
         raw.orEmpty().split(',').map { it.trim() }.filter { it in Hideable }.toSet()
 
     fun encode(hidden: Set<String>): String = Hideable.filter { it in hidden }.joinToString(",")
+
+    /**
+     * The stored value after showing or hiding one tab. Applied to what is stored right now,
+     * so the other tabs keep their current state even if a screen still shows an older set.
+     */
+    fun withTabHidden(raw: String?, route: String, hidden: Boolean): String {
+        val current = decode(raw)
+        if (route !in Hideable) return encode(current)
+        return encode(if (hidden) current + route else current - route)
+    }
 }

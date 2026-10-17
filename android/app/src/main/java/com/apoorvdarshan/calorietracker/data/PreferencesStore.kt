@@ -656,8 +656,9 @@ class PreferencesStore(
 
     val hiddenTabs: Flow<Set<String>> = ds.data.map { TabBarSettings.decode(it[Keys.HIDDEN_TABS]) }
 
-    suspend fun setHiddenTabs(hidden: Set<String>) {
-        ds.edit { it[Keys.HIDDEN_TABS] = TabBarSettings.encode(hidden) }
+    /** Shows or hides one tab, reading the other tabs' state inside the same edit. */
+    suspend fun setTabHidden(route: String, hidden: Boolean) {
+        ds.edit { it[Keys.HIDDEN_TABS] = TabBarSettings.withTabHidden(it[Keys.HIDDEN_TABS], route, hidden) }
     }
 
     suspend fun resetAddMenuConfig() {

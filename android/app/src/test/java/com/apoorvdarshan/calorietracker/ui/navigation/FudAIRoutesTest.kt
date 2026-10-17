@@ -51,4 +51,15 @@ class FudAIRoutesTest {
         assertEquals("coach,workouts", TabBarSettings.encode(setOf(FudAIRoutes.WORKOUTS, FudAIRoutes.COACH)))
         assertEquals(setOf(FudAIRoutes.COACH, FudAIRoutes.WORKOUTS), TabBarSettings.decode("coach,workouts"))
     }
+
+    @Test
+    fun hidingOneTabKeepsTheOtherStoredTabs() {
+        // Coach was hidden by a restore after Settings loaded "": hiding Workouts must keep it.
+        assertEquals("coach,workouts", TabBarSettings.withTabHidden("coach", FudAIRoutes.WORKOUTS, hidden = true))
+        assertEquals("coach", TabBarSettings.withTabHidden("coach,workouts", FudAIRoutes.WORKOUTS, hidden = false))
+        assertEquals("", TabBarSettings.withTabHidden(null, FudAIRoutes.PROGRESS, hidden = false))
+        assertEquals("progress", TabBarSettings.withTabHidden("progress", FudAIRoutes.PROGRESS, hidden = true))
+        // Home and Settings can't be hidden; unknown stored values are dropped.
+        assertEquals("coach", TabBarSettings.withTabHidden("coach,kitchen", FudAIRoutes.HOME, hidden = true))
+    }
 }
