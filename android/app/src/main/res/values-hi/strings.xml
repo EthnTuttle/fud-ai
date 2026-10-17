@@ -525,6 +525,10 @@
     <string name="settings_week_monday">सोमवार</string>
     <string name="settings_week_sunday">रविवार</string>
     <string name="settings_notifications">सूचनाएँ</string>
+    <string name="settings_water_quick_add">त्वरित जोड़ मात्राएँ</string>
+    <string name="settings_water_quick_add_amount">मात्रा %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s तक की मात्रा दर्ज करें।</string>
+    <string name="settings_water_quick_add_footer">एक टैप में पानी लॉग करने के लिए + मेनू में दिखती हैं।</string>
     <string name="settings_battery_opt">बैटरी ऑप्टिमाइज़ेशन</string>
     <string name="settings_battery_opt_value">Fud AI को व्हाइटलिस्ट करें</string>
 

@@ -528,6 +528,10 @@
     <string name="settings_week_monday">Luni</string>
     <string name="settings_week_sunday">Duminică</string>
     <string name="settings_notifications">Notificări</string>
+    <string name="settings_water_quick_add">Cantități pentru adăugare rapidă</string>
+    <string name="settings_water_quick_add_amount">Cantitatea %1$d</string>
+    <string name="settings_water_quick_add_invalid">Introdu o cantitate de până la %1$s.</string>
+    <string name="settings_water_quick_add_footer">Apar în meniul + pentru a înregistra apa cu o singură atingere.</string>
     <string name="settings_battery_opt">Optimizare baterie</string>
     <string name="settings_battery_opt_value">Adaugă Fud AI în lista albă</string>
 

@@ -1150,6 +1150,7 @@ struct HomeView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(WaterQuickAddPresets.key) private var waterQuickAddPresetsRaw = ""
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
     @AppStorage(FastingSettings.notificationEnabledKey) private var fastingGoalNotificationEnabled = true
@@ -1388,20 +1389,14 @@ private var dailyStepsTaskKey: String {
         } label: {
             Label("Custom", systemImage: "slider.horizontal.3")
         }
-        Button {
-            logWater(750)
-        } label: {
-            Label("3 Glasses (~\(waterUnit.formatted(milliliters: 750)))", systemImage: "drop.fill")
-        }
-        Button {
-            logWater(500)
-        } label: {
-            Label("2 Glasses (~\(waterUnit.formatted(milliliters: 500)))", systemImage: "drop.fill")
-        }
-        Button {
-            logWater(250)
-        } label: {
-            Label("1 Glass (~\(waterUnit.formatted(milliliters: 250)))", systemImage: "drop.fill")
+        // Largest first, as the fixed 3/2/1 glass presets were.
+        let presets = WaterQuickAddPresets.decode(waterQuickAddPresetsRaw).reversed()
+        ForEach(Array(presets.enumerated()), id: \.offset) { _, milliliters in
+            Button {
+                logWater(milliliters)
+            } label: {
+                Label(waterUnit.formatted(milliliters: milliliters), systemImage: "drop.fill")
+            }
         }
     }
 
@@ -4627,6 +4622,7 @@ struct ProfileView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(WaterQuickAddPresets.key) private var waterQuickAddPresetsRaw = ""
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
 
@@ -5374,6 +5370,27 @@ struct ProfileView: View {
                         .onChange(of: waterUnitRaw) { _, _ in
                             WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
                         }
+
+                        NavigationLink {
+                            WaterQuickAddSettingsView(unit: waterUnit)
+                        } label: {
+                            Label {
+                                HStack {
+                                    Text("Quick Add Amounts")
+                                    Spacer()
+                                    Text(WaterQuickAddPresets.summary(
+                                        WaterQuickAddPresets.decode(waterQuickAddPresetsRaw),
+                                        unit: waterUnit
+                                    ))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                }
+                            } icon: {
+                                Image(systemName: "drop.circle")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .accessibilityIdentifier("settings.water.quickAdd")
                     }
 
                     HStack {

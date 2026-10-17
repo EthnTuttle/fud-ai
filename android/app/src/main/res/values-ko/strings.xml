@@ -524,6 +524,10 @@
     <string name="settings_week_monday">월요일</string>
     <string name="settings_week_sunday">일요일</string>
     <string name="settings_notifications">알림</string>
+    <string name="settings_water_quick_add">빠른 추가 양</string>
+    <string name="settings_water_quick_add_amount">양 %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s 이하의 양을 입력하세요.</string>
+    <string name="settings_water_quick_add_footer">+ 메뉴에 표시되어 한 번의 탭으로 물을 기록할 수 있습니다.</string>
     <string name="settings_battery_opt">배터리 최적화</string>
     <string name="settings_battery_opt_value">Fud AI 화이트리스트 추가</string>
 

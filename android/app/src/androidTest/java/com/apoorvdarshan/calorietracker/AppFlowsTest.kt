@@ -332,10 +332,13 @@ class AppFlowsTest {
         val waterMenuItem = hasText(string(R.string.water)) and hasClickAction()
         waitFor(waterMenuItem)
         compose.onNode(waterMenuItem).performClick()
-        val oneGlass = string(R.string.water_one_glass_dynamic, WaterUnit.MILLILITERS.format(250))
+        // The smallest default quick-add amount; the logged row shows the same text,
+        // so wait for the menu itself to close.
+        val oneGlass = WaterUnit.MILLILITERS.format(250)
+        val customAmount = string(R.string.water_custom_amount)
         waitFor(hasText(oneGlass))
         compose.onNodeWithText(oneGlass).performClick()
-        waitForAbsent(hasText(oneGlass))
+        waitForAbsent(hasText(customAmount))
         val entry = awaitPreference(prefs.waterEntries) { it.size == 1 }.single()
         assertEquals(250, entry.milliliters)
         val row = "diary.water.${entry.id}"

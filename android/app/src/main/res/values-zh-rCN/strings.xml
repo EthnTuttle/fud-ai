@@ -524,6 +524,10 @@
     <string name="settings_week_monday">星期一</string>
     <string name="settings_week_sunday">星期日</string>
     <string name="settings_notifications">通知</string>
+    <string name="settings_water_quick_add">快速添加量</string>
+    <string name="settings_water_quick_add_amount">数量 %1$d</string>
+    <string name="settings_water_quick_add_invalid">请输入不超过 %1$s 的量。</string>
+    <string name="settings_water_quick_add_footer">显示在 + 菜单中，一键记录饮水。</string>
     <string name="settings_battery_opt">电池优化</string>
     <string name="settings_battery_opt_value">将 Fud AI 加入白名单</string>
 

@@ -738,6 +738,10 @@
     <string name="settings_water_unit">Water Unit</string>
     <string name="settings_water_unit_ml">Milliliters (ml)</string>
     <string name="settings_water_unit_fl_oz">Fluid Ounces (fl oz)</string>
+    <string name="settings_water_quick_add">Quick Add Amounts</string>
+    <string name="settings_water_quick_add_amount">Amount %1$d</string>
+    <string name="settings_water_quick_add_invalid">Enter an amount up to %1$s.</string>
+    <string name="settings_water_quick_add_footer">Shown in the + menu for one-tap water logging.</string>
     <string name="settings_fasting_tracking">Fasting Tracking</string>
     <string name="settings_walk_run_quick_log">Walk &amp; Run</string>
     <string name="settings_walk_run_quick_log_footer">Off by default. When enabled, Walking and Running appear in the Workouts + menu for quick outdoor logging.</string>
@@ -1224,9 +1228,6 @@
     <string name="water_one_glass_amount">1 glass (~250 ml)</string>
     <string name="water_two_glasses_amount">2 glasses (~500 ml)</string>
     <string name="water_three_glasses_amount">3 glasses (~750 ml)</string>
-    <string name="water_one_glass_dynamic">1 glass (~%1$s)</string>
-    <string name="water_two_glasses_dynamic">2 glasses (~%1$s)</string>
-    <string name="water_three_glasses_dynamic">3 glasses (~%1$s)</string>
     <string name="water_custom_amount">Custom amount</string>
     <string name="nutrient_custom_amount">Custom amount</string>
     <string name="nutrient_use_preset_wheel">Use preset wheel</string>

@@ -524,6 +524,10 @@
     <string name="settings_week_monday">月曜日</string>
     <string name="settings_week_sunday">日曜日</string>
     <string name="settings_notifications">通知</string>
+    <string name="settings_water_quick_add">クイック追加の量</string>
+    <string name="settings_water_quick_add_amount">量 %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s までの量を入力してください。</string>
+    <string name="settings_water_quick_add_footer">+ メニューに表示され、ワンタップで水分を記録できます。</string>
     <string name="settings_battery_opt">バッテリー最適化</string>
     <string name="settings_battery_opt_value">Fud AI を除外</string>
 

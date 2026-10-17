@@ -13,6 +13,54 @@ enum WaterSettings {
     static let dailyGoalOptions = [1_500, 2_000, 2_500, 3_000, 3_500, 4_000]
 }
 
+/// The three one-tap water amounts in the Home + menu. Stored in milliliters as
+/// comma-separated text ("250,500,750"), the same format Android uses.
+enum WaterQuickAddPresets {
+    static let key = "waterQuickAddPresetsMl"
+    static let defaults = [250, 500, 750]
+    static let validRange = 1...5_000
+
+    /// Missing or malformed values fall back to the defaults; valid ones come back smallest first.
+    static func decode(_ raw: String?) -> [Int] {
+        let values = (raw ?? "")
+            .split(separator: ",")
+            .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+        guard values.count == defaults.count, values.allSatisfy(validRange.contains) else { return defaults }
+        return values.sorted()
+    }
+
+    static func encode(_ presets: [Int]) -> String {
+        presets.sorted().map(String.init).joined(separator: ",")
+    }
+
+    /// "250 · 500 · 750 ml" for the settings row.
+    static func summary(_ presets: [Int], unit: WaterUnit) -> String {
+        presets.map { unit.displayValue(forMilliliters: $0) }.joined(separator: " · ") + " \(unit.symbol)"
+    }
+
+    /// Plain digits for a text field: no grouping separators, at most one decimal for fl oz.
+    static func editingText(forMilliliters milliliters: Int, unit: WaterUnit) -> String {
+        guard unit == .fluidOunces else { return String(milliliters) }
+        let ounces = (unit.displayAmount(forMilliliters: milliliters) * 10).rounded() / 10
+        return ounces == ounces.rounded() ? String(Int(ounces)) : String(format: "%.1f", ounces)
+    }
+
+    /// Keeps digits (and one decimal for fl oz), like the custom water amount field.
+    static func filteredInput(_ value: String, unit: WaterUnit) -> String {
+        let filtered = value.filter { $0.isNumber || (unit == .fluidOunces && ($0 == "." || $0 == ",")) }
+        let normalized = filtered.replacingOccurrences(of: ",", with: ".")
+        let pieces = normalized.split(separator: ".", omittingEmptySubsequences: false)
+        return String((pieces.count > 1 ? "\(pieces[0]).\(pieces[1].prefix(1))" : normalized).prefix(6))
+    }
+
+    /// Milliliters for an edited amount, or nil when it is empty or outside `validRange`.
+    static func milliliters(fromEditingText text: String, unit: WaterUnit) -> Int? {
+        guard let value = Double(text.replacingOccurrences(of: ",", with: ".")), value > 0 else { return nil }
+        let milliliters = unit.milliliters(fromDisplayedValue: value)
+        return validRange.contains(milliliters) ? milliliters : nil
+    }
+}
+
 enum WaterUnit: String, CaseIterable, Identifiable {
     case milliliters = "ml"
     case fluidOunces = "floz"

@@ -531,6 +531,10 @@
     <string name="settings_week_monday">Poniedziałek</string>
     <string name="settings_week_sunday">Niedziela</string>
     <string name="settings_notifications">Powiadomienia</string>
+    <string name="settings_water_quick_add">Ilości szybkiego dodawania</string>
+    <string name="settings_water_quick_add_amount">Ilość %1$d</string>
+    <string name="settings_water_quick_add_invalid">Wpisz ilość do %1$s.</string>
+    <string name="settings_water_quick_add_footer">Wyświetlane w menu + do zapisywania wody jednym dotknięciem.</string>
     <string name="settings_battery_opt">Optymalizacja baterii</string>
     <string name="settings_battery_opt_value">Dodaj Fud AI do wyjątków</string>
 

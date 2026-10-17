@@ -730,6 +730,10 @@
     <string name="settings_water_unit">Одиниці води</string>
     <string name="settings_water_unit_ml">Мілілітри (мл)</string>
     <string name="settings_water_unit_fl_oz">Рідкі унції (fl oz)</string>
+    <string name="settings_water_quick_add">Об’єми швидкого додавання</string>
+    <string name="settings_water_quick_add_amount">Об’єм %1$d</string>
+    <string name="settings_water_quick_add_invalid">Введіть об’єм до %1$s.</string>
+    <string name="settings_water_quick_add_footer">Показуються в меню «+», щоб записувати воду одним дотиком.</string>
     <string name="settings_fasting_tracking">Відстеження голодування</string>
     <string name="settings_walk_run_quick_log">Ходьба та біг</string>
     <string name="settings_walk_run_quick_log_footer">За замовчуванням вимкнено. Коли увімкнено, ходьба та біг з\'являються в меню «+» тренувань для швидкого запису на відкритому повітрі.</string>
@@ -1210,9 +1214,6 @@
     <string name="water_one_glass_amount">1 склянка (~250 мл)</string>
     <string name="water_two_glasses_amount">2 склянки (~500 мл)</string>
     <string name="water_three_glasses_amount">3 склянки (~750 мл)</string>
-    <string name="water_one_glass_dynamic">1 склянка (~%1$s)</string>
-    <string name="water_two_glasses_dynamic">2 склянки (~%1$s)</string>
-    <string name="water_three_glasses_dynamic">3 склянки (~%1$s)</string>
     <string name="water_custom_amount">Власна кількість</string>
     <string name="nutrient_custom_amount">Власна кількість</string>
     <string name="nutrient_use_preset_wheel">Використати колесо прокрутки</string>

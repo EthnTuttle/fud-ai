@@ -19,6 +19,7 @@ import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WeightGoal
+import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
 import com.apoorvdarshan.calorietracker.models.WorkoutSplit
@@ -70,6 +71,7 @@ data class SettingsUiState(
     val waterTrackingEnabled: Boolean = false,
     val waterDailyGoalMl: Int = 2_000,
     val waterUnit: WaterUnit = WaterUnit.Default,
+    val waterQuickAddPresetsMl: List<Int> = WaterQuickAddPresets.Defaults,
     val waterReminderEnabled: Boolean = false,
     val fastingTrackingEnabled: Boolean = false,
     val walkRunQuickLogEnabled: Boolean = false,
@@ -216,6 +218,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val waterTracking = container.prefs.waterTrackingEnabled.first()
             val waterGoal = container.prefs.waterDailyGoalMl.first()
             val waterUnit = container.prefs.waterUnit.first()
+            val waterQuickAddPresets = container.prefs.waterQuickAddPresetsMl.first()
             val waterReminder = container.prefs.waterReminderEnabled.first()
             val fastingTracking = container.prefs.fastingTrackingEnabled.first()
             val walkRunQuickLog = container.prefs.walkRunQuickLogEnabled.first()
@@ -295,6 +298,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 waterTrackingEnabled = waterTracking,
                 waterDailyGoalMl = waterGoal,
                 waterUnit = waterUnit,
+                waterQuickAddPresetsMl = waterQuickAddPresets,
                 waterReminderEnabled = waterReminder,
                 fastingTrackingEnabled = fastingTracking,
                 walkRunQuickLogEnabled = walkRunQuickLog,
@@ -1005,6 +1009,16 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.setWaterUnit(v)
             _ui.value = _ui.value.copy(waterUnit = v)
+        }
+    }
+
+    fun setWaterQuickAddPresetsMl(presets: List<Int>) {
+        if (presets.size != WaterQuickAddPresets.Defaults.size ||
+            presets.any { it !in WaterQuickAddPresets.ValidRange }
+        ) return
+        viewModelScope.launch {
+            container.prefs.setWaterQuickAddPresetsMl(presets)
+            _ui.value = _ui.value.copy(waterQuickAddPresetsMl = presets.sorted())
         }
     }
 

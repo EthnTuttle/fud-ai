@@ -525,6 +525,10 @@
     <string name="settings_week_monday">Maandag</string>
     <string name="settings_week_sunday">Zondag</string>
     <string name="settings_notifications">Meldingen</string>
+    <string name="settings_water_quick_add">Hoeveelheden voor snel toevoegen</string>
+    <string name="settings_water_quick_add_amount">Hoeveelheid %1$d</string>
+    <string name="settings_water_quick_add_invalid">Voer een hoeveelheid tot %1$s in.</string>
+    <string name="settings_water_quick_add_footer">Getoond in het +-menu om water met één tik te registreren.</string>
     <string name="settings_battery_opt">Batterijoptimalisatie</string>
     <string name="settings_battery_opt_value">Fud AI op witte lijst</string>
 

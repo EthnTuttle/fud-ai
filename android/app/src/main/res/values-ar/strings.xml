@@ -537,6 +537,10 @@
     <string name="settings_week_monday">الإثنين</string>
     <string name="settings_week_sunday">الأحد</string>
     <string name="settings_notifications">الإشعارات</string>
+    <string name="settings_water_quick_add">كميات الإضافة السريعة</string>
+    <string name="settings_water_quick_add_amount">الكمية %1$d</string>
+    <string name="settings_water_quick_add_invalid">أدخل كمية حتى %1$s.</string>
+    <string name="settings_water_quick_add_footer">تظهر في قائمة + لتسجيل الماء بنقرة واحدة.</string>
     <string name="settings_battery_opt">تحسين البطارية</string>
     <string name="settings_battery_opt_value">إضافة Fud AI للقائمة البيضاء</string>
 

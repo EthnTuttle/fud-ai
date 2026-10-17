@@ -527,6 +527,10 @@
     <string name="settings_water_unit">Jednotka vody</string>
     <string name="settings_water_unit_ml">Mililitry (ml)</string>
     <string name="settings_water_unit_fl_oz">Tekuté unce (fl oz)</string>
+    <string name="settings_water_quick_add">Množství pro rychlé přidání</string>
+    <string name="settings_water_quick_add_amount">Množství %1$d</string>
+    <string name="settings_water_quick_add_invalid">Zadejte množství nejvýše %1$s.</string>
+    <string name="settings_water_quick_add_footer">Zobrazuje se v nabídce + pro zapsání vody jedním klepnutím.</string>
     <string name="settings_notif_water_reminder">Připomenutí pití</string>
     <string name="settings_battery_opt">Optimalizace baterie</string>
     <string name="settings_battery_opt_value">Přidat Fud AI na výjimky</string>
@@ -910,9 +914,6 @@
     <string name="water_one_glass_amount">1 sklenice (~250 ml)</string>
     <string name="water_two_glasses_amount">2 sklenice (~500 ml)</string>
     <string name="water_three_glasses_amount">3 sklenice (~750 ml)</string>
-    <string name="water_one_glass_dynamic">1 sklenice (~%1$s)</string>
-    <string name="water_two_glasses_dynamic">2 sklenice (~%1$s)</string>
-    <string name="water_three_glasses_dynamic">3 sklenice (~%1$s)</string>
     <string name="water_custom_amount">Vlastní množství</string>
     <string name="water_add">Přidat vodu</string>
     <string name="notif_update_title">Aktualizace k dispozici</string>

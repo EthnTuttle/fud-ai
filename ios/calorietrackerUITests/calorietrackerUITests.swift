@@ -310,7 +310,8 @@ final class calorietrackerUITests: XCTestCase {
         let waterMenu = app.buttons["Water"]
         XCTAssertTrue(waterMenu.waitForExistence(timeout: 5))
         waterMenu.tap()
-        let glass = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1 Glass")).firstMatch
+        // The smallest default quick-add amount.
+        let glass = app.buttons.matching(NSPredicate(format: "label == %@", "250 ml")).firstMatch
         XCTAssertTrue(glass.waitForExistence(timeout: 5))
         glass.tap()
 

@@ -728,6 +728,10 @@
     <string name="settings_water_unit">Su Birimi</string>
     <string name="settings_water_unit_ml">Mililitre (ml)</string>
     <string name="settings_water_unit_fl_oz">Sıvı Ons (fl oz)</string>
+    <string name="settings_water_quick_add">Hızlı Ekleme Miktarları</string>
+    <string name="settings_water_quick_add_amount">Miktar %1$d</string>
+    <string name="settings_water_quick_add_invalid">En fazla %1$s olan bir miktar girin.</string>
+    <string name="settings_water_quick_add_footer">Tek dokunuşla su kaydı için + menüsünde gösterilir.</string>
     <string name="settings_fasting_tracking">Oruç Takibi</string>
     <string name="settings_walk_run_quick_log">Yürüyüş ve Koşu</string>
     <string name="settings_walk_run_quick_log_footer">Varsayılan olarak kapalıdır. Etkinleştirildiğinde, hızlı açık hava kaydı için Yürüyüş ve Koşu Antrenmanlar + menüsünde görünür.</string>
@@ -1212,9 +1216,6 @@
     <string name="water_one_glass_amount">1 bardak (~250 ml)</string>
     <string name="water_two_glasses_amount">2 bardak (~500 ml)</string>
     <string name="water_three_glasses_amount">3 bardak (~750 ml)</string>
-    <string name="water_one_glass_dynamic">1 bardak (~%1$s)</string>
-    <string name="water_two_glasses_dynamic">2 bardak (~%1$s)</string>
-    <string name="water_three_glasses_dynamic">3 bardak (~%1$s)</string>
     <string name="water_custom_amount">Özel miktar</string>
     <string name="nutrient_custom_amount">Özel miktar</string>
     <string name="nutrient_use_preset_wheel">Önayarlı çarkı kullan</string>

@@ -525,6 +525,10 @@
     <string name="settings_week_monday">Bazar ertəsi</string>
     <string name="settings_week_sunday">Bazar</string>
     <string name="settings_notifications">Bildirişlər</string>
+    <string name="settings_water_quick_add">Sürətli əlavə miqdarları</string>
+    <string name="settings_water_quick_add_amount">Miqdar %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s qədər miqdar daxil edin.</string>
+    <string name="settings_water_quick_add_footer">Bir toxunuşla su qeydi üçün + menyusunda göstərilir.</string>
     <string name="settings_battery_opt">Batareya Optimizasiyası</string>
     <string name="settings_battery_opt_value">Fud AI-ı ağ siyahıya əlavə et</string>
 
