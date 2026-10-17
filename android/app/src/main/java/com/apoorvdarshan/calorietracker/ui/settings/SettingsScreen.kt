@@ -96,6 +96,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.Percent
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.outlined.Timer
@@ -1005,6 +1006,12 @@ fun SettingsScreen(
                     stringResource(R.string.settings_meal_times_customize),
                     icon = Icons.Outlined.Add
                 ) { nav.navigate(FudAIRoutes.ADD_MENU) }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.product_information),
+                    stringResource(R.string.settings_meal_times_customize),
+                    icon = Icons.Outlined.QrCodeScanner
+                ) { nav.navigate(FudAIRoutes.PRODUCT_INFO) }
             }
             }
 
@@ -4471,7 +4478,7 @@ private fun CustomInstructionsBlock(
 }
 
 @Composable
-private fun ToggleRow(
+internal fun ToggleRow(
     label: String,
     checked: Boolean,
     icon: ImageVector? = null,

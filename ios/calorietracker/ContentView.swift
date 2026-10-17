@@ -5291,6 +5291,23 @@ struct ProfileView: View {
                         }
                     }
 
+                    NavigationLink {
+                        ProductInfoSettingsView()
+                    } label: {
+                        Label {
+                            HStack {
+                                Text("Product Information")
+                                Spacer()
+                                Text("Customize")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        } icon: {
+                            Image(systemName: "barcode")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+
                 }
                 .listRowBackground(AppColors.appCard)
                 }

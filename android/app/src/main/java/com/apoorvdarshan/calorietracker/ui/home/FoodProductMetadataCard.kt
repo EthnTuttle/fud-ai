@@ -17,67 +17,41 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FoodProductMetadata
+import com.apoorvdarshan.calorietracker.models.ProductInfoField
 
+/**
+ * Open Food Facts details for a barcode log. [fields] comes from
+ * [ProductInfoField.visibleFields], so it already honours the user's Product information
+ * settings (#427) and only lists fields with data.
+ */
 @Composable
-internal fun FoodProductMetadataCard(metadata: FoodProductMetadata) {
-    val rows = buildList {
-        add(ProductMetadataItem(stringResource(R.string.product_barcode), metadata.barcode))
-        metadata.packageQuantity?.let {
-            add(ProductMetadataItem(stringResource(R.string.product_package), it))
-        }
-        metadata.nutriScore?.let {
-            add(ProductMetadataItem(stringResource(R.string.product_nutri_score), it))
-        }
-        metadata.novaGroup?.let {
-            add(ProductMetadataItem(stringResource(R.string.product_nova_group), it.toString()))
-        }
-        metadata.ecoScore?.let {
-            add(ProductMetadataItem(stringResource(R.string.product_eco_score), it))
-        }
-        metadata.allergens.takeIf { it.isNotEmpty() }?.let {
-            add(
-                ProductMetadataItem(
-                    stringResource(R.string.product_allergens),
-                    it.joinToString(", "),
-                    stacked = true
-                )
-            )
-        }
-        metadata.traces.takeIf { it.isNotEmpty() }?.let {
-            add(
-                ProductMetadataItem(
-                    stringResource(R.string.product_may_contain),
-                    it.joinToString(", "),
-                    stacked = true
-                )
-            )
-        }
-        metadata.labels.takeIf { it.isNotEmpty() }?.let {
-            add(
-                ProductMetadataItem(
-                    stringResource(R.string.product_labels),
-                    it.joinToString(", "),
-                    stacked = true
-                )
-            )
-        }
-        metadata.categories.takeIf { it.isNotEmpty() }?.let {
-            add(
-                ProductMetadataItem(
-                    stringResource(R.string.product_categories),
-                    it.joinToString(", "),
-                    stacked = true
-                )
-            )
+internal fun FoodProductMetadataCard(
+    metadata: FoodProductMetadata,
+    fields: List<ProductInfoField>
+) {
+    val rows = fields.mapNotNull { field ->
+        val label = stringResource(field.labelRes)
+        when (field) {
+            ProductInfoField.BARCODE -> ProductMetadataItem(label, metadata.barcode)
+            ProductInfoField.PACKAGE -> metadata.packageQuantity?.let { ProductMetadataItem(label, it) }
+            ProductInfoField.NUTRI_SCORE -> metadata.nutriScore?.let { ProductMetadataItem(label, it) }
+            ProductInfoField.NOVA_GROUP -> metadata.novaGroup?.let { ProductMetadataItem(label, it.toString()) }
+            ProductInfoField.ECO_SCORE -> metadata.ecoScore?.let { ProductMetadataItem(label, it) }
+            ProductInfoField.ALLERGENS -> metadata.allergens.stackedItem(label)
+            ProductInfoField.TRACES -> metadata.traces.stackedItem(label)
+            ProductInfoField.LABELS -> metadata.labels.stackedItem(label)
+            ProductInfoField.CATEGORIES -> metadata.categories.stackedItem(label)
+            ProductInfoField.INGREDIENT_LABEL -> null
         }
     }
+    val ingredientsText = metadata.ingredientsText?.takeIf { ProductInfoField.INGREDIENT_LABEL in fields }
 
     SheetPillCard {
         rows.forEachIndexed { index, item ->
             if (index > 0) SheetHairline()
             ProductMetadataRow(item)
         }
-        metadata.ingredientsText?.let { ingredients ->
+        ingredientsText?.let { ingredients ->
             if (rows.isNotEmpty()) SheetHairline()
             Column(
                 modifier = Modifier
@@ -106,6 +80,9 @@ private data class ProductMetadataItem(
     val value: String,
     val stacked: Boolean = false
 )
+
+private fun List<String>.stackedItem(label: String): ProductMetadataItem? =
+    takeIf { it.isNotEmpty() }?.let { ProductMetadataItem(label, it.joinToString(", "), stacked = true) }
 
 @Composable
 private fun ProductMetadataRow(item: ProductMetadataItem) {

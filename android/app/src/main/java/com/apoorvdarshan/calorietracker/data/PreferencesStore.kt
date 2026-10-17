@@ -23,6 +23,7 @@ import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
 import com.apoorvdarshan.calorietracker.models.MealSchedule
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.PendingFoodAnalysisDraft
+import com.apoorvdarshan.calorietracker.models.ProductInfoField
 import com.apoorvdarshan.calorietracker.models.QuickAction
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
@@ -604,6 +605,23 @@ class PreferencesStore(
 
     val preferGramsByDefault: Flow<Boolean> = ds.data.map { it[Keys.PREFER_GRAMS_BY_DEFAULT] ?: false }
     suspend fun setPreferGramsByDefault(v: Boolean) { ds.edit { it[Keys.PREFER_GRAMS_BY_DEFAULT] = v } }
+
+    /** Barcode Product information block (#427). Mirrors iOS @AppStorage("productInfoShown"); on by default. */
+    val productInfoShown: Flow<Boolean> = ds.data.map { it[Keys.PRODUCT_INFO_SHOWN] ?: true }
+    suspend fun setProductInfoShown(v: Boolean) { ds.edit { it[Keys.PRODUCT_INFO_SHOWN] = v } }
+
+    /** Product information fields the user hid; mirrors iOS "productInfoHiddenFields" (comma-separated keys). */
+    val productInfoHiddenFields: Flow<Set<ProductInfoField>> = ds.data.map {
+        ProductInfoField.hiddenFromStorage(it[Keys.PRODUCT_INFO_HIDDEN_FIELDS])
+    }
+    suspend fun setProductInfoFieldHidden(field: ProductInfoField, hidden: Boolean) {
+        ds.edit {
+            val current = ProductInfoField.hiddenFromStorage(it[Keys.PRODUCT_INFO_HIDDEN_FIELDS])
+            it[Keys.PRODUCT_INFO_HIDDEN_FIELDS] = ProductInfoField.storageValue(
+                if (hidden) current + field else current - field
+            )
+        }
+    }
 
     val saveMealPhotosToGallery: Flow<Boolean> = ds.data.map { it[Keys.SAVE_MEAL_PHOTOS_TO_GALLERY] ?: false }
     suspend fun setSaveMealPhotosToGallery(v: Boolean) { ds.edit { it[Keys.SAVE_MEAL_PHOTOS_TO_GALLERY] = v } }
@@ -1507,6 +1525,8 @@ class PreferencesStore(
         val HEIGHT_UNIT = stringPreferencesKey("heightUnit")
         val WEIGHT_UNIT = stringPreferencesKey("weightUnit")
         val PREFER_GRAMS_BY_DEFAULT = booleanPreferencesKey("foodMeasurementPreferGramsByDefault")
+        val PRODUCT_INFO_SHOWN = booleanPreferencesKey("productInfoShown")
+        val PRODUCT_INFO_HIDDEN_FIELDS = stringPreferencesKey("productInfoHiddenFields")
         val SAVE_MEAL_PHOTOS_TO_GALLERY = booleanPreferencesKey("saveMealPhotosToGallery")
         val APPEARANCE_MODE = stringPreferencesKey("appearanceMode")
         val APP_THEME_COLOR = stringPreferencesKey("appThemeColor")

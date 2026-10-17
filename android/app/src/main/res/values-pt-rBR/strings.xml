@@ -62,6 +62,23 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informações do produto</string>
+    <string name="product_barcode">Código de barras</string>
+    <string name="product_package">Embalagem</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Grupo NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Alérgenos</string>
+    <string name="product_may_contain">Pode conter</string>
+    <string name="product_allergen_check">Verificação de alérgenos</string>
+    <string name="product_labels">Selos</string>
+    <string name="product_categories">Categorias</string>
+    <string name="product_ingredient_label">Lista de ingredientes</string>
+    <string name="product_info_settings_show">Mostrar informações do produto</string>
+    <string name="product_info_settings_fields">Detalhes a mostrar</string>
+    <string name="product_info_settings_footer">Aparece no fim das telas de revisão e edição de alimentos escaneados por código de barras. A verificação de alérgenos não é afetada e sempre aparece quando você tem sensibilidades a alérgenos definidas.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Proteína</string>
     <string name="macro_carbs">Carboidratos</string>

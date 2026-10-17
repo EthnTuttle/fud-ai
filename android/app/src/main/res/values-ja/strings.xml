@@ -62,6 +62,23 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">製品情報</string>
+    <string name="product_barcode">バーコード</string>
+    <string name="product_package">内容量</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVAグループ</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">アレルゲン</string>
+    <string name="product_may_contain">含まれる可能性</string>
+    <string name="product_allergen_check">アレルゲンチェック</string>
+    <string name="product_labels">ラベル</string>
+    <string name="product_categories">カテゴリ</string>
+    <string name="product_ingredient_label">原材料表示</string>
+    <string name="product_info_settings_show">製品情報を表示</string>
+    <string name="product_info_settings_fields">表示する項目</string>
+    <string name="product_info_settings_footer">バーコードでスキャンした食品の確認画面と編集画面の最後に表示されます。アレルゲンチェックには影響せず、アレルゲン感受性を設定している場合は常に表示されます。</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">タンパク質</string>
     <string name="macro_carbs">炭水化物</string>

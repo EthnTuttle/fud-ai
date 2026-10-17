@@ -62,6 +62,23 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informacje o produkcie</string>
+    <string name="product_barcode">Kod kreskowy</string>
+    <string name="product_package">Opakowanie</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Grupa NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Alergeny</string>
+    <string name="product_may_contain">Może zawierać</string>
+    <string name="product_allergen_check">Kontrola alergenów</string>
+    <string name="product_labels">Oznaczenia</string>
+    <string name="product_categories">Kategorie</string>
+    <string name="product_ingredient_label">Skład na etykiecie</string>
+    <string name="product_info_settings_show">Pokazuj informacje o produkcie</string>
+    <string name="product_info_settings_fields">Wyświetlane szczegóły</string>
+    <string name="product_info_settings_footer">Wyświetlane na końcu ekranów przeglądu i edycji produktów zeskanowanych kodem kreskowym. Nie wpływa na kontrolę alergenów, która zawsze się pojawia, gdy masz ustawione wrażliwości na alergeny.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Białko</string>
     <string name="macro_carbs">Węglowodany</string>

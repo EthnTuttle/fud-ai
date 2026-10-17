@@ -62,6 +62,23 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Məhsul məlumatı</string>
+    <string name="product_barcode">Barkod</string>
+    <string name="product_package">Qablaşdırma</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA qrupu</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergenlər</string>
+    <string name="product_may_contain">Tərkibində ola bilər</string>
+    <string name="product_allergen_check">Allergen yoxlaması</string>
+    <string name="product_labels">Etiketlər</string>
+    <string name="product_categories">Kateqoriyalar</string>
+    <string name="product_ingredient_label">Tərkib etiketi</string>
+    <string name="product_info_settings_show">Məhsul məlumatını göstər</string>
+    <string name="product_info_settings_fields">Göstəriləcək məlumatlar</string>
+    <string name="product_info_settings_footer">Barkodla skan edilmiş qidalar üçün nəzərdən keçirmə və redaktə ekranlarının sonunda göstərilir. Allergen yoxlamasına təsir etmir və allergen həssaslıqlarınız təyin olunduqda həmişə göstərilir.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protein</string>
     <string name="macro_carbs">Karbohidrat</string>
