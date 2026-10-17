@@ -14,15 +14,30 @@ struct SpeechService {
         var errorDescription: String? {
             switch self {
             case .noAPIKey:
-                return "No API key configured for this speech provider. Add one in Settings → Speech-to-Text."
+                return String(
+                    localized: "No API key configured for this speech provider. Add one in Settings → Speech-to-Text.",
+                    comment: "Voice input error when the selected speech provider has no API key. Settings → Speech-to-Text is the screen path."
+                )
             case .fileReadFailed:
-                return "Could not read the recorded audio file."
+                return String(
+                    localized: "Could not read the recorded audio file.",
+                    comment: "Voice input error when the recording can't be read back from disk."
+                )
             case .networkError(let err):
-                return "Network error: \(err.localizedDescription)"
+                return String(
+                    localized: "Network error: \(err.localizedDescription)",
+                    comment: "Coach chat or voice input error; the argument is the system's description of the network failure."
+                )
             case .apiError(let msg):
-                return "Speech API error: \(msg)"
+                return String(
+                    localized: "Speech API error: \(msg)",
+                    comment: "Voice input error; the argument is the message returned by the speech provider, shown as is."
+                )
             case .invalidResponse:
-                return "Unexpected response from the speech provider."
+                return String(
+                    localized: "Unexpected response from the speech provider.",
+                    comment: "Voice input error when the speech provider's reply can't be read."
+                )
             }
         }
     }

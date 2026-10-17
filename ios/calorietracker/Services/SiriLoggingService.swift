@@ -20,9 +20,12 @@ enum SiriLoggingService {
         var errorDescription: String? {
             switch self {
             case .missingNumber:
-                "Please say a weight, such as 75 kilograms or 165 pounds."
+                String(
+                    localized: "Please say a weight, such as 75 kilograms or 165 pounds.",
+                    comment: "Siri reply when the spoken weight has no number."
+                )
             case .invalidRange:
-                "That does not look like a valid weight."
+                String(localized: "That does not look like a valid weight.", comment: "Siri reply when the spoken weight is outside the allowed range.")
             }
         }
     }

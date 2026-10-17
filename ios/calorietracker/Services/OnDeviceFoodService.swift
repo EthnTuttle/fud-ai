@@ -9,7 +9,10 @@ enum OnDeviceAIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unavailable(let reason):
-            "Apple Intelligence is unavailable: \(reason)"
+            String(
+                localized: "Apple Intelligence is unavailable: \(reason)",
+                comment: "Error when the on-device model can't run; the argument explains why, such as that Apple Intelligence is turned off."
+            )
         }
     }
 }

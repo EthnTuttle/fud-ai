@@ -18,11 +18,18 @@ nonisolated enum LiveSocketError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .refused(let statusCode):
-            "The provider refused the connection (HTTP \(statusCode))."
+            String(
+                localized: "The provider refused the connection (HTTP \(statusCode)).",
+                comment: "Voice assistant error; the argument is the HTTP status code, such as 401."
+            )
         case .closed(let code, let reason):
-            reason.flatMap { $0.isEmpty ? nil : $0 } ?? "The connection closed (\(code))."
+            // The close code is an identifier, so it is passed as text to skip digit grouping.
+            reason.flatMap { $0.isEmpty ? nil : $0 } ?? String(
+                localized: "The connection closed (\(String(code))).",
+                comment: "Voice assistant error when the provider closes the connection without a reason; the argument is the close code, such as 1011."
+            )
         case .unexpectedMessage:
-            "The provider sent a message the app can't read."
+            String(localized: "The provider sent a message the app can't read.", comment: "Voice assistant error when the provider sends data the app doesn't understand.")
         }
     }
 
