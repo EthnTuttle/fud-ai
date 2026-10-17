@@ -3,7 +3,7 @@ package com.apoorvdarshan.calorietracker.services.hosted
 import com.apoorvdarshan.calorietracker.services.SecureHttpClient
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
-import com.apoorvdarshan.calorietracker.services.ai.await
+import com.apoorvdarshan.calorietracker.services.ai.awaitBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -152,16 +152,17 @@ class HostedAiClient(
         var attempt = 0
         while (true) {
             val sequence = quota.nextRequestSequence()
+            // Read on OkHttp's thread: the hosted Coach, food and speech calls start on the main dispatcher.
             val response = try {
-                client.newCall(request()).await()
+                client.newCall(request()).awaitBody()
             } catch (io: IOException) {
                 throw AiError.Network(io)
             }
-            val outcome = response.use {
+            val outcome = response.let {
                 if (applyQuota) {
                     HostedQuotaSnapshot.fromHeaders { name -> it.header(name) }?.let { s -> quota.apply(s, sequence) }
                 }
-                val body = it.body?.string().orEmpty()
+                val body = it.body
                 if (it.isSuccessful) {
                     Attempt.Success(body)
                 } else {

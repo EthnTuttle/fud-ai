@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services.ai
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
+import okhttp3.Headers
 import okhttp3.Response
 import org.json.JSONObject
 import java.io.IOException
@@ -28,13 +29,14 @@ object RetryPolicy {
     suspend fun execute(delays: LongArray = defaultDelays, callFactory: () -> Call): String {
         var lastKind = AiErrorKind.GENERIC
         for (attempt in 0..delays.size) {
+            // The body is read on OkHttp's thread: the coach calls this from the main dispatcher.
             val response = try {
-                callFactory().await()
+                callFactory().awaitBody()
             } catch (io: IOException) {
                 throw AiError.Network(io)
             }
 
-            val bodyStr = response.use { it.body?.string().orEmpty() }
+            val bodyStr = response.body
             val code = response.code
 
             if (response.isSuccessful) return bodyStr
@@ -68,6 +70,8 @@ object RetryPolicy {
 /**
  * Cooperative cancellation: cancelling the coroutine (e.g. the analyzing overlay's Cancel button)
  * also cancels the underlying OkHttp call instead of letting it run to completion in the background.
+ * The body is still unread when this returns, so only call it off the main thread; [awaitBody]
+ * is main-safe.
  */
 internal suspend fun Call.await(): Response = suspendCancellableCoroutine { cont ->
     enqueue(object : okhttp3.Callback {
@@ -77,6 +81,41 @@ internal suspend fun Call.await(): Response = suspendCancellableCoroutine { cont
 
         override fun onResponse(call: Call, response: Response) {
             if (cont.isActive) cont.resume(response) else response.close()
+        }
+    })
+    cont.invokeOnCancellation { cancel() }
+}
+
+/** A response whose body [awaitBody] has already read to the end and closed. */
+internal class BufferedResponse(val code: Int, val headers: Headers, val body: String) {
+    val isSuccessful: Boolean get() = code in 200..299
+
+    fun header(name: String): String? = headers[name]
+}
+
+/**
+ * Like [await], but reads the whole body on OkHttp's callback thread before resuming, so a caller
+ * on the main dispatcher never touches the socket (Android throws NetworkOnMainThreadException
+ * when a body read has to wait on the network). The coroutine stays suspended until the body is
+ * read, so cancelling it during a slow body still cancels the call.
+ */
+internal suspend fun Call.awaitBody(): BufferedResponse = suspendCancellableCoroutine { cont ->
+    enqueue(object : okhttp3.Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            if (cont.isActive) cont.resumeWithException(e)
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            if (!cont.isActive) {
+                response.close()
+                return
+            }
+            // Anything thrown out of this callback would crash OkHttp's thread instead of
+            // reaching the caller, so failures are handed to the continuation.
+            val result = runCatching {
+                response.use { BufferedResponse(it.code, it.headers, it.body.string()) }
+            }
+            if (cont.isActive) cont.resumeWith(result)
         }
     })
     cont.invokeOnCancellation { cancel() }

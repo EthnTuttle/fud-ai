@@ -2,6 +2,8 @@ package com.apoorvdarshan.calorietracker.services.hosted
 
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
+import com.apoorvdarshan.calorietracker.services.ai.BodyReadRecorder
+import com.apoorvdarshan.calorietracker.services.ai.callerDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.TimeUnit
 
 class HostedAiClientTest {
     private val server = MockWebServer()
@@ -144,6 +147,33 @@ class HostedAiClientTest {
         val refreshed = quota.refresh(force = true).getOrThrow()
         assertEquals(150, refreshed.creditBank)
         assertEquals("/api/hosted-ai/v1/quota?refresh=1", server.takeRequest().path)
+    }
+
+    @Test
+    fun hostedCoachBodyIsReadOffTheCallingThread() {
+        // Issue #540: the hosted Coach calls this from the main dispatcher.
+        val recorder = BodyReadRecorder()
+        val http = OkHttpClient.Builder().addInterceptor(recorder.interceptor).build()
+        val hosted = HostedAiClient(
+            userId = { userId },
+            quota = quota,
+            client = http,
+            baseUrl = server.url("/api/hosted-ai/v1").toString().trimEnd('/'),
+            retryDelayMillis = 0
+        )
+        val body = """{"candidates":[{"content":{"parts":[{"text":"${"x".repeat(8_000)}"}]}}]}"""
+        server.enqueue(
+            quotaHeaders(MockResponse().setResponseCode(200).setBody(body))
+                .throttleBody(1_024, 10, TimeUnit.MILLISECONDS)
+        )
+
+        callerDispatcher().use { caller ->
+            assertEquals(body, runBlocking(caller) { hosted.gemini("""{"contents":"x"}""") })
+        }
+        assertEquals(1, quota.snapshot.value?.dailyUsed)
+        assertTrue("body was never read", recorder.threads.isNotEmpty())
+        assertFalse("body read on the caller's thread", recorder.readOnCaller)
+        http.dispatcher.executorService.shutdown()
     }
 
     private suspend fun expectHosted(block: suspend () -> Unit): AiError {
