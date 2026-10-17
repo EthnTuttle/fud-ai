@@ -19,13 +19,25 @@ struct ChatService {
         var errorDescription: String? {
             switch self {
             case .noAPIKey:
-                return "No API key configured. Add your key in Settings → AI Provider."
+                return String(
+                    localized: "No API key configured. Add your key in Settings → AI Provider.",
+                    comment: "Coach chat error when no AI provider API key is saved. Settings → AI Provider is the screen path."
+                )
             case .networkError(let err):
-                return "Network error: \(err.localizedDescription)"
+                return String(
+                    localized: "Network error: \(err.localizedDescription)",
+                    comment: "Coach chat or voice input error; the argument is the system's description of the network failure."
+                )
             case .apiError(let msg):
-                return "API error: \(msg)"
+                return String(
+                    localized: "API error: \(msg)",
+                    comment: "Coach chat error; the argument is the message returned by the AI provider, shown as is."
+                )
             case .invalidResponse:
-                return "Could not understand the AI response. Please try again."
+                return String(
+                    localized: "Could not understand the AI response. Please try again.",
+                    comment: "Coach chat error when the AI provider's reply can't be read."
+                )
             }
         }
     }

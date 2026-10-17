@@ -529,6 +529,7 @@
 				ro,
 				ru,
 				tr,
+				uk,
 				"zh-Hans",
 				Base,
 			);

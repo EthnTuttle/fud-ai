@@ -28,21 +28,36 @@ enum DiaryImportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileTooLarge:
-            return "This file is too large to import."
+            return String(localized: "This file is too large to import.", comment: "Food diary import error when the chosen file is over the size limit.")
         case .invalidDocument:
-            return "This is not a valid Fud AI food diary JSON file."
+            return String(
+                localized: "This is not a valid Fud AI food diary JSON file.",
+                comment: "Food diary import error when the file isn't a Fud AI diary export. Fud AI is the app name; JSON is a file format."
+            )
         case .unsupportedDocument:
-            return "This food diary format is not supported."
+            return String(localized: "This food diary format is not supported.", comment: "Food diary import error when the export format version is unknown.")
         case .noEntries:
-            return "The selected diary does not contain any food or water entries."
+            return String(
+                localized: "The selected diary does not contain any food or water entries.",
+                comment: "Food diary import error when the file has nothing to import."
+            )
         case .invalidDate(let value):
-            return "The diary contains an invalid date or time: \(value)."
+            return String(
+                localized: "The diary contains an invalid date or time: \(value).",
+                comment: "Food diary import error; the argument is the date or time text copied from the file."
+            )
         case .invalidMeal(let value):
-            return "The diary contains an unknown meal type: \(value)."
+            return String(
+                localized: "The diary contains an unknown meal type: \(value).",
+                comment: "Food diary import error; the argument is the meal type text copied from the file."
+            )
         case .invalidWaterEntry:
-            return "The diary contains an invalid water entry."
+            return String(localized: "The diary contains an invalid water entry.", comment: "Food diary import error when a water entry in the file can't be read.")
         case .invalidEntry(let value):
-            return "The diary contains an invalid food entry: \(value)."
+            return String(
+                localized: "The diary contains an invalid food entry: \(value).",
+                comment: "Food diary import error; the argument is the food name or entry text copied from the file."
+            )
         }
     }
 }

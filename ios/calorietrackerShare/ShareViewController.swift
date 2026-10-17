@@ -94,11 +94,14 @@ class ShareViewController: UIViewController {
     
     private func dismissWithError() {
         let alert = UIAlertController(
-            title: "Error",
-            message: "Unable to process the shared image.",
+            title: String(localized: "Error", comment: "Title of the alert shown when a shared image can't be imported into Fud AI."),
+            message: String(
+                localized: "Unable to process the shared image.",
+                comment: "Message of the alert shown when the image shared from another app can't be read or saved."
+            ),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: String(localized: "OK", comment: "Button that dismisses the shared image error alert."), style: .default) { [weak self] _ in
             self?.extensionContext?.cancelRequest(withError: NSError(domain: "ShareError", code: 1, userInfo: nil))
         })
         present(alert, animated: true)

@@ -15,11 +15,21 @@ enum HostedAIServiceError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL: return "Invalid hosted AI URL."
-        case .unauthorized: return "Hosted AI could not identify your subscription. Try Restore Purchases."
+        case .invalidURL:
+            return String(localized: "Invalid hosted AI URL.", comment: "Hosted AI error when the service address can't be built.")
+        case .unauthorized:
+            return String(
+                localized: "Hosted AI could not identify your subscription. Try Restore Purchases.",
+                comment: "Hosted AI error when the subscription can't be verified. Restore Purchases is the button name in the paywall."
+            )
         case .serverError(let msg): return msg
-        case .invalidResponse: return "Could not understand the hosted AI response."
-        case .upstreamUnavailable: return "Hosted AI is temporarily unavailable. Please try again shortly."
+        case .invalidResponse:
+            return String(localized: "Could not understand the hosted AI response.", comment: "Hosted AI error when the service's reply can't be read.")
+        case .upstreamUnavailable:
+            return String(
+                localized: "Hosted AI is temporarily unavailable. Please try again shortly.",
+                comment: "Hosted AI error when the AI provider behind the service is down."
+            )
         }
     }
 }

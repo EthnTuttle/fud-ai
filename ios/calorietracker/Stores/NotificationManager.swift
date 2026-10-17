@@ -101,8 +101,8 @@ class NotificationManager {
         if breakfastEnabled {
             scheduleRepeatingMeal(
                 id: "meal.breakfast",
-                title: "Breakfast Time",
-                body: "Don't forget to log your breakfast!",
+                title: String(localized: "Breakfast Time", comment: "Title of the daily breakfast reminder notification."),
+                body: String(localized: "Don't forget to log your breakfast!", comment: "Body of the daily breakfast reminder notification."),
                 hour: breakfastHour, minute: breakfastMinute
             )
         }
@@ -110,8 +110,8 @@ class NotificationManager {
         if lunchEnabled {
             scheduleRepeatingMeal(
                 id: "meal.lunch",
-                title: "Lunch Time",
-                body: "Snap a photo to keep tracking!",
+                title: String(localized: "Lunch Time", comment: "Title of the daily lunch reminder notification."),
+                body: String(localized: "Snap a photo to keep tracking!", comment: "Body of the daily lunch reminder notification; suggests logging lunch with a photo."),
                 hour: lunchHour, minute: lunchMinute
             )
         }
@@ -119,8 +119,8 @@ class NotificationManager {
         if dinnerEnabled {
             scheduleRepeatingMeal(
                 id: "meal.dinner",
-                title: "Dinner Time",
-                body: "Log your dinner to stay on track!",
+                title: String(localized: "Dinner Time", comment: "Title of the daily dinner reminder notification."),
+                body: String(localized: "Log your dinner to stay on track!", comment: "Body of the daily dinner reminder notification."),
                 hour: dinnerHour, minute: dinnerMinute
             )
         }
@@ -149,8 +149,8 @@ class NotificationManager {
         guard enabled else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Time to Hydrate"
-        content.body = "Have some water and log it in Fud AI."
+        content.title = String(localized: "Time to Hydrate", comment: "Title of the daily water reminder notification.")
+        content.body = String(localized: "Have some water and log it in Fud AI.", comment: "Body of the daily water reminder notification. Fud AI is the app name.")
         content.sound = .default
 
         var dateComponents = DateComponents()
@@ -158,6 +158,57 @@ class NotificationManager {
         dateComponents.minute = minute
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         PendingNotificationRequests.add(UNNotificationRequest(identifier: "water.reminder", content: content, trigger: trigger))
+    }
+
+    // MARK: - Repeating Reminders: refresh text
+
+    /// The saved meal and water reminder settings, with the same defaults as the
+    /// Notifications settings screen and onboarding.
+    struct RepeatingReminderSettings: Equatable {
+        struct Time: Equatable {
+            var enabled: Bool
+            var hour: Int
+            var minute: Int
+        }
+
+        var breakfast: Time
+        var lunch: Time
+        var dinner: Time
+        /// Enabled only while water tracking and its reminder are both on.
+        var water: Time
+
+        init(defaults: UserDefaults) {
+            func time(_ name: String, enabled: Bool, hour: Int) -> Time {
+                Time(
+                    enabled: defaults.object(forKey: "\(name)ReminderEnabled") as? Bool ?? enabled,
+                    hour: defaults.object(forKey: "\(name)ReminderHour") as? Int ?? hour,
+                    minute: defaults.object(forKey: "\(name)ReminderMinute") as? Int ?? 0
+                )
+            }
+            breakfast = time("breakfast", enabled: true, hour: 8)
+            lunch = time("lunch", enabled: true, hour: 12)
+            dinner = time("dinner", enabled: true, hour: 19)
+            water = Time(
+                enabled: defaults.bool(forKey: WaterSettings.enabledKey)
+                    && defaults.bool(forKey: WaterSettings.reminderEnabledKey),
+                hour: defaults.object(forKey: WaterSettings.reminderHourKey) as? Int ?? 14,
+                minute: defaults.object(forKey: WaterSettings.reminderMinuteKey) as? Int ?? 0
+            )
+        }
+    }
+
+    /// Meal and water reminders repeat daily, so they keep the text of the language
+    /// the app ran in when they were added. Re-adding them from the saved settings
+    /// whenever the app becomes active moves reminders added by an older version, or
+    /// before a language change (iOS relaunches the app then), to the current language.
+    func rescheduleRepeatingReminders(defaults: UserDefaults = .standard) {
+        let settings = RepeatingReminderSettings(defaults: defaults)
+        scheduleMealReminders(
+            breakfastEnabled: settings.breakfast.enabled, breakfastHour: settings.breakfast.hour, breakfastMinute: settings.breakfast.minute,
+            lunchEnabled: settings.lunch.enabled, lunchHour: settings.lunch.hour, lunchMinute: settings.lunch.minute,
+            dinnerEnabled: settings.dinner.enabled, dinnerHour: settings.dinner.hour, dinnerMinute: settings.dinner.minute
+        )
+        scheduleWaterReminder(enabled: settings.water.enabled, hour: settings.water.hour, minute: settings.water.minute)
     }
 
     // MARK: - Fasting Goal (one-shot)
@@ -170,9 +221,12 @@ class NotificationManager {
         guard goalDate.timeIntervalSinceNow > 1 else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Fasting Goal Reached")
+        content.title = String(localized: "Fasting Goal Reached", comment: "Title of the notification sent when an active fast reaches its goal.")
         let goal = FastingDurationFormatter.goal(minutes: session.goalMinutes)
-        content.body = String(localized: "You reached your \(goal) fasting goal. End the fast when you're ready.")
+        content.body = String(
+            localized: "You reached your \(goal) fasting goal. End the fast when you're ready.",
+            comment: "Body of the fasting goal notification. The argument is the goal length, such as 16h."
+        )
         content.sound = .default
         let message = content.copy() as! UNNotificationContent
 
@@ -205,8 +259,11 @@ class NotificationManager {
         ), fireDate > now else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Don't Break Your \(currentStreak)-Day Streak!"
-        content.body = "Log something before the day ends."
+        content.title = String(
+            localized: "Don't Break Your \(currentStreak)-Day Streak!",
+            comment: "Title of the streak reminder notification. The number is how many days in a row the user has logged food; the translation varies by plural."
+        )
+        content.body = String(localized: "Log something before the day ends.", comment: "Body of the streak reminder notification.")
         content.sound = .default
 
         var dateComponents = DateComponents()
@@ -233,8 +290,11 @@ class NotificationManager {
 
         let remaining = max(0, calorieGoal - todayCalories)
         let content = UNMutableNotificationContent()
-        content.title = "Daily Summary"
-        content.body = "You ate \(todayCalories) of \(calorieGoal) kcal today. \(remaining) remaining!"
+        content.title = String(localized: "Daily Summary", comment: "Title of the evening daily summary notification.")
+        content.body = String(
+            localized: "You ate \(todayCalories) of \(calorieGoal) kcal today. \(remaining) remaining!",
+            comment: "Body of the daily summary notification: calories eaten, the daily calorie goal, and calories left. kcal is an abbreviation that does not change with the number; vary the remaining count by plural where the language needs it."
+        )
         content.sound = .default
 
         var dateComponents = DateComponents()
@@ -263,8 +323,8 @@ class NotificationManager {
         ), fireDate > now else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Time to Weigh In"
-        content.body = "Log today's weight to keep your progress chart accurate."
+        content.title = String(localized: "Time to Weigh In", comment: "Title of the daily weigh-in reminder notification.")
+        content.body = String(localized: "Log today's weight to keep your progress chart accurate.", comment: "Body of the daily weigh-in reminder notification.")
         content.sound = .default
 
         var dateComponents = DateComponents()
@@ -293,8 +353,8 @@ class NotificationManager {
         ), fireDate > now else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Body Fat Check-In"
-        content.body = "Log today's body fat % to track your composition trend."
+        content.title = String(localized: "Body Fat Check-In", comment: "Title of the daily body fat reminder notification.")
+        content.body = String(localized: "Log today's body fat % to track your composition trend.", comment: "Body of the daily body fat reminder notification. % means body fat percentage.")
         content.sound = .default
 
         var dateComponents = DateComponents()
@@ -380,8 +440,8 @@ class NotificationManager {
         guard settings.authorizationStatus == .authorized else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Update Available"
-        content.body = "Fud AI \(version) is ready. Tap to update."
+        content.title = String(localized: "Update Available", comment: "Title of the notification that a new App Store version is out.")
+        content.body = String(localized: "Fud AI \(version) is ready. Tap to update.", comment: "Body of the app update notification. Fud AI is the app name; the argument is the new version number, such as 7.2.")
         content.sound = .default
         content.userInfo = ["updateURL": url.absoluteString]
 
@@ -461,8 +521,8 @@ class NotificationManager {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Fud AI is live on Product Hunt 🚀"
-        content.body = "We just launched! Tap to vote and help more people find Fud AI."
+        content.title = String(localized: "Fud AI is live on Product Hunt 🚀", comment: "Title of the Product Hunt launch day notification. Fud AI and Product Hunt are names; keep them in English.")
+        content.body = String(localized: "We just launched! Tap to vote and help more people find Fud AI.", comment: "Body of the Product Hunt launch day notification. Fud AI is the app name.")
         content.sound = .default
         content.userInfo = ["openURL": FudAILinks.productHunt.absoluteString]
 
