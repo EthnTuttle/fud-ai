@@ -1423,6 +1423,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun deleteAllData(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             val challengeDeleted = container.weeklyChallengeRepository.prepareForDeleteEverything()
+            // Stops the countdown and clears its saved state and alarm, which live outside DataStore.
+            container.workoutRestTimer.skip()
             container.prefs.clearAll()
             container.keyStore.clearAll(preserveWeeklyChallengeToken = !challengeDeleted)
             container.imageStore.clearAll()
