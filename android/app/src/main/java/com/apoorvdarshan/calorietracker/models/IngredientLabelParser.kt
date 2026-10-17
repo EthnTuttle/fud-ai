@@ -17,9 +17,20 @@ data class IngredientLabelItem(
     val text: String get() = segments.joinToString("") { it.text }
 }
 
+/** A scanned ingredient label split for display (#428). */
+data class IngredientLabel(
+    /** One entry per ingredient. Empty when the label does not make a useful list. */
+    val items: List<IngredientLabelItem>,
+    /**
+     * Sentences after the ingredient list, such as "May contain traces of nuts.", kept whole so
+     * precautionary statements never read as ingredients.
+     */
+    val notes: List<IngredientLabelItem> = emptyList()
+)
+
 /**
- * Turns an Open Food Facts `ingredients_text` into a readable list (#428). Display only: the
- * stored label and the allergen check keep using the raw text, and label entries never become
+ * Turns an Open Food Facts ingredient label into a readable list (#428). Display only: the
+ * stored label and the allergen check keep using the whole text, and label entries never become
  * macro-bearing meal ingredients. Mirrors iOS IngredientLabelParser; keep both in sync.
  */
 object IngredientLabelParser {
@@ -36,24 +47,74 @@ object IngredientLabelParser {
     // Includes no-break spaces, which the JVM's \s leaves out but iOS (ICU) collapses.
     private val whitespace = "[\\s\\u00A0\\u2007\\u202F]+".toRegex()
     private val combiningMarks = "\\p{Mn}+".toRegex()
+    private val allergenSpan = Regex(
+        "<span\\s+class\\s*=\\s*[\"']allergen[\"']\\s*>(.*?)</span\\s*>",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+    )
+    // The characters Swift's Character.isNewline accepts, so both platforms end sentences alike.
+    private val lineBreaks = setOf('\n', '\u000B', '\u000C', '\r', '\u0085', '\u2028', '\u2029')
+    private val markerEdgePunctuation = setOf(':', ';', ',', '.', '：', '；', '，', '、', '。')
+    private val spanTag = Regex("</?span\\b[^>]*>", RegexOption.IGNORE_CASE)
+    private val htmlEntity = Regex("&(#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|amp|lt|gt|quot|apos|nbsp);")
+    private val namedEntities = mapOf(
+        "amp" to "&", "lt" to "<", "gt" to ">", "quot" to "\"", "apos" to "'", "nbsp" to "\u00A0"
+    )
 
     /**
-     * The label split into entries. Empty when it does not make a useful list (a single entry,
-     * or more than [MAX_ITEMS]); show [segments] of the whole text instead.
+     * The label's first sentence split into entries, plus any later sentences as notes. The
+     * entries are empty when that sentence does not make a useful list (a single entry, or more
+     * than [MAX_ITEMS]); show [segments] of the whole text instead.
      */
-    fun items(text: String, sensitivities: List<String> = emptyList()): List<IngredientLabelItem> {
-        val parts = splitTopLevel(stripHeading(text))
-        if (parts.size <= 1 || parts.size > MAX_ITEMS) return emptyList()
-        return parts.map { part ->
-            val segments = segments(part)
-            IngredientLabelItem(
-                segments = segments,
-                matchesSensitivity = AllergenAnalysis.mentionsAny(
-                    sensitivities,
-                    segments.joinToString("") { it.text }
-                )
+    fun parse(text: String, sensitivities: List<String> = emptyList()): IngredientLabel {
+        val sentences = splitSentences(stripHeading(text))
+        val parts = splitTopLevel(sentences.firstOrNull().orEmpty())
+        if (parts.size <= 1 || parts.size > MAX_ITEMS) return IngredientLabel(emptyList())
+        return IngredientLabel(
+            items = parts.map { item(it, sensitivities) },
+            notes = sentences.drop(1)
+                .map { it.replace(whitespace, " ").trim() }
+                .filter { it.isNotEmpty() }
+                .map { item(it, sensitivities) }
+        )
+    }
+
+    /** The entries of [parse]. */
+    fun items(text: String, sensitivities: List<String> = emptyList()): List<IngredientLabelItem> =
+        parse(text, sensitivities).items
+
+    private fun item(text: String, sensitivities: List<String>): IngredientLabelItem {
+        val segments = segments(text)
+        return IngredientLabelItem(
+            segments = segments,
+            matchesSensitivity = AllergenAnalysis.mentionsAny(
+                sensitivities,
+                segments.joinToString("") { it.text }
             )
-        }
+        )
+    }
+
+    /**
+     * Open Food Facts' `ingredients_text` often carries no allergen markers; the allergens it
+     * flags are in `ingredients_text_with_allergens` as `<span class="allergen">` tags. Returns
+     * [plain] with those spans turned into the `_allergen_` markers [segments] reads, or [plain]
+     * itself when the markup is missing or does not match it word for word.
+     */
+    fun markingAllergens(plain: String?, markup: String?): String? {
+        val fallback = plain?.trim()?.takeIf { it.isNotEmpty() }
+        if (markup.isNullOrBlank()) return fallback
+        val marked = decodeEntities(
+            markup.replace(allergenSpan) { match ->
+                val inner = match.groupValues[1].replace(spanTag, "").replace("_", "")
+                // Spaces and punctuation at the edges stay outside the marker ("contenir: _cacahuète_").
+                val leading = inner.takeWhile(::isMarkerEdge)
+                val trailing = inner.drop(leading.length).takeLastWhile(::isMarkerEdge)
+                val core = inner.substring(leading.length, inner.length - trailing.length)
+                if (core.isEmpty()) inner else leading + "_" + core + "_" + trailing
+            }.replace(spanTag, "")
+        ).trim()
+        if (marked.isEmpty()) return fallback
+        if (fallback != null && comparable(marked) != comparable(fallback)) return fallback
+        return marked
     }
 
     /** Splits `_allergen_` markers into emphasized segments and drops stray underscores. */
@@ -102,6 +163,29 @@ object IngredientLabelParser {
         return trimmed.substring(colon + 1).trim()
     }
 
+    /**
+     * Splits at full stops outside brackets that end a sentence: followed by a line break, or by
+     * a capitalised word ("… acerola. May contain …"). Decimals ("8.7%") and abbreviations
+     * before a single letter ("vit. C") stay together. Each sentence keeps its full stop.
+     */
+    fun splitSentences(text: String): List<String> {
+        val sentences = mutableListOf<String>()
+        var start = 0
+        var depth = 0
+        text.forEachIndexed { index, char ->
+            when {
+                char in openers -> depth += 1
+                char in closers -> depth = maxOf(0, depth - 1)
+                depth == 0 && char == '.' && endsSentence(text, index) -> {
+                    sentences += text.substring(start, index + 1)
+                    start = index + 1
+                }
+            }
+        }
+        sentences += text.substring(start)
+        return sentences.map { it.trim() }.filter { it.isNotEmpty() }
+    }
+
     /** Splits on commas and semicolons outside brackets, keeping decimal commas ("8,7%"). */
     fun splitTopLevel(text: String): List<String> {
         val parts = mutableListOf<String>()
@@ -122,6 +206,37 @@ object IngredientLabelParser {
         parts += current.toString()
         return parts.map(::clean).filter { it.isNotEmpty() }
     }
+
+    private fun endsSentence(text: String, index: Int): Boolean {
+        var next = index + 1
+        if (next >= text.length || !text[next].isWhitespace()) return false
+        var lineBreak = false
+        while (next < text.length && text[next].isWhitespace()) {
+            if (text[next] in lineBreaks) lineBreak = true
+            next += 1
+        }
+        if (next >= text.length) return false
+        return lineBreak ||
+            (text[next].isUpperCase() && next + 1 < text.length && text[next + 1].isLetter())
+    }
+
+    private fun isMarkerEdge(char: Char): Boolean = char.isWhitespace() || char in markerEdgePunctuation
+
+    private fun decodeEntities(text: String): String = htmlEntity.replace(text) { match ->
+        val name = match.groupValues[1]
+        val codePoint = when {
+            name.startsWith("#x") || name.startsWith("#X") -> name.drop(2).toIntOrNull(16)
+            name.startsWith("#") -> name.drop(1).toIntOrNull()
+            else -> null
+        }
+        when {
+            codePoint != null && Character.isValidCodePoint(codePoint) -> String(Character.toChars(codePoint))
+            codePoint != null -> match.value
+            else -> namedEntities[name] ?: match.value
+        }
+    }
+
+    private fun comparable(text: String): String = text.replace("_", "").replace(whitespace, " ").trim()
 
     private fun isDecimalComma(text: String, index: Int): Boolean =
         text[index] == ',' && index > 0 && index + 1 < text.length &&

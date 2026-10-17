@@ -84,42 +84,48 @@ extension ProductInfoField {
     }
 }
 
-/// The scanned ingredient label as a readable list (#428), display only. Entries
-/// Open Food Facts marks as allergens are bold; entries matching the user's
-/// allergen sensitivities get a warning icon. Labels that do not split into a
-/// list stay a paragraph.
+/// The scanned ingredient label as a readable list (#428), display only.
+/// Allergens Open Food Facts flags are bold; entries matching the user's
+/// allergen sensitivities get a warning icon. Statements after the list
+/// ("May contain …") stay sentences below it, and labels that do not split into
+/// a list stay a paragraph.
 private struct IngredientLabelView: View {
     let title: LocalizedStringKey
     let text: String
     let sensitivities: [String]
 
     var body: some View {
-        let items = IngredientLabelParser.items(from: text, sensitivities: sensitivities)
+        let label = IngredientLabelParser.parse(text, sensitivities: sensitivities)
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
-            if items.isEmpty {
+            if label.items.isEmpty {
                 Text(Self.attributed(IngredientLabelParser.segments(in: text.trimmingCharacters(in: .whitespacesAndNewlines))))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                ForEach(Array(label.items.enumerated()), id: \.offset) { _, item in
                     row(for: item)
+                }
+                ForEach(Array(label.notes.enumerated()), id: \.offset) { index, note in
+                    row(for: note, bulleted: false)
+                        .padding(.top, index == 0 ? 4 : 0)
                 }
             }
         }
         .accessibilityElement(children: .contain)
     }
 
-    private func row(for item: IngredientLabelItem) -> some View {
+    /// Notes after the list are plain sentences without a bullet.
+    private func row(for item: IngredientLabelItem, bulleted: Bool = true) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             if item.matchesSensitivity {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
-            } else {
+            } else if bulleted {
                 Text(verbatim: "•")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)

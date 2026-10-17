@@ -4,6 +4,7 @@ import com.apoorvdarshan.calorietracker.BuildConfig
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
 import com.apoorvdarshan.calorietracker.models.FoodProductMetadata
+import com.apoorvdarshan.calorietracker.models.IngredientLabelParser
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
@@ -32,7 +33,7 @@ object OpenFoodFactsService {
         "product_quantity", "product_quantity_unit", "serving_size", "serving_quantity",
         "nutriments", "ingredients_text", "allergens_tags", "traces_tags",
         "nutriscore_grade", "nova_group", "ecoscore_grade", "labels_tags",
-        "categories_tags", "image_front_url"
+        "categories_tags", "image_front_url", "ingredients_text_with_allergens"
     ).joinToString(",")
     private val API_BASE_URL = "https://world.openfoodfacts.org/".toHttpUrl()
 
@@ -178,7 +179,10 @@ object OpenFoodFactsService {
         val metadata = FoodProductMetadata(
             barcode = barcode,
             packageQuantity = product.string("quantity"),
-            ingredientsText = product.string("ingredients_text"),
+            ingredientsText = IngredientLabelParser.markingAllergens(
+                plain = product.string("ingredients_text"),
+                markup = product.string("ingredients_text_with_allergens")
+            ),
             allergens = displayTags(product.stringList("allergens_tags"), 16),
             traces = displayTags(product.stringList("traces_tags"), 16),
             nutriScore = normalizedScore(product.string("nutriscore_grade")),

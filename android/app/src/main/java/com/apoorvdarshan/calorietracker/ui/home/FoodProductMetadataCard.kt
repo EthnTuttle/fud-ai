@@ -81,13 +81,14 @@ internal fun FoodProductMetadataCard(
 }
 
 /**
- * The scanned ingredient label as a readable list (#428), display only. Entries Open Food Facts
- * marks as allergens are bold; entries matching the user's allergen sensitivities get a warning
- * icon. Labels that do not split into a list stay a paragraph.
+ * The scanned ingredient label as a readable list (#428), display only. Allergens Open Food Facts
+ * flags are bold; entries matching the user's allergen sensitivities get a warning icon.
+ * Statements after the list ("May contain …") stay sentences below it, and labels that do not
+ * split into a list stay a paragraph.
  */
 @Composable
 private fun IngredientLabelSection(text: String, sensitivities: List<String>) {
-    val items = remember(text, sensitivities) { IngredientLabelParser.items(text, sensitivities) }
+    val label = remember(text, sensitivities) { IngredientLabelParser.parse(text, sensitivities) }
     val secondary = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
     val emphasis = MaterialTheme.colorScheme.onSurface
     Column(
@@ -102,7 +103,7 @@ private fun IngredientLabelSection(text: String, sensitivities: List<String>) {
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.semantics { heading() }
         )
-        if (items.isEmpty()) {
+        if (label.items.isEmpty()) {
             Text(
                 ingredientLabelText(IngredientLabelParser.segments(text.trim()), emphasis),
                 fontSize = 14.sp,
@@ -110,20 +111,36 @@ private fun IngredientLabelSection(text: String, sensitivities: List<String>) {
                 color = secondary
             )
         } else {
-            items.forEach { item -> IngredientLabelRow(item, secondary, emphasis) }
+            label.items.forEach { item -> IngredientLabelRow(item, secondary, emphasis) }
+            label.notes.forEachIndexed { index, note ->
+                IngredientLabelRow(
+                    note,
+                    secondary,
+                    emphasis,
+                    bulleted = false,
+                    modifier = if (index == 0) Modifier.padding(top = 4.dp) else Modifier
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun IngredientLabelRow(item: IngredientLabelItem, secondary: Color, emphasis: Color) {
+private fun IngredientLabelRow(
+    item: IngredientLabelItem,
+    secondary: Color,
+    emphasis: Color,
+    /** Notes after the list are plain sentences without a bullet. */
+    bulleted: Boolean = true,
+    modifier: Modifier = Modifier
+) {
     val description = if (item.matchesSensitivity) {
         "${AllergenAssessment.POSSIBLE_ALLERGEN.displayName}: ${item.text}"
     } else {
         item.text
     }
     Row(
-        modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+        modifier = modifier.clearAndSetSemantics { contentDescription = description },
         verticalAlignment = Alignment.Top
     ) {
         if (item.matchesSensitivity) {
@@ -135,10 +152,11 @@ private fun IngredientLabelRow(item: IngredientLabelItem, secondary: Color, emph
                     .padding(top = 3.dp)
                     .size(14.dp)
             )
-        } else {
+            Spacer(Modifier.width(8.dp))
+        } else if (bulleted) {
             Text("•", fontSize = 14.sp, lineHeight = 20.sp, color = secondary)
+            Spacer(Modifier.width(8.dp))
         }
-        Spacer(Modifier.width(8.dp))
         Text(
             ingredientLabelText(item.segments, emphasis),
             fontSize = 14.sp,

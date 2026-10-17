@@ -87,6 +87,120 @@ struct IngredientLabelParserTests {
         #expect(IngredientLabelParser.items(from: "Sugar, whey").map(\.matchesSensitivity) == [false, false])
     }
 
+    @Test
+    func openFoodFactsAllergenSpansBecomeMarkers() throws {
+        // Live Open Food Facts product 3017620422003: ingredients_text has no markers, the
+        // allergens it flags are only in ingredients_text_with_allergens (with stray </span>s).
+        let marked = IngredientLabelParser.markingAllergens(
+            plain: "Sucre, huile de palme, NOISETTES 13%, cacao maigre 7,4%, LAIT écrémé en poudre 6,6%, "
+                + "LACTOSERUM en poudre, émulsifiants: lécithines [SOJA), vanilline. Sans gluten.",
+            markup: #"Sucre, huile de palme, <span class="allergen">NOISETTES</span> </span>13%, cacao maigre 7,4%, "#
+                + #"<span class="allergen">LAIT</span> </span>écrémé en poudre 6,6%, "#
+                + #"<span class="allergen">LACTOSERUM</span> </span>en poudre, émulsifiants: lécithines "#
+                + #"[<span class="allergen">SOJA</span>), vanilline. Sans gluten."#
+        )
+        #expect(marked == "Sucre, huile de palme, _NOISETTES_ 13%, cacao maigre 7,4%, _LAIT_ écrémé en poudre 6,6%, "
+            + "_LACTOSERUM_ en poudre, émulsifiants: lécithines [_SOJA_), vanilline. Sans gluten.")
+
+        let label = IngredientLabelParser.parse(try #require(marked))
+        #expect(label.items.map(\.text) == [
+            "Sucre", "huile de palme", "NOISETTES 13%", "cacao maigre 7,4%", "LAIT écrémé en poudre 6,6%",
+            "LACTOSERUM en poudre", "émulsifiants: lécithines [SOJA)", "vanilline"
+        ])
+        #expect(label.items.flatMap { $0.segments.filter(\.isAllergen).map(\.text) } == [
+            "NOISETTES", "LAIT", "LACTOSERUM", "SOJA"
+        ])
+        #expect(label.notes.map(\.text) == ["Sans gluten."])
+
+        // Live product 4008400402222, and spans around multi-word lowercase allergens (7622210449283).
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "Zucker, Palmöl, HASELNÜSSE (13%), MAGERMILCHPULVER (8,7 %), Emulgator Lecithine (SOJA), Vanillin.",
+            markup: #"Zucker, Palmöl, <span class="allergen">HASELNÜSSE</span> (13%), "#
+                + #"<span class="allergen">MAGERMILCHPULVER</span> (8,7 %), Emulgator Lecithine "#
+                + #"(<span class="allergen">SOJA</span>), Vanillin."#
+        ) == "Zucker, Palmöl, _HASELNÜSSE_ (13%), _MAGERMILCHPULVER_ (8,7 %), Emulgator Lecithine (_SOJA_), Vanillin.")
+        // Live product 5000159484695 flags ": cacahuète"; the colon stays outside the marker.
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "vanille. (Peut contenir: cacahuète, noisette)",
+            markup: #"vanille. (Peut contenir<span class="allergen">: cacahuète</span>, "#
+                + #"<span class="allergen">noisette</span>)"#
+        ) == "vanille. (Peut contenir: _cacahuète_, _noisette_)")
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "émulsifiant (lécithines de soja), sel, perméat de lactosérum (de lait)",
+            markup: #"émulsifiant (<span class="allergen">lécithines de soja</span>), sel, "#
+                + #"perméat de lactosérum (de <span class="allergen">lait</span>)"#
+        ) == "émulsifiant (_lécithines de soja_), sel, perméat de lactosérum (de _lait_)")
+    }
+
+    @Test
+    func allergenMarkupFallsBackToThePlainLabelWhenItDoesNotMatch() {
+        // Open Food Facts turns contributor _markers_ into spans; keep them as markers.
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "Sucre, _lait_ écrémé",
+            markup: #"Sucre, <span class="allergen">lait</span> écrémé"#
+        ) == "Sucre, _lait_ écrémé")
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "Fish & chips, milk",
+            markup: #"Fish &amp; chips, <span class="allergen">milk</span>"#
+        ) == "Fish & chips, _milk_")
+        #expect(IngredientLabelParser.markingAllergens(plain: " Oats, milk ", markup: nil) == "Oats, milk")
+        #expect(IngredientLabelParser.markingAllergens(plain: "Oats, milk", markup: "  ") == "Oats, milk")
+        #expect(IngredientLabelParser.markingAllergens(plain: "Oats, milk", markup: "Oats, <b>milk</b>") == "Oats, milk")
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "Oats, milk",
+            markup: #"Avoine, <span class="allergen">lait</span>"#
+        ) == "Oats, milk")
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: nil,
+            markup: #"<span class="allergen">Oats</span>, salt"#
+        ) == "_Oats_, salt")
+        #expect(IngredientLabelParser.markingAllergens(plain: nil, markup: nil) == nil)
+    }
+
+    @Test
+    func statementsAfterTheListBecomeNotesInsteadOfEntries() {
+        // Live product 3228857000166: the precautionary statement must not read as ingredients.
+        let label = IngredientLabelParser.parse(
+            "Farine complète de BLÉ 36%, eau, farine de BLÉ 24%, huile de colza, sucre, arôme (contient alcool), "
+                + "sel, vinaigre, farine de SEIGLE maltée, levure, gluten de BLÉ, extrait d'acérola. Peut contenir "
+                + "des traces d'OEUFS, SOJA, LAIT, FRUITS À COQUE et GRAINES DE SÉSAME."
+        )
+        #expect(label.items.map(\.text) == [
+            "Farine complète de BLÉ 36%", "eau", "farine de BLÉ 24%", "huile de colza", "sucre",
+            "arôme (contient alcool)", "sel", "vinaigre", "farine de SEIGLE maltée", "levure",
+            "gluten de BLÉ", "extrait d'acérola"
+        ])
+        #expect(label.notes.map(\.text) == [
+            "Peut contenir des traces d'OEUFS, SOJA, LAIT, FRUITS À COQUE et GRAINES DE SÉSAME."
+        ])
+
+        let us = IngredientLabelParser.parse(
+            "Ingredients: Enriched flour, sugar, soybean oil. CONTAINS: WHEAT, SOY.",
+            sensitivities: ["soy"]
+        )
+        #expect(us.items.map(\.text) == ["Enriched flour", "sugar", "soybean oil"])
+        #expect(us.items.map(\.matchesSensitivity) == [false, false, true])
+        #expect(us.notes.map(\.text) == ["CONTAINS: WHEAT, SOY."])
+        #expect(us.notes.map(\.matchesSensitivity) == [true])
+
+        let footnote = IngredientLabelParser.parse("sugar, cocoa mass¹, salt.\n¹Rainforest Alliance Certified")
+        #expect(footnote.items.map(\.text) == ["sugar", "cocoa mass¹", "salt"])
+        #expect(footnote.notes.map(\.text) == ["¹Rainforest Alliance Certified"])
+    }
+
+    @Test
+    func fullStopsInsideTheListDoNotEndIt() {
+        #expect(IngredientLabelParser.parse(
+            "Sugar, vit. C, skimmed milk powder 8.7%, acids (citric acid. Malic acid)."
+        ) == IngredientLabel(
+            items: ["Sugar", "vit. C", "skimmed milk powder 8.7%", "acids (citric acid. Malic acid)"].map {
+                IngredientLabelItem(segments: [.init(text: $0, isAllergen: false)], matchesSensitivity: false)
+            }
+        ))
+        // A single-entry first sentence still falls back to a paragraph.
+        #expect(IngredientLabelParser.parse("Whole milk. May contain nuts, soy.").items.isEmpty)
+    }
+
     private func texts(_ label: String) -> [String] {
         IngredientLabelParser.items(from: label).map(\.text)
     }

@@ -100,5 +100,151 @@ class IngredientLabelParserTest {
         assertEquals(listOf(false, false), IngredientLabelParser.items("Sugar, whey").map { it.matchesSensitivity })
     }
 
+    @Test
+    fun openFoodFactsAllergenSpansBecomeMarkers() {
+        // Live Open Food Facts product 3017620422003: ingredients_text has no markers, the
+        // allergens it flags are only in ingredients_text_with_allergens (with stray </span>s).
+        val marked = IngredientLabelParser.markingAllergens(
+            plain = "Sucre, huile de palme, NOISETTES 13%, cacao maigre 7,4%, LAIT écrémé en poudre 6,6%, " +
+                "LACTOSERUM en poudre, émulsifiants: lécithines [SOJA), vanilline. Sans gluten.",
+            markup = "Sucre, huile de palme, <span class=\"allergen\">NOISETTES</span> </span>13%, cacao maigre 7,4%, " +
+                "<span class=\"allergen\">LAIT</span> </span>écrémé en poudre 6,6%, " +
+                "<span class=\"allergen\">LACTOSERUM</span> </span>en poudre, émulsifiants: lécithines " +
+                "[<span class=\"allergen\">SOJA</span>), vanilline. Sans gluten."
+        )
+        assertEquals(
+            "Sucre, huile de palme, _NOISETTES_ 13%, cacao maigre 7,4%, _LAIT_ écrémé en poudre 6,6%, " +
+                "_LACTOSERUM_ en poudre, émulsifiants: lécithines [_SOJA_), vanilline. Sans gluten.",
+            marked
+        )
+
+        val label = IngredientLabelParser.parse(marked!!)
+        assertEquals(
+            listOf(
+                "Sucre", "huile de palme", "NOISETTES 13%", "cacao maigre 7,4%", "LAIT écrémé en poudre 6,6%",
+                "LACTOSERUM en poudre", "émulsifiants: lécithines [SOJA)", "vanilline"
+            ),
+            label.items.map { it.text }
+        )
+        assertEquals(
+            listOf("NOISETTES", "LAIT", "LACTOSERUM", "SOJA"),
+            label.items.flatMap { item -> item.segments.filter { it.isAllergen }.map { it.text } }
+        )
+        assertEquals(listOf("Sans gluten."), label.notes.map { it.text })
+
+        // Live product 4008400402222, and spans around multi-word lowercase allergens (7622210449283).
+        assertEquals(
+            "Zucker, Palmöl, _HASELNÜSSE_ (13%), _MAGERMILCHPULVER_ (8,7 %), Emulgator Lecithine (_SOJA_), Vanillin.",
+            IngredientLabelParser.markingAllergens(
+                plain = "Zucker, Palmöl, HASELNÜSSE (13%), MAGERMILCHPULVER (8,7 %), Emulgator Lecithine (SOJA), Vanillin.",
+                markup = "Zucker, Palmöl, <span class=\"allergen\">HASELNÜSSE</span> (13%), " +
+                    "<span class=\"allergen\">MAGERMILCHPULVER</span> (8,7 %), Emulgator Lecithine " +
+                    "(<span class=\"allergen\">SOJA</span>), Vanillin."
+            )
+        )
+        // Live product 5000159484695 flags ": cacahuète"; the colon stays outside the marker.
+        assertEquals(
+            "vanille. (Peut contenir: _cacahuète_, _noisette_)",
+            IngredientLabelParser.markingAllergens(
+                plain = "vanille. (Peut contenir: cacahuète, noisette)",
+                markup = "vanille. (Peut contenir<span class=\"allergen\">: cacahuète</span>, " +
+                    "<span class=\"allergen\">noisette</span>)"
+            )
+        )
+        assertEquals(
+            "émulsifiant (_lécithines de soja_), sel, perméat de lactosérum (de _lait_)",
+            IngredientLabelParser.markingAllergens(
+                plain = "émulsifiant (lécithines de soja), sel, perméat de lactosérum (de lait)",
+                markup = "émulsifiant (<span class=\"allergen\">lécithines de soja</span>), sel, " +
+                    "perméat de lactosérum (de <span class=\"allergen\">lait</span>)"
+            )
+        )
+    }
+
+    @Test
+    fun allergenMarkupFallsBackToThePlainLabelWhenItDoesNotMatch() {
+        // Open Food Facts turns contributor _markers_ into spans; keep them as markers.
+        assertEquals(
+            "Sucre, _lait_ écrémé",
+            IngredientLabelParser.markingAllergens(
+                plain = "Sucre, _lait_ écrémé",
+                markup = "Sucre, <span class=\"allergen\">lait</span> écrémé"
+            )
+        )
+        assertEquals(
+            "Fish & chips, _milk_",
+            IngredientLabelParser.markingAllergens(
+                plain = "Fish & chips, milk",
+                markup = "Fish &amp; chips, <span class=\"allergen\">milk</span>"
+            )
+        )
+        assertEquals("Oats, milk", IngredientLabelParser.markingAllergens(plain = " Oats, milk ", markup = null))
+        assertEquals("Oats, milk", IngredientLabelParser.markingAllergens(plain = "Oats, milk", markup = "  "))
+        assertEquals(
+            "Oats, milk",
+            IngredientLabelParser.markingAllergens(plain = "Oats, milk", markup = "Oats, <b>milk</b>")
+        )
+        assertEquals(
+            "Oats, milk",
+            IngredientLabelParser.markingAllergens(
+                plain = "Oats, milk",
+                markup = "Avoine, <span class=\"allergen\">lait</span>"
+            )
+        )
+        assertEquals(
+            "_Oats_, salt",
+            IngredientLabelParser.markingAllergens(plain = null, markup = "<span class=\"allergen\">Oats</span>, salt")
+        )
+        assertEquals(null, IngredientLabelParser.markingAllergens(plain = null, markup = null))
+    }
+
+    @Test
+    fun statementsAfterTheListBecomeNotesInsteadOfEntries() {
+        // Live product 3228857000166: the precautionary statement must not read as ingredients.
+        val label = IngredientLabelParser.parse(
+            "Farine complète de BLÉ 36%, eau, farine de BLÉ 24%, huile de colza, sucre, arôme (contient alcool), " +
+                "sel, vinaigre, farine de SEIGLE maltée, levure, gluten de BLÉ, extrait d'acérola. Peut contenir " +
+                "des traces d'OEUFS, SOJA, LAIT, FRUITS À COQUE et GRAINES DE SÉSAME."
+        )
+        assertEquals(
+            listOf(
+                "Farine complète de BLÉ 36%", "eau", "farine de BLÉ 24%", "huile de colza", "sucre",
+                "arôme (contient alcool)", "sel", "vinaigre", "farine de SEIGLE maltée", "levure",
+                "gluten de BLÉ", "extrait d'acérola"
+            ),
+            label.items.map { it.text }
+        )
+        assertEquals(
+            listOf("Peut contenir des traces d'OEUFS, SOJA, LAIT, FRUITS À COQUE et GRAINES DE SÉSAME."),
+            label.notes.map { it.text }
+        )
+
+        val us = IngredientLabelParser.parse(
+            "Ingredients: Enriched flour, sugar, soybean oil. CONTAINS: WHEAT, SOY.",
+            sensitivities = listOf("soy")
+        )
+        assertEquals(listOf("Enriched flour", "sugar", "soybean oil"), us.items.map { it.text })
+        assertEquals(listOf(false, false, true), us.items.map { it.matchesSensitivity })
+        assertEquals(listOf("CONTAINS: WHEAT, SOY."), us.notes.map { it.text })
+        assertEquals(listOf(true), us.notes.map { it.matchesSensitivity })
+
+        val footnote = IngredientLabelParser.parse("sugar, cocoa mass¹, salt.\n¹Rainforest Alliance Certified")
+        assertEquals(listOf("sugar", "cocoa mass¹", "salt"), footnote.items.map { it.text })
+        assertEquals(listOf("¹Rainforest Alliance Certified"), footnote.notes.map { it.text })
+    }
+
+    @Test
+    fun fullStopsInsideTheListDoNotEndIt() {
+        assertEquals(
+            IngredientLabel(
+                items = listOf("Sugar", "vit. C", "skimmed milk powder 8.7%", "acids (citric acid. Malic acid)")
+                    .map { IngredientLabelItem(listOf(IngredientLabelItem.Segment(it, isAllergen = false))) }
+            ),
+            IngredientLabelParser.parse("Sugar, vit. C, skimmed milk powder 8.7%, acids (citric acid. Malic acid).")
+        )
+        // A single-entry first sentence still falls back to a paragraph.
+        assertTrue(IngredientLabelParser.parse("Whole milk. May contain nuts, soy.").items.isEmpty())
+    }
+
     private fun texts(label: String): List<String> = IngredientLabelParser.items(label).map { it.text }
 }
