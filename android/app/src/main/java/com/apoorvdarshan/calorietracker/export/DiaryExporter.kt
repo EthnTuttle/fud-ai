@@ -101,7 +101,7 @@ object DiaryExporter {
         val content = when (format) {
             DiaryFormat.JSON -> json(days, lo, hi, targets, water)
             DiaryFormat.MARKDOWN -> markdown(days, lo, hi, targets, mealDisplay, water, energyUnit)
-            DiaryFormat.CSV -> csv(days, water)
+            DiaryFormat.CSV -> csv(days, water, energyUnit)
         }
         val name = "Fud-Food-Diary-${dayFmt.format(lo)}_to_${dayFmt.format(hi)}.${format.ext}"
         return name to content
@@ -285,9 +285,16 @@ object DiaryExporter {
 
     // --- CSV ---
 
-    private fun csv(byDay: Map<LocalDate, List<FoodEntry>>, water: Map<LocalDate, List<WaterEntry>>): String {
+    private fun csv(
+        byDay: Map<LocalDate, List<FoodEntry>>,
+        water: Map<LocalDate, List<WaterEntry>>,
+        energyUnit: EnergyUnit,
+    ): String {
+        // Values stay the stored kcal. A kJ user gets the unit in the column name,
+        // like the other unit-suffixed columns; kcal exports keep the original header.
+        val caloriesColumn = if (energyUnit == EnergyUnit.KJ) "calories_kcal" else "calories"
         val sb = StringBuilder()
-        sb.append("date,meal,time,food,weight_g,calories,protein_g,carbs_g,fat_g,sugar_g,added_sugar_g,fiber_g,saturated_fat_g,monounsaturated_fat_g,polyunsaturated_fat_g,cholesterol_mg,caffeine_mg,sodium_mg,potassium_mg,trans_fat_g,calcium_mg,iron_mg,magnesium_mg,zinc_mg,vitamin_a_mcg,vitamin_c_mg,vitamin_d_mcg,vitamin_b12_mcg,vitamin_e_mg,vitamin_k_mcg,folate_mcg,omega3_g,source,note,ingredients,entry_type,water_ml,water_total_ml\n")
+        sb.append("date,meal,time,food,weight_g,$caloriesColumn,protein_g,carbs_g,fat_g,sugar_g,added_sugar_g,fiber_g,saturated_fat_g,monounsaturated_fat_g,polyunsaturated_fat_g,cholesterol_mg,caffeine_mg,sodium_mg,potassium_mg,trans_fat_g,calcium_mg,iron_mg,magnesium_mg,zinc_mg,vitamin_a_mcg,vitamin_c_mg,vitamin_d_mcg,vitamin_b12_mcg,vitamin_e_mg,vitamin_k_mcg,folate_mcg,omega3_g,source,note,ingredients,entry_type,water_ml,water_total_ml\n")
         for ((date, dayEntries) in byDay) {
             val d = dayFmt.format(date)
             for ((mt, items) in meals(dayEntries)) {

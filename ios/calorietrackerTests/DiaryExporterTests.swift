@@ -197,6 +197,25 @@ struct DiaryExporterTests {
         #expect((days[0]["targets"] as? [String: Any])?["calories"] as? Int == 2_000)
     }
 
+    @Test func csvNamesTheKilocalorieColumnForKilojouleUsers() throws {
+        let fixture = makeFixture()
+        func rows(_ unit: EnergyUnit) throws -> [[String]] {
+            let export = try #require(DiaryExporter.build(from: fixture.date, to: fixture.date, format: .csv,
+                entries: [fixture.entry], profile: makeProfile(), energyUnit: unit))
+            return String(decoding: export.data, as: UTF8.self)
+                .split(separator: "\n")
+                .map { $0.split(separator: ",", omittingEmptySubsequences: false).map(String.init) }
+        }
+        let kj = try rows(.kj)
+        let kcal = try rows(.kcal)
+        // Only the header name changes: same column position, same stored kcal values.
+        #expect(kj[0][5] == "calories_kcal")
+        #expect(kcal[0][5] == "calories")
+        #expect(kj[0].count == kcal[0].count)
+        #expect(kj[1][5] == "120")
+        #expect(Array(kj.dropFirst()) == Array(kcal.dropFirst()))
+    }
+
     private func makeProfile() -> UserProfile {
         UserProfile(
             name: "Exporter",

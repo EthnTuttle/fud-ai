@@ -109,7 +109,8 @@ private fun AllMetricsWide(snapshot: WidgetSnapshot) {
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
-                text = "${snapshot.displayCaloriesRemaining} left",
+                // Same unit-aware text as the tall layout, so kJ numbers name their unit.
+                text = energyLeftText(snapshot),
                 style = TextStyle(
                     color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                     fontWeight = FontWeight.Medium,

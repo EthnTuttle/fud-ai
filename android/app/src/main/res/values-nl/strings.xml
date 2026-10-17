@@ -705,9 +705,9 @@
     <string name="notif_streak_text">Houd je streak gaande — log iets van vandaag.</string>
     <string name="notif_summary_title">De samenvatting van vandaag is klaar</string>
     <string name="notif_summary_text">Tik om te zien hoe de macro\'s van vandaag uitkwamen.</string>
-    <string name="notif_summary_deficit_kj">%1$d kJ gegeten · %2$d verbrand · geschat tekort %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">%1$d kJ gegeten · %2$d verbrand · geschat overschot %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">%1$d kJ gegeten · %2$d verbrand · geschat in balans</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ gegeten · %2$d kJ verbrand · geschat tekort %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ gegeten · %2$d kJ verbrand · geschat overschot %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ gegeten · %2$d kJ verbrand · geschat in balans</string>
 
     <string name="onboarding_goal_optional">Doel (optioneel)</string>
     <string name="onboarding_goal_set_later">Je kunt dit later in Instellingen instellen.</string>

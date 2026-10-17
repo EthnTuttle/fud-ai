@@ -705,9 +705,9 @@
     <string name="notif_streak_text">Halte deine Serie aufrecht — erfasse etwas von heute.</string>
     <string name="notif_summary_title">Die heutige Zusammenfassung ist bereit</string>
     <string name="notif_summary_text">Tippe, um zu sehen, wie deine heutigen Makros aussahen.</string>
-    <string name="notif_summary_deficit_kj">%1$d kJ gegessen · %2$d verbrannt · geschätztes Defizit %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">%1$d kJ gegessen · %2$d verbrannt · geschätzter Überschuss %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">%1$d kJ gegessen · %2$d verbrannt · geschätzt ausgeglichen</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ gegessen · %2$d kJ verbrannt · geschätztes Defizit %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ gegessen · %2$d kJ verbrannt · geschätzter Überschuss %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ gegessen · %2$d kJ verbrannt · geschätzt ausgeglichen</string>
 
     <string name="onboarding_goal_optional">Ziel (optional)</string>
     <string name="onboarding_goal_set_later">Du kannst dies später in den Einstellungen festlegen.</string>

@@ -2,12 +2,14 @@ package com.apoorvdarshan.calorietracker.models
 
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.services.ai.CoachContext
+import com.apoorvdarshan.calorietracker.services.voice.RepoFiles
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 import java.time.Instant
 import java.util.Locale
 
@@ -144,5 +146,27 @@ class EnergyUnitTest {
         assertEquals(8_368, kj.displayCalorieGoal)
         assertEquals(8_368 - 5_217, kj.displayCaloriesRemaining)
         assertEquals(EnergyUnit.KJ.storageValue, kj.emptyForToday().energyUnitRaw)
+    }
+
+    @Test
+    fun kilojouleDailySummaryNamesTheUnitOfEveryAmountInEveryLanguage() {
+        val names = listOf("notif_summary_deficit_kj", "notif_summary_surplus_kj", "notif_summary_balanced_kj")
+        val files = RepoFiles.find("src/main/res").listFiles().orEmpty()
+            .map { File(it, "strings.xml") }.filter { it.exists() }
+        var checked = 0
+        for (file in files) {
+            val xml = file.readText()
+            for (name in names) {
+                val text = Regex("<string name=\"$name\">(.*?)</string>").find(xml)?.groupValues?.get(1)
+                    ?: error("${file.parentFile.name} is missing $name")
+                // Eaten, burned and the difference are all converted, so each one names kJ.
+                val amounts = Regex("%\\d\\\$d").findAll(text).count()
+                val labelled = Regex("%\\d\\\$d (kJ|кДж)").findAll(text).count()
+                assertEquals("${file.parentFile.name}/$name: $text", amounts, labelled)
+                checked++
+            }
+        }
+        // English plus the 18 app languages.
+        assertEquals(19 * names.size, checked)
     }
 }

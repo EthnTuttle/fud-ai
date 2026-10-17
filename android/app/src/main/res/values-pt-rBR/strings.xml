@@ -706,9 +706,9 @@
     <string name="notif_streak_text">Mantenha sua sequência — registre algo de hoje.</string>
     <string name="notif_summary_title">O resumo de hoje está pronto</string>
     <string name="notif_summary_text">Toque para ver como ficaram seus macros hoje.</string>
-    <string name="notif_summary_deficit_kj">Consumido: %1$d kJ · Gasto: %2$d · Déficit estimado: %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">Consumido: %1$d kJ · Gasto: %2$d · Superávit estimado: %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">Consumido: %1$d kJ · Gasto: %2$d · Equilíbrio estimado</string>
+    <string name="notif_summary_deficit_kj">Consumido: %1$d kJ · Gasto: %2$d kJ · Déficit estimado: %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Consumido: %1$d kJ · Gasto: %2$d kJ · Superávit estimado: %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Consumido: %1$d kJ · Gasto: %2$d kJ · Equilíbrio estimado</string>
 
     <string name="onboarding_goal_optional">Objetivo (opcional)</string>
     <string name="onboarding_goal_set_later">Você pode definir isso mais tarde em Ajustes.</string>

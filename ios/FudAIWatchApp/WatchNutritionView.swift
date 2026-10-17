@@ -19,6 +19,7 @@ struct WatchNutritionView: View {
             WatchCalorieGauge(
                 eaten: receiver.snapshot.displayCalories,
                 remaining: receiver.snapshot.displayCaloriesRemaining,
+                usesKilojoules: receiver.snapshot.usesKilojoules,
                 progress: receiver.snapshot.calorieProgress,
                 gradient: themeGradient
             )
@@ -130,6 +131,8 @@ private struct WatchWaterLogView: View {
 private struct WatchCalorieGauge: View {
     let eaten: Int
     let remaining: Int
+    /// kJ numbers are about 4x the kcal ones, so they always carry their unit.
+    let usesKilojoules: Bool
     let progress: Double
     let gradient: [Color]
 
@@ -169,8 +172,14 @@ private struct WatchCalorieGauge: View {
                 HStack(spacing: 3) {
                     Image(systemName: "flame.fill")
                         .font(.system(size: 9, weight: .semibold))
-                    Text("\(remaining) left")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    Group {
+                        if usesKilojoules {
+                            Text("\(remaining) kJ left")
+                        } else {
+                            Text("\(remaining) left")
+                        }
+                    }
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
                 }
                 .foregroundStyle(gradient.first ?? .pink)
                 .lineLimit(1)

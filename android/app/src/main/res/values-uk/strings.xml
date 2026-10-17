@@ -1006,9 +1006,9 @@
     <string name="notif_summary_deficit">Спожито %1$d ккал · Спалено %2$d · Розрахунковий дефіцит %3$d ккал</string>
     <string name="notif_summary_surplus">Спожито %1$d ккал · Спалено %2$d · Розрахунковий профіцит %3$d ккал</string>
     <string name="notif_summary_balanced">Спожито %1$d ккал · Спалено %2$d · Розрахунковий баланс</string>
-    <string name="notif_summary_deficit_kj">Спожито %1$d кДж · Спалено %2$d · Розрахунковий дефіцит %3$d кДж</string>
-    <string name="notif_summary_surplus_kj">Спожито %1$d кДж · Спалено %2$d · Розрахунковий профіцит %3$d кДж</string>
-    <string name="notif_summary_balanced_kj">Спожито %1$d кДж · Спалено %2$d · Розрахунковий баланс</string>
+    <string name="notif_summary_deficit_kj">Спожито %1$d кДж · Спалено %2$d кДж · Розрахунковий дефіцит %3$d кДж</string>
+    <string name="notif_summary_surplus_kj">Спожито %1$d кДж · Спалено %2$d кДж · Розрахунковий профіцит %3$d кДж</string>
+    <string name="notif_summary_balanced_kj">Спожито %1$d кДж · Спалено %2$d кДж · Розрахунковий баланс</string>
 
     <string name="widget_all_metrics_label">Fud AI Сьогодні</string>
     <string name="widget_all_metrics_description">Переглядайте сьогоднішні калорії, білки, вуглеводи та жири в одному віджеті.</string>

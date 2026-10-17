@@ -709,9 +709,9 @@
     <string name="notif_streak_text">Поддержите свою серию — добавьте запись за сегодня.</string>
     <string name="notif_summary_title">Сводка за сегодня готова</string>
     <string name="notif_summary_text">Коснитесь, чтобы увидеть, как сложились макросы за день.</string>
-    <string name="notif_summary_deficit_kj">Съедено %1$d кДж · сожжено %2$d · расчётный дефицит %3$d кДж</string>
-    <string name="notif_summary_surplus_kj">Съедено %1$d кДж · сожжено %2$d · расчётный профицит %3$d кДж</string>
-    <string name="notif_summary_balanced_kj">Съедено %1$d кДж · сожжено %2$d · расчётный баланс</string>
+    <string name="notif_summary_deficit_kj">Съедено %1$d кДж · сожжено %2$d кДж · расчётный дефицит %3$d кДж</string>
+    <string name="notif_summary_surplus_kj">Съедено %1$d кДж · сожжено %2$d кДж · расчётный профицит %3$d кДж</string>
+    <string name="notif_summary_balanced_kj">Съедено %1$d кДж · сожжено %2$d кДж · расчётный баланс</string>
 
     <string name="onboarding_goal_optional">Цель (необязательно)</string>
     <string name="onboarding_goal_set_later">Можно настроить позже в Настройках.</string>

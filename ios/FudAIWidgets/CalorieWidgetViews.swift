@@ -215,8 +215,15 @@ private struct MediumCalorieView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")
                         .font(.system(size: 10, weight: .semibold))
-                    Text("\(snapshot.displayCaloriesRemaining) left")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                    Group {
+                        // kJ numbers are about 4x the kcal ones, so they always carry their unit.
+                        if snapshot.usesKilojoules {
+                            Text("\(snapshot.displayCaloriesRemaining) kJ left")
+                        } else {
+                            Text("\(snapshot.caloriesRemaining) left")
+                        }
+                    }
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
                 }
                 .foregroundStyle(snapshot.themeColor)
                 .lineLimit(1)

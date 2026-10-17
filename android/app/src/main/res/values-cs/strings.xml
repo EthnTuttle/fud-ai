@@ -1074,9 +1074,9 @@
     <string name="notif_summary_deficit">Snědeno %1$d kcal · spáleno %2$d · odhadovaný deficit %3$d kcal</string>
     <string name="notif_summary_surplus">Snědeno %1$d kcal · spáleno %2$d · odhadovaný přebytek %3$d kcal</string>
     <string name="notif_summary_balanced">Snědeno %1$d kcal · spáleno %2$d · odhadem vyrovnáno</string>
-    <string name="notif_summary_deficit_kj">Snědeno %1$d kJ · spáleno %2$d · odhadovaný deficit %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">Snědeno %1$d kJ · spáleno %2$d · odhadovaný přebytek %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">Snědeno %1$d kJ · spáleno %2$d · odhadem vyrovnáno</string>
+    <string name="notif_summary_deficit_kj">Snědeno %1$d kJ · spáleno %2$d kJ · odhadovaný deficit %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Snědeno %1$d kJ · spáleno %2$d kJ · odhadovaný přebytek %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Snědeno %1$d kJ · spáleno %2$d kJ · odhadem vyrovnáno</string>
     <string name="import_diary_title">Import deníku jídel</string>
     <string name="import_entries">Záznamy jídel</string>
     <string name="import_date_range">Období</string>

@@ -107,7 +107,7 @@ enum DiaryExporter {
         switch format {
         case .json: text = json(days, start: start, end: end, targets: targets)
         case .markdown: text = markdown(days, start: start, end: end, targets: targets, energyUnit: energyUnit)
-        case .csv: text = csv(days)
+        case .csv: text = csv(days, energyUnit: energyUnit)
         }
 
         let name = "Fud-Food-Diary-\(dayFmt.string(from: start))_to_\(dayFmt.string(from: end)).\(format.fileExtension)"
@@ -303,8 +303,11 @@ enum DiaryExporter {
 
     // MARK: - CSV
 
-    private static func csv(_ days: [DayBundle]) -> String {
-        var s = "date,meal,time,food,weight_g,calories,protein_g,carbs_g,fat_g,sugar_g,added_sugar_g,fiber_g,saturated_fat_g,monounsaturated_fat_g,polyunsaturated_fat_g,cholesterol_mg,caffeine_mg,sodium_mg,potassium_mg,trans_fat_g,calcium_mg,iron_mg,magnesium_mg,zinc_mg,vitamin_a_mcg,vitamin_c_mg,vitamin_d_mcg,vitamin_b12_mcg,vitamin_e_mg,vitamin_k_mcg,folate_mcg,omega3_g,source,note,ingredients,entry_type,water_ml,water_total_ml\n"
+    private static func csv(_ days: [DayBundle], energyUnit: EnergyUnit) -> String {
+        // Values stay the stored kcal. A kJ user gets the unit in the column name,
+        // like the other unit-suffixed columns; kcal exports keep the original header.
+        let caloriesColumn = energyUnit == .kj ? "calories_kcal" : "calories"
+        var s = "date,meal,time,food,weight_g,\(caloriesColumn),protein_g,carbs_g,fat_g,sugar_g,added_sugar_g,fiber_g,saturated_fat_g,monounsaturated_fat_g,polyunsaturated_fat_g,cholesterol_mg,caffeine_mg,sodium_mg,potassium_mg,trans_fat_g,calcium_mg,iron_mg,magnesium_mg,zinc_mg,vitamin_a_mcg,vitamin_c_mg,vitamin_d_mcg,vitamin_b12_mcg,vitamin_e_mg,vitamin_k_mcg,folate_mcg,omega3_g,source,note,ingredients,entry_type,water_ml,water_total_ml\n"
         for bundle in days {
             let date = dayFmt.string(from: bundle.date)
             for g in bundle.groups {

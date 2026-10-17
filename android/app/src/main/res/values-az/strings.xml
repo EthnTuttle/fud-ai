@@ -705,9 +705,9 @@
     <string name="notif_streak_text">Silsilənizi davam etdirin — bu gündən nəsə qeyd edin.</string>
     <string name="notif_summary_title">Bu günün xülasəsi hazırdır</string>
     <string name="notif_summary_text">Bu günün makrolarının necə düzüldüyünü görmək üçün toxunun.</string>
-    <string name="notif_summary_deficit_kj">%1$d kJ qəbul edildi · %2$d yandırıldı · təxmini kəsir %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">%1$d kJ qəbul edildi · %2$d yandırıldı · təxmini artıq %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">%1$d kJ qəbul edildi · %2$d yandırıldı · təxmini balans</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ qəbul edildi · %2$d kJ yandırıldı · təxmini kəsir %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ qəbul edildi · %2$d kJ yandırıldı · təxmini artıq %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ qəbul edildi · %2$d kJ yandırıldı · təxmini balans</string>
 
     <string name="onboarding_goal_optional">Hədəf (isteğe bağlı)</string>
     <string name="onboarding_goal_set_later">Bunu sonra Tənzimləmələrdə təyin edə bilərsiniz.</string>

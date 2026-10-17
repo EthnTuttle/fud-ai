@@ -708,9 +708,9 @@
     <string name="notif_streak_text">Menține-ți seria — înregistrează ceva din ziua de azi.</string>
     <string name="notif_summary_title">Rezumatul de azi e gata</string>
     <string name="notif_summary_text">Atinge pentru a vedea cum s-au aliniat macronutrienții de azi.</string>
-    <string name="notif_summary_deficit_kj">Consumat: %1$d kJ · Ars: %2$d · Deficit estimat: %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">Consumat: %1$d kJ · Ars: %2$d · Surplus estimat: %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">Consumat: %1$d kJ · Ars: %2$d · Echilibru estimat</string>
+    <string name="notif_summary_deficit_kj">Consumat: %1$d kJ · Ars: %2$d kJ · Deficit estimat: %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Consumat: %1$d kJ · Ars: %2$d kJ · Surplus estimat: %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Consumat: %1$d kJ · Ars: %2$d kJ · Echilibru estimat</string>
 
     <string name="onboarding_goal_optional">Țintă (opțional)</string>
     <string name="onboarding_goal_set_later">Poți seta asta mai târziu în Setări.</string>

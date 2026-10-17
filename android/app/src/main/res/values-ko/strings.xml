@@ -704,9 +704,9 @@
     <string name="notif_streak_text">연속 기록을 유지하세요 — 오늘 먹은 음식을 기록해 보세요.</string>
     <string name="notif_summary_title">오늘의 요약이 준비되었어요</string>
     <string name="notif_summary_text">탭하여 오늘의 매크로 결과를 확인하세요.</string>
-    <string name="notif_summary_deficit_kj">섭취 %1$d kJ · 소모 %2$d · 예상 적자 %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">섭취 %1$d kJ · 소모 %2$d · 예상 잉여 %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">섭취 %1$d kJ · 소모 %2$d · 예상 균형</string>
+    <string name="notif_summary_deficit_kj">섭취 %1$d kJ · 소모 %2$d kJ · 예상 적자 %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">섭취 %1$d kJ · 소모 %2$d kJ · 예상 잉여 %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">섭취 %1$d kJ · 소모 %2$d kJ · 예상 균형</string>
 
     <string name="onboarding_goal_optional">목표(선택)</string>
     <string name="onboarding_goal_set_later">나중에 설정에서 설정할 수 있습니다.</string>

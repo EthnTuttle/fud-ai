@@ -717,9 +717,9 @@
     <string name="notif_streak_text">حافظ على سلسلتك — سجّل شيئًا من اليوم.</string>
     <string name="notif_summary_title">ملخص اليوم جاهز</string>
     <string name="notif_summary_text">اضغط لرؤية كيف اتسقت ماكروهات اليوم.</string>
-    <string name="notif_summary_deficit_kj">تم تناول %1$d kJ · حُرق %2$d · عجز تقديري %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">تم تناول %1$d kJ · حُرق %2$d · فائض تقديري %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">تم تناول %1$d kJ · حُرق %2$d · توازن تقديري</string>
+    <string name="notif_summary_deficit_kj">تم تناول %1$d kJ · حُرق %2$d kJ · عجز تقديري %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">تم تناول %1$d kJ · حُرق %2$d kJ · فائض تقديري %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">تم تناول %1$d kJ · حُرق %2$d kJ · توازن تقديري</string>
 
     <string name="onboarding_goal_optional">الهدف (اختياري)</string>
     <string name="onboarding_goal_set_later">يمكنك ضبط هذا لاحقاً في الإعدادات.</string>

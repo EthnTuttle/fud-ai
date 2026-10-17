@@ -1011,9 +1011,9 @@
     <string name="notif_summary_deficit">%1$d kcal yenildi · %2$d yakıldı · %3$d kcal tahmini açık</string>
     <string name="notif_summary_surplus">%1$d kcal yenildi · %2$d yakıldı · %3$d kcal tahmini fazla</string>
     <string name="notif_summary_balanced">%1$d kcal yenildi · %2$d yakıldı · tahmini denge</string>
-    <string name="notif_summary_deficit_kj">%1$d kJ yenildi · %2$d yakıldı · %3$d kJ tahmini açık</string>
-    <string name="notif_summary_surplus_kj">%1$d kJ yenildi · %2$d yakıldı · %3$d kJ tahmini fazla</string>
-    <string name="notif_summary_balanced_kj">%1$d kJ yenildi · %2$d yakıldı · tahmini denge</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ yenildi · %2$d kJ yakıldı · %3$d kJ tahmini açık</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ yenildi · %2$d kJ yakıldı · %3$d kJ tahmini fazla</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ yenildi · %2$d kJ yakıldı · tahmini denge</string>
 
     <string name="widget_all_metrics_label">Fud AI Bugün</string>
     <string name="widget_all_metrics_description">Bugünün kalori, protein, karbonhidrat ve yağını tek widget\'ta görün.</string>

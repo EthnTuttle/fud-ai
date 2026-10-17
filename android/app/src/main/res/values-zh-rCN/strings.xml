@@ -704,9 +704,9 @@
     <string name="notif_streak_text">保持连续记录——记录今天吃的内容。</string>
     <string name="notif_summary_title">今日摘要已就绪</string>
     <string name="notif_summary_text">点按查看今日宏量营养素的完成情况。</string>
-    <string name="notif_summary_deficit_kj">已摄入 %1$d kJ · 已消耗 %2$d · 预计缺口 %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">已摄入 %1$d kJ · 已消耗 %2$d · 预计盈余 %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">已摄入 %1$d kJ · 已消耗 %2$d · 预计平衡</string>
+    <string name="notif_summary_deficit_kj">已摄入 %1$d kJ · 已消耗 %2$d kJ · 预计缺口 %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">已摄入 %1$d kJ · 已消耗 %2$d kJ · 预计盈余 %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">已摄入 %1$d kJ · 已消耗 %2$d kJ · 预计平衡</string>
 
     <string name="onboarding_goal_optional">目标(可选)</string>
     <string name="onboarding_goal_set_later">稍后可以在设置中设置。</string>

@@ -714,9 +714,9 @@
     <string name="notif_streak_text">Utrzymaj serię — zapisz coś z dzisiaj.</string>
     <string name="notif_summary_title">Dzisiejsze podsumowanie jest gotowe</string>
     <string name="notif_summary_text">Dotknij, aby zobaczyć, jak ułożyły się dzisiejsze makro.</string>
-    <string name="notif_summary_deficit_kj">Zjedzono %1$d kJ · spalono %2$d · szacowany deficyt %3$d kJ</string>
-    <string name="notif_summary_surplus_kj">Zjedzono %1$d kJ · spalono %2$d · szacowana nadwyżka %3$d kJ</string>
-    <string name="notif_summary_balanced_kj">Zjedzono %1$d kJ · spalono %2$d · szacunkowo w równowadze</string>
+    <string name="notif_summary_deficit_kj">Zjedzono %1$d kJ · spalono %2$d kJ · szacowany deficyt %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Zjedzono %1$d kJ · spalono %2$d kJ · szacowana nadwyżka %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Zjedzono %1$d kJ · spalono %2$d kJ · szacunkowo w równowadze</string>
 
     <string name="onboarding_goal_optional">Cel (opcjonalnie)</string>
     <string name="onboarding_goal_set_later">Możesz ustawić to później w Ustawieniach.</string>
