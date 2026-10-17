@@ -158,6 +158,7 @@
     <string name="nav_progress">Progreso</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Ajustes</string>
+    <string name="nav_workouts">Entrenamientos</string>
     <string name="nav_about">Acerca de</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -523,6 +524,7 @@
     <string name="settings_height_unit">Unidad de altura</string>
     <string name="settings_weight_unit">Unidad de peso</string>
     <string name="settings_week_starts">La semana empieza el</string>
+    <string name="settings_meal_times_customize">Personalizar</string>
     <string name="settings_week_monday">Lunes</string>
     <string name="settings_week_sunday">Domingo</string>
     <string name="settings_notifications">Notificaciones</string>

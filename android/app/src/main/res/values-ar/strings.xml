@@ -158,6 +158,7 @@
     <string name="nav_progress">التقدم</string>
     <string name="nav_coach">المدرب</string>
     <string name="nav_settings">الإعدادات</string>
+    <string name="nav_workouts">التمارين</string>
     <string name="nav_about">حول</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -534,6 +535,7 @@
     <string name="settings_height_unit">وحدة الطول</string>
     <string name="settings_weight_unit">وحدة الوزن</string>
     <string name="settings_week_starts">يبدأ الأسبوع يوم</string>
+    <string name="settings_meal_times_customize">تخصيص</string>
     <string name="settings_week_monday">الإثنين</string>
     <string name="settings_week_sunday">الأحد</string>
     <string name="settings_notifications">الإشعارات</string>

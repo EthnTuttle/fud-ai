@@ -528,6 +528,7 @@
     <string name="settings_height_unit">Единица роста</string>
     <string name="settings_weight_unit">Единица веса</string>
     <string name="settings_week_starts">Начало недели</string>
+    <string name="settings_meal_times_customize">Настроить</string>
     <string name="settings_week_monday">Понедельник</string>
     <string name="settings_week_sunday">Воскресенье</string>
     <string name="settings_notifications">Уведомления</string>

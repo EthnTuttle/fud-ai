@@ -158,6 +158,7 @@
     <string name="nav_progress">Progres</string>
     <string name="nav_coach">Antrenor</string>
     <string name="nav_settings">Setări</string>
+    <string name="nav_workouts">Antrenamente</string>
     <string name="nav_about">Despre</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -525,6 +526,7 @@
     <string name="settings_height_unit">Unitate de înălțime</string>
     <string name="settings_weight_unit">Unitate de greutate</string>
     <string name="settings_week_starts">Săptămâna începe în</string>
+    <string name="settings_meal_times_customize">Personalizează</string>
     <string name="settings_week_monday">Luni</string>
     <string name="settings_week_sunday">Duminică</string>
     <string name="settings_notifications">Notificări</string>
