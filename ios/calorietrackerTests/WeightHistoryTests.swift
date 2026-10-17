@@ -138,6 +138,20 @@ struct WeightHistoryTests {
         #expect(HealthKitManager.weightChangesImport(hasAnchor: true, backfilledVersion: 9, typesVersion: 9) == .newSamples)
     }
 
+    // MARK: - Logging older weigh-ins
+
+    @Test func backdatedWeighInNeverCountsAsReachingTheGoal() {
+        let latest = WeightEntry(date: Date(timeIntervalSince1970: 1_790_000_000), weightKg: 80)
+        let older = WeightEntry(date: latest.date.addingTimeInterval(-86_400 * 200), weightKg: 74)
+        let newer = WeightEntry(date: latest.date.addingTimeInterval(86_400), weightKg: 74)
+
+        #expect(!WeightStore.crossesGoal(older, previousLatest: latest, goalKg: 75, goal: .lose))
+        #expect(WeightStore.crossesGoal(newer, previousLatest: latest, goalKg: 75, goal: .lose))
+        #expect(!WeightStore.crossesGoal(
+            WeightEntry(date: older.date, weightKg: 90), previousLatest: latest, goalKg: 85, goal: .gain
+        ))
+    }
+
     // MARK: - Chart range
 
     @Test func progressRangesIncludeReadingsLoggedToday() throws {

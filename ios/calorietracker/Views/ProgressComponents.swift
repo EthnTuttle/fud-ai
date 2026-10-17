@@ -790,12 +790,16 @@ struct LogWeightSheet: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
     let currentWeightKg: Double
-    let onSave: (Double) -> Void
+    /// Weight (kg) and when it was weighed.
+    let onSave: (Double, Date) -> Void
 
     @State private var wholeNumber: Int
     @State private var decimal: Int
+    /// Older weigh-ins (from another app, a notebook, progress photos) can be
+    /// logged on the day they happened instead of piling up on today.
+    @State private var day = Date()
 
-    init(currentWeightKg: Double, onSave: @escaping (Double) -> Void) {
+    init(currentWeightKg: Double, onSave: @escaping (Double, Date) -> Void) {
         self.currentWeightKg = currentWeightKg
         self.onSave = onSave
         // Respect @AppStorage at the time the sheet is created.
@@ -822,7 +826,7 @@ struct LogWeightSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 Text("Log Weight")
                     .font(.system(.title2, design: .rounded, weight: .bold))
 
@@ -877,8 +881,12 @@ struct LogWeightSheet: View {
                         .padding(.leading, 4)
                 }
 
+                DatePicker("Date", selection: $day, in: ...Date(), displayedComponents: .date)
+                    .tint(AppColors.calorie)
+                    .padding(.horizontal, 24)
+
                 Button {
-                    onSave(selectedKg)
+                    onSave(selectedKg, VoiceAssistantParsing.logDate(day: day, time: nil, defaultDay: day))
                     dismiss()
                 } label: {
                     Text("Save")

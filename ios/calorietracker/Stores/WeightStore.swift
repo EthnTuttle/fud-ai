@@ -82,16 +82,20 @@ class WeightStore {
         syncProfileWeightToLatest()
 
         // Detect goal-weight crossing — fire only on the transition, not on every weight past goal.
-        if let profile = UserProfile.load(), let goalKg = profile.goalWeightKg, let previous = previousLatest {
-            let crossed: Bool
-            switch profile.goal {
-            case .lose:    crossed = previous.weightKg > goalKg && entry.weightKg <= goalKg
-            case .gain:    crossed = previous.weightKg < goalKg && entry.weightKg >= goalKg
-            case .maintain: crossed = false
-            }
-            if crossed {
-                NotificationCenter.default.post(name: .weightGoalReached, object: nil)
-            }
+        if let profile = UserProfile.load(), let goalKg = profile.goalWeightKg, let previous = previousLatest,
+           Self.crossesGoal(entry, previousLatest: previous, goalKg: goalKg, goal: profile.goal) {
+            NotificationCenter.default.post(name: .weightGoalReached, object: nil)
+        }
+    }
+
+    /// Only a new latest reading can reach the goal: a weigh-in logged for an
+    /// earlier day is history, not progress.
+    static func crossesGoal(_ entry: WeightEntry, previousLatest previous: WeightEntry, goalKg: Double, goal: WeightGoal) -> Bool {
+        guard entry.date >= previous.date else { return false }
+        switch goal {
+        case .lose:    return previous.weightKg > goalKg && entry.weightKg <= goalKg
+        case .gain:    return previous.weightKg < goalKg && entry.weightKg >= goalKg
+        case .maintain: return false
         }
     }
 
