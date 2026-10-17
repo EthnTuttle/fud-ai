@@ -28,6 +28,13 @@ data class CloudBackupUi(
     val existingCloudBackup: Boolean = false,
 )
 
+/**
+ * Text for the backup error dialog. VM errors such as OutOfMemoryError (#484)
+ * and blank messages mean nothing to users, so they get [fallback] instead.
+ */
+fun cloudBackupErrorMessage(failure: Throwable, fallback: String): String =
+    failure.message?.takeIf { failure !is Error && it.isNotBlank() } ?: fallback
+
 class CloudBackupCoordinator(
     private val context: Context,
     private val prefs: PreferencesStore,
