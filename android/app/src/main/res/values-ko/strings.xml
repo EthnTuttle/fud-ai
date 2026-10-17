@@ -463,6 +463,26 @@
     <string name="coach_reset_confirm">초기화</string>
     <string name="coach_no_profile_error">아직 프로필이 없어요. 먼저 온보딩을 완료하세요.</string>
     <string name="coach_chat_failed">채팅 실패</string>
+    <string name="coach_proposal_custom_title">직접 만든 새 운동</string>
+    <string name="coach_proposal_add_title">운동에 추가</string>
+    <string name="coach_proposal_add">추가</string>
+    <string name="coach_proposal_dismiss">건너뛰기</string>
+    <string name="coach_proposal_added">추가됨</string>
+    <string name="coach_proposal_dismissed">건너뜀</string>
+    <string name="coach_proposal_category">카테고리: %1$s</string>
+    <string name="coach_proposal_equipment">기구: %1$s</string>
+    <string name="coach_proposal_primary_muscles">주요 근육: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">보조 근육: %1$s</string>
+    <string name="coach_proposal_date">날짜: %1$s</string>
+    <string name="coach_proposal_sets">세트: %1$d</string>
+    <string name="coach_proposal_reps">반복: %1$d</string>
+    <string name="coach_proposal_duration">시간: %1$d분</string>
+    <string name="coach_proposal_exercise_missing">이 운동은 더 이상 라이브러리에 없습니다.</string>
+    <string name="coach_proposal_save_failed">이 변경 사항을 저장하지 못했습니다. 다시 시도하세요.</string>
+    <string name="coach_proposal_add_custom_description">%1$s을(를) 운동 라이브러리에 추가</string>
+    <string name="coach_proposal_add_to_day_description">%1$s을(를) 운동 일지에 추가</string>
+    <string name="coach_proposal_dismiss_description">%1$s 제안 건너뛰기</string>
+    <string name="coach_proposal_name_taken">이 이름의 운동이 이미 라이브러리에 있습니다.</string>
 
     <string name="coach_chip_predict_30_days">30일 후 예상 체중은?</string>
     <string name="coach_chip_lose_faster">안전하게 더 빨리 살 빼는 법은?</string>

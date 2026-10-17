@@ -135,6 +135,32 @@ struct LocalizationCatalogTests {
         #expect(try Self.format(key, "de", 900, 1_000, 100) == "Du hast heute 900 von 1.000 kcal gegessen. Noch 100 übrig!")
     }
 
+    /// Every label and error on a Coach exercise proposal card, with its format arguments.
+    static let coachProposalKeys = [
+        "New custom exercise", "Add to workout", "Add", "coach.proposal.dismiss", "Added", "Dismissed",
+        "Category: %@", "Equipment: %@", "Primary muscles: %@", "Secondary muscles: %@",
+        "Date: %@", "Sets: %lld", "Reps: %lld", "Duration: %lld min",
+        "Add %@ to your exercise library", "Add %@ to your workout diary", "Dismiss the suggestion for %@",
+        "This exercise is no longer in your library.", "An exercise with this name is already in your library.",
+        "Couldn't save this change. Try again.",
+    ]
+
+    @Test func coachProposalCardIsTranslatedInEveryLanguage() throws {
+        let missing = "\u{0}missing"
+        for language in Self.appLanguages {
+            let bundle = try Self.languageBundle(language, in: .main)
+            for key in Self.coachProposalKeys {
+                let translation = bundle.localizedString(forKey: key, value: missing, table: nil)
+                #expect(translation != missing, "\(language) is missing \(key)")
+                guard translation != missing else { continue }
+                #expect(
+                    Self.formatArguments(translation) == Self.formatArguments(key),
+                    "\(language) \(translation) does not match the arguments of \(key)"
+                )
+            }
+        }
+    }
+
     @Test func kilojouleDailySummaryAgreesWithTheRemainingCount() throws {
         let key = "You ate %lld of %lld kJ today. %lld remaining!"
         // кДж (kilojoule) is masculine where ккал is feminine.

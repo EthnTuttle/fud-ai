@@ -464,6 +464,26 @@
     <string name="coach_reset_confirm">रीसेट</string>
     <string name="coach_no_profile_error">अभी कोई प्रोफ़ाइल नहीं है। पहले ऑनबोर्डिंग पूरी करें।</string>
     <string name="coach_chat_failed">चैट विफल</string>
+    <string name="coach_proposal_custom_title">नया कस्टम व्यायाम</string>
+    <string name="coach_proposal_add_title">वर्कआउट में जोड़ें</string>
+    <string name="coach_proposal_add">जोड़ें</string>
+    <string name="coach_proposal_dismiss">खारिज करें</string>
+    <string name="coach_proposal_added">जोड़ा गया</string>
+    <string name="coach_proposal_dismissed">खारिज किया गया</string>
+    <string name="coach_proposal_category">श्रेणी: %1$s</string>
+    <string name="coach_proposal_equipment">उपकरण: %1$s</string>
+    <string name="coach_proposal_primary_muscles">मुख्य मांसपेशियाँ: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">सहायक मांसपेशियाँ: %1$s</string>
+    <string name="coach_proposal_date">दिनांक: %1$s</string>
+    <string name="coach_proposal_sets">सेट: %1$d</string>
+    <string name="coach_proposal_reps">रेप्स: %1$d</string>
+    <string name="coach_proposal_duration">अवधि: %1$d मिनट</string>
+    <string name="coach_proposal_exercise_missing">यह व्यायाम अब आपकी लाइब्रेरी में नहीं है।</string>
+    <string name="coach_proposal_save_failed">यह बदलाव सहेजा नहीं जा सका। फिर से कोशिश करें।</string>
+    <string name="coach_proposal_add_custom_description">%1$s को अपनी व्यायाम लाइब्रेरी में जोड़ें</string>
+    <string name="coach_proposal_add_to_day_description">%1$s को अपनी वर्कआउट डायरी में जोड़ें</string>
+    <string name="coach_proposal_dismiss_description">%1$s का सुझाव खारिज करें</string>
+    <string name="coach_proposal_name_taken">इस नाम का व्यायाम पहले से आपकी लाइब्रेरी में है।</string>
 
     <string name="coach_chip_predict_30_days">30 दिनों में मेरा अपेक्षित वज़न क्या होगा?</string>
     <string name="coach_chip_lose_faster">मैं सुरक्षित रूप से तेज़ी से वज़न कैसे घटाऊं?</string>

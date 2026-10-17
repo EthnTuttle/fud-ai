@@ -463,6 +463,26 @@
     <string name="coach_reset_confirm">重置</string>
     <string name="coach_no_profile_error">尚无个人资料。请先完成引导设置。</string>
     <string name="coach_chat_failed">聊天失败</string>
+    <string name="coach_proposal_custom_title">新的自定义动作</string>
+    <string name="coach_proposal_add_title">添加到训练</string>
+    <string name="coach_proposal_add">添加</string>
+    <string name="coach_proposal_dismiss">忽略</string>
+    <string name="coach_proposal_added">已添加</string>
+    <string name="coach_proposal_dismissed">已忽略</string>
+    <string name="coach_proposal_category">类别：%1$s</string>
+    <string name="coach_proposal_equipment">器械：%1$s</string>
+    <string name="coach_proposal_primary_muscles">主要肌群：%1$s</string>
+    <string name="coach_proposal_secondary_muscles">次要肌群：%1$s</string>
+    <string name="coach_proposal_date">日期：%1$s</string>
+    <string name="coach_proposal_sets">组数：%1$d</string>
+    <string name="coach_proposal_reps">次数：%1$d</string>
+    <string name="coach_proposal_duration">时长：%1$d 分钟</string>
+    <string name="coach_proposal_exercise_missing">此动作已不在你的动作库中。</string>
+    <string name="coach_proposal_save_failed">无法保存此更改，请重试。</string>
+    <string name="coach_proposal_add_custom_description">将 %1$s 添加到你的动作库</string>
+    <string name="coach_proposal_add_to_day_description">将 %1$s 添加到训练日记</string>
+    <string name="coach_proposal_dismiss_description">忽略关于 %1$s 的建议</string>
+    <string name="coach_proposal_name_taken">你的动作库中已有同名动作。</string>
 
     <string name="coach_chip_predict_30_days">30 天后我的预期体重是多少？</string>
     <string name="coach_chip_lose_faster">如何安全地更快减重？</string>

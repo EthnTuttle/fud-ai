@@ -66,7 +66,8 @@ struct ChatService {
         workoutPlans: [StrengthWorkoutDayPlan] = [],
         workoutPreferences: StrengthWorkoutPreferences? = nil,
         workoutAccessEnabled: Bool = false,
-        exerciseLibrary: [ExerciseLibraryItem] = []
+        exerciseLibrary: [ExerciseLibraryItem] = [],
+        proposals: CoachExerciseProposalCollector? = nil
     ) async throws -> String {
         if AIModeSettings.isHosted {
             return try await hostedCoachMessage(
@@ -85,23 +86,33 @@ struct ChatService {
                 workoutPlans: workoutPlans,
                 workoutPreferences: workoutPreferences,
                 workoutAccessEnabled: workoutAccessEnabled,
-                exerciseLibrary: exerciseLibrary
+                exerciseLibrary: exerciseLibrary,
+                proposals: proposals
             )
         }
 
-        let systemPrompt = buildSystemPrompt(
-            profile: profile,
-            weights: weights,
-            bodyFats: bodyFats,
-            measurements: measurements,
-            foods: foods,
-            fastingSessions: fastingSessions,
-            heightMetric: heightMetric,
-            weightMetric: weightMetric,
-            workoutSessions: workoutSessions,
-            workoutPlans: workoutPlans,
-            workoutAccessEnabled: workoutAccessEnabled
-        )
+        func makeSystemPrompt(proposalCards: Bool) -> String {
+            buildSystemPrompt(
+                profile: profile,
+                weights: weights,
+                bodyFats: bodyFats,
+                measurements: measurements,
+                foods: foods,
+                fastingSessions: fastingSessions,
+                heightMetric: heightMetric,
+                weightMetric: weightMetric,
+                workoutSessions: workoutSessions,
+                workoutPlans: workoutPlans,
+                workoutAccessEnabled: workoutAccessEnabled,
+                canProposeWorkoutChanges: proposalCards
+            )
+        }
+        let systemPrompt = makeSystemPrompt(proposalCards: proposals != nil)
+        // On-device models answer without tools, so they are never told about proposal cards
+        // they cannot make (the reply would point the user at a card that never appears).
+        func toolFreeSystemPrompt() -> String {
+            proposals == nil ? systemPrompt : makeSystemPrompt(proposalCards: false)
+        }
         let tools = CoachTools(
             weights: weights,
             bodyFats: bodyFats,
@@ -112,7 +123,8 @@ struct ChatService {
             workoutPreferences: workoutPreferences,
             workoutPlanWeightUnit: weightMetric ? .kg : .lbs,
             workoutAccessEnabled: workoutAccessEnabled,
-            exerciseLibrary: exerciseLibrary
+            exerciseLibrary: exerciseLibrary,
+            proposals: proposals
         )
 
         let config = AIProviderSettings.currentConfig(requiresVision: imageData != nil)
@@ -125,11 +137,13 @@ struct ChatService {
             guard !provider.requiresAPIKey || apiKey != nil else {
                 throw ChatError.noAPIKey
             }
+            // A fallback attempt answers from scratch, so cards from a failed attempt are dropped.
+            proposals?.reset()
 
             switch provider.apiFormat {
             case .onDevice:
                 return try await callOnDevice(
-                    systemPrompt: systemPrompt,
+                    systemPrompt: toolFreeSystemPrompt(),
                     history: history,
                     newUserMessage: newUserMessage,
                     imageData: imageData
@@ -138,11 +152,11 @@ struct ChatService {
                 let localHistory = history.suffix(8).map { message in
                     Gemma4LocalModelManager.ChatTurn(
                         role: message.role == .user ? .user : .assistant,
-                        text: message.content
+                        text: message.contextContent
                     )
                 }
                 let localInstructions = """
-                \(systemPrompt)
+                \(toolFreeSystemPrompt())
 
                 ON-DEVICE MODE
                 You cannot call data tools in this mode. Answer only from the profile, forecast, and data summary above. If the question requires unavailable detailed history, say that briefly instead of inventing facts.
@@ -213,7 +227,7 @@ struct ChatService {
         if #available(iOS 26.0, *) {
             try OnDeviceAIService.requireAvailable()
             let conversation = history.suffix(8).map { message in
-                "\(message.role.rawValue.capitalized): \(message.content)"
+                "\(message.role.rawValue.capitalized): \(message.contextContent)"
             }.joined(separator: "\n")
             let prompt = """
             \(conversation.isEmpty ? "" : "Recent conversation:\n\(conversation)\n\n")
@@ -273,7 +287,8 @@ struct ChatService {
         weightMetric: Bool,
         workoutSessions: [StrengthWorkoutSession] = [],
         workoutPlans: [StrengthWorkoutDayPlan] = [],
-        workoutAccessEnabled: Bool = false
+        workoutAccessEnabled: Bool = false,
+        canProposeWorkoutChanges: Bool = false
     ) -> String {
         var lines: [String] = []
         if workoutAccessEnabled {
@@ -296,6 +311,9 @@ struct ChatService {
             lines.append("- \"What workout do I have planned?\" → call get_workout_plans")
             lines.append("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
             lines.append("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
+            if canProposeWorkoutChanges {
+                lines.append("- \"Add this to my workout\" → search_exercise_library, then propose_add_exercise_to_day. A gym machine that is not in the library → propose_custom_exercise. These only show the user a card to confirm; nothing is saved until they tap Add, so never say a change was made.")
+            }
         }
         lines.append("Do NOT call tools for questions you can answer from the profile/forecast below.")
         lines.append("")
@@ -463,7 +481,7 @@ struct ChatService {
 
         var messages: [[String: Any]] = [["role": "system", "content": systemPrompt]]
         for msg in history {
-            messages.append(["role": msg.role.rawValue, "content": msg.content])
+            messages.append(["role": msg.role.rawValue, "content": msg.contextContent])
         }
         if let imageData {
             messages.append(["role": "user", "content": openAIUserContent(text: newUserMessage, imageData: imageData)])
@@ -584,7 +602,7 @@ struct ChatService {
         }
         var messages: [[String: Any]] = []
         for msg in history {
-            messages.append(["role": msg.role.rawValue, "content": msg.content])
+            messages.append(["role": msg.role.rawValue, "content": msg.contextContent])
         }
         if let imageData {
             messages.append(["role": "user", "content": anthropicUserContent(text: newUserMessage, imageData: imageData)])
@@ -703,7 +721,7 @@ struct ChatService {
         var contents: [[String: Any]] = []
         for msg in history {
             let role = msg.role == .user ? "user" : "model"
-            contents.append(["role": role, "parts": [["text": msg.content]]])
+            contents.append(["role": role, "parts": [["text": msg.contextContent]]])
         }
         contents.append(["role": "user", "parts": geminiUserParts(text: newUserMessage, imageData: imageData)])
 
@@ -777,7 +795,8 @@ struct ChatService {
         workoutPlans: [StrengthWorkoutDayPlan],
         workoutPreferences: StrengthWorkoutPreferences?,
         workoutAccessEnabled: Bool,
-        exerciseLibrary: [ExerciseLibraryItem]
+        exerciseLibrary: [ExerciseLibraryItem],
+        proposals: CoachExerciseProposalCollector?
     ) async throws -> String {
         try await AIGate.runWithHostedQuota(.coachMessage) {
             try await hostedCoachReply(
@@ -796,7 +815,8 @@ struct ChatService {
                 workoutPlans: workoutPlans,
                 workoutPreferences: workoutPreferences,
                 workoutAccessEnabled: workoutAccessEnabled,
-                exerciseLibrary: exerciseLibrary
+                exerciseLibrary: exerciseLibrary,
+                proposals: proposals
             )
         }
     }
@@ -817,8 +837,10 @@ struct ChatService {
         workoutPlans: [StrengthWorkoutDayPlan],
         workoutPreferences: StrengthWorkoutPreferences?,
         workoutAccessEnabled: Bool,
-        exerciseLibrary: [ExerciseLibraryItem]
+        exerciseLibrary: [ExerciseLibraryItem],
+        proposals: CoachExerciseProposalCollector?
     ) async throws -> String {
+        proposals?.reset()
         let systemPrompt = buildSystemPrompt(
             profile: profile,
             weights: weights,
@@ -830,7 +852,8 @@ struct ChatService {
             weightMetric: weightMetric,
             workoutSessions: workoutSessions,
             workoutPlans: workoutPlans,
-            workoutAccessEnabled: workoutAccessEnabled
+            workoutAccessEnabled: workoutAccessEnabled,
+            canProposeWorkoutChanges: proposals != nil
         )
         let tools = CoachTools(
             weights: weights,
@@ -842,7 +865,8 @@ struct ChatService {
             workoutPreferences: workoutPreferences,
             workoutPlanWeightUnit: weightMetric ? .kg : .lbs,
             workoutAccessEnabled: workoutAccessEnabled,
-            exerciseLibrary: exerciseLibrary
+            exerciseLibrary: exerciseLibrary,
+            proposals: proposals
         )
         return try await callHostedGemini(
             systemPrompt: systemPrompt,
@@ -863,7 +887,7 @@ struct ChatService {
         var contents: [[String: Any]] = []
         for msg in history {
             let role = msg.role == .user ? "user" : "model"
-            contents.append(["role": role, "parts": [["text": msg.content]]])
+            contents.append(["role": role, "parts": [["text": msg.contextContent]]])
         }
         contents.append(["role": "user", "parts": geminiUserParts(text: newUserMessage, imageData: imageData)])
 

@@ -421,6 +421,26 @@
     <string name="coach_reset_confirm">Resetovat</string>
     <string name="coach_no_profile_error">Zatím nemáš profil. Nejdřív dokonči úvodní nastavení.</string>
     <string name="coach_chat_failed">Chat selhal</string>
+    <string name="coach_proposal_custom_title">Nový vlastní cvik</string>
+    <string name="coach_proposal_add_title">Přidat do tréninku</string>
+    <string name="coach_proposal_add">Přidat</string>
+    <string name="coach_proposal_dismiss">Zamítnout</string>
+    <string name="coach_proposal_added">Přidáno</string>
+    <string name="coach_proposal_dismissed">Zamítnuto</string>
+    <string name="coach_proposal_category">Kategorie: %1$s</string>
+    <string name="coach_proposal_equipment">Vybavení: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Hlavní svaly: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">Vedlejší svaly: %1$s</string>
+    <string name="coach_proposal_date">Datum: %1$s</string>
+    <string name="coach_proposal_sets">Série: %1$d</string>
+    <string name="coach_proposal_reps">Opakování: %1$d</string>
+    <string name="coach_proposal_duration">Doba trvání: %1$d min</string>
+    <string name="coach_proposal_exercise_missing">Tento cvik už ve tvé knihovně není.</string>
+    <string name="coach_proposal_save_failed">Změnu se nepodařilo uložit. Zkus to znovu.</string>
+    <string name="coach_proposal_add_custom_description">Přidat %1$s do knihovny cviků</string>
+    <string name="coach_proposal_add_to_day_description">Přidat %1$s do deníku tréninků</string>
+    <string name="coach_proposal_dismiss_description">Zamítnout návrh: %1$s</string>
+    <string name="coach_proposal_name_taken">Cvik s tímto názvem už ve tvé knihovně je.</string>
 
     <string name="coach_chip_predict_30_days">Jaká bude moje váha za 30 dní?</string>
     <string name="coach_chip_lose_faster">Jak zhubnout rychleji a bezpečně?</string>

@@ -465,6 +465,26 @@
     <string name="coach_reset_confirm">Reimposta</string>
     <string name="coach_no_profile_error">Nessun profilo ancora. Completa prima la configurazione iniziale.</string>
     <string name="coach_chat_failed">Chat non riuscita</string>
+    <string name="coach_proposal_custom_title">Nuovo esercizio personalizzato</string>
+    <string name="coach_proposal_add_title">Aggiungi all’allenamento</string>
+    <string name="coach_proposal_add">Aggiungi</string>
+    <string name="coach_proposal_dismiss">Ignora</string>
+    <string name="coach_proposal_added">Aggiunto</string>
+    <string name="coach_proposal_dismissed">Ignorato</string>
+    <string name="coach_proposal_category">Categoria: %1$s</string>
+    <string name="coach_proposal_equipment">Attrezzatura: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Muscoli principali: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">Muscoli secondari: %1$s</string>
+    <string name="coach_proposal_date">Data: %1$s</string>
+    <string name="coach_proposal_sets">Serie: %1$d</string>
+    <string name="coach_proposal_reps">Ripetizioni: %1$d</string>
+    <string name="coach_proposal_duration">Durata: %1$d min</string>
+    <string name="coach_proposal_exercise_missing">Questo esercizio non è più nella tua libreria.</string>
+    <string name="coach_proposal_save_failed">Impossibile salvare questa modifica. Riprova.</string>
+    <string name="coach_proposal_add_custom_description">Aggiungi %1$s alla tua libreria di esercizi</string>
+    <string name="coach_proposal_add_to_day_description">Aggiungi %1$s al diario degli allenamenti</string>
+    <string name="coach_proposal_dismiss_description">Ignora il suggerimento per %1$s</string>
+    <string name="coach_proposal_name_taken">Un esercizio con questo nome è già nella tua libreria.</string>
 
     <string name="coach_chip_predict_30_days">Qual è il mio peso previsto tra 30 giorni?</string>
     <string name="coach_chip_lose_faster">Come posso perdere peso più velocemente in sicurezza?</string>
