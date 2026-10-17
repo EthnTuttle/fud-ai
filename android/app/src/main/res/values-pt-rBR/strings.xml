@@ -665,6 +665,12 @@
     <string name="progress_workout_stat_days">Dias</string>
     <string name="progress_workout_no_range">Nenhum gasto de treino calculado neste período</string>
     <string name="progress_workout_chart_description">Gráfico de gasto dos treinos de %1$s a %2$s. Total: %3$d quilocalorias; último: %4$d quilocalorias.</string>
+    <string name="workout_filter_source">Origem</string>
+    <string name="workout_source_dataset">Banco de dados</string>
+    <string name="workout_source_saved">Salvos</string>
+    <string name="workout_source_mine">Meus</string>
+    <string name="workout_mine_empty_title">Nenhum exercício personalizado ainda</string>
+    <string name="workout_mine_empty_subtitle">Os exercícios que você criar aparecem aqui.</string>
     <string name="progress_log_body_fat">Registrar gordura corporal</string>
     <string name="progress_log_first_body_fat">Registre seu primeiro % de gordura corporal para ver tendências</string>
     <string name="progress_log_body_fat_title">Registrar gordura corporal</string>

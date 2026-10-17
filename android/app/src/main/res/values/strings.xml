@@ -978,6 +978,12 @@
     <string name="empty_title">No exercises match</string>
     <string name="workout_empty_subtitle">Try different filters — or create your own exercise.</string>
     <string name="workout_create_exercise">Create exercise</string>
+    <string name="workout_filter_source">Source</string>
+    <string name="workout_source_dataset">Dataset</string>
+    <string name="workout_source_saved">Saved</string>
+    <string name="workout_source_mine">Mine</string>
+    <string name="workout_mine_empty_title">No custom exercises yet</string>
+    <string name="workout_mine_empty_subtitle">Exercises you create show up here.</string>
     <string name="filter_all">All</string>
     <string name="filter_all_count">All %d</string>
     <string name="hide_details">Hide details</string>

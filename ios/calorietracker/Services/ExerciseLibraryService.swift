@@ -165,6 +165,8 @@ struct ExerciseLibraryFilterRequest: Sendable {
     let sort: ExerciseLibrarySort
     let searchText: String
     let splitMuscles: Set<String>
+    /// Library "Source" filter: keep only exercises the user created.
+    let onlyUserExercises: Bool
 }
 
 enum ExerciseLibraryFilterEngine {
@@ -184,6 +186,7 @@ enum ExerciseLibraryFilterEngine {
             sort: request.sort,
             searchText: request.searchText
         )
+        .filter { !request.onlyUserExercises || UserExercise.isUserExercise($0.id) }
 
         guard !request.splitMuscles.isEmpty else {
             return filtered

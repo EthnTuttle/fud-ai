@@ -966,6 +966,12 @@
     <string name="empty_title">Eşleşen egzersiz yok</string>
     <string name="workout_empty_subtitle">Farklı filtreler deneyin — veya kendi egzersizinizi oluşturun.</string>
     <string name="workout_create_exercise">Egzersiz oluştur</string>
+    <string name="workout_filter_source">Kaynak</string>
+    <string name="workout_source_dataset">Veritabanı</string>
+    <string name="workout_source_saved">Kaydedilenler</string>
+    <string name="workout_source_mine">Benimkiler</string>
+    <string name="workout_mine_empty_title">Henüz özel egzersiz yok</string>
+    <string name="workout_mine_empty_subtitle">Oluşturduğunuz egzersizler burada görünür.</string>
     <string name="filter_all">Tümü</string>
     <string name="filter_all_count">Tümü %d</string>
     <string name="hide_details">Detayları gizle</string>

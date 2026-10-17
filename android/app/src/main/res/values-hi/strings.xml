@@ -664,6 +664,12 @@
     <string name="progress_workout_stat_days">दिन</string>
     <string name="progress_workout_no_range">इस अवधि में कोई गणना किया गया वर्कआउट बर्न नहीं है</string>
     <string name="progress_workout_chart_description">%1$s से %2$s तक वर्कआउट बर्न चार्ट। कुल %3$d किलोकैलोरी; नवीनतम %4$d किलोकैलोरी।</string>
+    <string name="workout_filter_source">स्रोत</string>
+    <string name="workout_source_dataset">डेटाबेस</string>
+    <string name="workout_source_saved">सहेजे गए</string>
+    <string name="workout_source_mine">मेरे</string>
+    <string name="workout_mine_empty_title">अभी तक कोई कस्टम व्यायाम नहीं</string>
+    <string name="workout_mine_empty_subtitle">आपके बनाए व्यायाम यहाँ दिखेंगे।</string>
     <string name="progress_log_body_fat">बॉडी फैट दर्ज करें</string>
     <string name="progress_log_first_body_fat">रुझान देखने के लिए अपना पहला बॉडी फैट % दर्ज करें</string>
     <string name="progress_log_body_fat_title">बॉडी फैट दर्ज करें</string>

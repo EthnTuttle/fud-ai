@@ -702,6 +702,12 @@
     <string name="empty_subtitle">Zkus jiný sval, vybavení nebo hledaný výraz — nebo resetuj filtry výše.</string>
     <string name="empty_title">Žádné cviky neodpovídají</string>
     <string name="filter_all">Vše</string>
+    <string name="workout_filter_source">Zdroj</string>
+    <string name="workout_source_dataset">Databáze</string>
+    <string name="workout_source_saved">Uložené</string>
+    <string name="workout_source_mine">Moje</string>
+    <string name="workout_mine_empty_title">Zatím žádné vlastní cviky</string>
+    <string name="workout_mine_empty_subtitle">Cviky, které vytvoříte, se zobrazí zde.</string>
     <string name="filter_all_count">Vše %d</string>
     <string name="hide_details">Skrýt detaily</string>
     <string name="instructions">Provedení</string>

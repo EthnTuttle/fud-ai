@@ -664,6 +664,12 @@
     <string name="progress_workout_stat_days">Tage</string>
     <string name="progress_workout_no_range">Keine berechneten Trainingsverbräuche in diesem Zeitraum</string>
     <string name="progress_workout_chart_description">Diagramm des Trainingsverbrauchs von %1$s bis %2$s. Gesamt %3$d Kilokalorien; zuletzt %4$d Kilokalorien.</string>
+    <string name="workout_filter_source">Quelle</string>
+    <string name="workout_source_dataset">Datenbank</string>
+    <string name="workout_source_saved">Gespeichert</string>
+    <string name="workout_source_mine">Meine</string>
+    <string name="workout_mine_empty_title">Noch keine eigenen Übungen</string>
+    <string name="workout_mine_empty_subtitle">Von dir erstellte Übungen erscheinen hier.</string>
     <string name="progress_log_body_fat">Körperfett protokollieren</string>
     <string name="progress_log_first_body_fat">Erfasse deinen ersten Körperfettwert, um Trends zu sehen</string>
     <string name="progress_log_body_fat_title">Körperfett protokollieren</string>

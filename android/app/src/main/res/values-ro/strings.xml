@@ -668,6 +668,12 @@
     <string name="progress_workout_stat_days">Zile</string>
     <string name="progress_workout_no_range">Nu există consumuri calculate pentru antrenamente în această perioadă</string>
     <string name="progress_workout_chart_description">Graficul consumului din antrenamente de la %1$s la %2$s. Total: %3$d kilocalorii; recent: %4$d kilocalorii.</string>
+    <string name="workout_filter_source">Sursă</string>
+    <string name="workout_source_dataset">Bază de date</string>
+    <string name="workout_source_saved">Salvate</string>
+    <string name="workout_source_mine">Ale mele</string>
+    <string name="workout_mine_empty_title">Încă nu ai exerciții personalizate</string>
+    <string name="workout_mine_empty_subtitle">Exercițiile pe care le creezi apar aici.</string>
     <string name="progress_log_body_fat">Înregistrează grăsimea corporală</string>
     <string name="progress_log_first_body_fat">Înregistrează primul tău % de grăsime corporală pentru a vedea tendințele</string>
     <string name="progress_log_body_fat_title">Înregistrează grăsimea corporală</string>

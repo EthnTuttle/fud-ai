@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -87,6 +88,7 @@ import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.ExerciseSort
 import com.apoorvdarshan.calorietracker.data.ExerciseVisual
+import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
@@ -275,7 +277,7 @@ private fun WorkoutLibraryScreen(
     val items = remember(
         repo, vm.debouncedSearch, vm.levels, vm.equipment, vm.primaryMuscles, vm.secondaryMuscles,
         vm.forces, vm.mechanics, vm.categories, vm.sort, vm.splitGroupTitles,
-        vm.diaryUiState.splitGroups
+        vm.diaryUiState.splitGroups, vm.onlyUserExercises
     ) {
         filterByWorkoutSplit(repo.filtered(
             levels = vm.levels,
@@ -287,7 +289,7 @@ private fun WorkoutLibraryScreen(
             categories = vm.categories,
             sort = vm.sort,
             searchText = vm.debouncedSearch
-        ), vm)
+        ), vm).filter { !vm.onlyUserExercises || UserExercise.isUserExercise(it.id) }
     }
 
     // Dismiss the search keyboard as soon as the list starts scrolling — matches
@@ -419,6 +421,15 @@ private fun FilterRow(repo: ExerciseRepository, vm: WorkoutsViewModel) {
         horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         val allLabel = stringResource(R.string.filter_all)
+        val mineLabel = stringResource(R.string.workout_source_mine)
+        FilterPill(
+            title = stringResource(R.string.workout_filter_source),
+            icon = Icons.Filled.Person,
+            selected = if (vm.onlyUserExercises) setOf(mineLabel) else emptySet(),
+            emptyDisplay = allLabel,
+            options = listOf(mineLabel),
+            onSelect = { vm.onlyUserExercises = it.isNotEmpty() }
+        )
         FilterPill(
             title = "Body Part",
             icon = Icons.Filled.GridView,

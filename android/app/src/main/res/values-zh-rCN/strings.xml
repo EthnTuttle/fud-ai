@@ -663,6 +663,12 @@
     <string name="progress_workout_stat_days">天数</string>
     <string name="progress_workout_no_range">此时间范围内没有已计算的锻炼消耗</string>
     <string name="progress_workout_chart_description">%1$s 至 %2$s 的锻炼消耗图表。总计 %3$d 千卡；最新 %4$d 千卡。</string>
+    <string name="workout_filter_source">来源</string>
+    <string name="workout_source_dataset">数据库</string>
+    <string name="workout_source_saved">已保存</string>
+    <string name="workout_source_mine">我的</string>
+    <string name="workout_mine_empty_title">还没有自定义动作</string>
+    <string name="workout_mine_empty_subtitle">你创建的动作会显示在这里。</string>
     <string name="progress_log_body_fat">记录体脂</string>
     <string name="progress_log_first_body_fat">记录你的第一个体脂百分比以查看趋势</string>
     <string name="progress_log_body_fat_title">记录体脂</string>
