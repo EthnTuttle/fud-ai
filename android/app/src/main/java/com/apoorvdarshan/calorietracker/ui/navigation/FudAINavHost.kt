@@ -323,7 +323,11 @@ fun FudAINavHost(
                     AddMenuSettingsScreen(vm = settingsViewModel, onBack = { nav.popBackStack() })
                 }
                 composable(FudAIRoutes.TAB_BAR) {
-                    TabBarSettingsScreen(vm = settingsViewModel, onBack = { nav.popBackStack() })
+                    TabBarSettingsScreen(
+                        vm = settingsViewModel,
+                        workoutMode = workoutMode,
+                        onBack = { nav.popBackStack() }
+                    )
                 }
                 composable(FudAIRoutes.BODY_MEASUREMENTS) {
                     BodyMeasurementsScreen(container = container, onBack = { nav.popBackStack() })
