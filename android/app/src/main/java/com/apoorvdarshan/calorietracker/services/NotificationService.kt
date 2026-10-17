@@ -103,7 +103,19 @@ class NotificationService(private val context: Context) {
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply { description = context.getString(R.string.notif_channel_announcements_desc) }
 
-        mgr.createNotificationChannels(listOf(streak, daily, goal, weight, bodyFat, appUpdate, water, announcements))
+        // High importance: the end of a rest should reach a phone in a pocket.
+        val workoutRest = NotificationChannel(
+            CHANNEL_WORKOUT_REST,
+            context.getString(R.string.notif_channel_workout_rest),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = context.getString(R.string.notif_channel_workout_rest_desc)
+            enableVibration(true)
+        }
+
+        mgr.createNotificationChannels(
+            listOf(streak, daily, goal, weight, bodyFat, appUpdate, water, announcements, workoutRest)
+        )
     }
 
     fun canPostNotifications(): Boolean {
@@ -165,6 +177,57 @@ class NotificationService(private val context: Context) {
             alarm.cancel(pending)
             pending.cancel()
         }
+    }
+
+    // -- Workout rest timer (one-shot) -----------------------------------
+
+    /**
+     * Arms the alert for a rest that ends while the app is in the background. Like the fasting
+     * goal it uses an inexact alarm (no exact-alarm permission), so it can arrive a little after
+     * the countdown; the receiver skips it while the app is in the foreground.
+     */
+    fun scheduleWorkoutRest(endsAtMillis: Long, exerciseName: String) {
+        if (endsAtMillis <= System.currentTimeMillis()) {
+            cancelWorkoutRest()
+            return
+        }
+        val pending = broadcastPendingIntent(
+            REQUEST_WORKOUT_REST,
+            WorkoutRestReceiver::class.java,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        ) {
+            putExtra(EXTRA_REST_EXERCISE_NAME, exerciseName)
+        } ?: return
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endsAtMillis, pending)
+    }
+
+    fun cancelWorkoutRest() {
+        val pending = broadcastPendingIntent(
+            REQUEST_WORKOUT_REST,
+            WorkoutRestReceiver::class.java,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+        )
+        if (pending != null) {
+            val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarm.cancel(pending)
+            pending.cancel()
+        }
+    }
+
+    fun showWorkoutRestComplete(exerciseName: String) {
+        val content = activityPendingIntent(REQUEST_WORKOUT_REST, MainActivity::class.java)
+        val text = context.getString(R.string.notif_workout_rest_text, exerciseName)
+        val notif = NotificationCompat.Builder(context, CHANNEL_WORKOUT_REST)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(context.getString(R.string.notif_workout_rest_title))
+            .setContentText(text)
+            .setContentIntent(content)
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+        NotificationManagerCompat.from(context).notifySafely(context, WORKOUT_REST_NOTIFICATION_ID, notif)
     }
 
     fun showGoalReached() {
@@ -384,6 +447,8 @@ class NotificationService(private val context: Context) {
         const val CHANNEL_WATER = "water_reminder"
         const val CHANNEL_FASTING = "fasting_goal"
         const val CHANNEL_ANNOUNCEMENTS = "announcements"
+        const val CHANNEL_WORKOUT_REST = "workout_rest"
+        const val EXTRA_REST_EXERCISE_NAME = "rest_exercise_name"
         const val EXTRA_CHANNEL = "channel"
         const val EXTRA_TITLE = "title"
         const val EXTRA_TEXT = "text"
@@ -392,6 +457,7 @@ class NotificationService(private val context: Context) {
         private const val GOAL_NOTIFICATION_ID = 4242
         private const val APP_UPDATE_NOTIFICATION_ID = 5555
         private const val PRODUCT_HUNT_NOTIFICATION_ID = 6666
+        private const val WORKOUT_REST_NOTIFICATION_ID = 7777
         private const val REQUEST_STREAK = 1001
         private const val REQUEST_DAILY = 1002
         private const val REQUEST_WEIGHT = 1003
@@ -400,6 +466,7 @@ class NotificationService(private val context: Context) {
         private const val REQUEST_WATER = 1006
         private const val REQUEST_FASTING = 1007
         private const val REQUEST_PRODUCT_HUNT = 1008
+        private const val REQUEST_WORKOUT_REST = 1009
     }
 }
 
@@ -440,6 +507,30 @@ class ProductHuntLaunchReceiver : BroadcastReceiver() {
                     NotificationService(context).canPostNotifications()
                 if (enabled) {
                     NotificationService(context).showProductHuntLaunch()
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+}
+
+/**
+ * Fired by the rest-timer alarm. Posts only while the app is in the background (in the
+ * foreground the countdown ends with a haptic) and only when the app's notifications are on.
+ */
+class WorkoutRestReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val exerciseName = intent.getStringExtra(NotificationService.EXTRA_REST_EXERCISE_NAME).orEmpty()
+        val pendingResult = goAsync()
+        val app = context.applicationContext as? FudAIApp
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val container = app?.container
+                val inForeground = container?.workoutRestTimer?.isAppInForeground == true
+                val enabled = container?.prefs?.notificationsEnabled?.first() == true
+                if (enabled && !inForeground) {
+                    NotificationService(context).showWorkoutRestComplete(exerciseName)
                 }
             } finally {
                 pendingResult.finish()

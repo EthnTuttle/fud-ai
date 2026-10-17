@@ -433,6 +433,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".services.WorkoutRestReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".services.FastingBootReceiver"
             android:enabled="true"
             android:exported="true">
