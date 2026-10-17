@@ -764,8 +764,13 @@ struct VoiceAssistantToolTests {
         let screens = try #require((properties["screen"] as? [String: Any])?["enum"] as? [String])
         for section in sections {
             let category = try #require(ProfileSettingsCategory(voiceAssistantSection: section), "\(section)")
-            #expect(category.voiceAssistantSection == section)
+            let reported = try #require(category.voiceAssistantSection, "\(section)")
+            // "reminders" is kept for compatibility and opens the page reported as "notifications".
+            #expect(reported == (section == "reminders" ? "notifications" : section))
+            #expect(ProfileSettingsCategory(voiceAssistantSection: reported) == category)
         }
+        #expect(ProfileSettingsCategory(voiceAssistantSection: "reminders") == .trackingNotifications)
+        #expect(ProfileSettingsCategory(voiceAssistantSection: "notifications") == .trackingNotifications)
         for screen in screens {
             #expect(VoiceAssistantScreen(rawValue: screen) != nil, "\(screen)")
         }

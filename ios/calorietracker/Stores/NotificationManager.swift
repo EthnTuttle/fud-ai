@@ -340,7 +340,7 @@ class NotificationManager {
 
     /// Daily nudge to log a body-fat reading. Skips firing if the user has
     /// already logged one today. Most users don't measure body fat daily, so
-    /// this defaults OFF — users opt in via Settings → Notifications.
+    /// this defaults OFF — users opt in via Settings → Tracking & Notifications.
     func scheduleBodyFatLogReminder(enabled: Bool, hour: Int, minute: Int, hasLoggedBodyFatToday: Bool) {
         PendingNotificationRequests.remove(["smart.bodyfat"])
 
@@ -383,7 +383,7 @@ class NotificationManager {
 
         // Body-fat opt-in default OFF — most users don't measure daily, so
         // a daily ping would feel noisy. Users with a daily smart-scale
-        // routine can flip it on in Settings → Notifications.
+        // routine can flip it on in Settings → Tracking & Notifications.
         let bodyFatLogEnabled = UserDefaults.standard.object(forKey: "bodyFatLogReminderEnabled") as? Bool ?? false
         let bodyFatLogHour = UserDefaults.standard.object(forKey: "bodyFatLogReminderHour") as? Int ?? 8
         let bodyFatLogMinute = UserDefaults.standard.object(forKey: "bodyFatLogReminderMinute") as? Int ?? 0

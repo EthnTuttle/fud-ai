@@ -387,6 +387,25 @@ class AppFlowsTest {
     }
 
     @Test
+    fun trackingAndNotificationsShareOneSettingsPage() {
+        launchFresh()
+        openTab("settings")
+        compose.onNodeWithTag("nav.settings").performClick()
+        waitFor(hasTestTag("settings.category.TRACKING_NOTIFICATIONS"))
+        // The former separate rows are gone (#432).
+        compose.onNodeWithTag("settings.category.TRACKING_REMINDERS").assertDoesNotExist()
+        compose.onNodeWithTag("settings.category.NOTIFICATIONS").assertDoesNotExist()
+        compose.onNodeWithTag("settings.category.TRACKING_NOTIFICATIONS").performScrollTo().performClick()
+
+        waitFor(hasTestTag("settings.water.enabled"))
+        compose.onNodeWithText(string(R.string.settings_section_tracking_notifications)).assertIsDisplayed()
+        // Tracking comes first, then the notification master switch.
+        val water = compose.onNodeWithTag("settings.water.enabled").fetchSemanticsNode().boundsInRoot
+        val notifications = compose.onNodeWithTag("settings.notifications.enabled").fetchSemanticsNode().boundsInRoot
+        assertTrue(water.top < notifications.top)
+    }
+
+    @Test
     fun workoutLibrarySearchOpensRealExerciseDetails() {
         launchFresh()
         openTab("workouts")
@@ -448,8 +467,8 @@ class AppFlowsTest {
         // A restored Settings tab can still be inside its last category.
         // Re-tapping the real tab returns to the hub, just as a user would.
         compose.onNodeWithTag("nav.settings").performClick()
-        waitFor(hasTestTag("settings.category.TRACKING_REMINDERS"))
-        compose.onNodeWithTag("settings.category.TRACKING_REMINDERS").performScrollTo().performClick()
+        waitFor(hasTestTag("settings.category.TRACKING_NOTIFICATIONS"))
+        compose.onNodeWithTag("settings.category.TRACKING_NOTIFICATIONS").performScrollTo().performClick()
         waitFor(hasTestTag("settings.water.enabled"))
         compose.onNodeWithTag("settings.water.enabled").performScrollTo()
     }

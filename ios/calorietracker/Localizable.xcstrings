@@ -63083,60 +63083,66 @@
         }
       }
     },
-    "Tracking & Reminders": {
+    "Tracking & Notifications": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التتبع والتذكيرات"
+            "value": "التتبع والإشعارات"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "İzləmə və Xatırlatmalar"
+            "value": "İzləmə və Bildirişlər"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sledování a oznámení"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tracking & Erinnerungen"
+            "value": "Tracking & Mitteilungen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tracking & Reminders"
+            "value": "Tracking & Notifications"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seguimiento y recordatorios"
+            "value": "Seguimiento y notificaciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suivi et rappels"
+            "value": "Suivi et notifications"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "ट्रैकिंग और रिमाइंडर"
+            "value": "ट्रैकिंग और सूचनाएँ"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Monitoraggio e promemoria"
+            "value": "Monitoraggio e notifiche"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "トラッキングとリマインダー"
+            "value": "トラッキングと通知"
           }
         },
         "ko": {
@@ -63148,49 +63154,49 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tracking & herinneringen"
+            "value": "Tracking & meldingen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Śledzenie i przypomnienia"
+            "value": "Śledzenie i powiadomienia"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acompanhamento e lembretes"
+            "value": "Acompanhamento e notificações"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Monitorizare și mementouri"
+            "value": "Monitorizare și notificări"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отслеживание и напоминания"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відстеження та нагадування"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "追踪与提醒"
+            "value": "Отслеживание и уведомления"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Takip ve Hatırlatıcılar"
+            "value": "Takip ve Bildirimler"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відстеження та сповіщення"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追踪与通知"
           }
         }
       }
