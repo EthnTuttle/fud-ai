@@ -102,6 +102,9 @@ class LocalModelManager(
 
     fun modelFile(id: LocalModelId): File = File(modelDir, LocalModelCatalog.descriptor(id).fileName)
 
+    /** Disk space used by downloaded (or partially downloaded) models (Settings → Storage). */
+    fun storedBytes(): Long = modelDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+
     fun registerReleaseHook(id: LocalModelId, hook: suspend () -> Unit) {
         releaseHooks[id] = hook
     }

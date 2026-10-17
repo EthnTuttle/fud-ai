@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,9 +35,13 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import java.text.NumberFormat
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.time.temporal.TemporalAdjusters
+import java.time.temporal.WeekFields
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -88,6 +94,131 @@ internal fun preferredDailyWorkoutBurns(entries: List<WorkoutSession>): List<Pai
                 ?.let { date to it }
         }
         .sortedBy(Pair<LocalDate, Int>::first)
+
+@Composable
+internal fun StepsProgressSection(
+    days: List<Pair<LocalDate, Int>>?,
+    chartStart: LocalDate?,
+    chartEnd: LocalDate,
+    weekly: Boolean,
+    historyMayBeMissing: Boolean
+) {
+    val numberFormat = remember { NumberFormat.getIntegerInstance(Locale.getDefault()) }
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text(
+            stringResource(R.string.progress_metric_steps),
+            fontSize = 17.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        when {
+            days == null -> Box(
+                Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    strokeWidth = 2.dp,
+                    color = AppColors.Calorie
+                )
+            }
+            days.isEmpty() -> ProgressEmptyText(stringResource(R.string.progress_steps_no_range))
+            else -> {
+                val summary = remember(days) { stepsSummary(days) }
+                ProgressStatRow(
+                    listOf(
+                        stringResource(R.string.progress_steps_stat_total) to numberFormat.format(summary.total),
+                        stringResource(R.string.progress_steps_stat_average) to numberFormat.format(summary.average),
+                        stringResource(R.string.progress_steps_stat_best_day) to
+                            numberFormat.format(summary.best?.second ?: 0)
+                    )
+                )
+                val firstDayOfWeek = remember { WeekFields.of(Locale.getDefault()).firstDayOfWeek }
+                // All has no fixed start: its chart begins at the first day with steps.
+                val start = chartStart ?: days.first().first
+                val bars = remember(days, start, chartEnd, weekly, firstDayOfWeek) {
+                    stepChartBars(days, start, chartEnd, weekly, firstDayOfWeek)
+                }
+                val dateFormatter = remember {
+                    DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault())
+                }
+                if (bars.isNotEmpty()) DailyBarChart(
+                    values = bars,
+                    contentDescription = stringResource(
+                        R.string.progress_steps_chart_description,
+                        dateFormatter.format(bars.first().first),
+                        dateFormatter.format(bars.last().first),
+                        numberFormat.format(summary.total),
+                        numberFormat.format(summary.best?.second ?: 0)
+                    ),
+                    dateFormatter = dateFormatter
+                )
+                if (weekly) ProgressFootnote(stringResource(R.string.progress_steps_weekly_note))
+            }
+        }
+        if (historyMayBeMissing) ProgressFootnote(stringResource(R.string.progress_steps_history_note))
+        ProgressFootnote(stringResource(R.string.progress_steps_footnote))
+    }
+}
+
+internal data class StepsSummary(val total: Int, val average: Int, val best: Pair<LocalDate, Int>?)
+
+/** Total, mean over the days Health Connect has steps for (a day without data would
+ *  otherwise read as a zero-step day), and the best single day. */
+internal fun stepsSummary(days: List<Pair<LocalDate, Int>>): StepsSummary {
+    val total = days.sumOf { it.second }
+    val average = if (days.isEmpty()) 0 else (total.toDouble() / days.size).roundToInt()
+    return StepsSummary(total, average, days.maxByOrNull { it.second })
+}
+
+/** Longer ranges chart one bar per week so 6M / 1Y / All stay readable. */
+internal fun showsWeeklyStepBars(start: LocalDate, end: LocalDate): Boolean =
+    end.toEpochDay() - start.toEpochDay() + 1 > 90
+
+/** One bar per day from [start] through [end], or per calendar week when [weekly]
+ *  (that week's average over its days with steps, dated at the week's first day),
+ *  oldest first. Every slot is present — zero when Health Connect has no steps for
+ *  it — because the chart spaces bars by position, so a skipped day would pull the
+ *  later bars away from their dates. Averages elsewhere still use only the real days. */
+internal fun stepChartBars(
+    days: List<Pair<LocalDate, Int>>,
+    start: LocalDate,
+    end: LocalDate,
+    weekly: Boolean,
+    firstDayOfWeek: DayOfWeek
+): List<Pair<LocalDate, Int>> {
+    if (end < start) return emptyList()
+    if (!weekly) {
+        val stepsByDay = days.toMap()
+        return generateSequence(start) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(end) }
+            .map { day -> day to (stepsByDay[day] ?: 0) }
+            .toList()
+    }
+    val weekOf = { day: LocalDate -> day.with(TemporalAdjusters.previousOrSame(firstDayOfWeek)) }
+    val weeklyAverages = days
+        .filter { (day, _) -> day in start..end }
+        .groupBy { (day, _) -> weekOf(day) }
+        .mapValues { (_, values) -> values.map { it.second }.average().roundToInt() }
+    val lastWeek = weekOf(end)
+    return generateSequence(weekOf(start)) { it.plusWeeks(1) }
+        .takeWhile { !it.isAfter(lastWeek) }
+        .map { week -> week to (weeklyAverages[week] ?: 0) }
+        .toList()
+}
+
+/** Without the history grant, Health Connect hides records from more than ~30 days
+ *  before Fud AI was first connected, so long windows may be partly empty. */
+internal fun stepsHistoryMayBeMissing(start: LocalDate, today: LocalDate, hasHistoryAccess: Boolean): Boolean =
+    !hasHistoryAccess && start < today.minusDays(30)
+
+@Composable
+private fun ProgressFootnote(text: String) {
+    Text(
+        text,
+        fontSize = 11.sp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+    )
+}
 
 private val preferredWorkoutBurnComparator =
     compareBy<WorkoutSession> { it.healthSyncVersion ?: 0 }
@@ -168,24 +299,38 @@ private fun ProgressStatItem(
 
 @Composable
 private fun WorkoutBurnChart(values: List<Pair<LocalDate, Int>>) {
-    val maxValue = values.maxOf(Pair<LocalDate, Int>::second).coerceAtLeast(1).toFloat()
-    val grid = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
-    val secondary = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
     val dateFormatter = remember {
         DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault())
     }
-    val chartDescription = stringResource(
-        R.string.progress_workout_chart_description,
-        dateFormatter.format(values.first().first),
-        dateFormatter.format(values.last().first),
-        values.sumOf(Pair<LocalDate, Int>::second),
-        values.last().second
+    DailyBarChart(
+        values = values,
+        contentDescription = stringResource(
+            R.string.progress_workout_chart_description,
+            dateFormatter.format(values.first().first),
+            dateFormatter.format(values.last().first),
+            values.sumOf(Pair<LocalDate, Int>::second),
+            values.last().second
+        ),
+        dateFormatter = dateFormatter
     )
+}
+
+/** Gradient bar per dated value with first/last date labels; shared by the workout
+ *  burn and steps cards. */
+@Composable
+private fun DailyBarChart(
+    values: List<Pair<LocalDate, Int>>,
+    contentDescription: String,
+    dateFormatter: DateTimeFormatter
+) {
+    val maxValue = values.maxOf(Pair<LocalDate, Int>::second).coerceAtLeast(1).toFloat()
+    val grid = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.09f)
+    val secondary = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Canvas(
             Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(10.dp))
                 .background(AppColors.Calorie.copy(alpha = 0.025f))
-                .semantics { contentDescription = chartDescription }
+                .semantics { this.contentDescription = contentDescription }
         ) {
             repeat(5) { index ->
                 val y = size.height * index / 4f

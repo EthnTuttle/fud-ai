@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">제품 정보</string>
+    <string name="product_barcode">바코드</string>
+    <string name="product_package">내용량</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA 그룹</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">알레르기 유발 성분</string>
+    <string name="product_may_contain">함유 가능</string>
+    <string name="product_allergen_check">알레르기 성분 확인</string>
+    <string name="product_labels">라벨</string>
+    <string name="product_categories">카테고리</string>
+    <string name="product_ingredient_label">원재료 표시</string>
+    <string name="product_possible_allergen">알레르기 유발 가능 성분: %1$s</string>
+    <string name="product_info_settings_show">제품 정보 표시</string>
+    <string name="product_info_settings_fields">표시할 항목</string>
+    <string name="product_info_settings_footer">바코드로 스캔한 음식의 검토 및 편집 화면 맨 아래에 표시됩니다. 알레르기 성분 확인은 영향을 받지 않으며, 알레르기 민감 항목을 설정한 경우 항상 표시됩니다.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">단백질</string>
     <string name="macro_carbs">탄수화물</string>
@@ -353,6 +371,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">음식 상세</string>
     <string name="sheet_serving">1회 제공량</string>
+    <string name="recipe_servings_title">레시피 인분 수</string>
+    <string name="recipe_servings_footer">모든 재료를 추가한 뒤 설정하세요. Fud AI가 레시피를 나눠 1인분을 기록하고, 저장된 식사에도 그 1인분 크기가 유지됩니다.</string>
+    <string name="cd_recipe_servings_fewer">인분 줄이기</string>
+    <string name="cd_recipe_servings_more">인분 늘리기</string>
     <string name="sheet_nutrition">영양</string>
     <string name="sheet_meal">식사</string>
     <string name="sheet_more_nutrition">추가 영양 정보</string>
@@ -454,6 +476,8 @@
     <string name="progress_range_6m">6개월</string>
     <string name="progress_range_year">1년</string>
     <string name="progress_range_all">전체</string>
+    <string name="progress_previous_period">이전 기간</string>
+    <string name="progress_next_period">다음 기간</string>
 
     <string name="progress_weight_section">체중</string>
     <string name="progress_log_weight">체중 기록</string>
@@ -469,6 +493,8 @@
     </plurals>
 
     <string name="progress_calories_section">칼로리</string>
+    <string name="progress_include_today">오늘 포함</string>
+    <string name="progress_include_today_caption">칼로리 차트와 영양 평균</string>
     <string name="progress_avg_format">평균: %1$,d kcal</string>
     <string name="progress_no_food">아직 기록된 음식이 없어요</string>
 
@@ -508,6 +534,11 @@
     <string name="settings_goal_weight">목표 체중</string>
     <string name="settings_calories">칼로리</string>
     <string name="settings_recalculate_goals">목표 다시 계산</string>
+    <string name="settings_estimated_maintenance">예상 유지 칼로리</string>
+    <string name="settings_maintenance_deficit_format">칼로리 적자: %1$,d kcal/일</string>
+    <string name="settings_maintenance_surplus_format">칼로리 잉여: %1$,d kcal/일</string>
+    <string name="settings_maintenance_close">목표가 유지 칼로리에 가깝습니다</string>
+    <string name="settings_estimated_maintenance_info">예상 유지 칼로리는 평소 하루에 소모하는 칼로리입니다. 프로필의 BMR(기초대사량)에 활동 수준을 곱해 계산합니다. 이보다 적게 먹으면 체중 감량을 위한 칼로리 적자, 많이 먹으면 체중 증가를 위한 칼로리 잉여가 됩니다. 표시되는 적자 또는 잉여는 칼로리 목표에서 이 추정치를 뺀 값입니다. 공식에 따른 추정치이므로 실제 소모량과 다를 수 있으며, 목표 재계산은 기록한 음식, 체중 추세 또는 측정된 에너지 소모를 바탕으로 목표를 정할 수도 있습니다. 이는 의학적 조언이 아닙니다.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · 자동</string>
     <string name="settings_macro_pinned_a11y">고정됨</string>
@@ -521,6 +552,7 @@
     <string name="settings_height_unit">키 단위</string>
     <string name="settings_weight_unit">체중 단위</string>
     <string name="settings_week_starts">주 시작 요일</string>
+    <string name="settings_meal_times_customize">사용자 지정</string>
     <string name="settings_week_monday">월요일</string>
     <string name="settings_week_sunday">일요일</string>
     <string name="settings_notifications">알림</string>
@@ -539,8 +571,25 @@
     <string name="settings_clear_key">키 지우기</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">이전 체중 기록</string>
     <string name="settings_clear_food_log">음식 기록 지우기</string>
     <string name="settings_delete_all_data">모든 데이터 삭제</string>
+    <string name="storage_title">저장 공간</string>
+    <string name="storage_saved_photos">저장된 사진</string>
+    <string name="storage_on_device_models">기기 내 모델</string>
+    <string name="storage_cache">캐시</string>
+    <string name="storage_compress_photos">사진 압축</string>
+    <string name="storage_clear_cache">캐시 지우기</string>
+    <string name="storage_footer">사진 압축은 2048px보다 큰 사진의 크기를 영구적으로 줄입니다. 캐시 지우기는 썸네일과 다운로드한 운동 이미지를 삭제하며, 필요할 때 다시 생성됩니다. 기기 내 모델은 해당 AI 또는 음성 설정에서 삭제하세요.</string>
+    <string name="storage_compress_confirm_title">사진을 압축할까요?</string>
+    <string name="storage_compress_confirm_message">긴 변이 2048픽셀보다 큰 사진은 2048픽셀로 영구적으로 축소되어 JPEG로 저장됩니다. 더 작은 사진은 변경되지 않습니다. 이 작업은 취소할 수 없습니다.</string>
+    <string name="storage_compress_action">압축</string>
+    <string name="storage_compressing_progress">사진 압축 중… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">사진 압축 완료</string>
+    <string name="storage_compress_freed">%1$s 확보됨.</string>
+    <string name="storage_compress_nothing">압축할 사진이 없습니다.</string>
+    <string name="storage_compress_unreadable">일부 사진은 읽을 수 없어 변경하지 않았습니다.</string>
+    <string name="storage_compress_failed">일부 사진은 압축할 수 없어 변경하지 않았습니다. 기기에 여유 공간이 있는지 확인한 후 다시 시도하세요.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">음식 기록을 지울까요?</string>
@@ -648,6 +697,7 @@
     <string name="progress_metric_weight">체중</string>
     <string name="progress_metric_body_fat">체지방</string>
     <string name="progress_metric_workouts">운동</string>
+    <string name="progress_metric_steps">걸음 수</string>
     <string name="progress_workout_history">운동 기록</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">계산된 소모량 %1$d개 · 탭하여 보기 또는 삭제</item>
@@ -672,6 +722,14 @@
     <string name="workout_exercise_take_photo">사진 찍기</string>
     <string name="workout_exercise_camera_denied_title">카메라 접근 권한이 필요합니다</string>
     <string name="workout_exercise_camera_denied_message">운동 사진을 찍으려면 시스템 설정에서 Fud AI의 카메라 사용을 허용하세요.</string>
+    <string name="progress_steps_stat_total">합계</string>
+    <string name="progress_steps_stat_average">평균</string>
+    <string name="progress_steps_stat_best_day">최고 기록일</string>
+    <string name="progress_steps_no_range">이 기간의 걸음 수 데이터가 없습니다</string>
+    <string name="progress_steps_footnote">Health Connect의 일일 걸음 수 합계입니다.</string>
+    <string name="progress_steps_weekly_note">막대는 주별 하루 평균 걸음 수를 보여줍니다.</string>
+    <string name="progress_steps_history_note">Health Connect는 Fud AI를 연결하기 약 30일 전부터의 걸음 수만 공유하므로 그 이전 날짜는 빠질 수 있습니다.</string>
+    <string name="progress_steps_chart_description">%1$s~%2$s 걸음 수 차트. 합계 %3$s보, 최고 기록일 %4$s보.</string>
     <string name="progress_log_body_fat">체지방 기록</string>
     <string name="progress_log_first_body_fat">추이를 보려면 첫 체지방률을 기록하세요</string>
     <string name="progress_log_body_fat_title">체지방 기록</string>
@@ -809,4 +867,5 @@
     <string name="settings_save_photos_to_gallery">사진에 저장</string>
     <string name="settings_save_photos_to_gallery_subtitle">기록할 때 식사 사진을 갤러리에도 저장</string>
     <string name="settings_other_nutrients_note">칼로리, 단백질, 탄수화물, 지방 목표와 별개입니다.</string>
+    <string name="label_date">날짜</string>
 </resources>

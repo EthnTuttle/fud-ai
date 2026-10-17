@@ -41,6 +41,26 @@
     <string name="kg_per_week_format">%1$.2f kg/týd.</string>
     <string name="lbs_per_week_format">%1$.2f lbs/týd.</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informace o produktu</string>
+    <string name="product_barcode">Čárový kód</string>
+    <string name="barcode_saved_label_title">Používá se váš uložený výživový štítek pro tento čárový kód</string>
+    <string name="barcode_saved_label_footer">Open Food Facts pro tento produkt nemá nutriční hodnoty. Chcete-li tento štítek zapomenout, smažte záznamy jídla, které ho použily.</string>
+    <string name="product_package">Balení</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Skupina NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Alergeny</string>
+    <string name="product_may_contain">Může obsahovat</string>
+    <string name="product_allergen_check">Kontrola alergenů</string>
+    <string name="product_labels">Označení</string>
+    <string name="product_categories">Kategorie</string>
+    <string name="product_ingredient_label">Složení na etiketě</string>
+    <string name="product_possible_allergen">Možný alergen: %1$s</string>
+    <string name="product_info_settings_show">Zobrazit informace o produktu</string>
+    <string name="product_info_settings_fields">Zobrazené údaje</string>
+    <string name="product_info_settings_footer">Zobrazuje se na konci obrazovek kontroly a úprav u potravin naskenovaných čárovým kódem. Kontrola alergenů tím není ovlivněna a zobrazí se vždy, když máte nastavené citlivosti na alergeny.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Bílkoviny</string>
     <string name="macro_carbs">Sacharidy</string>
@@ -415,6 +435,9 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1R</string>
     <string name="progress_range_all">Vše</string>
+    <string name="progress_metric_steps">Kroky</string>
+    <string name="progress_previous_period">Předchozí období</string>
+    <string name="progress_next_period">Další období</string>
 
     <string name="progress_weight_section">Váha</string>
     <string name="progress_log_weight">Zapsat váhu</string>
@@ -434,6 +457,16 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorie</string>
+    <string name="progress_steps_stat_total">Celkem</string>
+    <string name="progress_steps_stat_average">Průměr</string>
+    <string name="progress_steps_stat_best_day">Nejlepší den</string>
+    <string name="progress_steps_no_range">V tomto období nejsou žádná data o krocích</string>
+    <string name="progress_steps_footnote">Denní součty kroků z Health Connect.</string>
+    <string name="progress_steps_weekly_note">Sloupce ukazují průměrný denní počet kroků za každý týden.</string>
+    <string name="progress_steps_history_note">Health Connect sdílí kroky jen zhruba od 30 dnů před připojením Fud AI, takže starší dny mohou chybět.</string>
+    <string name="progress_steps_chart_description">Graf kroků od %1$s do %2$s. Celkem %3$s kroků; nejlepší den %4$s kroků.</string>
+    <string name="progress_include_today">Zahrnout dnešek</string>
+    <string name="progress_include_today_caption">Graf kalorií a průměry živin</string>
     <string name="progress_avg_format">Průměr: %1$d kcal</string>
     <string name="progress_no_food">Zatím žádné zapsané jídlo</string>
 
@@ -471,6 +504,11 @@
     <string name="settings_goal_weight">Cílová váha</string>
     <string name="settings_calories">Kalorie</string>
     <string name="settings_recalculate_goals">Přepočítat cíle</string>
+    <string name="settings_estimated_maintenance">Odhadovaný udržovací příjem</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/den</string>
+    <string name="settings_maintenance_surplus_format">Přebytek: %1$,d kcal/den</string>
+    <string name="settings_maintenance_close">Cíl je blízko udržovacímu příjmu</string>
+    <string name="settings_estimated_maintenance_info">Odhadovaný udržovací příjem je počet kalorií, které spálíte v běžný den: váš BMR z profilu vynásobený úrovní aktivity. Když jíte méně, vzniká deficit pro hubnutí; když více, vzniká přebytek pro nabírání. Zobrazený deficit nebo přebytek je váš kalorický cíl minus tento odhad. Jde o odhad podle vzorce, takže skutečný výdej se může lišit, a přepočet cílů může nastavit cíl podle zaznamenaného jídla, vývoje hmotnosti nebo naměřeného výdeje energie. Nejde o lékařskou radu.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Připnuto</string>
@@ -554,6 +592,7 @@
     <string name="settings_fallback_footer">Když primární poskytovatel selže (přetížení, limit požadavků, chyba sítě), aplikace to automaticky zkusí znovu s tímto záložním. Může být stejný jako primární — jen vyber jiný model.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Starší záznamy hmotnosti</string>
     <string name="settings_manage_health_access">Spravovat přístup Health Connect</string>
     <string name="settings_permissions">Oprávnění</string>
     <string name="settings_energy_goals">Cíle podle spálené energie</string>
@@ -564,6 +603,22 @@
     <string name="settings_refresh_energy_goals">Obnovit cíle ze spálené energie</string>
     <string name="settings_clear_food_log">Vymazat deník jídel</string>
     <string name="settings_delete_all_data">Smazat všechna data</string>
+    <string name="storage_title">Úložiště</string>
+    <string name="storage_saved_photos">Uložené fotky</string>
+    <string name="storage_on_device_models">Modely v zařízení</string>
+    <string name="storage_cache">Mezipaměť</string>
+    <string name="storage_compress_photos">Komprimovat fotky</string>
+    <string name="storage_clear_cache">Vymazat mezipaměť</string>
+    <string name="storage_footer">Komprimovat fotky trvale zmenší fotky větší než 2048 px. Vymazat mezipaměť odstraní miniatury a stažené obrázky cviků, které se v případě potřeby znovu vytvoří. Modely v zařízení smažete v jejich nastavení AI nebo řeči.</string>
+    <string name="storage_compress_confirm_title">Komprimovat fotky?</string>
+    <string name="storage_compress_confirm_message">Fotky, jejichž delší strana přesahuje 2048 pixelů, budou trvale zmenšeny na 2048 pixelů a uloženy jako JPEG. Menší fotky zůstanou beze změny. Tuto akci nelze vrátit.</string>
+    <string name="storage_compress_action">Komprimovat</string>
+    <string name="storage_compressing_progress">Komprimace fotek… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotky zkomprimovány</string>
+    <string name="storage_compress_freed">Uvolněno %1$s.</string>
+    <string name="storage_compress_nothing">Žádné fotky nebylo třeba komprimovat.</string>
+    <string name="storage_compress_unreadable">Některé fotky nebylo možné načíst a zůstaly beze změny.</string>
+    <string name="storage_compress_failed">Některé fotky nebylo možné zkomprimovat a zůstaly beze změny. Ujisti se, že má zařízení volné místo, a zkus to znovu.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Vymazat deník jídel?</string>
@@ -1024,6 +1079,10 @@
     <string name="ingredients_remove">Odebrat</string>
     <string name="ingredients_weight">Hmotnost</string>
     <string name="ingredients_footer">Změny ingrediencí automaticky aktualizují celkové kalorie a makra jídla.</string>
+    <string name="recipe_servings_title">Porce v receptu</string>
+    <string name="recipe_servings_footer">Nastavte to po přidání všech ingrediencí. Fud AI recept rozdělí, abyste zapsali 1 porci, a Uložená jídla si tuto velikost porce ponechají.</string>
+    <string name="cd_recipe_servings_fewer">Méně porcí</string>
+    <string name="cd_recipe_servings_more">Více porcí</string>
     <string name="progressive_meal_title">Postupné jídlo</string>
     <string name="progressive_meal_description">Fotka 1 → 2 → 3 sleduje každou ingredienci přidanou na stejný talíř. Viditelné rozdíly na kuchyňské váze se stanou hmotnostmi ingrediencí.</string>
     <string name="progressive_meal_info_title">Jak Postupné jídlo funguje</string>

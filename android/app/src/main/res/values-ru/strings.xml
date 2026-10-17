@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Информация о продукте</string>
+    <string name="product_barcode">Штрихкод</string>
+    <string name="product_package">Упаковка</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Группа NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Аллергены</string>
+    <string name="product_may_contain">Может содержать</string>
+    <string name="product_allergen_check">Проверка аллергенов</string>
+    <string name="product_labels">Маркировки</string>
+    <string name="product_categories">Категории</string>
+    <string name="product_ingredient_label">Состав на этикетке</string>
+    <string name="product_possible_allergen">Возможный аллерген: %1$s</string>
+    <string name="product_info_settings_show">Показывать информацию о продукте</string>
+    <string name="product_info_settings_fields">Отображаемые сведения</string>
+    <string name="product_info_settings_footer">Показывается в конце экранов проверки и редактирования продуктов, отсканированных по штрихкоду. Проверка аллергенов от этого не зависит и всегда отображается, если у вас заданы чувствительности к аллергенам.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Белок</string>
     <string name="macro_carbs">Углеводы</string>
@@ -358,6 +376,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Сведения о еде</string>
     <string name="sheet_serving">Порция</string>
+    <string name="recipe_servings_title">Порций в рецепте</string>
+    <string name="recipe_servings_footer">Укажите это после добавления всех ингредиентов. Fud AI разделит рецепт, чтобы вы записали 1 порцию, а в сохранённых блюдах останется этот размер порции.</string>
+    <string name="cd_recipe_servings_fewer">Меньше порций</string>
+    <string name="cd_recipe_servings_more">Больше порций</string>
     <string name="sheet_nutrition">Питание</string>
     <string name="sheet_meal">Приём пищи</string>
     <string name="sheet_more_nutrition">Больше о питании</string>
@@ -459,6 +481,8 @@
     <string name="progress_range_6m">6М</string>
     <string name="progress_range_year">1Г</string>
     <string name="progress_range_all">Всё</string>
+    <string name="progress_previous_period">Предыдущий период</string>
+    <string name="progress_next_period">Следующий период</string>
 
     <string name="progress_weight_section">Вес</string>
     <string name="progress_log_weight">Записать вес</string>
@@ -476,6 +500,8 @@
     </plurals>
 
     <string name="progress_calories_section">Калории</string>
+    <string name="progress_include_today">Учитывать сегодня</string>
+    <string name="progress_include_today_caption">График калорий и средние значения питания</string>
     <string name="progress_avg_format">Сред.: %1$,d ккал</string>
     <string name="progress_no_food">Пока нет записей о еде</string>
 
@@ -515,6 +541,11 @@
     <string name="settings_goal_weight">Целевой вес</string>
     <string name="settings_calories">Калории</string>
     <string name="settings_recalculate_goals">Пересчитать цели</string>
+    <string name="settings_estimated_maintenance">Оценочная норма поддержания</string>
+    <string name="settings_maintenance_deficit_format">Дефицит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format">Профицит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_close">Цель близка к норме поддержания</string>
+    <string name="settings_estimated_maintenance_info">Оценочная норма поддержания — это калории, которые вы сжигаете в обычный день: ваш BMR из профиля, умноженный на уровень активности. Если есть меньше, получается дефицит для снижения веса; если больше — профицит для набора. Показанный дефицит или профицит — это ваша цель по калориям минус эта оценка. Это расчёт по формуле, поэтому реальный расход может отличаться, а пересчёт целей может задать цель на основе записанной еды, динамики веса или измеренного расхода энергии. Это не медицинская рекомендация.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · авто</string>
     <string name="settings_macro_pinned_a11y">Закреплено</string>
@@ -528,6 +559,7 @@
     <string name="settings_height_unit">Единица роста</string>
     <string name="settings_weight_unit">Единица веса</string>
     <string name="settings_week_starts">Начало недели</string>
+    <string name="settings_meal_times_customize">Настроить</string>
     <string name="settings_week_monday">Понедельник</string>
     <string name="settings_week_sunday">Воскресенье</string>
     <string name="settings_notifications">Уведомления</string>
@@ -546,8 +578,25 @@
     <string name="settings_clear_key">Очистить ключ</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Старые записи веса</string>
     <string name="settings_clear_food_log">Очистить дневник питания</string>
     <string name="settings_delete_all_data">Удалить все данные</string>
+    <string name="storage_title">Хранилище</string>
+    <string name="storage_saved_photos">Сохранённые фото</string>
+    <string name="storage_on_device_models">Модели на устройстве</string>
+    <string name="storage_cache">Кэш</string>
+    <string name="storage_compress_photos">Сжать фото</string>
+    <string name="storage_clear_cache">Очистить кэш</string>
+    <string name="storage_footer">«Сжать фото» навсегда уменьшает фото больше 2048 пикселей. «Очистить кэш» удаляет миниатюры и загруженные изображения упражнений — при необходимости они создаются заново. Модели на устройстве удаляются в их настройках ИИ или распознавания речи.</string>
+    <string name="storage_compress_confirm_title">Сжать фото?</string>
+    <string name="storage_compress_confirm_message">Фото, у которых длинная сторона больше 2048 пикселей, будут навсегда уменьшены до 2048 пикселей и сохранены в формате JPEG. Фото меньшего размера не изменятся. Это действие нельзя отменить.</string>
+    <string name="storage_compress_action">Сжать</string>
+    <string name="storage_compressing_progress">Сжатие фото… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Фото сжаты</string>
+    <string name="storage_compress_freed">Освобождено %1$s.</string>
+    <string name="storage_compress_nothing">Нет фото, которые нужно сжать.</string>
+    <string name="storage_compress_unreadable">Некоторые фото не удалось прочитать, они остались без изменений.</string>
+    <string name="storage_compress_failed">Некоторые фото не удалось сжать, они остались без изменений. Убедитесь, что на устройстве есть свободное место, и попробуйте снова.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистить дневник питания?</string>
@@ -655,6 +704,7 @@
     <string name="progress_metric_weight">Вес</string>
     <string name="progress_metric_body_fat">Жир тела</string>
     <string name="progress_metric_workouts">Тренировки</string>
+    <string name="progress_metric_steps">Шаги</string>
     <string name="progress_workout_history">История тренировок</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d расчёт расхода · коснитесь, чтобы посмотреть или удалить</item>
@@ -672,6 +722,14 @@
     <string name="progress_workout_stat_days">Дни</string>
     <string name="progress_workout_no_range">За этот период нет рассчитанного расхода тренировок</string>
     <string name="progress_workout_chart_description">График расхода тренировок с %1$s по %2$s. Всего %3$d килокалорий; последнее значение %4$d килокалорий.</string>
+    <string name="progress_steps_stat_total">Итого</string>
+    <string name="progress_steps_stat_average">Среднее</string>
+    <string name="progress_steps_stat_best_day">Лучший день</string>
+    <string name="progress_steps_no_range">Нет данных о шагах за этот период</string>
+    <string name="progress_steps_footnote">Суммы шагов за день из Health Connect.</string>
+    <string name="progress_steps_weekly_note">Столбцы показывают среднее число шагов в день за каждую неделю.</string>
+    <string name="progress_steps_history_note">Health Connect передаёт шаги только примерно с 30 дней до подключения Fud AI, поэтому более ранние дни могут отсутствовать.</string>
+    <string name="progress_steps_chart_description">График шагов с %1$s по %2$s. Всего %3$s шагов; лучший день — %4$s шагов.</string>
     <string name="progress_log_body_fat">Записать жир</string>
     <string name="progress_log_first_body_fat">Запишите первое измерение жира, чтобы увидеть динамику</string>
     <string name="progress_log_body_fat_title">Записать жир</string>

@@ -13,10 +13,16 @@ enum GeminiRequestConfiguration {
     /// `thinkingConfig.thinkingLevel` for Gemini 3-family models. `minimal` is the fastest level but
     /// is only accepted by Flash-Lite and the 3 / 3.5 / 3.6 Flash models; 3.7+ Flash and the Pro
     /// models reject it with a 400, so they get `low`. Pre-3 models (thinkingBudget only) and
-    /// unrecognized ids return nil so nothing is sent.
+    /// unrecognized ids return nil so nothing is sent. Google's versionless `-latest` aliases get a
+    /// level every Gemini 3 model they can point to accepts (#358).
     static func thinkingLevel(for model: String) -> String? {
         let id = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let bare = id.split(separator: "/").last.map(String.init) ?? id
+        switch bare {
+        case "gemini-flash-lite-latest": return "minimal"
+        case "gemini-flash-latest": return "low"
+        default: break
+        }
         guard bare.hasPrefix("gemini-") else { return nil }
         let remainder = bare.dropFirst("gemini-".count)
         guard let dash = remainder.firstIndex(of: "-") else { return nil }

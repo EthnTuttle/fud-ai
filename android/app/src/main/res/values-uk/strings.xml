@@ -87,6 +87,10 @@
     <string name="product_labels">Мітки</string>
     <string name="product_categories">Категорії</string>
     <string name="product_ingredient_label">Етикетка інгредієнтів</string>
+    <string name="product_possible_allergen">Можливий алерген: %1$s</string>
+    <string name="product_info_settings_show">Показувати інформацію про продукт</string>
+    <string name="product_info_settings_fields">Відображувані відомості</string>
+    <string name="product_info_settings_footer">Показується в кінці екранів перегляду та редагування продуктів, відсканованих за штрихкодом. Перевірка алергенів від цього не залежить і завжди з\'являється, якщо у вас задано чутливість до алергенів.</string>
 
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Білки</string>
@@ -265,6 +269,7 @@
     <string name="progress_metric_weight">Вага</string>
     <string name="progress_metric_body_fat">Відсоток жиру</string>
     <string name="progress_metric_workouts">Тренування</string>
+    <string name="progress_metric_steps">Кроки</string>
     <string name="progress_log_body_fat">Записати відсоток жиру</string>
     <string name="progress_log_first_body_fat">Зареєструйте свій перший показник жиру в організмі, щоб переглянути тенденції</string>
     <string name="progress_log_body_fat_title">Записати відсоток жиру</string>
@@ -534,6 +539,8 @@
     <string name="progress_range_6m">6 міс.</string>
     <string name="progress_range_year">1 рік</string>
     <string name="progress_range_all">Весь час</string>
+    <string name="progress_previous_period">Попередній період</string>
+    <string name="progress_next_period">Наступний період</string>
 
     <string name="progress_weight_section">Вага</string>
     <string name="progress_log_weight">Записати вагу</string>
@@ -569,8 +576,18 @@
     <string name="progress_workout_stat_days">Дні</string>
     <string name="progress_workout_no_range">За цей період немає розрахованого спалювання від тренувань</string>
     <string name="progress_workout_chart_description">Графік спалювання від тренувань з %1$s по %2$s. Усього %3$d кілокалорій; останнє значення %4$d кілокалорій.</string>
+    <string name="progress_steps_stat_total">Разом</string>
+    <string name="progress_steps_stat_average">Середнє</string>
+    <string name="progress_steps_stat_best_day">Найкращий день</string>
+    <string name="progress_steps_no_range">Немає даних про кроки за цей період</string>
+    <string name="progress_steps_footnote">Денні суми кроків з Health Connect.</string>
+    <string name="progress_steps_weekly_note">Стовпці показують середню кількість кроків на день за кожен тиждень.</string>
+    <string name="progress_steps_history_note">Health Connect передає кроки лише приблизно з 30 днів до підключення Fud AI, тому давніші дні можуть бути відсутні.</string>
+    <string name="progress_steps_chart_description">Графік кроків з %1$s по %2$s. Усього %3$s кроків; найкращий день — %4$s кроків.</string>
 
     <string name="progress_calories_section">Калорії</string>
+    <string name="progress_include_today">Враховувати сьогодні</string>
+    <string name="progress_include_today_caption">Графік калорій і середні показники харчування</string>
     <string name="progress_avg_format">Середнє: %1$d ккал</string>
     <string name="progress_no_food">Їжу ще не зареєстровано</string>
 
@@ -671,6 +688,11 @@
     <string name="settings_goal_weight">Цільова вага</string>
     <string name="settings_calories">Калорії</string>
     <string name="settings_recalculate_goals">Перерахувати цілі</string>
+    <string name="settings_estimated_maintenance">Орієнтовна норма підтримки</string>
+    <string name="settings_maintenance_deficit_format">Дефіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format">Профіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_close">Ціль близька до норми підтримки</string>
+    <string name="settings_estimated_maintenance_info">Орієнтовна норма підтримки — це калорії, які ви спалюєте у звичайний день: ваш BMR із профілю, помножений на рівень активності. Якщо їсти менше, виникає дефіцит для схуднення; якщо більше — профіцит для набору ваги. Показаний дефіцит або профіцит — це ваша ціль калорій мінус ця оцінка. Це розрахунок за формулою, тож реальні витрати можуть відрізнятися, а перерахунок цілей може встановити ціль на основі записаної їжі, динаміки ваги або виміряних витрат енергії. Це не медична порада.</string>
     <string name="settings_macro_pinned_format">%1$d г</string>
     <string name="settings_macro_auto_format">%1$d г · авто</string>
     <string name="settings_macro_pinned_a11y">Закріплено</string>
@@ -798,6 +820,7 @@
     <string name="settings_fallback_footer">Якщо основний постачальник не відповідає (перевантаження, ліміт запитів, помилка мережі), застосунок автоматично повторить спробу з цим резервним постачальником. Можна вибрати того ж постачальника, що й основний — просто вкажіть іншу модель.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Старіші записи ваги</string>
     <string name="settings_manage_health_access">Керувати доступом до Health Connect</string>
     <string name="settings_permissions">Дозволи</string>
     <string name="settings_energy_goals">Цілі спалювання енергії</string>
@@ -808,6 +831,22 @@
     <string name="settings_refresh_energy_goals">Оновити цілі спалювання енергії</string>
     <string name="settings_clear_food_log">Очистити журнал їжі</string>
     <string name="settings_delete_all_data">Видалити всі дані</string>
+    <string name="storage_title">Сховище</string>
+    <string name="storage_saved_photos">Збережені фото</string>
+    <string name="storage_on_device_models">Моделі на пристрої</string>
+    <string name="storage_cache">Кеш</string>
+    <string name="storage_compress_photos">Стиснути фото</string>
+    <string name="storage_clear_cache">Очистити кеш</string>
+    <string name="storage_footer">«Стиснути фото» назавжди зменшує фото, більші за 2048 пікселів. «Очистити кеш» видаляє мініатюри та завантажені зображення вправ — за потреби вони створюються знову. Моделі на пристрої видаляються в їхніх налаштуваннях ШІ або мовлення.</string>
+    <string name="storage_compress_confirm_title">Стиснути фото?</string>
+    <string name="storage_compress_confirm_message">Фото, у яких довша сторона перевищує 2048 пікселів, буде назавжди зменшено до 2048 пікселів і збережено у форматі JPEG. Менші фото не зміняться. Цю дію не можна скасувати.</string>
+    <string name="storage_compress_action">Стиснути</string>
+    <string name="storage_compressing_progress">Стиснення фото… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Фото стиснуто</string>
+    <string name="storage_compress_freed">Звільнено %1$s.</string>
+    <string name="storage_compress_nothing">Немає фото, які потрібно стиснути.</string>
+    <string name="storage_compress_unreadable">Деякі фото не вдалося прочитати, тому їх не змінено.</string>
+    <string name="storage_compress_failed">Деякі фото не вдалося стиснути, тому їх не змінено. Переконайтеся, що на пристрої є вільне місце, і спробуйте ще раз.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистити журнал їжі?</string>
@@ -1288,6 +1327,10 @@
     <string name="ingredients_remove">Видалити</string>
     <string name="ingredients_weight">Вага</string>
     <string name="ingredients_footer">Зміни в інгредієнтах автоматично оновлюють загальну кількість калорій та макросів у страві.</string>
+    <string name="recipe_servings_title">Порцій у рецепті</string>
+    <string name="recipe_servings_footer">Укажіть це після додавання всіх інгредієнтів. Fud AI розділить рецепт, щоб ви записали 1 порцію, а збережені страви збережуть цей розмір порції.</string>
+    <string name="cd_recipe_servings_fewer">Менше порцій</string>
+    <string name="cd_recipe_servings_more">Більше порцій</string>
     <string name="combine_action">Об\'єднати</string>
     <string name="combine_into_meal">Об\'єднати в прийом їжі</string>
     <string name="combine_selected_count">Вибрано: %1$d</string>

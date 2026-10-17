@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Produktinformationen</string>
+    <string name="product_barcode">Barcode</string>
+    <string name="product_package">Packung</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA-Gruppe</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergene</string>
+    <string name="product_may_contain">Kann enthalten</string>
+    <string name="product_allergen_check">Allergen-Check</string>
+    <string name="product_labels">Siegel</string>
+    <string name="product_categories">Kategorien</string>
+    <string name="product_ingredient_label">Zutatenliste</string>
+    <string name="product_possible_allergen">Mögliches Allergen: %1$s</string>
+    <string name="product_info_settings_show">Produktinformationen anzeigen</string>
+    <string name="product_info_settings_fields">Angezeigte Details</string>
+    <string name="product_info_settings_footer">Wird bei per Barcode gescannten Lebensmitteln am Ende der Prüf- und Bearbeitungsansicht angezeigt. Der Allergen-Check ist davon nicht betroffen und erscheint immer, wenn du Allergen-Empfindlichkeiten festgelegt hast.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protein</string>
     <string name="macro_carbs">Kohlenhydrate</string>
@@ -354,6 +372,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Essensdetails</string>
     <string name="sheet_serving">Portion</string>
+    <string name="recipe_servings_title">Portionen im Rezept</string>
+    <string name="recipe_servings_footer">Lege das fest, nachdem du alle Zutaten hinzugefügt hast. Fud AI teilt das Rezept auf, sodass du 1 Portion einträgst, und Gespeicherte Mahlzeiten behalten diese Portionsgröße.</string>
+    <string name="cd_recipe_servings_fewer">Weniger Portionen</string>
+    <string name="cd_recipe_servings_more">Mehr Portionen</string>
     <string name="sheet_nutrition">Ernährung</string>
     <string name="sheet_meal">Mahlzeit</string>
     <string name="sheet_more_nutrition">Weitere Nährwerte</string>
@@ -455,6 +477,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1J</string>
     <string name="progress_range_all">Alle</string>
+    <string name="progress_previous_period">Vorheriger Zeitraum</string>
+    <string name="progress_next_period">Nächster Zeitraum</string>
 
     <string name="progress_weight_section">Gewicht</string>
     <string name="progress_log_weight">Gewicht erfassen</string>
@@ -470,6 +494,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorien</string>
+    <string name="progress_include_today">Heute einbeziehen</string>
+    <string name="progress_include_today_caption">Kaloriendiagramm und Nährwert-Durchschnitte</string>
     <string name="progress_avg_format">Ø: %1$,d kcal</string>
     <string name="progress_no_food">Noch kein Essen erfasst</string>
 
@@ -509,6 +535,11 @@
     <string name="settings_goal_weight">Zielgewicht</string>
     <string name="settings_calories">Kalorien</string>
     <string name="settings_recalculate_goals">Ziele neu berechnen</string>
+    <string name="settings_estimated_maintenance">Geschätzter Erhaltungsbedarf</string>
+    <string name="settings_maintenance_deficit_format">Defizit: %1$,d kcal/Tag</string>
+    <string name="settings_maintenance_surplus_format">Überschuss: %1$,d kcal/Tag</string>
+    <string name="settings_maintenance_close">Ziel liegt nahe am Erhaltungsbedarf</string>
+    <string name="settings_estimated_maintenance_info">Der geschätzte Erhaltungsbedarf ist die Kalorienmenge, die du an einem typischen Tag verbrennst: dein Grundumsatz (BMR) aus deinem Profil multipliziert mit deinem Aktivitätslevel. Isst du weniger, entsteht ein Defizit zum Abnehmen; isst du mehr, ein Überschuss zum Zunehmen. Das angezeigte Defizit bzw. der Überschuss ist dein Kalorienziel minus diese Schätzung. Es ist eine Formelschätzung, dein tatsächlicher Verbrauch kann abweichen, und die Zielberechnung kann dein Ziel stattdessen aus deinen erfassten Mahlzeiten, deinem Gewichtstrend oder deinem gemessenen Energieverbrauch festlegen. Dies ist keine medizinische Beratung.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Angeheftet</string>
@@ -522,6 +553,7 @@
     <string name="settings_height_unit">Größeneinheit</string>
     <string name="settings_weight_unit">Gewichtseinheit</string>
     <string name="settings_week_starts">Wochenbeginn</string>
+    <string name="settings_meal_times_customize">Anpassen</string>
     <string name="settings_week_monday">Montag</string>
     <string name="settings_week_sunday">Sonntag</string>
     <string name="settings_notifications">Mitteilungen</string>
@@ -540,8 +572,25 @@
     <string name="settings_clear_key">Schlüssel löschen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Ältere Gewichtseinträge</string>
     <string name="settings_clear_food_log">Ernährungstagebuch löschen</string>
     <string name="settings_delete_all_data">Alle Daten löschen</string>
+    <string name="storage_title">Speicher</string>
+    <string name="storage_saved_photos">Gespeicherte Fotos</string>
+    <string name="storage_on_device_models">Modelle auf dem Gerät</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Fotos komprimieren</string>
+    <string name="storage_clear_cache">Cache leeren</string>
+    <string name="storage_footer">„Fotos komprimieren“ verkleinert Fotos über 2048 px dauerhaft. „Cache leeren“ entfernt Miniaturansichten und heruntergeladene Übungsbilder; sie werden bei Bedarf neu erstellt. Modelle auf dem Gerät löschst du in ihren KI- oder Spracheinstellungen.</string>
+    <string name="storage_compress_confirm_title">Fotos komprimieren?</string>
+    <string name="storage_compress_confirm_message">Fotos, deren längste Seite 2048 Pixel überschreitet, werden dauerhaft auf 2048 Pixel verkleinert und als JPEG gespeichert. Kleinere Fotos bleiben unverändert. Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="storage_compress_action">Komprimieren</string>
+    <string name="storage_compressing_progress">Fotos werden komprimiert … %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotos komprimiert</string>
+    <string name="storage_compress_freed">%1$s freigegeben.</string>
+    <string name="storage_compress_nothing">Keine Fotos mussten komprimiert werden.</string>
+    <string name="storage_compress_unreadable">Einige Fotos konnten nicht gelesen werden und blieben unverändert.</string>
+    <string name="storage_compress_failed">Einige Fotos konnten nicht komprimiert werden und blieben unverändert. Stelle sicher, dass auf deinem Gerät Speicherplatz frei ist, und versuche es erneut.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Ernährungstagebuch löschen?</string>
@@ -649,6 +698,7 @@
     <string name="progress_metric_weight">Gewicht</string>
     <string name="progress_metric_body_fat">Körperfett</string>
     <string name="progress_metric_workouts">Training</string>
+    <string name="progress_metric_steps">Schritte</string>
     <string name="progress_workout_history">Trainingsverlauf</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d berechneter Verbrauch · zum Anzeigen oder Löschen tippen</item>
@@ -673,6 +723,14 @@
     <string name="workout_exercise_take_photo">Foto aufnehmen</string>
     <string name="workout_exercise_camera_denied_title">Kamerazugriff erforderlich</string>
     <string name="workout_exercise_camera_denied_message">Erlaube Fud AI in den Systemeinstellungen den Kamerazugriff, um Übungsfotos aufzunehmen.</string>
+    <string name="progress_steps_stat_total">Gesamt</string>
+    <string name="progress_steps_stat_average">Durchschnitt</string>
+    <string name="progress_steps_stat_best_day">Bester Tag</string>
+    <string name="progress_steps_no_range">Keine Schrittdaten in diesem Zeitraum</string>
+    <string name="progress_steps_footnote">Tägliche Schrittsummen aus Health Connect.</string>
+    <string name="progress_steps_weekly_note">Die Balken zeigen die durchschnittlichen täglichen Schritte pro Woche.</string>
+    <string name="progress_steps_history_note">Health Connect teilt Schritte nur ab etwa 30 Tagen vor der Verbindung mit Fud AI, daher können ältere Tage fehlen.</string>
+    <string name="progress_steps_chart_description">Schrittdiagramm von %1$s bis %2$s. Insgesamt %3$s Schritte; bester Tag %4$s Schritte.</string>
     <string name="progress_log_body_fat">Körperfett protokollieren</string>
     <string name="progress_log_first_body_fat">Erfasse deinen ersten Körperfettwert, um Trends zu sehen</string>
     <string name="progress_log_body_fat_title">Körperfett protokollieren</string>
@@ -810,4 +868,5 @@
     <string name="settings_save_photos_to_gallery">In Fotos speichern</string>
     <string name="settings_save_photos_to_gallery_subtitle">Mahlzeitfotos beim Protokollieren auch in deiner Galerie speichern</string>
     <string name="settings_other_nutrients_note">Getrennt von den Zielen für Kalorien, Protein, Kohlenhydrate und Fett.</string>
+    <string name="label_date">Datum</string>
 </resources>

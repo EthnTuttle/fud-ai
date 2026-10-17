@@ -42,6 +42,17 @@ enum WorkoutLogDaySwipeNavigation {
     }
 }
 
+/// Reorder mode belongs to the day it was started on. It ends when another
+/// day is selected or fewer than two exercises remain, so returning to that
+/// day (or adding an exercise back) shows the normal cards instead of
+/// silently resuming it.
+enum WorkoutLogReorderMode {
+    static func retainedDateKey(_ dateKey: String?, selectedDateKey: String, exerciseCount: Int) -> String? {
+        guard let dateKey, dateKey == selectedDateKey, exerciseCount > 1 else { return nil }
+        return dateKey
+    }
+}
+
 enum WorkoutLogKeyboardDismissal {
     static func shouldDismiss(at location: CGPoint, cardFrames: [CGRect]) -> Bool {
         guard !cardFrames.isEmpty else { return false }
@@ -87,6 +98,9 @@ struct WorkoutLogView: View {
     @State private var isCalculatingBurn = false
     @State private var workoutCardFrames: [UUID: CGRect] = [:]
     @State private var pendingWorkoutDeletion: StrengthPlannedExercise?
+    /// The day reordering was started on; cleared when the day changes or
+    /// fewer than two exercises remain (see `WorkoutLogReorderMode`).
+    @State private var reorderingDateKey: String?
     @FocusState private var focusedSetField: WorkoutLogSetFocus?
 
     private var isWorkoutDeletionPresented: Binding<Bool> {
@@ -127,6 +141,28 @@ struct WorkoutLogView: View {
 
     private var selectedExercises: [StrengthPlannedExercise] {
         workoutStore.exercises(for: selectedDate)
+    }
+
+    private var selectedDateKey: String {
+        StrengthWorkoutStore.dateKey(for: selectedDate)
+    }
+
+    private var isReordering: Bool {
+        WorkoutLogReorderMode.retainedDateKey(
+            reorderingDateKey,
+            selectedDateKey: selectedDateKey,
+            exerciseCount: selectedExercises.count
+        ) != nil
+    }
+
+    /// Clears the stored day once reordering no longer applies, so it does not
+    /// come back when the user returns to that day or adds an exercise.
+    private func endReorderingIfNeeded() {
+        reorderingDateKey = WorkoutLogReorderMode.retainedDateKey(
+            reorderingDateKey,
+            selectedDateKey: selectedDateKey,
+            exerciseCount: selectedExercises.count
+        )
     }
 
     private var importedHealthWorkouts: [ImportedHealthWorkout] {
@@ -250,8 +286,31 @@ struct WorkoutLogView: View {
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
                                 .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
+                        } else if isReordering {
+                            let count = selectedExercises.count
+                            ForEach(Array(selectedExercises.enumerated()), id: \.element.id) { index, exercise in
+                                WorkoutLogReorderRow(
+                                    exercise: exercise,
+                                    position: index + 1,
+                                    canMoveUp: index > 0,
+                                    canMoveDown: index < count - 1,
+                                    moveUp: { moveExercise(exercise, by: -1) },
+                                    moveDown: { moveExercise(exercise, by: 1) }
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
+                            }
+                            // Long-press dragging is offered only here, so it never
+                            // competes with set fields or swipe actions on normal cards.
+                            .onMove { source, destination in
+                                withAnimation(.snappy(duration: 0.25)) {
+                                    workoutStore.moveExercises(fromOffsets: source, toOffset: destination, on: selectedDate)
+                                }
+                            }
                         } else {
-                            ForEach(selectedExercises) { exercise in
+                            let count = selectedExercises.count
+                            ForEach(Array(selectedExercises.enumerated()), id: \.element.id) { index, exercise in
                                 WorkoutLogExerciseCard(
                                     exercise: exercise,
                                     weightUnit: weightUnit,
@@ -264,6 +323,8 @@ struct WorkoutLogView: View {
                                         displayUnit: weightUnit
                                     ),
                                     focusedField: $focusedSetField,
+                                    moveUp: index > 0 ? { moveExercise(exercise, by: -1) } : nil,
+                                    moveDown: index < count - 1 ? { moveExercise(exercise, by: 1) } : nil,
                                     openDetail: {
                                         guard focusedSetField == nil else { return }
                                         selectedDetailItem = exercise.libraryItem
@@ -283,6 +344,9 @@ struct WorkoutLogView: View {
                                     timerAction: { action in
                                         dismissSetKeyboard()
                                         workoutStore.updateTimer(action, exerciseID: exercise.id, on: selectedDate)
+                                    },
+                                    setEffort: { intensity in
+                                        workoutStore.setTimerIntensity(intensity, exerciseID: exercise.id, on: selectedDate)
                                     },
                                     updateSetCount: { count in
                                         workoutStore.setSetCount(count, exerciseID: exercise.id, on: selectedDate)
@@ -358,6 +422,9 @@ struct WorkoutLogView: View {
                             Spacer()
                             Text(workoutCountText(selectedExercises.count))
                                 .font(.caption.weight(.bold))
+                            if selectedExercises.count > 1 {
+                                reorderButton
+                            }
                         }
                         .textCase(nil)
                         .contentShape(Rectangle())
@@ -386,6 +453,8 @@ struct WorkoutLogView: View {
                             dismissSetKeyboard()
                         }
                 )
+                .onChange(of: selectedDateKey) { _, _ in endReorderingIfNeeded() }
+                .onChange(of: selectedExercises.count) { _, _ in endReorderingIfNeeded() }
                 .onChange(of: focusedSetField) { oldValue, newValue in
                     guard let exerciseID = newValue?.exerciseID,
                           exerciseID != oldValue?.exerciseID
@@ -491,8 +560,8 @@ struct WorkoutLogView: View {
                 .presentationDragIndicator(.visible)
             }
             .sheet(item: $outdoorActivitySheet) { activity in
-                OutdoorActivityDurationSheet(activity: activity) { minutes in
-                    logQuickOutdoorActivity(activity, minutes: minutes)
+                OutdoorActivityDurationSheet(activity: activity) { minutes, intensity in
+                    logQuickOutdoorActivity(activity, minutes: minutes, intensity: intensity)
                 }
             }
         }
@@ -574,6 +643,29 @@ struct WorkoutLogView: View {
         }
     }
 
+    /// A labeled header button rather than a hidden long-press drag keeps reordering discoverable.
+    private var reorderButton: some View {
+        Button {
+            dismissSetKeyboard()
+            withAnimation(.snappy(duration: 0.25)) {
+                reorderingDateKey = isReordering ? nil : selectedDateKey
+            }
+        } label: {
+            Label(isReordering ? "Done" : "Reorder", systemImage: isReordering ? "checkmark" : "arrow.up.arrow.down")
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+        }
+        .buttonStyle(.bordered)
+        .buttonBorderShape(.capsule)
+        .tint(Color.workoutAccent)
+    }
+
+    private func moveExercise(_ exercise: StrengthPlannedExercise, by offset: Int) {
+        withAnimation(.snappy(duration: 0.25)) {
+            workoutStore.moveExercise(exercise.id, by: offset, on: selectedDate)
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
     private var selectedDateTitle: String {
         if Calendar.current.isDateInToday(selectedDate) { return String(localized: "Today") }
         if Calendar.current.isDateInTomorrow(selectedDate) { return String(localized: "Tomorrow") }
@@ -592,14 +684,18 @@ struct WorkoutLogView: View {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    private func logQuickOutdoorActivity(_ activity: OutdoorActivityDurationSheet.ActivityKind, minutes: Int) {
+    private func logQuickOutdoorActivity(
+        _ activity: OutdoorActivityDurationSheet.ActivityKind,
+        minutes: Int,
+        intensity: StrengthWorkoutIntensity
+    ) {
         guard minutes > 0 else { return }
         let exerciseID = activity == .walking
             ? OutdoorActivitySettings.walkingExerciseID
             : OutdoorActivitySettings.runningExerciseID
         guard let item = library.exercises.first(where: { $0.id == exerciseID }) else { return }
 
-        workoutStore.logQuickCardio(item, minutes: minutes, on: selectedDate)
+        workoutStore.logQuickCardio(item, minutes: minutes, on: selectedDate, intensity: intensity)
         if let estimate = StrengthWorkoutBurnEstimator.estimate(
             exercises: workoutStore.exercises(for: selectedDate),
             bodyWeightKg: currentBodyWeightKg,
@@ -1021,11 +1117,15 @@ private struct WorkoutLogExerciseCard: View {
     let isSaved: Bool
     let lastTimeSummary: String?
     let focusedField: FocusState<WorkoutLogSetFocus?>.Binding
+    /// VoiceOver actions; nil at the first/last position.
+    let moveUp: (() -> Void)?
+    let moveDown: (() -> Void)?
     let openDetail: () -> Void
     let showHistory: () -> Void
     let toggleSaved: () -> Void
     let removeExercise: () -> Void
     let timerAction: (StrengthExerciseTimerAction) -> Void
+    let setEffort: (StrengthWorkoutIntensity) -> Void
     let updateSetCount: (Int) -> Void
     let updateWeight: (UUID, String) -> Void
     let updateReps: (UUID, String) -> Void
@@ -1080,6 +1180,10 @@ private struct WorkoutLogExerciseCard: View {
             .buttonStyle(.plain)
             .accessibilityLabel("\(exercise.name), \(exercise.primaryMuscles.joined(separator: ", ")), \(exercise.rawEquipment)")
             .accessibilityHint("Opens exercise instructions")
+            .accessibilityActions {
+                if let moveUp { Button("Move up", action: moveUp) }
+                if let moveDown { Button("Move down", action: moveDown) }
+            }
 
             if !isCardio {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -1108,6 +1212,11 @@ private struct WorkoutLogExerciseCard: View {
                     Image(systemName: isCardio ? "figure.run" : "list.number")
                         .font(.caption.weight(.heavy))
                         .foregroundStyle(Color.workoutMutedText)
+
+                    if isCardio {
+                        // Cardio has no RPE fields, so effort is chosen directly (Moderate by default).
+                        effortMenu
+                    }
 
                     Spacer(minLength: 0)
 
@@ -1203,6 +1312,104 @@ private struct WorkoutLogExerciseCard: View {
     private var shadowColor: Color {
         colorScheme == .light ? .clear : Color.black.opacity(0.22)
     }
+
+    private var effortMenu: some View {
+        let effort = StrengthWorkoutBurnEstimator.timerIntensity(for: exercise, defaultRPEScale: rpeScale)
+        return Menu {
+            Picker("Effort", selection: Binding(get: { effort }, set: { if $0 != effort { setEffort($0) } })) {
+                ForEach(StrengthWorkoutIntensity.allCases) { option in
+                    Text(option.localizedTitle).tag(option)
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Text("Effort: \(effort.localizedTitle)")
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.bold))
+            }
+            .font(.system(.caption, design: .rounded, weight: .heavy))
+            .foregroundStyle(Color.workoutAccent)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.workoutAccent.opacity(0.12), in: Capsule())
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Effort")
+        .accessibilityValue(effort.localizedTitle)
+    }
+}
+
+/// Compact row used while reordering: large, labeled arrows instead of a
+/// drag-only gesture, so the order can be changed one step at a time.
+private struct WorkoutLogReorderRow: View {
+    let exercise: StrengthPlannedExercise
+    let position: Int
+    let canMoveUp: Bool
+    let canMoveDown: Bool
+    let moveUp: () -> Void
+    let moveDown: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 12) {
+                Text(position, format: .number)
+                    .font(.system(.title3, design: .rounded, weight: .heavy))
+                    .foregroundStyle(Color.workoutAccent)
+                    .frame(minWidth: 26)
+
+                AnimatedExerciseVisual(
+                    exerciseName: exercise.name,
+                    imagePaths: exercise.imagePaths,
+                    height: 48,
+                    fillsWidth: false,
+                    allowsDerivedImageLookup: false,
+                    animatesFrames: false
+                )
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .clipped()
+                .accessibilityHidden(true)
+
+                Text(exercise.name)
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(Color.workoutCharcoal)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .accessibilityElement(children: .combine)
+
+            moveButton(systemImage: "chevron.up", enabled: canMoveUp, action: moveUp)
+                .accessibilityLabel(Text("Move \(exercise.name) up"))
+            moveButton(systemImage: "chevron.down", enabled: canMoveDown, action: moveDown)
+                .accessibilityLabel(Text("Move \(exercise.name) down"))
+        }
+        .padding(.vertical, 10)
+        .padding(.leading, 14)
+        .padding(.trailing, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.workoutPanel, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.workoutHairline.opacity(0.82), lineWidth: 0.8)
+        }
+    }
+
+    private func moveButton(systemImage: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 20, weight: .bold))
+                .frame(width: 48, height: 48)
+                .background(Color.workoutAccent.opacity(enabled ? 0.14 : 0.05), in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(enabled ? Color.workoutAccent : Color.workoutMutedText.opacity(0.4))
+        .disabled(!enabled)
+    }
 }
 
 private struct WorkoutExerciseTimerControls: View {
@@ -1214,15 +1421,17 @@ private struct WorkoutExerciseTimerControls: View {
 
     private var isRunning: Bool { timer?.isRunning == true }
     private var isSaved: Bool { timer?.isSaved == true }
+    /// Choosing an effort first stores an empty timer; it still reads as "Start timer".
+    private var hasStarted: Bool { timer?.hasStarted == true }
 
     var body: some View {
         Button {
-            if timer == nil { action(.start) } else { showingActions = true }
+            if !hasStarted { action(.start) } else { showingActions = true }
         } label: {
             VStack(spacing: 1) {
                 Image(systemName: isRunning ? "stopwatch.fill" : "stopwatch")
                     .font(.system(size: 17, weight: .bold))
-                if timer != nil {
+                if hasStarted {
                     TimelineView(.animation(minimumInterval: 1, paused: !isRunning)) { context in
                         Text(durationText(at: context.date))
                             .font(.system(size: 9, weight: .semibold, design: .rounded).monospacedDigit())
@@ -1236,9 +1445,9 @@ private struct WorkoutExerciseTimerControls: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(timer == nil ? Color.workoutMutedText.opacity(0.72) : Color.workoutAccent)
-        .accessibilityLabel("\(timer == nil ? "Start timer" : "Timer options") for \(exerciseName)")
-        .accessibilityValue(timer == nil ? "" : "\(durationText(at: .now)), \(isRunning ? "running" : (isSaved ? "saved" : "paused"))")
+        .foregroundStyle(!hasStarted ? Color.workoutMutedText.opacity(0.72) : Color.workoutAccent)
+        .accessibilityLabel("\(!hasStarted ? "Start timer" : "Timer options") for \(exerciseName)")
+        .accessibilityValue(!hasStarted ? "" : "\(durationText(at: .now)), \(isRunning ? "running" : (isSaved ? "saved" : "paused"))")
         .accessibilityIdentifier("workout.timer.\(exerciseID).primary")
         .confirmationDialog("Timer for \(exerciseName)", isPresented: $showingActions, titleVisibility: .visible) {
             Button(isRunning ? "Pause" : "Resume") { action(isRunning ? .pause : .resume) }

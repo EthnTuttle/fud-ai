@@ -51,6 +51,7 @@ import com.apoorvdarshan.calorietracker.ui.workouts.WorkoutsScreen
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.QuickActionRequest
 import com.apoorvdarshan.calorietracker.ui.settings.AddMenuSettingsScreen
+import com.apoorvdarshan.calorietracker.ui.settings.ProductInfoSettingsScreen
 import com.apoorvdarshan.calorietracker.ui.settings.QuickActionsScreen
 import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantHost
 
@@ -306,6 +307,9 @@ fun FudAINavHost(
                 }
                 composable(FudAIRoutes.ADD_MENU) {
                     AddMenuSettingsScreen(vm = settingsViewModel, onBack = { nav.popBackStack() })
+                }
+                composable(FudAIRoutes.PRODUCT_INFO) {
+                    ProductInfoSettingsScreen(container = container, onBack = { nav.popBackStack() })
                 }
                 composable(FudAIRoutes.BODY_MEASUREMENTS) {
                     BodyMeasurementsScreen(container = container, onBack = { nav.popBackStack() })

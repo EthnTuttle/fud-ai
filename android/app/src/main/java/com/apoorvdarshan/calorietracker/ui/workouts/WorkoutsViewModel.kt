@@ -269,6 +269,12 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.removeExercise(exerciseId, date, imageStore) }
     }
 
+    /** Negative offsets move the exercise up the day's list; positive offsets move it down. */
+    fun moveExercise(exerciseId: UUID, offset: Int) {
+        val date = diaryUiState.selectedDate
+        viewModelScope.launch { workoutRepository?.moveExercise(exerciseId, date, offset) }
+    }
+
     fun setSetCount(exerciseId: UUID, count: Int) {
         val date = diaryUiState.selectedDate
         viewModelScope.launch { workoutRepository?.setSetCount(count, exerciseId, date) }
@@ -365,7 +371,11 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.copyPlan(sourceDate, targetDate, includeSetDetails) }
     }
 
-    fun logQuickOutdoorActivity(kind: OutdoorActivityKind, minutes: Int) {
+    fun logQuickOutdoorActivity(
+        kind: OutdoorActivityKind,
+        minutes: Int,
+        intensity: WorkoutIntensity = WorkoutIntensity.MODERATE
+    ) {
         if (minutes <= 0) return
         val repository = workoutRepository ?: return
         val date = diaryUiState.selectedDate
@@ -376,7 +386,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
             }
             val catalog = ensureExerciseRepository()
             val item = catalog.exercises.firstOrNull { it.id == exerciseId } ?: return@launch
-            repository.logQuickCardio(item, minutes, date)
+            repository.logQuickCardio(item, minutes, date, intensity)
             repository.calculateBurn(
                 date = date,
                 bodyWeightKg = bodyWeightKg,

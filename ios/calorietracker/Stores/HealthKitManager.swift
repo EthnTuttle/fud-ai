@@ -220,6 +220,11 @@ class HealthKitManager {
     private let weightBackfillVersionKey = "healthKitWeightBackfillVersion"
     private let bodyFatBackfillVersionKey = "healthKitBodyFatBackfillVersion"
     private var isBackfillingWeight = false
+    /// Device-specific HKQueryAnchor for the incremental weight import. The
+    /// `healthKit` prefix keeps it out of iCloud backups.
+    private let weightImportAnchorKey = "healthKitWeightImportAnchor"
+    private var isImportingWeightChanges = false
+    private var weightChangesImportRequested = false
     private var isBackfillingBodyFat = false
     private var isBackfillingWorkoutBurn = false
     private let workoutImportLookbackDays = 90
@@ -787,15 +792,16 @@ class HealthKitManager {
         }
     }
 
-    /// One-shot import of every weight sample HealthKit knows about. Skips
-    /// our own writes (fudai_weight_id present), and dedupes against existing
-    /// entries by same-day + same-value so re-running this — or running it
-    /// when the user already incrementally synced via the change-token observer
-    /// — never creates duplicates. Stamps weightBackfillVersionKey on success
-    /// so subsequent scene-active wire-ups skip it.
+    /// One-shot import of every weight sample HealthKit knows about. Dedup,
+    /// deletion tombstones and own-sample restore are decided by
+    /// WeightStore.importHealthSamples against the live entries, so re-running
+    /// this — or overlapping it with the incremental import — never creates
+    /// duplicates. Stamps weightBackfillVersionKey once the store accepted the
+    /// samples so subsequent scene-active wire-ups skip it. `importSamples`
+    /// returns false when the weight store could not save them (blocked
+    /// persistence); the version then stays unstamped and the backfill retries.
     func backfillWeightFromHealthKitIfNeeded(
-        existing: @escaping () -> [WeightEntry],
-        importBatch: @escaping ([WeightEntry]) -> Void
+        importSamples: @escaping ([WeightHealthSample]) -> Bool
     ) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let backfilled = UserDefaults.standard.integer(forKey: weightBackfillVersionKey)
@@ -808,45 +814,115 @@ class HealthKitManager {
             // bail WITHOUT stamping the version so the backfill retries next scene-active
             // instead of being permanently burned by one bad run.
             guard let samples = await fetchAllSamples(.bodyMass, unit: .gramUnit(with: .kilo), fudaiMetadataKey: "fudai_weight_id") else { return }
-            // Build the dedup index from the *current* store snapshot — the
-            // observer might have added rows while we were querying HK.
-            let calendar = Calendar.current
-            let snapshot = existing()
-            // Restore mode = empty local store (reinstall / new phone). Only then do we
-            // import our own fudai-tagged samples: when entries exist locally, own samples
-            // are either already represented or synthetic profile-pushes
-            // (writeWeight(kg:date:)) that never had an entry — importing those would
-            // fabricate history the user never logged.
-            let restoringOwnHistory = snapshot.isEmpty
-            var newEntries: [WeightEntry] = []
-            // Same-day + close-value match catches our own pre-metadata writes,
-            // externals already imported via the change-token loop, and same-day
-            // duplicates within this batch (an entry write + a profile push on the
-            // same day carry the same value).
-            let isAlreadyLogged: (Date, Double) -> Bool = { date, kg in
-                snapshot.contains {
-                    calendar.isDate($0.date, inSameDayAs: date) && abs($0.weightKg - kg) < 0.01
-                } || newEntries.contains {
-                    calendar.isDate($0.date, inSameDayAs: date) && abs($0.weightKg - kg) < 0.01
-                }
-            }
-            for s in samples {
-                if isAlreadyLogged(s.date, s.value) { continue }
-                if let fudaiID = s.fudaiID {
-                    guard restoringOwnHistory else { continue }
-                    // Keep the ORIGINAL entry id so a later in-app delete of the
-                    // restored entry still finds and removes its HK sample via the
-                    // fudai_weight_id metadata predicate.
-                    newEntries.append(WeightEntry(id: fudaiID, date: s.date, weightKg: s.value))
-                } else {
-                    newEntries.append(WeightEntry(date: s.date, weightKg: s.value))
-                }
-            }
-            if !newEntries.isEmpty {
-                await MainActor.run { importBatch(newEntries) }
-            }
+            let weightSamples = samples.map { WeightHealthSample(weightKg: $0.value, date: $0.date, fudaiID: $0.fudaiID) }
+            let imported = await MainActor.run { importSamples(weightSamples) }
+            guard imported else { return }
             UserDefaults.standard.set(typesVersion, forKey: weightBackfillVersionKey)
         }
+    }
+
+    /// What one run of the anchored weight import does with HealthKit's answer.
+    enum WeightChangesImport: Equatable {
+        /// Samples added since the stored anchor.
+        case newSamples
+        /// No anchor and no completed backfill: the whole history, like the backfill.
+        case fullHistory
+        /// No anchor, but the full-history backfill already ran on this install
+        /// (an update from a build without this import): the whole history, but
+        /// only readings on days the weight history has no weigh-in for. Readings
+        /// the latest-sample observer missed since that backfill (backdated in
+        /// Health, synced late by a scale) mostly fill such days. A reading deleted
+        /// before deletions were remembered has no tombstone, and the same scan
+        /// with the usual rules would bring it back; skipping logged days keeps
+        /// it out whenever its day still holds another weigh-in.
+        case unloggedDaysOnly
+    }
+
+    static func weightChangesImport(hasAnchor: Bool, backfilledVersion: Int, typesVersion: Int) -> WeightChangesImport {
+        if hasAnchor { return .newSamples }
+        return backfilledVersion >= typesVersion ? .unloggedDaysOnly : .fullHistory
+    }
+
+    /// Imports weight samples added to Apple Health since the previous run,
+    /// whatever their date. The observer only reads the LATEST sample, so a
+    /// reading backdated in the Health app (or synced late by a scale) never
+    /// reached the chart once the one-shot backfill had run. The first run (no
+    /// anchor yet) scans the full history, under the rules `mode` (see
+    /// `WeightChangesImport`) gives the caller; own samples are only restored
+    /// by `.fullHistory`, like the backfill. Calls arriving mid-run queue one
+    /// follow-up run instead of being dropped.
+    /// `importSamples` returns false when the weight store could not save the
+    /// samples; the anchor then stays put so the next run delivers them again.
+    func importWeightChangesFromHealthKit(
+        importSamples: @escaping (_ samples: [WeightHealthSample], _ mode: WeightChangesImport) -> Bool
+    ) {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+        guard !isImportingWeightChanges else {
+            weightChangesImportRequested = true
+            return
+        }
+        isImportingWeightChanges = true
+        Task {
+            defer { isImportingWeightChanges = false }
+            repeat {
+                weightChangesImportRequested = false
+                let anchor = loadWeightImportAnchor()
+                let mode = Self.weightChangesImport(
+                    hasAnchor: anchor != nil,
+                    backfilledVersion: UserDefaults.standard.integer(forKey: weightBackfillVersionKey),
+                    typesVersion: typesVersion
+                )
+                guard let result = await fetchWeightSamples(after: anchor) else { return }
+                guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
+                let weightSamples = result.samples.map {
+                    WeightHealthSample(weightKg: $0.value, date: $0.date, fudaiID: $0.fudaiID)
+                }
+                let imported = await MainActor.run { importSamples(weightSamples, mode) }
+                // Advancing the anchor past samples the store refused would lose them.
+                guard imported else { return }
+                saveWeightImportAnchor(result.anchor)
+            } while weightChangesImportRequested
+        }
+    }
+
+    private func fetchWeightSamples(
+        after anchor: HKQueryAnchor?
+    ) async -> (samples: [(value: Double, date: Date, fudaiID: UUID?)], anchor: HKQueryAnchor?)? {
+        let unit = HKUnit.gramUnit(with: .kilo)
+        return await withCheckedContinuation { continuation in
+            let query = HKAnchoredObjectQuery(
+                type: HKQuantityType(.bodyMass),
+                predicate: nil,
+                anchor: anchor,
+                limit: HKObjectQueryNoLimit
+            ) { _, added, _, newAnchor, error in
+                guard error == nil else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let mapped = (added ?? [])
+                    .compactMap { $0 as? HKQuantitySample }
+                    .sorted { $0.startDate < $1.startDate }
+                    .map { sample -> (value: Double, date: Date, fudaiID: UUID?) in
+                        let fudaiID = (sample.metadata?["fudai_weight_id"] as? String).flatMap(UUID.init(uuidString:))
+                        return (sample.quantity.doubleValue(for: unit), sample.startDate, fudaiID)
+                    }
+                continuation.resume(returning: (mapped, newAnchor))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    private func loadWeightImportAnchor() -> HKQueryAnchor? {
+        guard let data = UserDefaults.standard.data(forKey: weightImportAnchorKey) else { return nil }
+        return try? NSKeyedUnarchiver.unarchivedObject(ofClass: HKQueryAnchor.self, from: data)
+    }
+
+    private func saveWeightImportAnchor(_ anchor: HKQueryAnchor?) {
+        guard let anchor,
+              let data = try? NSKeyedArchiver.archivedData(withRootObject: anchor, requiringSecureCoding: true)
+        else { return }
+        UserDefaults.standard.set(data, forKey: weightImportAnchorKey)
     }
 
     /// Mirror of backfillWeightFromHealthKitIfNeeded for body-fat samples.
@@ -1101,6 +1177,52 @@ class HealthKitManager {
             }
             healthStore.execute(query)
         }
+    }
+
+    /// Step totals for each local day from `start` through `endDay`, oldest first,
+    /// skipping days without steps. Uses HealthKit's daily statistics, which merge
+    /// iPhone and Apple Watch samples without double counting — never a sum of
+    /// raw samples.
+    func fetchDailySteps(from start: Date, through endDay: Date) async -> [StepDay] {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return [] }
+        let calendar = Calendar.current
+        let anchor = calendar.startOfDay(for: start)
+        guard let dayAfterEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDay)) else {
+            return []
+        }
+        let end = min(dayAfterEnd, Date())
+        guard end > anchor else { return [] }
+
+        let type = HKQuantityType(.stepCount)
+        let predicate = HKQuery.predicateForSamples(withStart: anchor, end: end, options: .strictStartDate)
+        var interval = DateComponents()
+        interval.day = 1
+
+        let totals: [(date: Date, steps: Int)] = await withCheckedContinuation { continuation in
+            let query = HKStatisticsCollectionQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: anchor,
+                intervalComponents: interval
+            )
+            query.initialResultsHandler = { _, collection, error in
+                guard error == nil, let collection else {
+                    continuation.resume(returning: [])
+                    return
+                }
+                var totals: [(date: Date, steps: Int)] = []
+                collection.enumerateStatistics(from: anchor, to: end) { statistics, _ in
+                    let steps = statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0
+                    if steps >= 1 {
+                        totals.append((calendar.startOfDay(for: statistics.startDate), Int(steps.rounded())))
+                    }
+                }
+                continuation.resume(returning: totals)
+            }
+            healthStore.execute(query)
+        }
+        return totals.map { StepDay(date: $0.date, steps: $0.steps) }
     }
 
     /// Dated measured energy for adaptive-goal evidence. This uses the same active-energy

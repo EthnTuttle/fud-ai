@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
@@ -19,6 +21,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -33,10 +38,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.OutdoorActivitySettings
+import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
+import com.apoorvdarshan.calorietracker.ui.workouts.labelRes
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 
 enum class OutdoorActivityKind {
@@ -49,17 +57,18 @@ enum class OutdoorActivityKind {
 fun OutdoorActivityDurationSheet(
     activity: OutdoorActivityKind,
     onDismiss: () -> Unit,
-    onLog: (Int) -> Unit
+    onLog: (minutes: Int, intensity: WorkoutIntensity) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var customMinutes by remember { mutableStateOf("") }
+    var intensity by remember { mutableStateOf(WorkoutIntensity.MODERATE) }
     var isSubmitting by remember { mutableStateOf(false) }
     val parsedMinutes = customMinutes.toIntOrNull()?.takeIf { it in 1..600 }
 
     fun submit(minutes: Int) {
         if (isSubmitting) return
         isSubmitting = true
-        onLog(minutes)
+        onLog(minutes, intensity)
         onDismiss()
     }
 
@@ -78,7 +87,10 @@ fun OutdoorActivityDurationSheet(
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
         Column(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -87,6 +99,21 @@ fun OutdoorActivityDurationSheet(
                 Text(title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Spacer(Modifier.weight(1f))
                 Spacer(Modifier.padding(horizontal = 31.dp))
+            }
+
+            // Chosen before the duration because the presets log immediately.
+            Text(stringResource(R.string.workout_effort), fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                WorkoutIntensity.entries.forEachIndexed { index, option ->
+                    SegmentedButton(
+                        selected = intensity == option,
+                        onClick = { intensity = option },
+                        enabled = !isSubmitting,
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = WorkoutIntensity.entries.size)
+                    ) {
+                        Text(stringResource(option.labelRes), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
             }
 
             Text(stringResource(R.string.outdoor_activity_how_long), fontWeight = FontWeight.SemiBold, fontSize = 18.sp)

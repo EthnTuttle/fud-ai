@@ -154,7 +154,7 @@ enum OpenFoodFactsService {
         "product_quantity", "product_quantity_unit", "serving_size", "serving_quantity",
         "nutriments", "ingredients_text", "allergens_tags", "traces_tags",
         "nutriscore_grade", "nova_group", "ecoscore_grade", "labels_tags",
-        "categories_tags", "image_front_url",
+        "categories_tags", "image_front_url", "ingredients_text_with_allergens",
     ].joined(separator: ",")
 
     private static func requestURL(for code: String) -> URL? {
@@ -215,7 +215,10 @@ enum OpenFoodFactsService {
         let metadata = FoodProductMetadata(
             barcode: barcode,
             packageQuantity: firstNonEmpty(product.quantity),
-            ingredientsText: firstNonEmpty(product.ingredientsText),
+            ingredientsText: IngredientLabelParser.markingAllergens(
+                plain: firstNonEmpty(product.ingredientsText),
+                markup: firstNonEmpty(product.ingredientsTextWithAllergens)
+            ),
             allergens: displayTags(product.allergenTags, limit: 16),
             traces: displayTags(product.traceTags, limit: 16),
             nutriScore: normalizedScore(product.nutriScore),
@@ -437,6 +440,7 @@ enum OpenFoodFactsService {
         let productQuantity: FlexibleDouble?
         let productQuantityUnit: String?
         let ingredientsText: String?
+        let ingredientsTextWithAllergens: String?
         let allergenTags: [String]?
         let traceTags: [String]?
         let nutriScore: String?
@@ -457,6 +461,7 @@ enum OpenFoodFactsService {
             case productQuantity = "product_quantity"
             case productQuantityUnit = "product_quantity_unit"
             case ingredientsText = "ingredients_text"
+            case ingredientsTextWithAllergens = "ingredients_text_with_allergens"
             case allergenTags = "allergens_tags"
             case traceTags = "traces_tags"
             case nutriScore = "nutriscore_grade"
