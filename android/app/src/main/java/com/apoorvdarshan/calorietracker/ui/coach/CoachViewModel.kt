@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.services.ai.AiError
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Base64
 
 /**
@@ -115,6 +118,11 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 val heightMetric = container.prefs.heightUnit.first() == "cm"
                 val weightMetric = container.prefs.weightUnit.first() == "kg"
                 val workoutState = container.workoutRepository.snapshot()
+                val exerciseLibrary = withContext(Dispatchers.IO) {
+                    ExerciseRepository.get(container.appContext)
+                        .includingActivities(workoutState.customActivities + workoutState.userExercises)
+                        .exercises
+                }
 
                 val reply = container.chatService.sendMessage(
                     history = history,
@@ -131,7 +139,8 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     workoutSessions = workoutState.completedSessions,
                     workoutPlans = workoutState.dayPlans.values.toList(),
                     workoutPreferences = workoutState.preferences,
-                    workoutPlanWeightUnit = if (weightMetric) WorkoutWeightUnit.KG else WorkoutWeightUnit.LBS
+                    workoutPlanWeightUnit = if (weightMetric) WorkoutWeightUnit.KG else WorkoutWeightUnit.LBS,
+                    exerciseLibrary = exerciseLibrary
                 )
                 container.chatRepository.append(ChatMessage(role = ChatMessage.Role.ASSISTANT, content = reply.trim()))
                 _ui.value = _ui.value.copy(sending = false)

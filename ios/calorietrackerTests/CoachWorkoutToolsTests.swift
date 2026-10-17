@@ -548,6 +548,77 @@ struct CoachWorkoutToolsTests {
         #expect(sets.first?["weight"] as? String == "85")
         #expect(sets.first?["reps"] as? Int == 8)
     }
+
+    @Test func exerciseLibrarySearchIsReadOnlyAndGatedByWorkoutAccess() throws {
+        let off = CoachTools(weights: [], bodyFats: [], foods: [], workoutAccessEnabled: false, exerciseLibrary: ExerciseSearchFixture.library)
+        #expect(!off.availableToolNames.contains("search_exercise_library"))
+        let blocked = try WorkoutCoachFixture.jsonObject(off.execute(name: "search_exercise_library", arguments: ["query": "chest press"]))
+        #expect(blocked["error"] as? String == "Workout access is disabled.")
+
+        let on = CoachTools(weights: [], bodyFats: [], foods: [], workoutAccessEnabled: true, exerciseLibrary: ExerciseSearchFixture.library)
+        #expect(on.availableToolNames.contains("search_exercise_library"))
+        let schema = CoachTools.parameterSchema(for: "search_exercise_library")
+        #expect(schema["required"] as? [String] == ["query"])
+        let properties = try #require(schema["properties"] as? [String: Any])
+        #expect(Set(properties.keys) == ["query", "muscle", "equipment", "limit"])
+        #expect(CoachTools.toolDescriptions["search_exercise_library"]?.contains("Read-only") == true)
+    }
+
+    @Test func exerciseLibrarySearchRanksNameMatchesAndFlagsCustomExercises() throws {
+        let tools = CoachTools(weights: [], bodyFats: [], foods: [], workoutAccessEnabled: true, exerciseLibrary: ExerciseSearchFixture.library)
+        let payload = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "chest press"])
+        )
+        let exercises = try #require(payload["exercises"] as? [[String: Any]])
+
+        #expect(exercises.map { $0["name"] as? String } == [
+            "Hammer Strength Chest Press", "Leverage Chest Press", "Machine Bench Press", "Leg Press",
+        ])
+        #expect(payload["total_matches"] as? Int == 4)
+        #expect(exercises[0]["catalog_id"] as? String == "user_exercise_hammer")
+        #expect(exercises[0]["is_custom"] as? Bool == true)
+        #expect(exercises[1]["is_custom"] as? Bool == false)
+        #expect(exercises[1]["equipment"] as? String == "Machine")
+        #expect(exercises[1]["primary_muscles"] as? [String] == ["Chest"])
+
+        let chestOnly = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "press", "muscle": "chest", "limit": 1])
+        )
+        #expect(chestOnly["count"] as? Int == 1)
+        #expect(chestOnly["total_matches"] as? Int == 3)
+        #expect(chestOnly["muscle"] as? String == "chest")
+    }
+
+    @Test func exerciseLibrarySearchMatchesWordPrefixesAndFilters() throws {
+        let library = ExerciseSearchFixture.library
+        #expect(CoachTools.rankedLibraryMatches(library, query: "leg press").first?.name == "Leg Press")
+        #expect(CoachTools.rankedLibraryMatches(library, query: "rows", equipment: "cable").map(\.name) == ["Seated Cable Rows"])
+        // "row" must not match "Narrow"; "quads" still finds the quadriceps squat via its muscles.
+        #expect(!CoachTools.rankedLibraryMatches(library, query: "row").map(\.name).contains("Narrow Stance Squats"))
+        #expect(CoachTools.rankedLibraryMatches(library, query: "squats", muscle: "quads").map(\.name) == ["Narrow Stance Squats"])
+        #expect(CoachTools.rankedLibraryMatches(library, query: "zercher").isEmpty)
+
+        let tools = CoachTools(weights: [], bodyFats: [], foods: [], workoutAccessEnabled: true, exerciseLibrary: library)
+        let missing = try WorkoutCoachFixture.jsonObject(tools.execute(name: "search_exercise_library", arguments: [:]))
+        #expect(missing["error"] as? String == "query is required.")
+        let empty = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "zercher"])
+        )
+        #expect(empty["count"] as? Int == 0)
+        #expect((empty["exercises"] as? [Any])?.isEmpty == true)
+    }
+}
+
+@MainActor
+private enum ExerciseSearchFixture {
+    static let library: [ExerciseLibraryItem] = [
+        ExerciseLibraryItem(id: "Leverage_Chest_Press", name: "Leverage Chest Press", category: "strength", rawEquipment: "machine", primaryMuscles: ["chest"], secondaryMuscles: ["shoulders", "triceps"]),
+        ExerciseLibraryItem(id: "Machine_Bench_Press", name: "Machine Bench Press", category: "strength", rawEquipment: "machine", primaryMuscles: ["chest"], secondaryMuscles: ["triceps"]),
+        ExerciseLibraryItem(id: "Leg_Press", name: "Leg Press", category: "strength", rawEquipment: "machine", primaryMuscles: ["quadriceps"]),
+        ExerciseLibraryItem(id: "Seated_Cable_Rows", name: "Seated Cable Rows", category: "strength", rawEquipment: "cable", primaryMuscles: ["middle back"]),
+        ExerciseLibraryItem(id: "Narrow_Stance_Squats", name: "Narrow Stance Squats", category: "strength", rawEquipment: "barbell", primaryMuscles: ["quadriceps"]),
+        ExerciseLibraryItem(id: "user_exercise_hammer", name: "Hammer Strength Chest Press", category: "strength", rawEquipment: "machine", primaryMuscles: ["chest"]),
+    ]
 }
 
 @MainActor

@@ -708,7 +708,8 @@ struct ChatView: View {
                     workoutSessions: strengthWorkoutStore.completedSessions,
                     workoutPlans: Array(strengthWorkoutStore.dayPlans.values),
                     workoutPreferences: strengthWorkoutStore.preferences,
-                    workoutAccessEnabled: true
+                    workoutAccessEnabled: true,
+                    exerciseLibrary: strengthWorkoutStore.exerciseLibrary.exercises
                 )
                 chatStore.append(ChatMessage(role: .assistant, content: reply))
             } catch {

@@ -24,6 +24,8 @@ struct CoachTools {
     var workoutPreferences: StrengthWorkoutPreferences? = nil
     var workoutPlanWeightUnit: WeightUnit = .lbs
     var workoutAccessEnabled = false
+    /// Built-in catalog plus the user's custom exercises, for the read-only library search.
+    var exerciseLibrary: [ExerciseLibraryItem] = []
 
     static let nutritionToolNames: [String] = [
         "get_data_summary",
@@ -40,6 +42,7 @@ struct CoachTools {
         "get_workout_preferences",
         "get_training_summary",
         "get_exercise_lift_history",
+        "search_exercise_library",
     ]
 
     /// The provider schemas are built from this instance value, preventing any
@@ -82,6 +85,7 @@ struct CoachTools {
         "get_workout_preferences": "Fetch workout-only preferences such as target muscles, injuries or issues, equipment, schedule, split, RPE scale, and strength numbers.",
         "get_training_summary": "Summarize workouts between two dates: calculated calorie burn plus sessions, saved exercise duration, sets, reps, volume, best load, and average RPE by exercise. Timed cardio does not require reps or sets.",
         "get_exercise_lift_history": "Fetch per-exercise lift history from the local workout diary: dated sessions with logged weight × reps sets, the most recent session, and best load in kg. Use for questions like \"what did I bench last?\" or trends for one lift. Optional catalog_id narrows matching; otherwise exercise name is used.",
+        "search_exercise_library": "Search the exercise library (built-in catalog plus the user's own custom exercises) by name or keywords. Returns matching exercises with catalog_id, name, category, equipment, primary and secondary muscles, and is_custom. Optional muscle and equipment filters narrow the results. When the user shares a photo of a gym machine or exercise, identify it first, then search with its likely names. Read-only: it cannot add, edit, or create exercises.",
     ]
 
     /// One schema source is translated to each provider's wrapper by
@@ -112,6 +116,18 @@ struct CoachTools {
                     "limit": ["type": "integer", "description": "Optional max dated sessions to return"],
                 ],
                 "required": ["exercise"],
+            ]
+        }
+        if toolName == "search_exercise_library" {
+            return [
+                "type": "object",
+                "properties": [
+                    "query": ["type": "string", "description": "Exercise name or keywords, e.g. chest press machine"],
+                    "muscle": ["type": "string", "description": "Optional muscle filter, e.g. chest or quadriceps"],
+                    "equipment": ["type": "string", "description": "Optional equipment filter, e.g. machine, cable, or dumbbell"],
+                    "limit": ["type": "integer", "description": "Optional max exercises to return (default 10, max 20)"],
+                ],
+                "required": ["query"],
             ]
         }
         return [
@@ -157,6 +173,8 @@ struct CoachTools {
             return getTrainingSummary(arguments: arguments)
         case "get_exercise_lift_history":
             return getExerciseLiftHistory(arguments: arguments)
+        case "search_exercise_library":
+            return searchExerciseLibrary(arguments: arguments)
         default:
             return jsonError("Unknown tool: \(name). Available tools: \(availableToolNames.joined(separator: ", "))")
         }
@@ -526,6 +544,111 @@ struct CoachTools {
         if let bestLoadKg { payload["best_load_kg"] = (bestLoadKg * 10).rounded() / 10 }
         if let last = sessions.first { payload["last_session"] = last }
         return jsonString(payload)
+    }
+
+    private func searchExerciseLibrary(arguments: [String: Any]) -> String {
+        guard let query = (arguments["query"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !query.isEmpty
+        else {
+            return jsonError("query is required.")
+        }
+        let muscle = (arguments["muscle"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let equipment = (arguments["equipment"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let limit = (arguments["limit"] as? Int).map { min(max($0, 1), 20) } ?? 10
+        let matches = Self.rankedLibraryMatches(
+            exerciseLibrary,
+            query: query,
+            muscle: muscle,
+            equipment: equipment
+        )
+        let exercises = matches.prefix(limit).map { item -> [String: Any] in
+            var payload: [String: Any] = [
+                "catalog_id": item.id,
+                "name": item.name,
+                "is_custom": UserExercise.isUserExercise(item.id) || item.id.hasPrefix("custom_activity_"),
+                "primary_muscles": item.primaryMuscles,
+                "secondary_muscles": item.secondaryMuscles,
+            ]
+            if let category = Self.libraryMetadata(item.category) { payload["category"] = category }
+            if let equipment = Self.libraryMetadata(item.rawEquipment) { payload["equipment"] = equipment }
+            return payload
+        }
+        var payload: [String: Any] = [
+            "query": query,
+            "count": exercises.count,
+            "total_matches": matches.count,
+            "exercises": exercises,
+        ]
+        if !muscle.isEmpty { payload["muscle"] = muscle }
+        if !equipment.isEmpty { payload["equipment"] = equipment }
+        return jsonString(payload)
+    }
+
+    /// Ranks library items for the coach search: whole-name matches first, then items whose
+    /// name holds more of the query words, then muscle/equipment/category matches. Words match
+    /// by prefix (with a simple plural strip) so "curls" finds "Curl" but "row" skips "Narrow".
+    static func rankedLibraryMatches(
+        _ library: [ExerciseLibraryItem],
+        query: String,
+        muscle: String = "",
+        equipment: String = ""
+    ) -> [ExerciseLibraryItem] {
+        let terms = searchWords(query)
+        guard !terms.isEmpty else { return [] }
+        let muscleTerms = searchWords(muscle)
+        let equipmentTerms = searchWords(equipment)
+        let normalizedQuery = terms.joined(separator: " ")
+
+        let scored = library.compactMap { item -> (item: ExerciseLibraryItem, score: Int)? in
+            let muscleWords = searchWords((item.primaryMuscles + item.secondaryMuscles).joined(separator: " "))
+            guard muscleTerms.allSatisfy({ wordsMatch($0, muscleWords) }),
+                  equipmentTerms.allSatisfy({ wordsMatch($0, searchWords(item.rawEquipment)) })
+            else { return nil }
+
+            let nameWords = searchWords(item.name)
+            let metadataWords = muscleWords + searchWords("\(item.category) \(item.rawEquipment)")
+            var nameHits = 0
+            var metadataHits = 0
+            for term in terms {
+                if wordsMatch(term, nameWords) {
+                    nameHits += 1
+                } else if wordsMatch(term, metadataWords) {
+                    metadataHits += 1
+                }
+            }
+            let allMatched = nameHits + metadataHits == terms.count
+            guard nameHits > 0 || allMatched else { return nil }
+            var score = nameHits * 10 + metadataHits * 3
+            if allMatched { score += 20 }
+            if nameHits == terms.count { score += 30 }
+            if nameWords.joined(separator: " ") == normalizedQuery { score += 100 }
+            return (item, score)
+        }
+        return scored
+            .sorted { lhs, rhs in
+                if lhs.score != rhs.score { return lhs.score > rhs.score }
+                return lhs.item.name.localizedCaseInsensitiveCompare(rhs.item.name) == .orderedAscending
+            }
+            .map(\.item)
+    }
+
+    nonisolated private static func searchWords(_ text: String) -> [String] {
+        text.lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+    }
+
+    nonisolated private static func wordsMatch(_ term: String, _ words: [String]) -> Bool {
+        var variants = [term]
+        if term.count > 3, term.hasSuffix("es") { variants.append(String(term.dropLast(2))) }
+        if term.count > 3, term.hasSuffix("s") { variants.append(String(term.dropLast())) }
+        return words.contains { word in variants.contains { word.hasPrefix($0) } }
+    }
+
+    nonisolated private static func libraryMetadata(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty || trimmed == "Unspecified" ? nil : trimmed
     }
 
     private func coachLiftSets(itemID: String, name: String, on dateKey: String) -> [StrengthExerciseLiftSet]? {
