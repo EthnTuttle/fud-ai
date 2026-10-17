@@ -726,6 +726,7 @@
     <string name="whats_new_v30_adaptive">Adaptiv Məqsədlər və Enerji Sərfi eksperimental mərhələdən çıxdı və yeni quraşdırmalarda defolt olaraq aktivdir.</string>
     <string name="whats_new_v30_widgets">Vidcetlər yeniləndi: Ana səhifənin spidometr üslubu, hər vidcetin real ölçüsündə çəkilir.</string>
     <string name="whats_new_v30_restore">Yenidən quraşdırmısınız və ya telefonu dəyişmisiniz? Yemək jurnalınız, çəkiniz və bədən yağınız indi Health Connect-dən avtomatik bərpa olunur.</string>
+    <string name="cloud_backup_restore_no_space">Bu ehtiyat nüsxəni bərpa etmək üçün kifayət qədər boş yaddaş yoxdur. Bir az yer boşaldın və yenidən cəhd edin.</string>
     <string name="settings_fasting_tracking">Oruc izləmə</string>
     <string name="settings_fasting_goal">Standart oruc hədəfi</string>
     <string name="settings_fasting_goal_value">%1$d saat</string>
