@@ -230,7 +230,12 @@ struct calorietrackerApp: App {
             }
         }
 
-        healthKitManager.onBodyMeasurementsChanged = { [weightStore, bodyFatStore] weightKg, weightDate, weightFudaiID, heightCm, bodyFat, bodyFatDate, bodyFatFudaiID, dob, sex in
+        healthKitManager.onBodyMeasurementsChanged = { [weightStore, bodyFatStore, healthKitManager] weightKg, weightDate, weightFudaiID, heightCm, bodyFat, bodyFatDate, bodyFatFudaiID, dob, sex in
+            // The latest-sample read below misses older readings added to Health
+            // later (backdated entries, late scale syncs); pick those up too.
+            healthKitManager.importWeightChangesFromHealthKit { samples, isFullHistory in
+                weightStore.importHealthSamples(samples, restoreOwnSamplesIfEmpty: isFullHistory)
+            }
             guard var profile = UserProfile.load() else { return }
             var changed = false
 
@@ -239,9 +244,13 @@ struct calorietrackerApp: App {
                 // from the observer: either the entry still exists in the store (duplicate) or the
                 // user just deleted it and the HK delete hasn't propagated yet (would resurrect it).
                 // External HK samples (Apple Watch, scale, Health app) have no fudai_weight_id;
-                // those we dedup by same-day + same-value.
+                // those we dedup by same-day + same-value. A reading the user deleted in Fud AI
+                // stays in Health when another source wrote it, so it must not come back either.
+                let deletedInApp = weightStore.isDeletedHealthSample(
+                    WeightHealthSample(weightKg: kg, date: date, fudaiID: weightFudaiID)
+                )
                 let shouldAdd: Bool
-                if weightFudaiID != nil {
+                if weightFudaiID != nil || deletedInApp {
                     shouldAdd = false
                 } else {
                     let calendar = Calendar.current
@@ -257,7 +266,7 @@ struct calorietrackerApp: App {
                 // from OUTSIDE our app. For our own samples, WeightStore.addEntry / deleteEntry
                 // already syncs profile — updating it here again can revert a just-made edit if
                 // HK hasn't indexed the write yet and returns an older sample of ours.
-                if weightFudaiID == nil, abs(profile.weightKg - kg) > 0.01 {
+                if weightFudaiID == nil, !deletedInApp, abs(profile.weightKg - kg) > 0.01 {
                     profile.weightKg = kg
                     changed = true
                 }
@@ -360,10 +369,12 @@ struct calorietrackerApp: App {
     /// Watch, manual entries, etc.). One-shot per typesVersion — see
     /// HealthKitManager.{weight,bodyFat}BackfillVersionKey.
     private func runBodyMeasurementBackfills() {
-        healthKitManager.backfillWeightFromHealthKitIfNeeded(
-            existing: { [weightStore] in weightStore.entries },
-            importBatch: { [weightStore] entries in weightStore.importExternalEntries(entries) }
-        )
+        healthKitManager.backfillWeightFromHealthKitIfNeeded { [weightStore] samples in
+            weightStore.importHealthSamples(samples, restoreOwnSamplesIfEmpty: true)
+        }
+        healthKitManager.importWeightChangesFromHealthKit { [weightStore] samples, isFullHistory in
+            weightStore.importHealthSamples(samples, restoreOwnSamplesIfEmpty: isFullHistory)
+        }
         healthKitManager.backfillBodyFatFromHealthKitIfNeeded(
             existing: { [bodyFatStore] in bodyFatStore.entries },
             importBatch: { [bodyFatStore] entries in bodyFatStore.importExternalEntries(entries) }

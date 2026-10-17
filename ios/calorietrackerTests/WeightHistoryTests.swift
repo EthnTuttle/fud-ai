@@ -2,9 +2,90 @@ import Foundation
 import Testing
 @testable import calorietracker
 
-/// Weight history regressions: readings missing from the Progress chart (#519).
+/// Weight history regressions: deleted readings coming back from Apple Health
+/// (#518) and readings missing from the Progress chart (#519).
 @MainActor
 struct WeightHistoryTests {
+    // MARK: - Deletion stays deleted
+
+    @Test func deletedExternalHealthReadingIsNotImportedAgain() throws {
+        try withStore { store, _ in
+            let scale = WeightHealthSample(weightKg: 81.4, date: Date(timeIntervalSince1970: 1_790_000_000), fudaiID: nil)
+            store.importHealthSamples([scale], restoreOwnSamplesIfEmpty: false)
+            let imported = try #require(store.entries.first)
+
+            store.deleteEntry(imported)
+            #expect(store.entries.isEmpty)
+            #expect(store.isDeletedHealthSample(scale))
+
+            // The scale's sample is still in Apple Health; the next observer
+            // fire or full-history import must not resurrect it.
+            store.importHealthSamples([scale], restoreOwnSamplesIfEmpty: true)
+            #expect(store.entries.isEmpty)
+
+            // A genuinely new reading from the same source still imports.
+            let nextDay = WeightHealthSample(weightKg: 81.0, date: scale.date.addingTimeInterval(86_400), fudaiID: nil)
+            store.importHealthSamples([nextDay], restoreOwnSamplesIfEmpty: false)
+            #expect(store.entries.map(\.weightKg) == [81.0])
+        }
+    }
+
+    @Test func deletionTombstonesPersistAcrossLaunches() throws {
+        try withStore { store, defaults in
+            let entry = WeightEntry(date: Date(timeIntervalSince1970: 1_790_000_000), weightKg: 70)
+            store.replaceAllEntries([entry])
+            store.deleteEntry(entry)
+
+            let relaunched = WeightStore(observesExternalChanges: false, defaults: defaults)
+            #expect(relaunched.deletionTombstones == [
+                WeightDeletionTombstone(entryID: entry.id, date: entry.date, weightKg: 70)
+            ])
+            #expect(relaunched.isDeletedHealthSample(
+                WeightHealthSample(weightKg: 70, date: entry.date, fudaiID: nil)
+            ))
+        }
+    }
+
+    @Test func deletedOwnSampleIsNotRestoredAfterReinstall() throws {
+        try withStore { store, _ in
+            let deleted = WeightEntry(date: Date(timeIntervalSince1970: 1_790_000_000), weightKg: 72)
+            let kept = WeightEntry(date: Date(timeIntervalSince1970: 1_790_100_000), weightKg: 71)
+            store.replaceAllEntries([deleted])
+            // Our Health delete can fail (or lag); the tagged sample survives.
+            store.deleteEntry(deleted)
+
+            store.importHealthSamples([
+                WeightHealthSample(weightKg: 72, date: deleted.date, fudaiID: deleted.id),
+                WeightHealthSample(weightKg: 71, date: kept.date, fudaiID: kept.id),
+            ], restoreOwnSamplesIfEmpty: true)
+
+            #expect(store.entries.map(\.id) == [kept.id])
+        }
+    }
+
+    @Test func healthImportDedupesAndOnlyRestoresOwnSamplesFromAnEmptyHistory() {
+        let day = Date(timeIntervalSince1970: 1_790_000_000)
+        let existing = [WeightEntry(date: day, weightKg: 80)]
+        let samples = [
+            WeightHealthSample(weightKg: 80.004, date: day.addingTimeInterval(60), fudaiID: nil), // same day + value
+            WeightHealthSample(weightKg: 79.5, date: day.addingTimeInterval(-86_400 * 400), fudaiID: nil), // old backfill
+            WeightHealthSample(weightKg: 79.5, date: day.addingTimeInterval(-86_400 * 400 + 30), fudaiID: nil), // batch dup
+            WeightHealthSample(weightKg: 78, date: day.addingTimeInterval(86_400), fudaiID: UUID()), // own sample
+        ]
+
+        let fresh = WeightStore.healthImportCandidates(
+            samples, existing: existing, tombstones: [], restoringOwnHistory: false
+        )
+        #expect(fresh.map(\.weightKg) == [79.5])
+
+        let ownID = UUID()
+        let restored = WeightStore.healthImportCandidates(
+            [WeightHealthSample(weightKg: 78, date: day, fudaiID: ownID)],
+            existing: [], tombstones: [], restoringOwnHistory: true
+        )
+        #expect(restored.map(\.id) == [ownID])
+    }
+
     // MARK: - Chart range
 
     @Test func progressRangesIncludeReadingsLoggedToday() throws {
