@@ -68,10 +68,15 @@ object GeminiClient {
      * `thinkingConfig.thinkingLevel` for Gemini 3-family models. `minimal` is the fastest level
      * but is only accepted by Flash-Lite and the 3 / 3.5 / 3.6 Flash models; 3.7+ Flash and the
      * Pro models reject it with a 400, so they get `low`. Pre-3 models (thinkingBudget only) and
-     * unrecognized ids get null so nothing is sent.
+     * unrecognized ids get null so nothing is sent. Google's versionless `-latest` aliases get a
+     * level every Gemini 3 model they can point to accepts (#358).
      */
     fun thinkingLevel(model: String): String? {
         val id = model.trim().lowercase().substringAfterLast('/')
+        when (id) {
+            "gemini-flash-lite-latest" -> return "minimal"
+            "gemini-flash-latest" -> return "low"
+        }
         val match = geminiModelPattern.find(id) ?: return null
         val major = match.groupValues[1].toIntOrNull() ?: return null
         val minor = match.groupValues[2].toIntOrNull() ?: 0
