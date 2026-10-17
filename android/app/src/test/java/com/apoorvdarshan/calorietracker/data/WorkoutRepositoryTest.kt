@@ -3,10 +3,12 @@ package com.apoorvdarshan.calorietracker.data
 import com.apoorvdarshan.calorietracker.models.CompletedExercise
 import com.apoorvdarshan.calorietracker.models.CompletedSet
 import com.apoorvdarshan.calorietracker.models.ExerciseTimerAction
+import com.apoorvdarshan.calorietracker.models.WorkoutBurnEstimator
 import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
 import com.apoorvdarshan.calorietracker.models.PlannedSet
 import com.apoorvdarshan.calorietracker.models.WorkoutDayPlan
 import com.apoorvdarshan.calorietracker.models.WorkoutPersistedState
+import com.apoorvdarshan.calorietracker.models.WorkoutPreferences
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -358,6 +360,31 @@ class WorkoutRepositoryTest {
         assertEquals(WorkoutIntensity.VIGOROUS, saved.intensity)
         // (4.8 - 1) MET × 3.5 × 70 kg / 200 × 10 min.
         assertEquals(47, repository.calculateBurn(date, 70.0, WorkoutWeightUnit.KG)!!.caloriesBurned)
+    }
+
+    @Test
+    fun choosingCardioEffortReplacesHiddenSetRpeButKeepsStrengthRpe() = runBlocking {
+        val repository = WorkoutRepository(FakeWorkoutStateStore())
+        val date = LocalDate.of(2026, 9, 8)
+        val rpeScale = WorkoutPreferences().rpeScale
+        repository.toggleExercise(exerciseItem().copy(id = "Running_Treadmill", category = "cardio"), date)
+        repository.toggleExercise(exerciseItem(), date)
+        val (cardio, strength) = repository.planNow(date).exercises
+        // Cardio cards show no set fields, so this RPE (e.g. from a text log) is invisible there.
+        repository.updateSet(cardio.id, cardio.sets.single().id, date, rpe = "10")
+        repository.updateSet(strength.id, strength.sets.single().id, date, reps = "8", rpe = "10")
+        suspend fun current(id: UUID) = repository.planNow(date).exercises.single { it.id == id }
+        assertEquals(WorkoutIntensity.VIGOROUS, WorkoutBurnEstimator.timerIntensity(current(cardio.id), rpeScale))
+
+        // The chosen effort is what the card then shows and what the burn uses.
+        repository.setTimerIntensity(cardio.id, date, WorkoutIntensity.LIGHT)
+        assertEquals("", current(cardio.id).sets.single().rpe)
+        assertNull(current(cardio.id).sets.single().rpeScale)
+        assertEquals(WorkoutIntensity.LIGHT, WorkoutBurnEstimator.timerIntensity(current(cardio.id), rpeScale))
+
+        repository.setTimerIntensity(strength.id, date, WorkoutIntensity.LIGHT)
+        assertEquals("10", current(strength.id).sets.single().rpe)
+        assertEquals(WorkoutIntensity.VIGOROUS, WorkoutBurnEstimator.timerIntensity(current(strength.id), rpeScale))
     }
 
     @Test

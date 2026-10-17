@@ -365,12 +365,22 @@ final class StrengthWorkoutStore {
         }
     }
 
+    /// Stores the timer's effort. Cardio cards show no set fields, so RPE left
+    /// on a cardio exercise's sets (e.g. from a text log) is cleared here;
+    /// otherwise it would keep overriding the effort the user just chose.
+    /// Strength RPE stays authoritative.
     func setTimerIntensity(
         _ intensity: StrengthWorkoutIntensity,
         exerciseID: UUID,
         on date: Date
     ) {
         updateExercise(exerciseID, on: date) { exercise in
+            if exercise.isCardio {
+                for index in exercise.sets.indices {
+                    exercise.sets[index].rpe = ""
+                    exercise.sets[index].rpeScale = nil
+                }
+            }
             var timer = exercise.timer ?? StrengthExerciseTimer()
             timer.intensity = intensity
             exercise.timer = timer

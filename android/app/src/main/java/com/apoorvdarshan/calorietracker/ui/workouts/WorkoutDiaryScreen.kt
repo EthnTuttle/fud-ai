@@ -188,10 +188,14 @@ internal fun WorkoutDiaryScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val exerciseCardBounds = remember { mutableStateMapOf<UUID, androidx.compose.ui.geometry.Rect>() }
     var diaryRootOrigin by remember { mutableStateOf(Offset.Zero) }
-    // Reordering belongs to one day, so changing days (or dropping below two
-    // exercises) returns to the normal cards without extra bookkeeping.
+    // Reordering belongs to one day: changing days or dropping below two exercises
+    // ends it, so it never comes back on its own when the user returns or adds one.
     var reorderDateKey by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
-    val isReordering = reorderDateKey == state.selectedDate.toString() && state.exercises.size > 1
+    val selectedDateKey = state.selectedDate.toString()
+    val isReordering = retainedReorderDateKey(reorderDateKey, selectedDateKey, state.exercises.size) != null
+    LaunchedEffect(selectedDateKey, state.exercises.size > 1) {
+        reorderDateKey = retainedReorderDateKey(reorderDateKey, selectedDateKey, state.exercises.size)
+    }
     val moveUpLabel = stringResource(R.string.workout_move_up)
     val moveDownLabel = stringResource(R.string.workout_move_down)
 
@@ -291,7 +295,7 @@ internal fun WorkoutDiaryScreen(
                     onToggleReorder = if (state.exercises.size > 1) {
                         {
                             dismissKeyboard()
-                            reorderDateKey = if (isReordering) null else state.selectedDate.toString()
+                            reorderDateKey = if (isReordering) null else selectedDateKey
                         }
                     } else null,
                     modifier = Modifier
@@ -1726,3 +1730,11 @@ internal fun selectedDateTitle(date: LocalDate, today: LocalDate = LocalDate.now
     today.minusDays(1) -> "Yesterday"
     else -> date.format(DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault()))
 }
+
+/**
+ * Reorder mode belongs to the day it was started on. It ends when another day is
+ * selected or fewer than two exercises remain, so returning to that day (or adding
+ * an exercise back) shows the normal cards instead of silently resuming it.
+ */
+internal fun retainedReorderDateKey(reorderDateKey: String?, selectedDateKey: String, exerciseCount: Int): String? =
+    reorderDateKey?.takeIf { it == selectedDateKey && exerciseCount > 1 }

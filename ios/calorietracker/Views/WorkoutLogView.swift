@@ -42,6 +42,17 @@ enum WorkoutLogDaySwipeNavigation {
     }
 }
 
+/// Reorder mode belongs to the day it was started on. It ends when another
+/// day is selected or fewer than two exercises remain, so returning to that
+/// day (or adding an exercise back) shows the normal cards instead of
+/// silently resuming it.
+enum WorkoutLogReorderMode {
+    static func retainedDateKey(_ dateKey: String?, selectedDateKey: String, exerciseCount: Int) -> String? {
+        guard let dateKey, dateKey == selectedDateKey, exerciseCount > 1 else { return nil }
+        return dateKey
+    }
+}
+
 enum WorkoutLogKeyboardDismissal {
     static func shouldDismiss(at location: CGPoint, cardFrames: [CGRect]) -> Bool {
         guard !cardFrames.isEmpty else { return false }
@@ -87,8 +98,8 @@ struct WorkoutLogView: View {
     @State private var isCalculatingBurn = false
     @State private var workoutCardFrames: [UUID: CGRect] = [:]
     @State private var pendingWorkoutDeletion: StrengthPlannedExercise?
-    /// Reordering belongs to one day, so changing days (or dropping below two
-    /// exercises) returns to the normal cards without extra bookkeeping.
+    /// The day reordering was started on; cleared when the day changes or
+    /// fewer than two exercises remain (see `WorkoutLogReorderMode`).
     @State private var reorderingDateKey: String?
     @FocusState private var focusedSetField: WorkoutLogSetFocus?
 
@@ -132,8 +143,26 @@ struct WorkoutLogView: View {
         workoutStore.exercises(for: selectedDate)
     }
 
+    private var selectedDateKey: String {
+        StrengthWorkoutStore.dateKey(for: selectedDate)
+    }
+
     private var isReordering: Bool {
-        reorderingDateKey == StrengthWorkoutStore.dateKey(for: selectedDate) && selectedExercises.count > 1
+        WorkoutLogReorderMode.retainedDateKey(
+            reorderingDateKey,
+            selectedDateKey: selectedDateKey,
+            exerciseCount: selectedExercises.count
+        ) != nil
+    }
+
+    /// Clears the stored day once reordering no longer applies, so it does not
+    /// come back when the user returns to that day or adds an exercise.
+    private func endReorderingIfNeeded() {
+        reorderingDateKey = WorkoutLogReorderMode.retainedDateKey(
+            reorderingDateKey,
+            selectedDateKey: selectedDateKey,
+            exerciseCount: selectedExercises.count
+        )
     }
 
     private var importedHealthWorkouts: [ImportedHealthWorkout] {
@@ -424,6 +453,8 @@ struct WorkoutLogView: View {
                             dismissSetKeyboard()
                         }
                 )
+                .onChange(of: selectedDateKey) { _, _ in endReorderingIfNeeded() }
+                .onChange(of: selectedExercises.count) { _, _ in endReorderingIfNeeded() }
                 .onChange(of: focusedSetField) { oldValue, newValue in
                     guard let exerciseID = newValue?.exerciseID,
                           exerciseID != oldValue?.exerciseID
@@ -617,7 +648,7 @@ struct WorkoutLogView: View {
         Button {
             dismissSetKeyboard()
             withAnimation(.snappy(duration: 0.25)) {
-                reorderingDateKey = isReordering ? nil : StrengthWorkoutStore.dateKey(for: selectedDate)
+                reorderingDateKey = isReordering ? nil : selectedDateKey
             }
         } label: {
             Label(isReordering ? "Done" : "Reorder", systemImage: isReordering ? "checkmark" : "arrow.up.arrow.down")

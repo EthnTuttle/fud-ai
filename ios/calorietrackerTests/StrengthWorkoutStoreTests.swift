@@ -633,6 +633,47 @@ struct StrengthWorkoutStoreTests {
         #expect(store.exercises(for: date).map(\.itemID) == ["row", "Walking_Outdoor", "bench", "squat"])
     }
 
+    @Test func reorderModeEndsWhenTheDayChangesOrFewerThanTwoExercisesRemain() {
+        #expect(WorkoutLogReorderMode.retainedDateKey("2026-09-08", selectedDateKey: "2026-09-08", exerciseCount: 2) == "2026-09-08")
+        #expect(WorkoutLogReorderMode.retainedDateKey(nil, selectedDateKey: "2026-09-08", exerciseCount: 3) == nil)
+        // The cleared key is what the diary stores, so returning to the day does not resume it.
+        #expect(WorkoutLogReorderMode.retainedDateKey("2026-09-08", selectedDateKey: "2026-09-09", exerciseCount: 3) == nil)
+        #expect(WorkoutLogReorderMode.retainedDateKey("2026-09-08", selectedDateKey: "2026-09-08", exerciseCount: 1) == nil)
+    }
+
+    @Test func choosingCardioEffortReplacesHiddenSetRPEButKeepsStrengthRPE() throws {
+        let fixture = WorkoutTestFixture()
+        defer { fixture.cleanUp() }
+        let date = WorkoutTestFixture.date(2026, 9, 8)
+        let store = fixture.makeStore()
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "run", name: "Run", category: "cardio"), on: date)
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: date)
+        let cardio = store.exercises(for: date)[0]
+        let strength = store.exercises(for: date)[1]
+        // Cardio cards show no set fields, so this RPE (e.g. from a text log) is invisible there.
+        let cardioSet = try #require(cardio.sets.first)
+        let strengthSet = try #require(strength.sets.first)
+        store.updateSet(exerciseID: cardio.id, setID: cardioSet.id, on: date, rpe: "10")
+        store.updateSet(exerciseID: strength.id, setID: strengthSet.id, on: date, reps: "8", rpe: "10")
+        func effort(_ id: UUID) -> StrengthWorkoutIntensity? {
+            store.exercises(for: date).first { $0.id == id }.map {
+                StrengthWorkoutBurnEstimator.timerIntensity(for: $0, defaultRPEScale: .strength)
+            }
+        }
+        #expect(effort(cardio.id) == .vigorous)
+
+        // The chosen effort is what the card then shows and what the burn uses.
+        store.setTimerIntensity(.light, exerciseID: cardio.id, on: date)
+        let updatedCardio = try #require(store.exercises(for: date).first { $0.id == cardio.id })
+        #expect(updatedCardio.sets.allSatisfy { $0.rpe.isEmpty && $0.rpeScale == nil })
+        #expect(effort(cardio.id) == .light)
+
+        store.setTimerIntensity(.light, exerciseID: strength.id, on: date)
+        let updatedStrength = try #require(store.exercises(for: date).first { $0.id == strength.id })
+        #expect(updatedStrength.sets.first?.rpe == "10")
+        #expect(effort(strength.id) == .vigorous)
+    }
+
     @Test func exerciseTimersPersistThroughReloadAndExcludePausedTime() throws {
         let fixture = WorkoutTestFixture()
         defer { fixture.cleanUp() }

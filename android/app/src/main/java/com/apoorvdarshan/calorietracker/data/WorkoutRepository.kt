@@ -347,9 +347,17 @@ class WorkoutRepository(
         }
     }
 
+    /**
+     * Stores the timer's effort. Cardio cards show no set fields, so RPE left on a cardio
+     * exercise's sets (e.g. from a text log) is cleared here; otherwise it would keep
+     * overriding the effort the user just chose. Strength RPE stays authoritative.
+     */
     suspend fun setTimerIntensity(exerciseId: UUID, date: LocalDate, intensity: WorkoutIntensity) {
         updateExercise(WorkoutDate.key(date), exerciseId) { exercise ->
-            exercise.copy(timer = (exercise.timer ?: ExerciseTimer()).copy(intensity = intensity))
+            exercise.copy(
+                sets = if (exercise.isCardio) exercise.sets.map { it.copy(rpe = "", rpeScale = null) } else exercise.sets,
+                timer = (exercise.timer ?: ExerciseTimer()).copy(intensity = intensity)
+            )
         }
     }
 
