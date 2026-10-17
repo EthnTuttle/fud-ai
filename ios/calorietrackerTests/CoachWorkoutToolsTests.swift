@@ -621,6 +621,24 @@ struct CoachWorkoutToolsTests {
         ])
     }
 
+    @Test func exerciseLibrarySearchFiltersBeforeKeepingOnlyFullNameMatches() throws {
+        let library = [
+            ExerciseLibraryItem(id: "Incline_Barbell_Bench_Press", name: "Incline Barbell Bench Press", category: "strength", rawEquipment: "barbell", primaryMuscles: ["chest"]),
+            ExerciseLibraryItem(id: "Incline_Cable_Chest_Press", name: "Incline Cable Chest Press", category: "strength", rawEquipment: "cable", primaryMuscles: ["chest"]),
+        ]
+        let tools = CoachTools(weights: [], bodyFats: [], foods: [], workoutAccessEnabled: true, exerciseLibrary: library)
+        // The barbell press matches every query word, but the cable filter must still find the
+        // cable press instead of falling back to the unfiltered barbell result.
+        let result = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "incline bench press", "equipment": "cable"])
+        )
+        let exercises = try #require(result["exercises"] as? [[String: Any]])
+        #expect(exercises.first?["name"] as? String == "Incline Cable Chest Press")
+        #expect(result["total_matches"] as? Int == 1)
+        #expect(result["filters_ignored"] == nil)
+        #expect(result["excluded_by_filters"] as? Int == 1)
+    }
+
     @Test func exerciseLibrarySearchIgnoresOneAndTwoLetterWordsUnlessTheQueryIsThatShort() {
         let library = [
             ExerciseLibraryItem(id: "Barbell_Curl", name: "Barbell Curl", category: "strength", rawEquipment: "barbell", primaryMuscles: ["biceps"]),

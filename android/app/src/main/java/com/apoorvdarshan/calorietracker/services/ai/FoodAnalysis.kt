@@ -293,6 +293,8 @@ internal object FoodJsonParser {
     private const val MIN_INGREDIENT_CALORIE_COVERAGE = 0.5
     /** A list adding up to more than this share also counts something twice, such as a total row. */
     private const val MAX_INGREDIENT_CALORIE_COVERAGE = 1.5
+    /** No single ingredient comes near this; a larger number is malformed and would saturate Int. */
+    private const val MAX_INGREDIENT_VALUE = 100_000.0
 
     private class IngredientDraft(
         val name: String,
@@ -327,10 +329,12 @@ internal object FoodJsonParser {
             val protein = jsonNumber(item["protein"]) ?: return emptyList()
             val carbs = jsonNumber(item["carbs"]) ?: return emptyList()
             val fat = jsonNumber(item["fat"]) ?: return emptyList()
-            if (name.isEmpty() || listOf(calories, protein, carbs, fat).any { it < 0 }) return emptyList()
+            if (name.isEmpty() || listOf(calories, protein, carbs, fat).any { it < 0 || it > MAX_INGREDIENT_VALUE }) {
+                return emptyList()
+            }
             val listedGrams = jsonNumber(item["grams"])
             // 0 is the prompt's placeholder for an unknown weight; a negative weight is malformed.
-            if (listedGrams != null && listedGrams < 0) return emptyList()
+            if (listedGrams != null && (listedGrams < 0 || listedGrams > MAX_INGREDIENT_VALUE)) return emptyList()
             val grams = listedGrams?.takeIf { it > 0 }
             // Without a weight or calories there is nothing to estimate the weight from.
             if (grams == null && calories <= 0) return emptyList()

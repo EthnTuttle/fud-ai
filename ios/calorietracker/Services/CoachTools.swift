@@ -562,7 +562,10 @@ struct CoachTools {
         let equipment = (arguments["equipment"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let limit = (arguments["limit"] as? Int).map { min(max($0, 1), 20) } ?? 10
         let queryMatches = Self.rankedLibraryMatches(exerciseLibrary, query: query)
-        let filtered = queryMatches.filter(Self.libraryFilter(muscle: muscle, equipment: equipment))
+        // Filter before choosing complete versus partial name matches, so a barbell exercise
+        // matching every query word cannot hide the cable one the equipment filter asks for.
+        let filtered = Self.rankedLibraryMatches(exerciseLibrary, query: query, muscle: muscle, equipment: equipment)
+        let passesFilters = Self.libraryFilter(muscle: muscle, equipment: equipment)
         // A filter word the library never uses ("upper" chest, "bench" equipment) must not hide
         // every match, or Coach would report an exercise that is in the library as missing.
         let filtersIgnored = filtered.isEmpty && !queryMatches.isEmpty
@@ -590,8 +593,9 @@ struct CoachTools {
         if filtersIgnored {
             payload["filters_ignored"] = true
             payload["note"] = "No exercise matched both the query and the muscle/equipment filters, so these results ignore the filters."
-        } else if matches.count < queryMatches.count {
-            payload["excluded_by_filters"] = queryMatches.count - matches.count
+        } else {
+            let excluded = queryMatches.filter { !passesFilters($0) }.count
+            if excluded > 0 { payload["excluded_by_filters"] = excluded }
         }
         return jsonString(payload)
     }

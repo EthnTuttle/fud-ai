@@ -1481,6 +1481,8 @@ struct GeminiService {
     private static let minIngredientCalorieCoverage = 0.5
     /// A list adding up to more than this share also counts something twice, such as a total row.
     private static let maxIngredientCalorieCoverage = 1.5
+    /// No single ingredient comes near this; a larger number is malformed and would overflow Int.
+    private static let maxIngredientValue = 100_000.0
 
     /// The breakdown replaces the meal macros, so it must be complete or absent (#343):
     /// any entry that cannot be kept or repaired drops the whole list and the model's
@@ -1510,11 +1512,11 @@ struct GeminiService {
                   let protein = ingredientNumber(item["protein"]),
                   let carbs = ingredientNumber(item["carbs"]),
                   let fat = ingredientNumber(item["fat"]),
-                  [calories, protein, carbs, fat].allSatisfy({ $0 >= 0 })
+                  [calories, protein, carbs, fat].allSatisfy({ $0 >= 0 && $0 <= maxIngredientValue })
             else { return [] }
             let listedGrams = ingredientNumber(item["grams"])
             // 0 is the prompt's placeholder for an unknown weight; a negative weight is malformed.
-            if let listedGrams, listedGrams < 0 { return [] }
+            if let listedGrams, listedGrams < 0 || listedGrams > maxIngredientValue { return [] }
             let grams = listedGrams.flatMap { $0 > 0 ? $0 : nil }
             // Without a weight or calories there is nothing to estimate the weight from.
             if grams == nil && calories <= 0 { return [] }

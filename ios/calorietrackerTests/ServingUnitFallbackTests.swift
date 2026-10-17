@@ -223,6 +223,9 @@ struct ServingUnitFallbackTests {
             #"{"name":"Rice","grams":-150,"calories":200,"protein":4,"carbs":44,"fat":1}"#,
             #"{"name":"Rice","grams":150,"calories":true,"protein":4,"carbs":44,"fat":1}"#,
             #"{"name":"Rice","grams":150,"calories":"about 200","protein":4,"carbs":44,"fat":1}"#,
+            // Finite but far beyond any food; Int(round(1e100)) would trap.
+            #"{"name":"Rice","grams":150,"calories":"1e100","protein":4,"carbs":44,"fat":1}"#,
+            #"{"name":"Rice","grams":1e300,"calories":200,"protein":4,"carbs":44,"fat":1}"#,
             #""Rice""#,
         ]
         for malformed in malformedItems {

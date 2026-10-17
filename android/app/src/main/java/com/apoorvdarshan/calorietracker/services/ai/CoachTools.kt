@@ -644,7 +644,10 @@ class CoachTools(
         val muscle = args.muscle?.trim().orEmpty()
         val equipment = args.equipment?.trim().orEmpty()
         val queryMatches = rankedLibraryMatches(exerciseLibrary, query)
-        val filtered = queryMatches.filter(libraryFilter(muscle, equipment))
+        // Filter before choosing complete versus partial name matches, so a barbell exercise
+        // matching every query word cannot hide the cable one the equipment filter asks for.
+        val filtered = rankedLibraryMatches(exerciseLibrary, query, muscle, equipment)
+        val passesFilters = libraryFilter(muscle, equipment)
         // A filter word the library never uses ("upper" chest, "bench" equipment) must not hide
         // every match, or Coach would report an exercise that is in the library as missing.
         val filtersIgnored = filtered.isEmpty() && queryMatches.isNotEmpty()
@@ -672,8 +675,9 @@ class CoachTools(
         if (filtersIgnored) {
             payload["filters_ignored"] = true
             payload["note"] = "No exercise matched both the query and the muscle/equipment filters, so these results ignore the filters."
-        } else if (matches.size < queryMatches.size) {
-            payload["excluded_by_filters"] = queryMatches.size - matches.size
+        } else {
+            val excluded = queryMatches.count { !passesFilters(it) }
+            if (excluded > 0) payload["excluded_by_filters"] = excluded
         }
         return json(payload)
     }

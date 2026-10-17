@@ -547,6 +547,28 @@ class CoachWorkoutToolsTest {
     }
 
     @Test
+    fun exerciseLibrarySearchFiltersBeforeKeepingOnlyFullNameMatches() {
+        val tools = CoachTools(
+            weights = emptyList(),
+            bodyFats = emptyList(),
+            foods = emptyList(),
+            exerciseLibrary = listOf(
+                libraryItem("Incline_Barbell_Bench_Press", "Incline Barbell Bench Press", "Barbell", listOf("Chest")),
+                libraryItem("Incline_Cable_Chest_Press", "Incline Cable Chest Press", "Cable", listOf("Chest"))
+            )
+        )
+        // The barbell press matches every query word, but the cable filter must still find the
+        // cable press instead of falling back to the unfiltered barbell result.
+        val result = json(
+            tools.execute("search_exercise_library", mapOf("query" to "incline bench press", "equipment" to "cable"))
+        )
+        assertEquals("Incline Cable Chest Press", result.getAsJsonArray("exercises")[0].asJsonObject["name"].asString)
+        assertEquals(1, result["total_matches"].asInt)
+        assertNull(result["filters_ignored"])
+        assertEquals(1, result["excluded_by_filters"].asInt)
+    }
+
+    @Test
     fun exerciseLibrarySearchIgnoresOneAndTwoLetterWordsUnlessTheQueryIsThatShort() {
         val library = listOf(
             libraryItem("Barbell_Curl", "Barbell Curl", "Barbell", listOf("Biceps")),
