@@ -813,6 +813,21 @@
     <string name="settings_refresh_energy_goals">Оновити цілі спалювання енергії</string>
     <string name="settings_clear_food_log">Очистити журнал їжі</string>
     <string name="settings_delete_all_data">Видалити всі дані</string>
+    <string name="storage_title">Сховище</string>
+    <string name="storage_saved_photos">Збережені фото</string>
+    <string name="storage_on_device_models">Моделі на пристрої</string>
+    <string name="storage_cache">Кеш</string>
+    <string name="storage_compress_photos">Стиснути фото</string>
+    <string name="storage_clear_cache">Очистити кеш</string>
+    <string name="storage_footer">«Стиснути фото» назавжди зменшує фото, більші за 2048 пікселів. «Очистити кеш» видаляє мініатюри та завантажені зображення вправ — за потреби вони створюються знову. Моделі на пристрої видаляються в їхніх налаштуваннях ШІ або мовлення.</string>
+    <string name="storage_compress_confirm_title">Стиснути фото?</string>
+    <string name="storage_compress_confirm_message">Фото, у яких довша сторона перевищує 2048 пікселів, буде назавжди зменшено до 2048 пікселів і збережено у форматі JPEG. Менші фото не зміняться. Цю дію не можна скасувати.</string>
+    <string name="storage_compress_action">Стиснути</string>
+    <string name="storage_compressing_progress">Стиснення фото… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Фото стиснуто</string>
+    <string name="storage_compress_freed">Звільнено %1$s.</string>
+    <string name="storage_compress_nothing">Немає фото, які потрібно стиснути.</string>
+    <string name="storage_compress_unreadable">Деякі фото не вдалося прочитати, тому їх не змінено.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистити журнал їжі?</string>

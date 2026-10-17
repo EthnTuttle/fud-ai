@@ -6267,6 +6267,8 @@ struct ProfileView: View {
                     .buttonStyle(.plain)
                 }
                 .listRowBackground(AppColors.appCard)
+
+                StorageSettingsSection()
                 }
 
                 if let aboutCategory = settingsCategory?.aboutCategory {

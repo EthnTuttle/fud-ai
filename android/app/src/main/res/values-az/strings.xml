@@ -547,6 +547,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Yemək Qeydlərini Təmizlə</string>
     <string name="settings_delete_all_data">Bütün Məlumatları Sil</string>
+    <string name="storage_title">Yaddaş</string>
+    <string name="storage_saved_photos">Saxlanmış şəkillər</string>
+    <string name="storage_on_device_models">Cihazdakı modellər</string>
+    <string name="storage_cache">Keş</string>
+    <string name="storage_compress_photos">Şəkilləri sıxışdır</string>
+    <string name="storage_clear_cache">Keşi təmizlə</string>
+    <string name="storage_footer">«Şəkilləri sıxışdır» 2048 pikseldən böyük şəkillərin ölçüsünü həmişəlik kiçildir. «Keşi təmizlə» miniatürləri və endirilmiş məşq şəkillərini silir; lazım olduqda yenidən yaradılırlar. Cihazdakı modelləri onların süni intellekt və ya nitq ayarlarından silin.</string>
+    <string name="storage_compress_confirm_title">Şəkillər sıxışdırılsın?</string>
+    <string name="storage_compress_confirm_message">Ən uzun tərəfi 2048 pikseldən böyük olan şəkillər həmişəlik 2048 pikselə kiçildiləcək və JPEG kimi saxlanılacaq. Kiçik şəkillər dəyişməz qalır. Bunu geri qaytarmaq mümkün deyil.</string>
+    <string name="storage_compress_action">Sıxışdır</string>
+    <string name="storage_compressing_progress">Şəkillər sıxışdırılır… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Şəkillər sıxışdırıldı</string>
+    <string name="storage_compress_freed">%1$s boşaldıldı.</string>
+    <string name="storage_compress_nothing">Sıxışdırılmalı şəkil yoxdur.</string>
+    <string name="storage_compress_unreadable">Bəzi şəkillər oxuna bilmədi və dəyişdirilmədi.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Yemək qeydləri təmizlənsin?</string>

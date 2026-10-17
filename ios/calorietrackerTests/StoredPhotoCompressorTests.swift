@@ -1,0 +1,141 @@
+import Foundation
+import ImageIO
+import Testing
+import UniformTypeIdentifiers
+@testable import calorietracker
+
+@MainActor
+struct StoredPhotoCompressorTests {
+    @Test func storedCapMatchesTheViewerDecodeCap() {
+        #expect(StoredPhotoCompressor.maxPixelSize == FoodImageStore.viewerMaxDimension)
+    }
+
+    @Test func largePhotoIsDownscaledUprightWithOrientationBakedIn() throws {
+        // Landscape pixels tagged "rotate 90° CW" display as portrait.
+        let large = try jpegData(width: 3_000, height: 2_000, orientation: .right)
+
+        let downscaled = try #require(StoredPhotoCompressor.downscaledJPEGData(large))
+        let info = try imageInfo(downscaled)
+
+        #expect(max(info.width, info.height) <= StoredPhotoCompressor.maxPixelSize)
+        #expect(max(info.width, info.height) > StoredPhotoCompressor.maxPixelSize - 8)
+        #expect(info.height > info.width)
+        #expect(info.orientation == 1)
+    }
+
+    @Test func smallOrUndecodableDataIsNotReencoded() throws {
+        #expect(StoredPhotoCompressor.downscaledJPEGData(try jpegData(width: 1_200, height: 900)) == nil)
+        #expect(StoredPhotoCompressor.downscaledJPEGData(Data("not an image".utf8)) == nil)
+    }
+
+    @Test func newPhotosAreCappedWhileSmallPhotosAndRestoresKeepTheirBytes() throws {
+        let large = try jpegData(width: 3_000, height: 2_000)
+        let small = try jpegData(width: 1_200, height: 900)
+        let largeName = try #require(FoodImageStore.shared.store(data: large, for: UUID()))
+        let smallName = try #require(FoodImageStore.shared.store(data: small, for: UUID()))
+        let restoredName = "\(UUID().uuidString).jpg"
+        #expect(FoodImageStore.shared.restore(data: large, filename: restoredName) == restoredName)
+        defer { [largeName, smallName, restoredName].forEach { FoodImageStore.shared.delete(filename: $0) } }
+
+        let stored = try imageInfo(try #require(FoodImageStore.shared.load(filename: largeName)))
+        #expect(max(stored.width, stored.height) <= StoredPhotoCompressor.maxPixelSize)
+        #expect(FoodImageStore.shared.load(filename: smallName) == small)
+        #expect(FoodImageStore.shared.load(filename: restoredName) == large)
+    }
+
+    @Test func compressingExistingPhotosKeepsNamesAndSkipsSmallOrUnreadableFiles() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let large = try jpegData(width: 4_000, height: 3_000, orientation: .down)
+        let small = try jpegData(width: 1_200, height: 900)
+        let broken = Data("not an image".utf8)
+        try large.write(to: folder.appendingPathComponent("a-large.jpg"))
+        try small.write(to: folder.appendingPathComponent("b-small.jpg"))
+        try broken.write(to: folder.appendingPathComponent("c-broken.jpg"))
+        var progress: [[Int]] = []
+
+        let result = StoredPhotoCompressor.compressPhotos(in: folder) { done, total in progress.append([done, total]) }
+
+        let compressed = try Data(contentsOf: folder.appendingPathComponent("a-large.jpg"))
+        #expect(result.compressedCount == 1)
+        #expect(result.unreadableCount == 1)
+        #expect(result.bytesSaved == Int64(large.count - compressed.count))
+        #expect(progress == [[1, 3], [2, 3], [3, 3]])
+        #expect(try Set(FileManager.default.contentsOfDirectory(atPath: folder.path)) == ["a-large.jpg", "b-small.jpg", "c-broken.jpg"])
+        let info = try imageInfo(compressed)
+        #expect(max(info.width, info.height) <= StoredPhotoCompressor.maxPixelSize)
+        #expect(info.width > info.height)
+        #expect(info.orientation == 1)
+        #expect(try Data(contentsOf: folder.appendingPathComponent("b-small.jpg")) == small)
+        #expect(try Data(contentsOf: folder.appendingPathComponent("c-broken.jpg")) == broken)
+
+        // A second run finds nothing left to do.
+        #expect(StoredPhotoCompressor.compressPhotos(in: folder).compressedCount == 0)
+    }
+
+    @Test func clearingTheThumbnailCacheNeverTouchesPhotos() throws {
+        let photo = try jpegData(width: 600, height: 400)
+        let name = try #require(FoodImageStore.shared.store(data: photo, for: UUID()))
+        defer { FoodImageStore.shared.delete(filename: name) }
+        let thumbnailFolder = try #require(FoodImageStore.shared.thumbnailCacheFolderURL)
+        #expect(FileManager.default.fileExists(atPath: thumbnailFolder.appendingPathComponent(name).path))
+
+        FoodImageStore.shared.clearThumbnailCache()
+
+        #expect(!FileManager.default.fileExists(atPath: thumbnailFolder.appendingPathComponent(name).path))
+        #expect(FoodImageStore.shared.load(filename: name) == photo)
+        #expect(FoodImageStore.shared.loadThumbnail(filename: name) != nil)
+    }
+
+    @Test func directorySizeCountsFilesAndToleratesMissingFolders() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AppStorageUsageTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent("nested"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try Data(count: 5_000).write(to: folder.appendingPathComponent("a.bin"))
+        try Data(count: 7_000).write(to: folder.appendingPathComponent("nested/b.bin"))
+
+        #expect(AppStorageUsage.directorySize(at: folder) >= 12_000)
+        #expect(AppStorageUsage.directorySize(at: folder.appendingPathComponent("missing")) == 0)
+        #expect(AppStorageUsage.directorySize(at: nil) == 0)
+    }
+
+    // MARK: - Helpers
+
+    /// Left half red, right half blue, encoded as JPEG with an EXIF orientation tag.
+    private func jpegData(width: Int, height: Int, orientation: CGImagePropertyOrientation = .up) throws -> Data {
+        let context = try #require(CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ))
+        context.setFillColor(red: 1, green: 0, blue: 0, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width / 2, height: height))
+        context.setFillColor(red: 0, green: 0, blue: 1, alpha: 1)
+        context.fill(CGRect(x: width / 2, y: 0, width: width - width / 2, height: height))
+        let image = try #require(context.makeImage())
+        let output = NSMutableData()
+        let destination = try #require(CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, [
+            kCGImageDestinationLossyCompressionQuality: 1.0,
+            kCGImagePropertyOrientation: orientation.rawValue
+        ] as CFDictionary)
+        try #require(CGImageDestinationFinalize(destination))
+        return output as Data
+    }
+
+    private func imageInfo(_ data: Data) throws -> (width: Int, height: Int, orientation: Int) {
+        let source = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+        let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
+        let width = try #require((properties[kCGImagePropertyPixelWidth] as? NSNumber)?.intValue)
+        let height = try #require((properties[kCGImagePropertyPixelHeight] as? NSNumber)?.intValue)
+        let orientation = (properties[kCGImagePropertyOrientation] as? NSNumber)?.intValue ?? 1
+        return (width, height, orientation)
+    }
+}

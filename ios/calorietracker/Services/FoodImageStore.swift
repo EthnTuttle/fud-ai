@@ -76,11 +76,14 @@ struct FoodImageStore {
         store(data: data, filename: "\(id.uuidString)-\(index).jpg")
     }
 
-    private func store(data: Data, filename: String) -> String? {
+    /// New photos over `StoredPhotoCompressor.maxPixelSize` are stored as an upright JPEG at that
+    /// size (the viewer never decodes more); smaller or undecodable images keep their bytes.
+    private func store(data: Data, filename: String, downscalingLargePhotos: Bool = true) -> String? {
         guard let folderURL else { return nil }
         let url = folderURL.appendingPathComponent(filename)
+        let bytes = downscalingLargePhotos ? (StoredPhotoCompressor.downscaledJPEGData(data) ?? data) : data
         do {
-            try data.write(to: url, options: .atomic)
+            try bytes.write(to: url, options: .atomic)
             if let thumbnail = decodeImage(at: url, maxPixelSize: Self.thumbnailMaxDimension) {
                 writeThumbnail(thumbnail, filename: filename)
             }
@@ -95,10 +98,25 @@ struct FoodImageStore {
         return (try? FileManager.default.contentsOfDirectory(atPath: folderURL.path)) ?? []
     }
 
+    /// Writes backup bytes byte-identical — restores are never re-compressed.
     @discardableResult
     func restore(data: Data, filename: String) -> String? {
         guard let safe = CloudBackupPolicy.safePhotoName(filename) else { return nil }
-        return store(data: data, filename: safe)
+        return store(data: data, filename: safe, downscalingLargePhotos: false)
+    }
+
+    /// Folder of stored photos, for Settings › Storage and Compress Photos.
+    var photoFolderURL: URL? { folderURL }
+
+    /// Folder of regenerable thumbnails, for Settings › Storage.
+    var thumbnailCacheFolderURL: URL? { thumbnailFolderURL }
+
+    /// Deletes cached thumbnails only; `loadThumbnail` rebuilds them from the photos on demand.
+    func clearThumbnailCache() {
+        if let thumbFolderURL = thumbnailFolderURL {
+            try? FileManager.default.removeItem(at: thumbFolderURL)
+        }
+        thumbnailCache.removeAllObjects()
     }
 
     /// Reads the bytes at `filename` (not a full path), or nil if missing.

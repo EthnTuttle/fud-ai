@@ -547,6 +547,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Voedingsdagboek wissen</string>
     <string name="settings_delete_all_data">Alle gegevens verwijderen</string>
+    <string name="storage_title">Opslag</string>
+    <string name="storage_saved_photos">Opgeslagen foto’s</string>
+    <string name="storage_on_device_models">Modellen op apparaat</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Foto’s comprimeren</string>
+    <string name="storage_clear_cache">Cache wissen</string>
+    <string name="storage_footer">Foto’s comprimeren verkleint foto’s groter dan 2048 px blijvend. Cache wissen verwijdert miniaturen en gedownloade oefenafbeeldingen; die worden opnieuw gemaakt wanneer nodig. Verwijder modellen op het apparaat via hun AI- of spraakinstellingen.</string>
+    <string name="storage_compress_confirm_title">Foto’s comprimeren?</string>
+    <string name="storage_compress_confirm_message">Foto’s waarvan de langste zijde groter is dan 2048 pixels worden blijvend verkleind tot 2048 pixels en als JPEG opgeslagen. Kleinere foto’s blijven ongewijzigd. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="storage_compress_action">Comprimeren</string>
+    <string name="storage_compressing_progress">Foto’s comprimeren… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Foto’s gecomprimeerd</string>
+    <string name="storage_compress_freed">%1$s vrijgemaakt.</string>
+    <string name="storage_compress_nothing">Er hoefden geen foto’s te worden gecomprimeerd.</string>
+    <string name="storage_compress_unreadable">Sommige foto’s konden niet worden gelezen en zijn ongewijzigd gelaten.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Voedingsdagboek wissen?</string>

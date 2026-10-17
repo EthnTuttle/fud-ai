@@ -546,6 +546,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">食事ログを消去</string>
     <string name="settings_delete_all_data">すべてのデータを削除</string>
+    <string name="storage_title">ストレージ</string>
+    <string name="storage_saved_photos">保存済みの写真</string>
+    <string name="storage_on_device_models">デバイス上のモデル</string>
+    <string name="storage_cache">キャッシュ</string>
+    <string name="storage_compress_photos">写真を圧縮</string>
+    <string name="storage_clear_cache">キャッシュを消去</string>
+    <string name="storage_footer">「写真を圧縮」は2048 pxを超える写真を恒久的に縮小します。「キャッシュを消去」はサムネイルとダウンロード済みのワークアウト画像を削除します（必要に応じて再作成されます）。デバイス上のモデルは、それぞれのAIまたは音声の設定から削除してください。</string>
+    <string name="storage_compress_confirm_title">写真を圧縮しますか？</string>
+    <string name="storage_compress_confirm_message">長辺が2048ピクセルを超える写真は、2048ピクセルに恒久的に縮小され、JPEGとして保存されます。それより小さい写真は変更されません。この操作は元に戻せません。</string>
+    <string name="storage_compress_action">圧縮</string>
+    <string name="storage_compressing_progress">写真を圧縮中… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">写真を圧縮しました</string>
+    <string name="storage_compress_freed">%1$sを解放しました。</string>
+    <string name="storage_compress_nothing">圧縮が必要な写真はありませんでした。</string>
+    <string name="storage_compress_unreadable">一部の写真は読み込めなかったため、変更されていません。</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">食事ログを消去しますか？</string>

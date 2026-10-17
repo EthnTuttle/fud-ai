@@ -548,6 +548,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Effacer le journal alimentaire</string>
     <string name="settings_delete_all_data">Supprimer toutes les données</string>
+    <string name="storage_title">Stockage</string>
+    <string name="storage_saved_photos">Photos enregistrées</string>
+    <string name="storage_on_device_models">Modèles sur l’appareil</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Compresser les photos</string>
+    <string name="storage_clear_cache">Vider le cache</string>
+    <string name="storage_footer">Compresser les photos redimensionne définitivement les photos de plus de 2048 px. Vider le cache supprime les miniatures et les images d’exercices téléchargées, qui sont recréées au besoin. Supprimez les modèles sur l’appareil depuis leurs réglages d’IA ou de reconnaissance vocale.</string>
+    <string name="storage_compress_confirm_title">Compresser les photos ?</string>
+    <string name="storage_compress_confirm_message">Les photos dont le plus grand côté dépasse 2048 pixels seront définitivement redimensionnées à 2048 pixels et enregistrées en JPEG. Les photos plus petites restent inchangées. Cette action est irréversible.</string>
+    <string name="storage_compress_action">Compresser</string>
+    <string name="storage_compressing_progress">Compression des photos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Photos compressées</string>
+    <string name="storage_compress_freed">%1$s libérés.</string>
+    <string name="storage_compress_nothing">Aucune photo n’avait besoin d’être compressée.</string>
+    <string name="storage_compress_unreadable">Certaines photos n’ont pas pu être lues et n’ont pas été modifiées.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Effacer le journal alimentaire ?</string>

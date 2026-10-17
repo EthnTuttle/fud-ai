@@ -569,6 +569,21 @@
     <string name="settings_refresh_energy_goals">Obnovit cíle ze spálené energie</string>
     <string name="settings_clear_food_log">Vymazat deník jídel</string>
     <string name="settings_delete_all_data">Smazat všechna data</string>
+    <string name="storage_title">Úložiště</string>
+    <string name="storage_saved_photos">Uložené fotky</string>
+    <string name="storage_on_device_models">Modely v zařízení</string>
+    <string name="storage_cache">Mezipaměť</string>
+    <string name="storage_compress_photos">Komprimovat fotky</string>
+    <string name="storage_clear_cache">Vymazat mezipaměť</string>
+    <string name="storage_footer">Komprimovat fotky trvale zmenší fotky větší než 2048 px. Vymazat mezipaměť odstraní miniatury a stažené obrázky cviků, které se v případě potřeby znovu vytvoří. Modely v zařízení smažete v jejich nastavení AI nebo řeči.</string>
+    <string name="storage_compress_confirm_title">Komprimovat fotky?</string>
+    <string name="storage_compress_confirm_message">Fotky, jejichž delší strana přesahuje 2048 pixelů, budou trvale zmenšeny na 2048 pixelů a uloženy jako JPEG. Menší fotky zůstanou beze změny. Tuto akci nelze vrátit.</string>
+    <string name="storage_compress_action">Komprimovat</string>
+    <string name="storage_compressing_progress">Komprimace fotek… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotky zkomprimovány</string>
+    <string name="storage_compress_freed">Uvolněno %1$s.</string>
+    <string name="storage_compress_nothing">Žádné fotky nebylo třeba komprimovat.</string>
+    <string name="storage_compress_unreadable">Některé fotky nebylo možné načíst a zůstaly beze změny.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Vymazat deník jídel?</string>

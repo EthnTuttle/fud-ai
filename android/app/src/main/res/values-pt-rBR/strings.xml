@@ -548,6 +548,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Limpar diário alimentar</string>
     <string name="settings_delete_all_data">Apagar todos os dados</string>
+    <string name="storage_title">Armazenamento</string>
+    <string name="storage_saved_photos">Fotos salvas</string>
+    <string name="storage_on_device_models">Modelos no dispositivo</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Comprimir fotos</string>
+    <string name="storage_clear_cache">Limpar cache</string>
+    <string name="storage_footer">Comprimir fotos reduz permanentemente as fotos maiores que 2048 px. Limpar cache remove miniaturas e imagens de exercícios baixadas, que são recriadas quando necessário. Exclua os modelos no dispositivo nas configurações de IA ou de fala correspondentes.</string>
+    <string name="storage_compress_confirm_title">Comprimir fotos?</string>
+    <string name="storage_compress_confirm_message">Fotos cujo lado maior ultrapasse 2048 pixels serão redimensionadas permanentemente para 2048 pixels e salvas como JPEG. Fotos menores permanecem inalteradas. Esta ação não pode ser desfeita.</string>
+    <string name="storage_compress_action">Comprimir</string>
+    <string name="storage_compressing_progress">Comprimindo fotos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotos comprimidas</string>
+    <string name="storage_compress_freed">%1$s liberados.</string>
+    <string name="storage_compress_nothing">Nenhuma foto precisava ser comprimida.</string>
+    <string name="storage_compress_unreadable">Algumas fotos não puderam ser lidas e foram mantidas sem alterações.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Limpar diário alimentar?</string>

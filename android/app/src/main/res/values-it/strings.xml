@@ -548,6 +548,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Cancella registro cibo</string>
     <string name="settings_delete_all_data">Elimina tutti i dati</string>
+    <string name="storage_title">Archiviazione</string>
+    <string name="storage_saved_photos">Foto salvate</string>
+    <string name="storage_on_device_models">Modelli sul dispositivo</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Comprimi foto</string>
+    <string name="storage_clear_cache">Svuota cache</string>
+    <string name="storage_footer">Comprimi foto ridimensiona in modo permanente le foto più grandi di 2048 px. Svuota cache rimuove le miniature e le immagini degli esercizi scaricate, che vengono ricreate quando servono. Elimina i modelli sul dispositivo dalle rispettive impostazioni IA o vocali.</string>
+    <string name="storage_compress_confirm_title">Comprimere le foto?</string>
+    <string name="storage_compress_confirm_message">Le foto con il lato più lungo superiore a 2048 pixel verranno ridimensionate in modo permanente a 2048 pixel e salvate in JPEG. Le foto più piccole restano invariate. L’operazione non può essere annullata.</string>
+    <string name="storage_compress_action">Comprimi</string>
+    <string name="storage_compressing_progress">Compressione foto… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Foto compresse</string>
+    <string name="storage_compress_freed">Liberati %1$s.</string>
+    <string name="storage_compress_nothing">Nessuna foto da comprimere.</string>
+    <string name="storage_compress_unreadable">Alcune foto non possono essere lette e sono rimaste invariate.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Cancellare il registro del cibo?</string>

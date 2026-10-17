@@ -1679,6 +1679,7 @@ fun SettingsScreen(
                     )
                 }
             }
+            StorageSettingsCard(container.storageMaintenance)
             }
 
             // App information and support actions are first-class Settings destinations.

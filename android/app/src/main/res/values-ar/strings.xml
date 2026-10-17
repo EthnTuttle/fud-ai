@@ -559,6 +559,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">مسح سجل الطعام</string>
     <string name="settings_delete_all_data">حذف جميع البيانات</string>
+    <string name="storage_title">التخزين</string>
+    <string name="storage_saved_photos">الصور المحفوظة</string>
+    <string name="storage_on_device_models">النماذج على الجهاز</string>
+    <string name="storage_cache">ذاكرة التخزين المؤقت</string>
+    <string name="storage_compress_photos">ضغط الصور</string>
+    <string name="storage_clear_cache">مسح ذاكرة التخزين المؤقت</string>
+    <string name="storage_footer">يؤدي «ضغط الصور» إلى تصغير الصور الأكبر من 2048 بكسل بشكل دائم. يزيل «مسح ذاكرة التخزين المؤقت» الصور المصغّرة وصور التمارين التي تم تنزيلها، ويُعاد إنشاؤها عند الحاجة. احذف النماذج على الجهاز من إعدادات الذكاء الاصطناعي أو الكلام الخاصة بها.</string>
+    <string name="storage_compress_confirm_title">ضغط الصور؟</string>
+    <string name="storage_compress_confirm_message">سيتم تصغير الصور التي يزيد ضلعها الأطول عن 2048 بكسل إلى 2048 بكسل بشكل دائم وحفظها بتنسيق JPEG. تبقى الصور الأصغر دون تغيير. لا يمكن التراجع عن ذلك.</string>
+    <string name="storage_compress_action">ضغط</string>
+    <string name="storage_compressing_progress">جارٍ ضغط الصور… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">تم ضغط الصور</string>
+    <string name="storage_compress_freed">تم تحرير %1$s.</string>
+    <string name="storage_compress_nothing">لا توجد صور تحتاج إلى ضغط.</string>
+    <string name="storage_compress_unreadable">تعذّرت قراءة بعض الصور وتُركت دون تغيير.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">مسح سجل الطعام؟</string>

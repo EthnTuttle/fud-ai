@@ -546,6 +546,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">음식 기록 지우기</string>
     <string name="settings_delete_all_data">모든 데이터 삭제</string>
+    <string name="storage_title">저장 공간</string>
+    <string name="storage_saved_photos">저장된 사진</string>
+    <string name="storage_on_device_models">기기 내 모델</string>
+    <string name="storage_cache">캐시</string>
+    <string name="storage_compress_photos">사진 압축</string>
+    <string name="storage_clear_cache">캐시 지우기</string>
+    <string name="storage_footer">사진 압축은 2048px보다 큰 사진의 크기를 영구적으로 줄입니다. 캐시 지우기는 썸네일과 다운로드한 운동 이미지를 삭제하며, 필요할 때 다시 생성됩니다. 기기 내 모델은 해당 AI 또는 음성 설정에서 삭제하세요.</string>
+    <string name="storage_compress_confirm_title">사진을 압축할까요?</string>
+    <string name="storage_compress_confirm_message">긴 변이 2048픽셀보다 큰 사진은 2048픽셀로 영구적으로 축소되어 JPEG로 저장됩니다. 더 작은 사진은 변경되지 않습니다. 이 작업은 취소할 수 없습니다.</string>
+    <string name="storage_compress_action">압축</string>
+    <string name="storage_compressing_progress">사진 압축 중… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">사진 압축 완료</string>
+    <string name="storage_compress_freed">%1$s 확보됨.</string>
+    <string name="storage_compress_nothing">압축할 사진이 없습니다.</string>
+    <string name="storage_compress_unreadable">일부 사진은 읽을 수 없어 변경하지 않았습니다.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">음식 기록을 지울까요?</string>

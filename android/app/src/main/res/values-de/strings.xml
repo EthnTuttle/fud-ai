@@ -547,6 +547,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Ernährungstagebuch löschen</string>
     <string name="settings_delete_all_data">Alle Daten löschen</string>
+    <string name="storage_title">Speicher</string>
+    <string name="storage_saved_photos">Gespeicherte Fotos</string>
+    <string name="storage_on_device_models">Modelle auf dem Gerät</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Fotos komprimieren</string>
+    <string name="storage_clear_cache">Cache leeren</string>
+    <string name="storage_footer">„Fotos komprimieren“ verkleinert Fotos über 2048 px dauerhaft. „Cache leeren“ entfernt Miniaturansichten und heruntergeladene Übungsbilder; sie werden bei Bedarf neu erstellt. Modelle auf dem Gerät löschst du in ihren KI- oder Spracheinstellungen.</string>
+    <string name="storage_compress_confirm_title">Fotos komprimieren?</string>
+    <string name="storage_compress_confirm_message">Fotos, deren längste Seite 2048 Pixel überschreitet, werden dauerhaft auf 2048 Pixel verkleinert und als JPEG gespeichert. Kleinere Fotos bleiben unverändert. Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="storage_compress_action">Komprimieren</string>
+    <string name="storage_compressing_progress">Fotos werden komprimiert … %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotos komprimiert</string>
+    <string name="storage_compress_freed">%1$s freigegeben.</string>
+    <string name="storage_compress_nothing">Keine Fotos mussten komprimiert werden.</string>
+    <string name="storage_compress_unreadable">Einige Fotos konnten nicht gelesen werden und blieben unverändert.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Ernährungstagebuch löschen?</string>

@@ -821,6 +821,21 @@
     <string name="settings_refresh_energy_goals">Refresh Energy Burn Goals</string>
     <string name="settings_clear_food_log">Clear Food Log</string>
     <string name="settings_delete_all_data">Delete All Data</string>
+    <string name="storage_title">Storage</string>
+    <string name="storage_saved_photos">Saved Photos</string>
+    <string name="storage_on_device_models">On-Device Models</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Compress Photos</string>
+    <string name="storage_clear_cache">Clear Cache</string>
+    <string name="storage_footer">Compress Photos permanently resizes photos larger than 2048 px. Clear Cache removes thumbnails and downloaded workout images, which are recreated when needed. Delete on-device models from their AI or speech settings.</string>
+    <string name="storage_compress_confirm_title">Compress Photos?</string>
+    <string name="storage_compress_confirm_message">Photos larger than 2048 pixels on their longest side will be permanently resized to 2048 pixels and saved as JPEG. Smaller photos stay unchanged. This can’t be undone.</string>
+    <string name="storage_compress_action">Compress</string>
+    <string name="storage_compressing_progress">Compressing photos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Photos Compressed</string>
+    <string name="storage_compress_freed">Freed %1$s.</string>
+    <string name="storage_compress_nothing">No photos needed compressing.</string>
+    <string name="storage_compress_unreadable">Some photos couldn’t be read and were left unchanged.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Clear food log?</string>

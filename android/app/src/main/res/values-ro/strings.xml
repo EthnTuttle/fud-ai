@@ -550,6 +550,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Șterge jurnalul alimentar</string>
     <string name="settings_delete_all_data">Șterge toate datele</string>
+    <string name="storage_title">Spațiu de stocare</string>
+    <string name="storage_saved_photos">Fotografii salvate</string>
+    <string name="storage_on_device_models">Modele pe dispozitiv</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Comprimă fotografiile</string>
+    <string name="storage_clear_cache">Golește cache-ul</string>
+    <string name="storage_footer">Comprimă fotografiile redimensionează permanent fotografiile mai mari de 2048 px. Golește cache-ul elimină miniaturile și imaginile de exerciții descărcate, care sunt recreate când este nevoie. Șterge modelele de pe dispozitiv din setările lor de AI sau de vorbire.</string>
+    <string name="storage_compress_confirm_title">Comprimi fotografiile?</string>
+    <string name="storage_compress_confirm_message">Fotografiile a căror latură cea mai lungă depășește 2048 de pixeli vor fi redimensionate permanent la 2048 de pixeli și salvate ca JPEG. Fotografiile mai mici rămân neschimbate. Acțiunea nu poate fi anulată.</string>
+    <string name="storage_compress_action">Comprimă</string>
+    <string name="storage_compressing_progress">Se comprimă fotografiile… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotografii comprimate</string>
+    <string name="storage_compress_freed">S-au eliberat %1$s.</string>
+    <string name="storage_compress_nothing">Nicio fotografie nu a necesitat comprimare.</string>
+    <string name="storage_compress_unreadable">Unele fotografii nu au putut fi citite și au rămas neschimbate.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Ștergi jurnalul alimentar?</string>

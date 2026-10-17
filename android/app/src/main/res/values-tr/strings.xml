@@ -811,6 +811,21 @@
     <string name="settings_refresh_energy_goals">Enerji Yakım Hedeflerini Yenile</string>
     <string name="settings_clear_food_log">Yiyecek Günlüğünü Temizle</string>
     <string name="settings_delete_all_data">Tüm Verileri Sil</string>
+    <string name="storage_title">Depolama</string>
+    <string name="storage_saved_photos">Kayıtlı Fotoğraflar</string>
+    <string name="storage_on_device_models">Cihazdaki Modeller</string>
+    <string name="storage_cache">Önbellek</string>
+    <string name="storage_compress_photos">Fotoğrafları Sıkıştır</string>
+    <string name="storage_clear_cache">Önbelleği Temizle</string>
+    <string name="storage_footer">Fotoğrafları Sıkıştır, 2048 pikselden büyük fotoğrafları kalıcı olarak küçültür. Önbelleği Temizle, küçük resimleri ve indirilen egzersiz görsellerini kaldırır; gerektiğinde yeniden oluşturulurlar. Cihazdaki modelleri ilgili yapay zekâ veya konuşma ayarlarından silin.</string>
+    <string name="storage_compress_confirm_title">Fotoğraflar sıkıştırılsın mı?</string>
+    <string name="storage_compress_confirm_message">En uzun kenarı 2048 pikselden büyük olan fotoğraflar kalıcı olarak 2048 piksele küçültülecek ve JPEG olarak kaydedilecek. Daha küçük fotoğraflar değişmez. Bu işlem geri alınamaz.</string>
+    <string name="storage_compress_action">Sıkıştır</string>
+    <string name="storage_compressing_progress">Fotoğraflar sıkıştırılıyor… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotoğraflar Sıkıştırıldı</string>
+    <string name="storage_compress_freed">%1$s boşaltıldı.</string>
+    <string name="storage_compress_nothing">Sıkıştırılması gereken fotoğraf yok.</string>
+    <string name="storage_compress_unreadable">Bazı fotoğraflar okunamadı ve değiştirilmeden bırakıldı.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Yiyecek günlüğü temizlensin mi?</string>

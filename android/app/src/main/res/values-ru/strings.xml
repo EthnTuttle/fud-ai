@@ -553,6 +553,21 @@
     <string name="settings_health_connect">Health Connect</string>
     <string name="settings_clear_food_log">Очистить дневник питания</string>
     <string name="settings_delete_all_data">Удалить все данные</string>
+    <string name="storage_title">Хранилище</string>
+    <string name="storage_saved_photos">Сохранённые фото</string>
+    <string name="storage_on_device_models">Модели на устройстве</string>
+    <string name="storage_cache">Кэш</string>
+    <string name="storage_compress_photos">Сжать фото</string>
+    <string name="storage_clear_cache">Очистить кэш</string>
+    <string name="storage_footer">«Сжать фото» навсегда уменьшает фото больше 2048 пикселей. «Очистить кэш» удаляет миниатюры и загруженные изображения упражнений — при необходимости они создаются заново. Модели на устройстве удаляются в их настройках ИИ или распознавания речи.</string>
+    <string name="storage_compress_confirm_title">Сжать фото?</string>
+    <string name="storage_compress_confirm_message">Фото, у которых длинная сторона больше 2048 пикселей, будут навсегда уменьшены до 2048 пикселей и сохранены в формате JPEG. Фото меньшего размера не изменятся. Это действие нельзя отменить.</string>
+    <string name="storage_compress_action">Сжать</string>
+    <string name="storage_compressing_progress">Сжатие фото… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Фото сжаты</string>
+    <string name="storage_compress_freed">Освобождено %1$s.</string>
+    <string name="storage_compress_nothing">Нет фото, которые нужно сжать.</string>
+    <string name="storage_compress_unreadable">Некоторые фото не удалось прочитать, они остались без изменений.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистить дневник питания?</string>
