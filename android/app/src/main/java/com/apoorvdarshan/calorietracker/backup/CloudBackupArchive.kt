@@ -5,7 +5,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileNotFoundException
 import java.io.FilterInputStream
 import java.io.InputStream
 import java.security.MessageDigest
@@ -36,12 +35,33 @@ object CloudBackupPolicy {
         "hasSeenProductHuntLaunchPrompt.2026-09-29",
     )
 
+    /** Longest photo file name a backup carries; real ones are a UUID and an extension. */
+    const val MAX_PHOTO_NAME_LENGTH = 128
+
     private val photoName = Regex("^[A-Za-z0-9._-]+\\.(jpg|jpeg|png|webp)$", RegexOption.IGNORE_CASE)
 
+    /**
+     * [name] if it is a plain photo file name, else null: ASCII letters, digits,
+     * '.', '_' and '-' only, a photo extension, at most [MAX_PHOTO_NAME_LENGTH]
+     * characters, no leading dot and no "..". A name with a directory part,
+     * relative or absolute, is rejected rather than shortened.
+     */
     fun safePhotoName(name: String): String? {
-        val base = name.substringAfterLast('/').substringAfterLast('\\')
-        return base.takeIf { photoName.matches(it) }
+        if (name.length > MAX_PHOTO_NAME_LENGTH || name.startsWith('.') || ".." in name) return null
+        if (!photoName.matches(name)) return null
+        // The pattern already excludes separators; File.name is a last check
+        // that no directory part survives.
+        val plain = File(name).name
+        return if (plain == name) plain else null
     }
+
+    /**
+     * The file name a restore writes for archive entry [entryName], or null if
+     * the entry must be skipped. Only `photos/<plain photo name>` qualifies, so
+     * an entry name can never point a restore outside the photo folder.
+     */
+    fun restorablePhotoName(entryName: String): String? =
+        if (entryName.startsWith(PHOTOS_DIR)) safePhotoName(entryName.substring(PHOTOS_DIR.length)) else null
 }
 
 @Serializable
@@ -162,13 +182,10 @@ object CloudBackupArchive {
             zip.write(payload)
             zip.closeEntry()
             for ((name, photo) in safePhotos) {
-                // Deleted since the snapshot: leave it out rather than fail the backup.
-                val input = try {
-                    photo.open()
-                } catch (_: FileNotFoundException) {
-                    continue
-                }
-                input.use {
+                // A snapshotted photo that can no longer be read fails the backup.
+                // The hash already lists it, so a backup saved without it would
+                // count as unchanged and never be retried.
+                photo.open().use {
                     zip.putNextEntry(ZipEntry(CloudBackupPolicy.PHOTOS_DIR + name))
                     it.copyTo(zip)
                     zip.closeEntry()
@@ -203,7 +220,7 @@ object CloudBackupArchive {
                     if (read < 0) break
                     size += read
                 }
-                if (restorablePhotoName(entry.name) != null) {
+                if (CloudBackupPolicy.restorablePhotoName(entry.name) != null) {
                     photoCount++
                     photoBytes += size
                 }
@@ -218,7 +235,11 @@ object CloudBackupArchive {
         return CloudBackupContents(document, raw.size.toLong(), photoCount, photoBytes)
     }
 
-    /** Hands each restorable photo to [restore] one at a time. [restore] must not close the stream. */
+    /**
+     * Hands each restorable photo to [restore] one at a time, under its plain
+     * file name; entries [CloudBackupPolicy.restorablePhotoName] rejects are
+     * skipped. [restore] must not close the stream.
+     */
     fun forEachPhoto(archive: File, restore: (name: String, input: InputStream) -> Unit) {
         ZipInputStream(archive.inputStream().buffered()).use { zip ->
             val entryStream = object : FilterInputStream(zip) {
@@ -226,14 +247,11 @@ object CloudBackupArchive {
             }
             while (true) {
                 val entry = zip.nextEntry ?: break
-                val name = restorablePhotoName(entry.name) ?: continue
+                val name = CloudBackupPolicy.restorablePhotoName(entry.name) ?: continue
                 restore(name, entryStream)
             }
         }
     }
-
-    private fun restorablePhotoName(entryName: String): String? =
-        if (entryName.startsWith(CloudBackupPolicy.PHOTOS_DIR)) CloudBackupPolicy.safePhotoName(entryName) else null
 
     /** Runs [block] with a new archive file in [dir] and always deletes it afterwards. */
     inline fun <T> withTempArchive(dir: File, block: (File) -> T): T {

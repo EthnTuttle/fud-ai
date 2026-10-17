@@ -183,7 +183,11 @@ class CloudBackupCoordinator(
             Instant.now().toEpochMilli() - lastAt.toEpochMilli() < CloudBackupPolicy.MIN_AUTO_BACKUP_INTERVAL_MS
         ) return
         mutex.withLock {
-            runCatching { upload(requireToken(), skipIfUnchanged = true) }
+            // Checked again under the lock: a restore, delete or sign-out that
+            // ran while this waited may have turned backup off.
+            if (prefs.cloudBackupEnabled.first()) {
+                runCatching { upload(requireToken(), skipIfUnchanged = true) }
+            }
         }
         refresh()
     }
@@ -220,15 +224,13 @@ class CloudBackupCoordinator(
 
     private suspend fun applyArchive(zip: File, fileId: String) {
         val email = prefs.cloudBackupAccountEmail.first()
-        CloudBackupRestore.apply(zip, images) { document, photosComplete ->
+        CloudBackupRestore.apply(zip, images) { document ->
             prefs.restoreCloudBackupValues(document.payload.values)
             // Device-specific Health Connect tokens must not transfer. Mark food
             // restore done so Health Connect skips a second import of the same IDs.
             prefs.clearHealthChangesToken()
             prefs.setHealthFoodRestoreDone(true)
-            // With photos missing, the next backup would replace the complete
-            // copy in Drive, so backup stays off until the user turns it on again.
-            prefs.setCloudBackupEnabled(photosComplete)
+            prefs.setCloudBackupEnabled(true)
             prefs.setCloudBackupAccountEmail(email)
             prefs.setCloudBackupFileId(fileId)
             prefs.setCloudBackupLastHash(document.content_sha256)

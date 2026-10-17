@@ -6,11 +6,14 @@ import android.graphics.Bitmap
 import android.util.LruCache
 import androidx.annotation.VisibleForTesting
 import com.apoorvdarshan.calorietracker.backup.CloudBackupPhotoStore
+import com.apoorvdarshan.calorietracker.backup.CloudBackupPhotoWriteException
+import com.apoorvdarshan.calorietracker.backup.CloudBackupPolicy
 import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder.scaledToMaxDimension
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -35,10 +38,18 @@ class FoodImageStore private constructor(
     }
     private val thumbnailLocks = ConcurrentHashMap<String, Any>()
 
-    // A Drive restore replaces every photo while the app stays usable (#484).
+    // A Drive restore writes its photos here first and moves them into [dir]
+    // only once every one of them has been read and written (#484).
+    private val stagingDir: File = File(filesRoot, STAGING_DIR_NAME)
+    private val stagingThumbnailDir: File = File(filesRoot, STAGING_THUMBNAIL_DIR_NAME)
+    private val stagingLock = Any()
+    private var stagingActive = false
+
+    // A Drive restore replaces the photos while the app stays usable (#484).
     // Deletions decided from the diary as it was before the restore would
     // remove restored photos, so they are skipped until it commits; the
-    // startup prune collects anything left behind. Written under the write lock.
+    // reference-checked prune collects anything left behind. Written under
+    // the write lock.
     private val restoreLock = ReentrantReadWriteLock()
     private var restoresRunning = 0
     private var generation = 0L
@@ -135,18 +146,31 @@ class FoodImageStore private constructor(
         true
     }.getOrDefault(false)
 
+    override fun bytesFree(): Long = filesRoot.usableSpace
+
+    override fun startStaging() {
+        synchronized(stagingLock) {
+            stagingActive = true
+            deleteStagingFolders()
+            if (!stagingDir.mkdirs() || !stagingThumbnailDir.mkdirs()) throw CloudBackupPhotoWriteException()
+        }
+    }
+
     /**
-     * Like [restoreBytes], but copies from [input] so a restore never holds the whole photo.
-     * The copy goes to a temp file first, so a failed write (a full disk) leaves no cut-off photo.
+     * Copies a restored photo into the staging folder without holding it in
+     * memory. The copy goes to a temp file first, so a failed write (a full
+     * disk) leaves no cut-off photo.
      */
-    override fun restoreStream(filename: String, input: InputStream): Boolean {
-        val file = File(dir, filename)
-        val temp = File(dir, "$filename.${UUID.randomUUID()}.tmp")
+    override fun stagePhoto(filename: String, input: InputStream): Boolean {
+        val target = childFile(stagingDir, filename) ?: return false
+        val temp = File(target.parentFile, "${target.name}.${UUID.randomUUID()}$TEMP_SUFFIX")
         return runCatching {
             FileOutputStream(temp).use { input.copyTo(it) }
-            check(temp.renameTo(file)) { "Could not move restored photo into place" }
+            check(temp.renameTo(target)) { "Could not move the staged photo into place" }
             runCatching {
-                FoodImageDecoder.decode(file, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
+                FoodImageDecoder.decode(target, THUMBNAIL_MAX_DIMENSION)?.let {
+                    writeThumbnailFile(it, File(stagingThumbnailDir, target.name))
+                }
             }
             true
         }.getOrElse {
@@ -155,11 +179,65 @@ class FoodImageStore private constructor(
         }
     }
 
-    override fun bytesFreeAfterClear(): Long =
-        filesRoot.usableSpace + bytesIn(dir) + bytesIn(thumbnailDir)
+    override fun commitStaged() {
+        val staged = stagingDir.listFiles()
+            ?.mapNotNull { file -> CloudBackupPolicy.safePhotoName(file.name)?.takeIf { file.isFile } }
+            .orEmpty()
+        try {
+            for (name in staged) {
+                val source = childFile(stagingDir, name) ?: throw CloudBackupPhotoWriteException()
+                val target = childFile(dir, name) ?: throw CloudBackupPhotoWriteException()
+                // A rename within the app's files folder replaces any photo
+                // with the same name in one step.
+                if (!source.renameTo(target)) throw CloudBackupPhotoWriteException()
+                val thumbnail = File(thumbnailDir, target.name)
+                val stagedThumbnail = File(stagingThumbnailDir, target.name)
+                // A thumbnail of the photo just replaced must not outlive it.
+                if (!stagedThumbnail.isFile || !stagedThumbnail.renameTo(thumbnail)) thumbnail.delete()
+            }
+        } finally {
+            thumbnailCache.evictAll()
+        }
+    }
 
-    private fun bytesIn(folder: File): Long =
-        folder.listFiles()?.sumOf { if (it.isFile) it.length() else 0L } ?: 0L
+    override fun discardStaged() {
+        synchronized(stagingLock) {
+            deleteStagingFolders()
+            stagingActive = false
+        }
+    }
+
+    /** Removes staging a restore left behind when the process died; keeps one still running. */
+    fun discardAbandonedStaging() {
+        synchronized(stagingLock) {
+            if (!stagingActive) deleteStagingFolders()
+        }
+    }
+
+    @VisibleForTesting
+    fun stagedFile(filename: String): File = File(stagingDir, filename)
+
+    private fun deleteStagingFolders() {
+        stagingDir.deleteRecursively()
+        stagingThumbnailDir.deleteRecursively()
+    }
+
+    /**
+     * [folder]/[filename] when [filename] is a plain photo name whose canonical
+     * path is a direct child of [folder], else null. Restored names come from a
+     * downloaded archive, so this keeps a crafted name, or a symbolic link
+     * already at that name, from reaching outside the folder.
+     */
+    private fun childFile(folder: File, filename: String): File? {
+        val name = CloudBackupPolicy.safePhotoName(filename) ?: return null
+        return try {
+            val root = folder.canonicalFile
+            val file = File(root, name).canonicalFile
+            if (file.toPath().startsWith(root.toPath()) && file.parentFile == root) file else null
+        } catch (_: IOException) {
+            null
+        }
+    }
 
     /** Stores a custom exercise photo under a fresh filename (never overwrites diary snapshots). */
     fun storeExercisePhoto(bytes: ByteArray): String? = runCatching {
@@ -204,7 +282,7 @@ class FoodImageStore private constructor(
         evictThumbnails(filename)
     }
 
-    override fun clearAll() {
+    fun clearAll() {
         dir.listFiles()?.forEach { runCatching { it.delete() } }
         thumbnailDir.listFiles()?.forEach { runCatching { it.delete() } }
         thumbnailCache.evictAll()
@@ -241,9 +319,14 @@ class FoodImageStore private constructor(
     }
 
     private fun writeThumbnail(filename: String, bitmap: Bitmap) {
+        val thumb = writeThumbnailFile(bitmap, File(thumbnailDir, filename))
+        thumbnailCache.put("$filename:$THUMBNAIL_MAX_DIMENSION", thumb)
+    }
+
+    /** Writes [bitmap]'s thumbnail to [target] through a temp file and returns it. */
+    private fun writeThumbnailFile(bitmap: Bitmap, target: File): Bitmap {
         val thumb = bitmap.scaledToMaxDimension(THUMBNAIL_MAX_DIMENSION)
-        val target = File(thumbnailDir, filename)
-        val temp = File(thumbnailDir, "$filename.${UUID.randomUUID()}.tmp")
+        val temp = File(target.parentFile, "${target.name}.${UUID.randomUUID()}$TEMP_SUFFIX")
         try {
             FileOutputStream(temp).use { out ->
                 thumb.compress(Bitmap.CompressFormat.JPEG, 76, out)
@@ -252,7 +335,7 @@ class FoodImageStore private constructor(
                 temp.copyTo(target, overwrite = true)
                 temp.delete()
             }
-            thumbnailCache.put("$filename:$THUMBNAIL_MAX_DIMENSION", thumb)
+            return thumb
         } catch (e: Exception) {
             temp.delete()
             throw e
@@ -272,6 +355,9 @@ class FoodImageStore private constructor(
         private const val DIR_NAME = "fudai-food-images"
         private const val THUMBNAIL_DIR_NAME = "fudai-food-thumbnails-v2"
         private const val LEGACY_THUMBNAIL_DIR_NAME = "fudai-food-thumbnails"
+        private const val STAGING_DIR_NAME = "fudai-food-images-restore"
+        private const val STAGING_THUMBNAIL_DIR_NAME = "fudai-food-thumbnails-restore"
+        private const val TEMP_SUFFIX = ".tmp"
         private const val THUMBNAIL_MAX_DIMENSION = 320
         const val VIEWER_MAX_DIMENSION = 2048
         private const val THUMBNAIL_CACHE_KB_DEFAULT = 12 * 1024

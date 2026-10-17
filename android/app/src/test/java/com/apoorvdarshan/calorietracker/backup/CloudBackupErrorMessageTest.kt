@@ -35,7 +35,7 @@ class CloudBackupErrorMessageTest {
     }
 
     @Test
-    fun anIncompleteRestoreShowsTheFallback() {
-        assertEquals(fallback, cloudBackupErrorMessage(CloudBackupIncompleteException(), fallback, noSpace))
+    fun aPhotoWriteFailureShowsTheFallback() {
+        assertEquals(fallback, cloudBackupErrorMessage(CloudBackupPhotoWriteException(), fallback, noSpace))
     }
 }

@@ -12,6 +12,11 @@ final class CloudBackupService {
     static let smokeTestRecordName = "smoke-test"
 
     private static var didRunSmokeTestThisLaunch = false
+    private static let archivePrefix = "fudai-backup-"
+    /// Older builds kept their whole last backup in the temp folder under this name.
+    private static let legacyArchiveName = "fudai-backup.zip"
+    /// Temp archives a backup in this process is still packing or uploading.
+    private static var activeArchiveNames: Set<String> = []
     private static let smokeLogger = Logger(subsystem: "com.apoorvdarshan.calorietracker", category: "CloudBackupSmoke")
 
     private let recordType = "FudAIBackup"
@@ -34,6 +39,7 @@ final class CloudBackupService {
         self.defaults = defaults
         self.enabled = defaults.bool(forKey: Self.enabledKey)
         self.lastAt = defaults.string(forKey: Self.lastAtKey)
+        FoodImageStore.shared.removeAbandonedRestoreStaging()
     }
 
     func snapshotValues() -> [String: CloudBackupValue] {
@@ -102,11 +108,25 @@ final class CloudBackupService {
         return photos
     }
 
-    func restorePhotos(from archive: CloudBackupArchive.Reader) throws {
-        FoodImageStore.shared.deleteAll()
+    /// Restores `archive`'s photos into `store` and calls `applyValues` once
+    /// they are in place. Every photo is read and staged first, so a failed
+    /// read or write throws before any current photo or value changes and the
+    /// diary never points at photos the restore removed. Runs without
+    /// suspending, so no other main-actor work sees a half-finished restore.
+    static func restorePhotos(
+        from archive: CloudBackupArchive.Reader,
+        into store: FoodImageStore,
+        applyValues: () -> Void
+    ) throws {
+        let staging = try store.makeRestoreStaging()
+        defer { staging.discard() }
         try archive.forEachPhoto { name, data in
-            _ = FoodImageStore.shared.restore(data: data, filename: name)
+            try store.stage(data, filename: name, in: staging)
         }
+        try store.moveInStagedPhotos(staging)
+        applyValues()
+        // The restored diary uses only the restored photos.
+        store.deletePhotos(notIn: staging.names)
     }
 
     func checkAccount() async throws {
@@ -132,7 +152,7 @@ final class CloudBackupService {
         let hash = CloudBackupArchive.contentHash(values: values, photoSizes: photos.mapValues(\.size))
         if skipIfUnchanged, hash == defaults.string(forKey: Self.lastHashKey) { return }
         let zip = try packToTemporaryFile(values: values, photos: photos)
-        defer { try? FileManager.default.removeItem(at: zip) }
+        defer { removeTemporaryArchive(zip) }
         try await upload(zip: zip, hash: hash)
         let now = ISO8601DateFormatter().string(from: Date())
         defaults.set(now, forKey: Self.lastAtKey)
@@ -152,8 +172,9 @@ final class CloudBackupService {
         else { throw CloudBackupError.noBackup }
         let archive = try CloudBackupArchive.Reader(url: url)
         let document = archive.document
-        try restorePhotos(from: archive)
-        applyValues(document.payload.values)
+        try Self.restorePhotos(from: archive, into: FoodImageStore.shared) {
+            applyValues(document.payload.values)
+        }
         defaults.set(document.contentSha256, forKey: Self.lastHashKey)
         defaults.set(document.exportedAt, forKey: Self.lastAtKey)
         lastAt = document.exportedAt
@@ -195,7 +216,7 @@ final class CloudBackupService {
             let photos = snapshotPhotos()
             let hash = CloudBackupArchive.contentHash(values: values, photoSizes: photos.mapValues(\.size))
             let zip = try packToTemporaryFile(values: values, photos: photos)
-            defer { try? FileManager.default.removeItem(at: zip) }
+            defer { removeTemporaryArchive(zip) }
             try await upload(zip: zip, hash: hash, toRecord: Self.smokeTestRecordName)
             smokeUploaded = true
 
@@ -234,12 +255,13 @@ final class CloudBackupService {
         Self.smokeLogger.error("\(line, privacy: .public)")
     }
 
-    /// Packs into a uniquely named temp file; the caller deletes it once CloudKit has saved it.
+    /// Packs into a uniquely named temp file; the caller passes it to
+    /// `removeTemporaryArchive` once CloudKit has saved it.
     private func packToTemporaryFile(values: [String: CloudBackupValue], photos: [String: CloudBackupPhotoFile]) throws -> URL {
         let temp = FileManager.default.temporaryDirectory
-        // Older builds left their whole last backup here under a fixed name.
-        try? FileManager.default.removeItem(at: temp.appendingPathComponent("fudai-backup.zip"))
-        let zip = temp.appendingPathComponent("fudai-backup-\(UUID().uuidString).zip")
+        Self.removeAbandonedArchives(in: temp, keeping: Self.activeArchiveNames)
+        let zip = temp.appendingPathComponent("\(Self.archivePrefix)\(UUID().uuidString).zip")
+        Self.activeArchiveNames.insert(zip.lastPathComponent)
         do {
             try CloudBackupArchive.pack(
                 to: zip,
@@ -249,10 +271,27 @@ final class CloudBackupService {
                 appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
             )
         } catch {
-            try? FileManager.default.removeItem(at: zip)
+            removeTemporaryArchive(zip)
             throw error
         }
         return zip
+    }
+
+    private func removeTemporaryArchive(_ zip: URL) {
+        try? FileManager.default.removeItem(at: zip)
+        Self.activeArchiveNames.remove(zip.lastPathComponent)
+    }
+
+    /// Deletes backup archives in `directory` that a killed process left while
+    /// packing or uploading, and the fixed-name file older builds kept there.
+    /// Names in `active` belong to a backup still running and are kept.
+    static func removeAbandonedArchives(in directory: URL, keeping active: Set<String>) {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        for name in names where !active.contains(name) {
+            let isArchive = name == legacyArchiveName || (name.hasPrefix(archivePrefix) && name.hasSuffix(".zip"))
+            guard isArchive else { continue }
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(name))
+        }
     }
 
     private func upload(zip: URL, hash: String, toRecord named: String? = nil) async throws {

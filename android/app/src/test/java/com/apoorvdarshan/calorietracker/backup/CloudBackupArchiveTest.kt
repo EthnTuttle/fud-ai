@@ -78,10 +78,69 @@ class CloudBackupArchiveTest {
     }
 
     @Test
-    fun rejectsPathTraversalPhotoNames() {
-        assertEquals("secret.jpg", CloudBackupPolicy.safePhotoName("../secret.jpg"))
-        assertEquals("meal.jpg", CloudBackupPolicy.safePhotoName("photos/meal.jpg"))
-        assertEquals(null, CloudBackupPolicy.safePhotoName("notes.txt"))
+    fun onlyPlainPhotoFileNamesAreSafe() {
+        val uuid = "11111111-2222-3333-4444-555555555555"
+        for (name in listOf("meal.jpg", "MEAL.JPEG", "a.png", "b.webp", "$uuid.jpg", "$uuid-2.jpg", "exercise_$uuid.jpg")) {
+            assertEquals(name, name, CloudBackupPolicy.safePhotoName(name))
+        }
+        val rejected = listOf(
+            "../secret.jpg", "../../secret.jpg", "photos/meal.jpg", "/etc/meal.jpg", "/meal.jpg",
+            "..\\secret.jpg", "C:\\meal.jpg", "a\\b.jpg", "a..b.jpg", "..jpg", ".hidden.jpg",
+            "notes.txt", "meal", "meal.jpg.exe", "", ".", "..", "me al.jpg", "méal.jpg", "meal\u0000.jpg",
+            "a".repeat(CloudBackupPolicy.MAX_PHOTO_NAME_LENGTH) + ".jpg",
+        )
+        for (name in rejected) {
+            assertEquals(name, null, CloudBackupPolicy.safePhotoName(name))
+        }
+        val longest = "a".repeat(CloudBackupPolicy.MAX_PHOTO_NAME_LENGTH - 4) + ".jpg"
+        assertEquals(longest, CloudBackupPolicy.safePhotoName(longest))
+    }
+
+    @Test
+    fun onlyPhotosFolderEntriesWithPlainNamesAreRestorable() {
+        assertEquals("meal.jpg", CloudBackupPolicy.restorablePhotoName("photos/meal.jpg"))
+        val skipped = listOf(
+            "meal.jpg", "other/meal.jpg", "/photos/meal.jpg", "photos/", "photos/../meal.jpg",
+            "photos/../../meal.jpg", "photos/sub/meal.jpg", "photos//meal.jpg", "photos/..\\meal.jpg",
+            "photos/.meal.jpg", "photos/notes.txt", "../photos/meal.jpg", "backup.json",
+        )
+        for (entry in skipped) {
+            assertEquals(entry, null, CloudBackupPolicy.restorablePhotoName(entry))
+        }
+    }
+
+    @Test
+    fun entriesThatWouldEscapeThePhotoFolderAreSkipped() {
+        val payload = CloudBackupArchive.readDocument(packToFile(sampleValues(), emptyList())).let {
+            Json.encodeToString(CloudBackupDocument.serializer(), it).toByteArray()
+        }
+        val crafted = temp.newFile("crafted.zip")
+        val ok = byteArrayOf(1, 2, 3)
+        ZipOutputStream(crafted.outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry(CloudBackupPolicy.PAYLOAD_NAME))
+            zip.write(payload)
+            zip.closeEntry()
+            val hostile = listOf(
+                "photos/../../evil.jpg", "photos/../evil.jpg", "photos/sub/evil.jpg", "photos//evil.jpg",
+                "photos/..\\evil.jpg", "/photos/evil.jpg", "../photos/evil.jpg", "photos/.evil.jpg",
+                "photos/" + "e".repeat(200) + ".jpg",
+            )
+            for (name in hostile) {
+                zip.putNextEntry(ZipEntry(name))
+                zip.write(ByteArray(64) { 9 })
+                zip.closeEntry()
+            }
+            zip.putNextEntry(ZipEntry("photos/ok.jpg"))
+            zip.write(ok)
+            zip.closeEntry()
+        }
+
+        val contents = CloudBackupArchive.inspect(crafted)
+        assertEquals(1, contents.photoCount)
+        assertEquals(ok.size.toLong(), contents.photoBytes)
+        val restored = readPhotos(crafted)
+        assertEquals(listOf("ok.jpg"), restored.keys.toList())
+        assertArrayEquals(ok, restored.getValue("ok.jpg"))
     }
 
     @Test
@@ -170,14 +229,16 @@ class CloudBackupArchiveTest {
     }
 
     @Test
-    fun packLeavesOutPhotosDeletedAfterTheSnapshot() {
+    fun packFailsWhenASnapshottedPhotoIsGone() {
         val dir = temp.newFolder("snapshot")
         val kept = File(dir, "kept.jpg").apply { writeBytes(byteArrayOf(1, 2)) }
         val deleted = File(dir, "deleted.jpg").apply { writeBytes(byteArrayOf(3, 4)) }
         val photos = listOf(CloudBackupPhoto.fromFile("kept.jpg", kept), CloudBackupPhoto.fromFile("deleted.jpg", deleted))
         assertTrue(deleted.delete())
-        val zip = packToFile(sampleValues(), photos)
-        assertEquals(setOf("kept.jpg"), readPhotos(zip).keys)
+        // The hash already lists deleted.jpg; saving a backup without it would
+        // mark it as backed up, so the backup fails and is retried instead.
+        val failure = runCatching { packToFile(sampleValues(), photos) }.exceptionOrNull()
+        assertTrue(failure is IOException)
     }
 
     @Test
@@ -330,6 +391,13 @@ class CloudBackupArchiveTest {
         encodeDefaults = true
     }
 
+    private val legacyPhotoName = Regex("^[A-Za-z0-9._-]+\\.(jpg|jpeg|png|webp)$", RegexOption.IGNORE_CASE)
+
+    private fun legacySafePhotoName(name: String): String? {
+        val base = name.substringAfterLast('/').substringAfterLast('\\')
+        return base.takeIf { legacyPhotoName.matches(it) }
+    }
+
     private fun legacyContentHash(values: Map<String, CloudBackupValue>, photos: Map<String, ByteArray>): String {
         val canonical = buildString {
             values.toSortedMap().forEach { (key, value) ->
@@ -359,7 +427,7 @@ class CloudBackupArchiveTest {
     ): ByteArray {
         val filtered = values.filterKeys { it !in CloudBackupPolicy.excludedKeys }
         val safePhotos = photos.mapNotNull { (name, bytes) ->
-            CloudBackupPolicy.safePhotoName(name)?.let { it to bytes }
+            legacySafePhotoName(name)?.let { it to bytes }
         }.toMap()
         val document = CloudBackupDocument(
             format = CloudBackupPolicy.FORMAT,
@@ -395,7 +463,7 @@ class CloudBackupArchiveTest {
                 when {
                     entry.name == CloudBackupPolicy.PAYLOAD_NAME -> payload = data
                     entry.name.startsWith(CloudBackupPolicy.PHOTOS_DIR) -> {
-                        CloudBackupPolicy.safePhotoName(entry.name)?.let { photos[it] = data }
+                        legacySafePhotoName(entry.name)?.let { photos[it] = data }
                     }
                 }
             }

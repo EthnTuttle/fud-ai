@@ -144,13 +144,176 @@ struct CloudBackupArchiveTests {
         }
     }
 
-    @Test func photoDeletedAfterTheSnapshotIsLeftOut() throws {
+    @Test func photoDeletedAfterTheSnapshotFailsTheBackup() throws {
         try withTemporaryDirectory { dir in
             let photos = try writePhotos(["kept.jpg": Data([1, 2]), "deleted.jpg": Data([3, 4])], in: dir)
             try FileManager.default.removeItem(at: try #require(photos["deleted.jpg"]).url)
             let zip = dir.appendingPathComponent("backup.zip")
-            try CloudBackupArchive.pack(to: zip, values: sampleValues, photos: photos, exportedAt: exportedAt, appVersion: appVersion)
-            #expect(Set(try restoredPhotos(CloudBackupArchive.Reader(url: zip)).keys) == ["kept.jpg"])
+            // The hash already lists deleted.jpg; saving a backup without it would
+            // mark it as backed up, so the backup fails and is retried instead.
+            #expect(throws: (any Error).self) {
+                try CloudBackupArchive.pack(to: zip, values: sampleValues, photos: photos, exportedAt: exportedAt, appVersion: appVersion)
+            }
+        }
+    }
+
+    @Test func onlyPlainPhotoFileNamesAreSafe() {
+        let uuid = "11111111-2222-3333-4444-555555555555"
+        for name in ["meal.jpg", "MEAL.JPEG", "a.png", "b.webp", "\(uuid).jpg", "\(uuid)-2.jpg", "exercise_\(uuid).jpg"] {
+            #expect(CloudBackupPolicy.safePhotoName(name) == name, "\(name)")
+        }
+        let rejected = [
+            "../secret.jpg", "../../secret.jpg", "photos/meal.jpg", "/etc/meal.jpg", "/meal.jpg",
+            "..\\secret.jpg", "C:\\meal.jpg", "a\\b.jpg", "a..b.jpg", "..jpg", ".hidden.jpg",
+            "notes.txt", "meal", "meal.jpg.exe", "", ".", "..", "me al.jpg", "méal.jpg", "meal\u{0}.jpg",
+            "٣.jpg", String(repeating: "a", count: CloudBackupPolicy.maxPhotoNameLength) + ".jpg",
+        ]
+        for name in rejected {
+            #expect(CloudBackupPolicy.safePhotoName(name) == nil, "\(name)")
+        }
+        let longest = String(repeating: "a", count: CloudBackupPolicy.maxPhotoNameLength - 4) + ".jpg"
+        #expect(CloudBackupPolicy.safePhotoName(longest) == longest)
+    }
+
+    @Test func onlyPhotosFolderEntriesWithPlainNamesAreRestorable() {
+        #expect(CloudBackupPolicy.restorablePhotoName("photos/meal.jpg") == "meal.jpg")
+        let skipped = [
+            "meal.jpg", "other/meal.jpg", "/photos/meal.jpg", "photos/", "photos/../meal.jpg",
+            "photos/../../meal.jpg", "photos/sub/meal.jpg", "photos//meal.jpg", "photos/..\\meal.jpg",
+            "photos/.meal.jpg", "photos/notes.txt", "../photos/meal.jpg", "backup.json",
+        ]
+        for entry in skipped {
+            #expect(CloudBackupPolicy.restorablePhotoName(entry) == nil, "\(entry)")
+        }
+    }
+
+    @Test func entriesThatWouldEscapeThePhotoFolderAreSkipped() throws {
+        try withTemporaryDirectory { dir in
+            let packed = dir.appendingPathComponent("packed.zip")
+            try CloudBackupArchive.pack(to: packed, values: sampleValues, photos: [:], exportedAt: exportedAt, appVersion: appVersion)
+            let document = try CloudBackupArchive.Reader(url: packed).document
+            let crafted = dir.appendingPathComponent("crafted.zip")
+            var zip = try CloudBackupZip.Writer(url: crafted)
+            try zip.add(name: CloudBackupPolicy.payloadName, data: try JSONEncoder().encode(document))
+            let hostile = [
+                "photos/../../evil.jpg", "photos/../evil.jpg", "photos/sub/evil.jpg", "photos//evil.jpg",
+                "photos/..\\evil.jpg", "/photos/evil.jpg", "../photos/evil.jpg", "photos/.evil.jpg",
+                "photos/" + String(repeating: "e", count: 200) + ".jpg",
+            ]
+            for name in hostile {
+                try zip.add(name: name, data: Data(repeating: 9, count: 64))
+            }
+            try zip.add(name: "photos/ok.jpg", data: Data([1, 2, 3]))
+            try zip.finish()
+            zip.close()
+
+            #expect(try restoredPhotos(CloudBackupArchive.Reader(url: crafted)) == ["ok.jpg": Data([1, 2, 3])])
+        }
+    }
+
+    @Test func stagingRefusesNamesThatLeaveTheStagingFolder() throws {
+        try withTemporaryDirectory { dir in
+            let store = FoodImageStore(baseURL: dir.appendingPathComponent("app", isDirectory: true))
+            let staging = try store.makeRestoreStaging()
+            defer { staging.discard() }
+            let names = [
+                "../escape.jpg", "../../escape.jpg", "../fudai-food-images/escape.jpg", "sub/escape.jpg",
+                dir.appendingPathComponent("escape.jpg").path, "..\\escape.jpg", ".escape.jpg", "escape.txt", "",
+            ]
+            for name in names {
+                #expect(throws: (any Error).self, "\(name)") {
+                    try store.stage(Data([1]), filename: name, in: staging)
+                }
+            }
+            let written = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: nil)?
+                .compactMap { $0 as? URL }
+                .filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true } ?? []
+            #expect(written.isEmpty, "\(written)")
+            #expect(staging.names.isEmpty)
+        }
+    }
+
+    @Test func stagingRefusesANameThatIsASymbolicLinkOutOfTheFolder() throws {
+        try withTemporaryDirectory { dir in
+            let store = FoodImageStore(baseURL: dir.appendingPathComponent("app", isDirectory: true))
+            let outside = dir.appendingPathComponent("outside.jpg")
+            try Data([1, 2, 3]).write(to: outside)
+            let staging = try store.makeRestoreStaging()
+            defer { staging.discard() }
+            try FileManager.default.createSymbolicLink(
+                at: staging.folder.appendingPathComponent("link.jpg"),
+                withDestinationURL: outside
+            )
+
+            #expect(throws: (any Error).self) {
+                try store.stage(Data([9, 9]), filename: "link.jpg", in: staging)
+            }
+            #expect(try Data(contentsOf: outside) == Data([1, 2, 3]))
+        }
+    }
+
+    @Test func restoreReplacesThePhotosOnlyAfterEveryOneIsStaged() throws {
+        try withTemporaryDirectory { dir in
+            let store = FoodImageStore(baseURL: dir.appendingPathComponent("app", isDirectory: true))
+            #expect(store.store(data: Data([7]), for: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!) != nil)
+            let originals = ["a.jpg": Data([1, 2]), "b.jpg": Data([3])]
+            let zip = dir.appendingPathComponent("backup.zip")
+            try CloudBackupArchive.pack(to: zip, values: sampleValues, photos: try writePhotos(originals, in: dir), exportedAt: exportedAt, appVersion: appVersion)
+
+            var photosWhenValuesApplied: Set<String> = []
+            try CloudBackupService.restorePhotos(from: CloudBackupArchive.Reader(url: zip), into: store) {
+                photosWhenValuesApplied = Set(store.filenames())
+            }
+
+            // The old photo is still there while the values are written, then goes.
+            #expect(photosWhenValuesApplied == ["a.jpg", "b.jpg", "00000000-0000-0000-0000-000000000001.jpg"])
+            #expect(Set(store.filenames()) == ["a.jpg", "b.jpg"])
+            #expect(store.load(filename: "a.jpg") == Data([1, 2]))
+            #expect(store.load(filename: "b.jpg") == Data([3]))
+        }
+    }
+
+    @Test func anArchiveReadFailureLeavesThePhotosAndValuesUntouched() throws {
+        try withTemporaryDirectory { dir in
+            let store = FoodImageStore(baseURL: dir.appendingPathComponent("app", isDirectory: true))
+            let oldID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+            #expect(store.store(data: Data([7]), for: oldID) != nil)
+            let originals = [
+                "a.jpg": Data(repeating: 1, count: 4_096),
+                "b.jpg": Data(repeating: 2, count: 4_096),
+                "c.jpg": Data(repeating: 3, count: 4_096),
+            ]
+            let zip = dir.appendingPathComponent("backup.zip")
+            try CloudBackupArchive.pack(to: zip, values: sampleValues, photos: try writePhotos(originals, in: dir), exportedAt: exportedAt, appVersion: appVersion)
+            let archive = try CloudBackupArchive.Reader(url: zip)
+            // The archive was scanned, then stops being readable partway.
+            let size = try #require(try FileManager.default.attributesOfItem(atPath: zip.path)[.size] as? Int)
+            let handle = try FileHandle(forWritingTo: zip)
+            try handle.truncate(atOffset: UInt64(size / 2))
+            try handle.close()
+
+            var appliedValues = false
+            #expect(throws: (any Error).self) {
+                try CloudBackupService.restorePhotos(from: archive, into: store) { appliedValues = true }
+            }
+
+            #expect(!appliedValues)
+            #expect(store.filenames() == ["\(oldID.uuidString).jpg"])
+            #expect(store.load(filename: "\(oldID.uuidString).jpg") == Data([7]))
+            // The staged photos are discarded with the failed restore.
+            #expect(!FileManager.default.fileExists(atPath: dir.appendingPathComponent("app/fudai-food-images-restore").path))
+        }
+    }
+
+    @Test func abandonedBackupArchivesAreRemovedButActiveOnesKept() throws {
+        try withTemporaryDirectory { dir in
+            let names = ["fudai-backup-abandoned.zip", "fudai-backup-active.zip", "fudai-backup.zip", "other.zip", "fudai-backup-notes.txt"]
+            for name in names {
+                try Data([1]).write(to: dir.appendingPathComponent(name))
+            }
+            CloudBackupService.removeAbandonedArchives(in: dir, keeping: ["fudai-backup-active.zip"])
+            let left = Set(try FileManager.default.contentsOfDirectory(atPath: dir.path))
+            #expect(left == ["fudai-backup-active.zip", "other.zip", "fudai-backup-notes.txt"])
         }
     }
 
@@ -217,6 +380,15 @@ struct CloudBackupArchiveTests {
 // The pre-streaming in-memory implementation, kept verbatim as the compatibility reference.
 @MainActor
 private enum LegacyCloudBackupArchive {
+    static func legacySafePhotoName(_ name: String) -> String? {
+        let base = (name as NSString).lastPathComponent
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
+        guard base.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
+        let ext = (base as NSString).pathExtension.lowercased()
+        guard ["jpg", "jpeg", "png", "webp"].contains(ext) else { return nil }
+        return base
+    }
+
     static func contentHash(values: [String: CloudBackupValue], photos: [String: Data]) -> String {
         var canonical = ""
         for key in values.keys.sorted() {
@@ -246,7 +418,7 @@ private enum LegacyCloudBackupArchive {
     ) throws -> Data {
         let filtered = values.filter { CloudBackupPolicy.include($0.key) && !CloudBackupPolicy.excludedKeys.contains($0.key) }
         let safePhotos = Dictionary(uniqueKeysWithValues: photos.compactMap { name, data in
-            CloudBackupPolicy.safePhotoName(name).map { ($0, data) }
+            legacySafePhotoName(name).map { ($0, data) }
         })
         let document = CloudBackupDocument(
             format: CloudBackupPolicy.format,
@@ -275,7 +447,7 @@ private enum LegacyCloudBackupArchive {
         guard document.formatVersion <= CloudBackupPolicy.version else { throw CloudBackupError.needsNewerApp }
         var photos: [String: Data] = [:]
         for (name, bytes) in files where name.hasPrefix(CloudBackupPolicy.photosDirectory) {
-            if let safe = CloudBackupPolicy.safePhotoName(name) {
+            if let safe = legacySafePhotoName(name) {
                 photos[safe] = bytes
             }
         }

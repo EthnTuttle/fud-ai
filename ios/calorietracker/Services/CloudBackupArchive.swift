@@ -29,13 +29,37 @@ enum CloudBackupPolicy {
         return true
     }
 
+    /// Longest photo file name a backup carries; real ones are a UUID and an extension.
+    static let maxPhotoNameLength = 128
+
+    private static let photoNameCharacters = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-"
+    )
+
+    /// `name` if it is a plain photo file name, else nil: ASCII letters, digits,
+    /// ".", "_" and "-" only, a photo extension, at most `maxPhotoNameLength`
+    /// characters, no leading dot and no "..". A name with a directory part,
+    /// relative or absolute, is rejected rather than shortened.
     static func safePhotoName(_ name: String) -> String? {
-        let base = (name as NSString).lastPathComponent
-        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
-        guard base.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
-        let ext = (base as NSString).pathExtension.lowercased()
-        guard ["jpg", "jpeg", "png", "webp"].contains(ext) else { return nil }
-        return base
+        guard !name.isEmpty,
+              name.utf8.count <= maxPhotoNameLength,
+              !name.hasPrefix("."),
+              !name.contains(".."),
+              name.unicodeScalars.allSatisfy({ photoNameCharacters.contains($0) })
+        else { return nil }
+        let ext = (name as NSString).pathExtension.lowercased()
+        guard ["jpg", "jpeg", "png", "webp"].contains(ext),
+              (name as NSString).lastPathComponent == name
+        else { return nil }
+        return name
+    }
+
+    /// The file name a restore writes for archive entry `entryName`, or nil if
+    /// the entry must be skipped. Only `photos/<plain photo name>` qualifies,
+    /// so an entry name can never point a restore outside the photo folder.
+    static func restorablePhotoName(_ entryName: String) -> String? {
+        guard entryName.hasPrefix(photosDirectory) else { return nil }
+        return safePhotoName(String(entryName.dropFirst(photosDirectory.count)))
     }
 }
 
@@ -141,9 +165,10 @@ enum CloudBackupArchive {
         try zip.add(name: CloudBackupPolicy.payloadName, data: payload)
         for (name, file) in safePhotos.sorted(by: { $0.key < $1.key }) {
             try autoreleasepool {
-                // Unreadable or deleted since the snapshot: leave it out, as the old
-                // read-everything-first snapshot did.
-                guard let data = try? Data(contentsOf: file.url) else { return }
+                // A snapshotted photo that can no longer be read fails the backup.
+                // The hash already lists it, so a backup saved without it would
+                // count as unchanged and never be retried.
+                let data = try Data(contentsOf: file.url)
                 try zip.add(name: CloudBackupPolicy.photosDirectory + name, data: data)
             }
         }
@@ -166,9 +191,11 @@ enum CloudBackupArchive {
             guard document.formatVersion <= CloudBackupPolicy.version else { throw CloudBackupError.needsNewerApp }
         }
 
+        /// Hands each restorable photo to `body` under its plain file name;
+        /// entries `CloudBackupPolicy.restorablePhotoName` rejects are skipped.
         func forEachPhoto(_ body: (_ name: String, _ data: Data) throws -> Void) throws {
-            for name in zip.names where name.hasPrefix(CloudBackupPolicy.photosDirectory) {
-                guard let safe = CloudBackupPolicy.safePhotoName(name) else { continue }
+            for name in zip.names {
+                guard let safe = CloudBackupPolicy.restorablePhotoName(name) else { continue }
                 // Drain per photo: a long restore loop on the main thread otherwise
                 // keeps every photo's autoreleased buffers alive until it ends.
                 try autoreleasepool {
