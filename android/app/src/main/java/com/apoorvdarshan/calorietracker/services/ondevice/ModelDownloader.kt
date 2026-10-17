@@ -176,6 +176,10 @@ internal class ModelDownloader(
             part.isFile && part.length() <= descriptor.expectedBytes &&
                 runCatching { sourceFile(part).readText() }.getOrNull() == sourceIdentity(descriptor)
 
+        /** Length of a partial the next download would resume, or zero when there is none. */
+        fun keptBytes(part: File, descriptor: LocalModelDescriptor): Long =
+            if (isResumable(part, descriptor)) part.length() else 0L
+
         fun discardPartial(part: File) {
             part.delete()
             sourceFile(part).delete()

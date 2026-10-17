@@ -33,7 +33,9 @@ data class LocalModelState(
     val descriptor: LocalModelDescriptor,
     val eligible: Boolean,
     val status: LocalModelInstallStatus,
-    val ineligibility: LocalModelIneligibility? = null
+    val ineligibility: LocalModelIneligibility? = null,
+    /** Bytes an interrupted download kept so the next one resumes; Delete discards them. */
+    val keptBytes: Long = 0L
 ) {
     val executable: Boolean get() = eligible && status == LocalModelInstallStatus.Installed
 }
@@ -66,11 +68,15 @@ class LocalModelManager(
                 supportedAbis,
                 isLowRamDevice
             )
+            val status = installedStatus(descriptor)
             descriptor.id to LocalModelState(
                 descriptor = descriptor,
                 eligible = ineligibility == null,
-                status = installedStatus(descriptor),
-                ineligibility = ineligibility
+                status = status,
+                ineligibility = ineligibility,
+                keptBytes = if (status == LocalModelInstallStatus.Installed) 0L else {
+                    ModelDownloader.keptBytes(partialFile(descriptor), descriptor)
+                }
             )
         }
     )
@@ -141,7 +147,7 @@ class LocalModelManager(
             val available = StatFs(modelDir.absolutePath).availableBytes
             val reserve = maxOf(256L * 1024L * 1024L, descriptor.expectedBytes / 10L)
             // Bytes kept from an interrupted attempt already occupy their share of the space.
-            val kept = if (ModelDownloader.isResumable(part, descriptor)) part.length() else 0L
+            val kept = ModelDownloader.keptBytes(part, descriptor)
             require(available >= descriptor.expectedBytes - kept + reserve) {
                 "Not enough free storage for ${descriptor.displayName}."
             }
@@ -175,9 +181,13 @@ class LocalModelManager(
                 update(id, LocalModelInstallStatus.NotInstalled)
                 throw CancellationException("Model download cancelled.").also { it.initCause(error) }
             }
-            // The partial stays so the next Download resumes it. The downloader already deleted
-            // it if the bytes failed verification.
-            update(id, LocalModelInstallStatus.Failed(error.message ?: "Model download failed."))
+            // The partial stays so the next Download resumes it, and Delete can discard it. The
+            // downloader already deleted it if the bytes failed verification.
+            update(
+                id,
+                LocalModelInstallStatus.Failed(error.message ?: "Model download failed."),
+                keptBytes = ModelDownloader.keptBytes(part, descriptor)
+            )
         } finally {
             activeCalls.remove(id)
             jobs.remove(id)
@@ -199,10 +209,10 @@ class LocalModelManager(
     private fun markerFile(descriptor: LocalModelDescriptor) =
         File(modelDir, "${descriptor.fileName}.sha256")
 
-    private fun update(id: LocalModelId, status: LocalModelInstallStatus) {
+    private fun update(id: LocalModelId, status: LocalModelInstallStatus, keptBytes: Long = 0L) {
         _states.value = _states.value.toMutableMap().apply {
             val old = checkNotNull(this[id])
-            this[id] = old.copy(status = status)
+            this[id] = old.copy(status = status, keptBytes = keptBytes)
         }
     }
 }

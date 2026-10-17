@@ -197,6 +197,19 @@ class ModelDownloaderTest {
         assertTrue(ModelDownloader.isResumable(part, descriptor(artifact)))
     }
 
+    @Test fun keptBytesReportThePartialUntilItIsDiscarded() {
+        // Settings offers Delete for exactly these bytes, so a failed download never strands them.
+        assertEquals(0L, ModelDownloader.keptBytes(part, descriptor(artifact)))
+
+        leavePartial(artifact.copyOf(split))
+
+        assertEquals(split.toLong(), ModelDownloader.keptBytes(part, descriptor(artifact)))
+        assertEquals(0L, ModelDownloader.keptBytes(part, descriptor(Random(566).nextBytes(artifact.size))))
+        ModelDownloader.discardPartial(part)
+        assertEquals(0L, ModelDownloader.keptBytes(part, descriptor(artifact)))
+        assertFalse(ModelDownloader.sourceFile(part).exists())
+    }
+
     @Test fun permanentHttpFailureIsNotRetried() {
         server.enqueue(MockResponse().setResponseCode(404))
 
