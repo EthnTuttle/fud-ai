@@ -270,7 +270,10 @@ class AppContainer(app: FudAIApp) {
     val fastingRepository = FastingRepository(prefs)
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
     val weeklyChallengeRepository = WeeklyChallengeRepository(app, keyStore)
-    val cloudBackup = CloudBackupCoordinator(app, prefs, imageStore, keyStore)
+    val cloudBackup = CloudBackupCoordinator(
+        app, prefs, imageStore, keyStore,
+        pruneUnusedPhotos = { foodRepository.pruneOrphanedImages() },
+    )
 
     val localGemma = LocalGemmaRuntime(app, localModels)
     val localWhisper = LocalWhisperRuntime(app, localModels)

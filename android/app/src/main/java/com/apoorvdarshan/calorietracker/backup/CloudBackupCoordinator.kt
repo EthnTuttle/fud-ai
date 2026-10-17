@@ -44,6 +44,8 @@ class CloudBackupCoordinator(
     private val prefs: PreferencesStore,
     private val images: FoodImageStore,
     private val keyStore: KeyStore,
+    /** The reference-checked photo cleanup, run once a restore has written the restored diary. */
+    private val pruneUnusedPhotos: suspend () -> Unit = {},
     private val drive: DriveCloudBackupClient = DriveCloudBackupClient(
         BuildConfig.CLOUD_BACKUP_WEB_CLIENT_ID
     ),
@@ -215,10 +217,16 @@ class CloudBackupCoordinator(
         prefs.setCloudBackupEnabled(true)
     }
 
-    private suspend fun restoreFromDrive(token: String, fileId: String) = withContext(Dispatchers.IO) {
-        withTempArchive { zip ->
-            drive.download(token, fileId, zip)
-            applyArchive(zip, fileId)
+    private suspend fun restoreFromDrive(token: String, fileId: String) {
+        withContext(Dispatchers.IO) {
+            withTempArchive { zip ->
+                drive.download(token, fileId, zip)
+                applyArchive(zip, fileId)
+            }
+            // The restore leaves photos the restored diary does not use in
+            // place; remove them now so the next backup does not carry them.
+            // If this fails, the startup prune removes them instead.
+            runCatching { pruneUnusedPhotos() }
         }
     }
 
