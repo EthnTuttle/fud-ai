@@ -1355,14 +1355,18 @@ class PreferencesStore(
     /// Ids of weight entries the user deleted, oldest first. Kept after deletion (and in
     /// cloud backups) so a Health Connect re-import never resurrects them — another app's
     /// record survives our delete. Comma-joined UUIDs, like [pendingNutritionHealthWrites].
-    val deletedWeightEntryIds: Flow<List<String>> = ds.data.map {
-        it[Keys.DELETED_WEIGHT_ENTRY_IDS]?.split(",")?.filter { s -> s.isNotBlank() } ?: emptyList()
+    val deletedWeightEntryIds: Flow<List<String>> = deletedIdsFlow(Keys.DELETED_WEIGHT_ENTRY_IDS)
+    suspend fun addDeletedWeightEntryId(id: String, limit: Int) =
+        addDeletedId(Keys.DELETED_WEIGHT_ENTRY_IDS, id, limit)
+
+    private fun deletedIdsFlow(key: Preferences.Key<String>): Flow<List<String>> = ds.data.map {
+        it[key]?.split(",")?.filter { s -> s.isNotBlank() } ?: emptyList()
     }
-    suspend fun addDeletedWeightEntryId(id: String, limit: Int) {
+
+    private suspend fun addDeletedId(key: Preferences.Key<String>, id: String, limit: Int) {
         ds.edit { prefs ->
-            val current = prefs[Keys.DELETED_WEIGHT_ENTRY_IDS]
-                ?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-            prefs[Keys.DELETED_WEIGHT_ENTRY_IDS] = (current - id + id).takeLast(limit).joinToString(",")
+            val current = prefs[key]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+            prefs[key] = (current - id + id).takeLast(limit).joinToString(",")
         }
     }
 
@@ -1375,6 +1379,11 @@ class PreferencesStore(
 
     suspend fun updateBodyFatEntries(transform: (List<BodyFatEntry>) -> List<BodyFatEntry>): List<BodyFatEntry> =
         updateJsonList(Keys.BODY_FAT_ENTRIES, BodyFatEntry.serializer(), transform)
+
+    /// Same as [deletedWeightEntryIds], for body-fat readings another app wrote.
+    val deletedBodyFatEntryIds: Flow<List<String>> = deletedIdsFlow(Keys.DELETED_BODY_FAT_ENTRY_IDS)
+    suspend fun addDeletedBodyFatEntryId(id: String, limit: Int) =
+        addDeletedId(Keys.DELETED_BODY_FAT_ENTRY_IDS, id, limit)
 
     // -- Body measurement (circumference) entries --------------------------
     val bodyMeasurements: Flow<List<BodyMeasurement>> = jsonListFlow(Keys.BODY_MEASUREMENTS, BodyMeasurement.serializer())
@@ -1499,6 +1508,7 @@ class PreferencesStore(
         val HEALTH_FOOD_RESTORE_DONE = booleanPreferencesKey("healthFoodRestoreDone")
         val PENDING_NUTRITION_HEALTH_WRITES = stringPreferencesKey("pendingNutritionHealthWrites")
         val DELETED_WEIGHT_ENTRY_IDS = stringPreferencesKey("deletedWeightEntryIds")
+        val DELETED_BODY_FAT_ENTRY_IDS = stringPreferencesKey("deletedBodyFatEntryIds")
         val CLOUD_BACKUP_ENABLED = booleanPreferencesKey("cloudBackupEnabled")
         val CLOUD_BACKUP_LAST_AT = stringPreferencesKey("cloudBackupLastAt")
         val CLOUD_BACKUP_LAST_HASH = stringPreferencesKey("cloudBackupLastHash")
