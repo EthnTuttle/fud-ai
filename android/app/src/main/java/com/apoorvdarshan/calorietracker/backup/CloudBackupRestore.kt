@@ -12,6 +12,13 @@ import java.io.InputStream
 interface CloudBackupPhotoStore {
     /** Free storage once [clearAll] has removed the current photos. */
     fun bytesFreeAfterClear(): Long
+
+    /**
+     * Brackets a restore, from clearing photos until the restored values are
+     * written. In between, deletions decided from the old diary are skipped.
+     */
+    fun beginRestore()
+    fun endRestore()
     fun clearAll()
     fun restoreStream(filename: String, input: InputStream): Boolean
 }
@@ -58,11 +65,16 @@ object CloudBackupRestore {
         // can close midway (#484). Once photos are cleared the restore has to
         // reach [commit], or the old diary is left pointing at deleted photos.
         withContext(NonCancellable) {
-            photos.clearAll()
-            CloudBackupArchive.forEachPhoto(archive) { name, input ->
-                if (!photos.restoreStream(name, input)) photosComplete = false
+            photos.beginRestore()
+            try {
+                photos.clearAll()
+                CloudBackupArchive.forEachPhoto(archive) { name, input ->
+                    if (!photos.restoreStream(name, input)) photosComplete = false
+                }
+                commit(contents.document, photosComplete)
+            } finally {
+                photos.endRestore()
             }
-            commit(contents.document, photosComplete)
         }
         if (!photosComplete) throw CloudBackupIncompleteException()
     }

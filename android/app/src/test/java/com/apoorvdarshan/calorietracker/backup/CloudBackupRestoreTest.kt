@@ -120,6 +120,27 @@ class CloudBackupRestoreTest {
         assertEquals(listOf("a.jpg", "c.jpg"), store.restored.keys.toList())
     }
 
+    @Test
+    fun deletionsStayPausedUntilTheRestoredValuesAreWritten() = runBlocking {
+        val archive = archiveWith("a.jpg" to byteArrayOf(1))
+        val store = FakePhotoStore()
+        CloudBackupRestore.apply(archive, store) { _, _ -> store.events += "commit" }
+
+        assertEquals(listOf("begin", "clear", "photo a.jpg", "commit", "end"), store.events)
+    }
+
+    @Test
+    fun aFailedCommitStillResumesDeletions() = runBlocking {
+        val archive = archiveWith("a.jpg" to byteArrayOf(1))
+        val store = FakePhotoStore()
+        val error = runCatching {
+            CloudBackupRestore.apply(archive, store) { _, _ -> error("DataStore write failed") }
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertEquals("end", store.events.last())
+    }
+
     private fun archiveWith(vararg photos: Pair<String, ByteArray>): File {
         val zip = temp.newFile()
         CloudBackupArchive.pack(
@@ -141,15 +162,26 @@ class CloudBackupRestoreTest {
     ) : CloudBackupPhotoStore {
         var cleared = false
         val restored = linkedMapOf<String, ByteArray>()
+        val events = mutableListOf<String>()
 
         override fun bytesFreeAfterClear(): Long = freeBytes
 
+        override fun beginRestore() {
+            events += "begin"
+        }
+
+        override fun endRestore() {
+            events += "end"
+        }
+
         override fun clearAll() {
             cleared = true
+            events += "clear"
         }
 
         override fun restoreStream(filename: String, input: InputStream): Boolean {
             onRestore()
+            events += "photo $filename"
             if (filename in failing) return false
             restored[filename] = input.readBytes()
             return true

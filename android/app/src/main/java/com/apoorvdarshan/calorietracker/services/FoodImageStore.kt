@@ -14,6 +14,9 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 /**
  * Local food-photo cache. Port of iOS FoodImageStore.
@@ -31,6 +34,14 @@ class FoodImageStore private constructor(
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount / 1024
     }
     private val thumbnailLocks = ConcurrentHashMap<String, Any>()
+
+    // A Drive restore replaces every photo while the app stays usable (#484).
+    // Deletions decided from the diary as it was before the restore would
+    // remove restored photos, so they are skipped until it commits; the
+    // startup prune collects anything left behind. Written under the write lock.
+    private val restoreLock = ReentrantReadWriteLock()
+    private var restoresRunning = 0
+    private var generation = 0L
 
     constructor(context: Context) : this(
         filesRoot = context.filesDir,
@@ -162,7 +173,32 @@ class FoodImageStore private constructor(
         if (restoreBytes(filename, jpeg)) filename else null
     }.getOrNull()
 
+    override fun beginRestore() {
+        restoreLock.write {
+            restoresRunning++
+            generation++
+        }
+    }
+
+    override fun endRestore() {
+        restoreLock.write {
+            restoresRunning--
+            generation++
+        }
+    }
+
+    /** Read before collecting the references passed to [pruneUnreferenced]. */
+    fun restoreGeneration(): Long = restoreLock.read { generation }
+
+    /** Skipped while a Drive restore runs; see [beginRestore]. */
     fun delete(filename: String) {
+        restoreLock.read {
+            if (restoresRunning > 0) return
+            deleteFiles(filename)
+        }
+    }
+
+    private fun deleteFiles(filename: String) {
         runCatching { File(dir, filename).delete() }
         runCatching { File(thumbnailDir, filename).delete() }
         evictThumbnails(filename)
@@ -179,22 +215,29 @@ class FoodImageStore private constructor(
      * Callers must include food-log, saved-meal, and pending-draft filenames in
      * [referencedFilenames]. This is safe to run repeatedly, including at startup,
      * and repairs orphaned files left by older builds without touching user data.
+     *
+     * Pass the [restoreGeneration] read before collecting [referencedFilenames]:
+     * if a Drive restore started since, those references describe the photos it
+     * replaced, and nothing is pruned.
      */
-    fun pruneUnreferenced(referencedFilenames: Set<String>) {
-        val referenced = referencedFilenames.mapTo(mutableSetOf()) { File(it).name }
+    fun pruneUnreferenced(referencedFilenames: Set<String>, generationAtRead: Long = restoreGeneration()) {
+        restoreLock.read {
+            if (restoresRunning > 0 || generationAtRead != generation) return
+            val referenced = referencedFilenames.mapTo(mutableSetOf()) { File(it).name }
 
-        dir.listFiles()
-            ?.filter { it.isFile && it.name !in referenced }
-            ?.forEach { delete(it.name) }
+            dir.listFiles()
+                ?.filter { it.isFile && it.name !in referenced }
+                ?.forEach { deleteFiles(it.name) }
 
-        // A crash can leave a thumbnail without its full-size image. Clean those
-        // independently while preserving every thumbnail still referenced.
-        thumbnailDir.listFiles()
-            ?.filter { it.isFile && it.name !in referenced }
-            ?.forEach { file ->
-                runCatching { file.delete() }
-                evictThumbnails(file.name)
-            }
+            // A crash can leave a thumbnail without its full-size image. Clean those
+            // independently while preserving every thumbnail still referenced.
+            thumbnailDir.listFiles()
+                ?.filter { it.isFile && it.name !in referenced }
+                ?.forEach { file ->
+                    runCatching { file.delete() }
+                    evictThumbnails(file.name)
+                }
+        }
     }
 
     private fun writeThumbnail(filename: String, bitmap: Bitmap) {
