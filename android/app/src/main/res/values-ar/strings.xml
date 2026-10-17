@@ -12,6 +12,7 @@
     <string name="widget_carbs">الكربوهيدرات</string>
     <string name="widget_fat">الدهون</string>
     <string name="widget_kcal_left_format">%1$d kcal متبقية</string>
+    <string name="widget_kj_left_format">%1$d kJ متبقية</string>
     <string name="widget_g_left_format">%1$dg متبقية</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">بروتين g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d سجلات جديدة · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">الحرق المقدّر: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">إضافة %1$d إلى السجل · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -340,6 +346,8 @@
     <string name="home_menu_saved_meals">الوجبات المحفوظة</string>
     <string name="home_kcal_of_format">من %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s متبقية</string>
+    <string name="home_kj_left_format">%1$s متبقية</string>
+    <string name="home_kilojoules">كيلوجول</string>
     <string name="home_view_more">عرض المزيد</string>
     <string name="home_todays_food">طعام اليوم</string>
     <string name="home_no_foods_logged">لم يتم تسجيل أي طعام</string>
@@ -510,6 +518,7 @@
     <string name="progress_include_today">تضمين اليوم</string>
     <string name="progress_include_today_caption">مخطط السعرات ومتوسطات التغذية</string>
     <string name="progress_avg_format">المتوسط: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">المتوسط: %1$,d kJ</string>
     <string name="progress_no_food">لم يتم تسجيل أي طعام بعد</string>
 
     <string name="progress_macro_averages">متوسطات العناصر الكبرى</string>
@@ -550,7 +559,9 @@
     <string name="settings_recalculate_goals">إعادة حساب الأهداف</string>
     <string name="settings_estimated_maintenance">سعرات الحفاظ المقدّرة</string>
     <string name="settings_maintenance_deficit_format">العجز: %1$,d kcal/يوم</string>
+    <string name="settings_maintenance_deficit_format_kj">العجز: %1$,d kJ/يوم</string>
     <string name="settings_maintenance_surplus_format">الفائض: %1$,d kcal/يوم</string>
+    <string name="settings_maintenance_surplus_format_kj">الفائض: %1$,d kJ/يوم</string>
     <string name="settings_maintenance_close">الهدف قريب من سعرات الحفاظ</string>
     <string name="settings_estimated_maintenance_info">سعرات الحفاظ المقدّرة هي السعرات التي تحرقها في يوم عادي: معدل الأيض الأساسي (BMR) من ملفك الشخصي مضروبًا في مستوى نشاطك. تناول أقل منها يعني عجزًا لخسارة الوزن، وتناول أكثر منها يعني فائضًا لزيادته. العجز أو الفائض المعروض هو هدف السعرات لديك مطروحًا منه هذا التقدير. إنه تقدير بمعادلة، لذا قد يختلف حرقك الفعلي، وقد تحدد إعادة حساب الأهداف هدفك بدلًا من ذلك بناءً على الطعام المسجل أو اتجاه وزنك أو حرق الطاقة المقاس. هذه ليست نصيحة طبية.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -566,6 +577,9 @@
     <string name="settings_height_unit">وحدة الطول</string>
     <string name="settings_weight_unit">وحدة الوزن</string>
     <string name="settings_week_starts">يبدأ الأسبوع يوم</string>
+    <string name="settings_energy_unit">وحدة الطاقة</string>
+    <string name="settings_energy_unit_kcal">كيلو سعرة حرارية (kcal)</string>
+    <string name="settings_energy_unit_kj">كيلوجول (kJ)</string>
     <string name="settings_meal_times_customize">تخصيص</string>
     <string name="settings_week_monday">الإثنين</string>
     <string name="settings_week_sunday">الأحد</string>
@@ -703,6 +717,9 @@
     <string name="notif_streak_text">حافظ على سلسلتك — سجّل شيئًا من اليوم.</string>
     <string name="notif_summary_title">ملخص اليوم جاهز</string>
     <string name="notif_summary_text">اضغط لرؤية كيف اتسقت ماكروهات اليوم.</string>
+    <string name="notif_summary_deficit_kj">تم تناول %1$d kJ · حُرق %2$d · عجز تقديري %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">تم تناول %1$d kJ · حُرق %2$d · فائض تقديري %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">تم تناول %1$d kJ · حُرق %2$d · توازن تقديري</string>
 
     <string name="onboarding_goal_optional">الهدف (اختياري)</string>
     <string name="onboarding_goal_set_later">يمكنك ضبط هذا لاحقاً في الإعدادات.</string>
@@ -735,6 +752,7 @@
     <string name="progress_workout_stat_days">أيام</string>
     <string name="progress_workout_no_range">لا توجد عمليات حرق تمارين محسوبة في هذه الفترة</string>
     <string name="progress_workout_chart_description">مخطط حرق التمارين من %1$s إلى %2$s. الإجمالي %3$d سعرة حرارية؛ الأحدث %4$d سعرة حرارية.</string>
+    <string name="progress_workout_chart_description_kj">مخطط حرق التمارين من %1$s إلى %2$s. الإجمالي %3$d كيلوجول؛ الأحدث %4$d كيلوجول.</string>
     <string name="workout_filter_source">المصدر</string>
     <string name="workout_source_dataset">قاعدة البيانات</string>
     <string name="workout_source_saved">المحفوظة</string>

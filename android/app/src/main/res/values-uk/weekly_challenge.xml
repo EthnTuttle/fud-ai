@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d з 28 балів</string>
     <string name="challenge_days_format">%1$d з 7 днів</string>
     <string name="challenge_days_kcal_format">%1$d з 7 днів · %2$d ккал</string>
+    <string name="challenge_days_kj_format">%1$d з 7 днів · %2$d кДж</string>
     <string name="challenge_weekly_breakdown">Цей тиждень</string>
     <string name="challenge_edit_profile">Редагувати профіль</string>
     <string name="challenge_leave_action">Вийти</string>

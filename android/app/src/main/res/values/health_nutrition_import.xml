@@ -14,6 +14,7 @@
     <string name="health_import_failed">Could not complete the import. Check Health Connect access and try again.</string>
     <string name="health_import_empty">No new nutrition records from other apps were found in this range. Check that your source app has shared nutrition with Health Connect. Previously imported records are skipped, including ones removed from your diary.</string>
     <string name="health_import_count">%1$d new records · %2$d kcal</string>
+    <string name="health_import_count_kj">%1$d new records · %2$d kJ</string>
     <string name="health_import_unnamed">Imported meal</string>
     <string name="health_import_local_only">These are local copies. Edits and deletions stay in Fud AI. Repeating an import skips previously imported records; it does not update them.</string>
     <string name="health_import_done">Imported %1$d records into your diary.</string>

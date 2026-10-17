@@ -12,6 +12,7 @@
     <string name="widget_carbs">Węglowodany</string>
     <string name="widget_fat">Tłuszcz</string>
     <string name="widget_kcal_left_format">pozostało %1$d kcal</string>
+    <string name="widget_kj_left_format">pozostało %1$d kJ</string>
     <string name="widget_g_left_format">pozostało %1$dg</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">białko g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,11 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="challenge_days_kj_format">%1$d/7 dni · %2$d kJ</string>
+    <string name="health_import_count_kj">Nowe wpisy: %1$d · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Szacowane spalanie: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">Dodaj %1$d do dziennika · %2$d kJ</string>
     <string name="grams_value_format">%1$d g</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -338,6 +345,8 @@
     <string name="home_menu_saved_meals">Zapisane posiłki</string>
     <string name="home_kcal_of_format">z %1$s kcal</string>
     <string name="home_kcal_left_format">pozostało %1$s</string>
+    <string name="home_kj_left_format">pozostało %1$s</string>
+    <string name="home_kilojoules">Kilodżule</string>
     <string name="home_view_more">Zobacz więcej</string>
     <string name="home_todays_food">Dzisiejsze jedzenie</string>
     <string name="home_no_foods_logged">Brak dodanych posiłków</string>
@@ -506,6 +515,7 @@
     <string name="progress_include_today">Uwzględnij dzisiaj</string>
     <string name="progress_include_today_caption">Wykres kalorii i średnie wartości odżywcze</string>
     <string name="progress_avg_format">Śr.: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Śr.: %1$,d kJ</string>
     <string name="progress_no_food">Brak zapisanych posiłków</string>
 
     <string name="progress_macro_averages">Średnie makro</string>
@@ -546,7 +556,9 @@
     <string name="settings_recalculate_goals">Przelicz cele</string>
     <string name="settings_estimated_maintenance">Szacowane kalorie na utrzymanie</string>
     <string name="settings_maintenance_deficit_format">Deficyt: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_deficit_format_kj">Deficyt: %1$,d kJ/dzień</string>
     <string name="settings_maintenance_surplus_format">Nadwyżka: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_surplus_format_kj">Nadwyżka: %1$,d kJ/dzień</string>
     <string name="settings_maintenance_close">Cel jest bliski utrzymaniu</string>
     <string name="settings_estimated_maintenance_info">Szacowane kalorie na utrzymanie to kalorie, które spalasz w typowy dzień: Twoje BMR z profilu pomnożone przez poziom aktywności. Jedzenie poniżej tej wartości to deficyt pozwalający schudnąć; powyżej — nadwyżka pozwalająca przytyć. Pokazany deficyt lub nadwyżka to Twój cel kaloryczny minus ta szacunkowa wartość. To szacunek oparty na wzorze, więc Twoje rzeczywiste spalanie może się różnić, a przeliczanie celów może ustalić cel na podstawie zapisanych posiłków, trendu wagi lub zmierzonego spalania energii. To nie jest porada medyczna.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
@@ -562,6 +574,9 @@
     <string name="settings_height_unit">Jednostka wzrostu</string>
     <string name="settings_weight_unit">Jednostka wagi</string>
     <string name="settings_week_starts">Tydzień zaczyna się od</string>
+    <string name="settings_energy_unit">Jednostka energii</string>
+    <string name="settings_energy_unit_kcal">Kilokalorie (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilodżule (kJ)</string>
     <string name="settings_meal_times_customize">Dostosuj</string>
     <string name="settings_week_monday">Poniedziałek</string>
     <string name="settings_week_sunday">Niedziela</string>
@@ -699,6 +714,9 @@
     <string name="notif_streak_text">Utrzymaj serię — zapisz coś z dzisiaj.</string>
     <string name="notif_summary_title">Dzisiejsze podsumowanie jest gotowe</string>
     <string name="notif_summary_text">Dotknij, aby zobaczyć, jak ułożyły się dzisiejsze makro.</string>
+    <string name="notif_summary_deficit_kj">Zjedzono %1$d kJ · spalono %2$d · szacowany deficyt %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Zjedzono %1$d kJ · spalono %2$d · szacowana nadwyżka %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Zjedzono %1$d kJ · spalono %2$d · szacunkowo w równowadze</string>
 
     <string name="onboarding_goal_optional">Cel (opcjonalnie)</string>
     <string name="onboarding_goal_set_later">Możesz ustawić to później w Ustawieniach.</string>
@@ -729,6 +747,7 @@
     <string name="progress_workout_stat_days">Dni</string>
     <string name="progress_workout_no_range">Brak obliczonych spałań treningowych w tym zakresie</string>
     <string name="progress_workout_chart_description">Wykres spalania treningowego od %1$s do %2$s. Razem %3$d kilokalorii; ostatnie %4$d kilokalorii.</string>
+    <string name="progress_workout_chart_description_kj">Wykres spalania treningowego od %1$s do %2$s. Razem %3$d kilodżuli; ostatnie %4$d kilodżuli.</string>
     <string name="workout_filter_source">Źródło</string>
     <string name="workout_source_dataset">Baza danych</string>
     <string name="workout_source_saved">Zapisane</string>

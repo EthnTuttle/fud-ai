@@ -27,6 +27,7 @@ import com.apoorvdarshan.calorietracker.models.PendingFoodAnalysisDraft
 import com.apoorvdarshan.calorietracker.models.ProductInfoField
 import com.apoorvdarshan.calorietracker.models.QuickAction
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
@@ -658,6 +659,10 @@ class PreferencesStore(
     /** false = Sunday, true = Monday (default). Mirrors iOS @AppStorage("weekStartsOnMonday"). */
     val weekStartsOnMonday: Flow<Boolean> = ds.data.map { it[Keys.WEEK_STARTS_MONDAY] ?: true }
     suspend fun setWeekStartsOnMonday(v: Boolean) { ds.edit { it[Keys.WEEK_STARTS_MONDAY] = v } }
+
+    /** kcal (default) or kJ for display and calorie input; stored values stay kcal. Mirrors iOS "energyUnit". */
+    val energyUnit: Flow<EnergyUnit> = ds.data.map { EnergyUnit.fromStorage(it[Keys.ENERGY_UNIT]) }
+    suspend fun setEnergyUnit(v: EnergyUnit) { ds.edit { it[Keys.ENERGY_UNIT] = v.storageValue } }
 
     val quickAction1: Flow<QuickAction> = quickAction(Keys.QUICK_ACTION_1, QuickAction.Defaults[0])
     val quickAction2: Flow<QuickAction> = quickAction(Keys.QUICK_ACTION_2, QuickAction.Defaults[1])
@@ -1598,6 +1603,7 @@ class PreferencesStore(
         val APPEARANCE_MODE = stringPreferencesKey("appearanceMode")
         val APP_THEME_COLOR = stringPreferencesKey("appThemeColor")
         val WEEK_STARTS_MONDAY = booleanPreferencesKey("weekStartsOnMonday")
+        val ENERGY_UNIT = stringPreferencesKey("energyUnit")
         val QUICK_ACTION_1 = stringPreferencesKey("quickAction.slot1")
         val QUICK_ACTION_2 = stringPreferencesKey("quickAction.slot2")
         val QUICK_ACTION_3 = stringPreferencesKey("quickAction.slot3")

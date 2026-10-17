@@ -84,6 +84,9 @@ import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.allergenAnalysis
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.ui.components.FullScreenImageViewer
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
+import com.apoorvdarshan.calorietracker.ui.components.energyUnitLabel
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlin.math.roundToInt
 import java.time.Instant
@@ -262,6 +265,8 @@ fun FoodResultSheet(
     val emDashText = stringResource(R.string.nutrition_em_dash)
 
     fun scaledInt(v: Int) = (v * scale).roundToInt()
+    // The calorie field shows the energy unit in use; the entry stores kcal.
+    val energyUnit = LocalEnergyUnit.current
     fun scaledMacro(v: Double) = v * scale
     fun scaledD(v: Double?) = v?.let { ((it * scale) * 10).roundToInt() / 10.0 }
     fun displayD(v: Double?) = v?.let { String.format("%.1f", it) } ?: emDashText
@@ -645,11 +650,11 @@ fun FoodResultSheet(
                 SheetPillCard {
                     ReviewNutritionValueRow(
                         label = stringResource(R.string.nutrition_label_calories),
-                        displayValue = "${scaledInt(editableCalories)}",
-                        editValue = "${scaledInt(editableCalories)}",
-                        unit = stringResource(R.string.unit_kcal),
+                        displayValue = "${energyUnit.displayValue(scaledInt(editableCalories))}",
+                        editValue = "${energyUnit.displayValue(scaledInt(editableCalories))}",
+                        unit = energyUnitLabel(),
                         unlocked = nutritionUnlocked,
-                        onEdit = { editableCalories = baseDoubleFromText(it).roundToInt() }
+                        onEdit = { editableCalories = energyUnit.kcalAmount(baseDoubleFromText(it)).roundToInt() }
                     )
                     SheetHairline()
                     ReviewNutritionValueRow(
@@ -1087,6 +1092,7 @@ private fun WhatIfMealImpactDialog(
 ) {
     val before = remember(dayEntries) { dayEntries.whatIfTotals() }
     val after = remember(before, entry) { before + entry.whatIfTotals() }
+    val energyUnit = LocalEnergyUnit.current
     var loading by remember(entry.id) { mutableStateOf(true) }
     var suggestion by remember(entry.id) { mutableStateOf<String?>(null) }
     var error by remember(entry.id) { mutableStateOf<String?>(null) }
@@ -1123,9 +1129,9 @@ private fun WhatIfMealImpactDialog(
                 SheetPillCard {
                     WhatIfImpactRow(
                         label = stringResource(R.string.nutrition_label_calories),
-                        added = "+${entry.calories} kcal",
-                        total = profile?.let { "${after.calories} / ${it.effectiveCalories} kcal" }
-                            ?: "${after.calories} kcal"
+                        added = "+${energyText(entry.calories)}",
+                        total = profile?.let { "${energyUnit.number(after.calories)} / ${energyText(it.effectiveCalories)}" }
+                            ?: energyText(after.calories)
                     )
                     SheetHairline()
                     WhatIfImpactRow(

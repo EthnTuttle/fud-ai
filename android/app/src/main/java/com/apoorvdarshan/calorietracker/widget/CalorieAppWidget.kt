@@ -11,6 +11,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -110,12 +111,12 @@ private fun CalorieSmall(snapshot: WidgetSnapshot) {
                 gaugeWidthDp = gaugeW,
                 startHex = snapshot.themeStartHex,
                 endHex = snapshot.themeEndHex,
-                centerLarge = snapshot.calories.toString(),
-                centerSmall = "/ ${snapshot.calorieGoal}"
+                centerLarge = snapshot.displayCalories.toString(),
+                centerSmall = "/ ${snapshot.displayCalorieGoal}"
             )
         }
         Text(
-            text = "${snapshot.caloriesRemaining} kcal left",
+            text = energyLeftText(snapshot),
             style = TextStyle(
                 color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                 fontWeight = FontWeight.Medium,
@@ -142,12 +143,12 @@ private fun CalorieMedium(snapshot: WidgetSnapshot) {
                 gaugeWidthDp = gaugeW,
                 startHex = snapshot.themeStartHex,
                 endHex = snapshot.themeEndHex,
-                centerLarge = snapshot.calories.toString(),
-                centerSmall = "/ ${snapshot.calorieGoal}"
+                centerLarge = snapshot.displayCalories.toString(),
+                centerSmall = "/ ${snapshot.displayCalorieGoal}"
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
-                text = "${snapshot.caloriesRemaining} kcal left",
+                text = energyLeftText(snapshot),
                 style = TextStyle(
                     color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                     fontWeight = FontWeight.Medium,
@@ -168,6 +169,17 @@ private fun CalorieMedium(snapshot: WidgetSnapshot) {
 }
 
 // ─── Shared building blocks ────────────────────────────────────────────────
+
+/** "N kcal left" / "N kJ left" in the energy unit the app last published. */
+@Composable
+internal fun energyLeftText(snapshot: WidgetSnapshot): String {
+    val context = LocalContext.current
+    return if (snapshot.usesKilojoules) {
+        context.getString(R.string.widget_kj_left_format, snapshot.displayCaloriesRemaining)
+    } else {
+        context.getString(R.string.widget_kcal_left_format, snapshot.caloriesRemaining)
+    }
+}
 
 @Composable
 internal fun WidgetHeader(iconRes: Int, label: String) {

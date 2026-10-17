@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d/28 分</string>
     <string name="challenge_days_format">%1$d/7 天</string>
     <string name="challenge_days_kcal_format">%1$d/7 天 · %2$d 千卡</string>
+    <string name="challenge_days_kj_format">%1$d/7 天 · %2$d 千焦</string>
     <string name="challenge_weekly_breakdown">本周</string>
     <string name="challenge_edit_profile">编辑个人资料</string>
     <string name="challenge_leave_action">退出</string>

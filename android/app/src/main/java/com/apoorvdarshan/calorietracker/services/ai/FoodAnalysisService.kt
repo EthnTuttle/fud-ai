@@ -319,6 +319,8 @@ class FoodAnalysisService(
             ?.let { "${(it * 100).toInt()}%" }
             ?: "not set"
         fun grams(value: Double) = String.format(Locale.US, "%.1fg", value)
+        // Empty for kcal users, so their prompt is unchanged.
+        val energyHint = prefs.energyUnit.first().aiReplyInstruction()?.let { "\n\n$it" }.orEmpty()
 
         val prompt = """
             The user tapped "What if?" before logging a meal in a nutrition tracker.
@@ -358,7 +360,7 @@ class FoodAnalysisService(
             - Protein: ${grams(afterProtein)}
             - Carbs: ${grams(afterCarbs)}
             - Fat: ${grams(afterFat)}
-        """.trimIndent()
+        """.trimIndent() + energyHint
         return callAi(prompt, imageBytesList = emptyList(), jsonResponse = false).trim()
     }
 

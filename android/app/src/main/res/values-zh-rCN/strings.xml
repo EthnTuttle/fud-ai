@@ -12,6 +12,7 @@
     <string name="widget_carbs">碳水</string>
     <string name="widget_fat">脂肪</string>
     <string name="widget_kcal_left_format">还剩 %1$d kcal</string>
+    <string name="widget_kj_left_format">还剩 %1$d kJ</string>
     <string name="widget_g_left_format">还剩 %1$dg</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">蛋白质 g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d 条新记录 · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">预计消耗：%1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">添加 %1$d 份到记录 · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -331,6 +337,8 @@
     <string name="home_menu_saved_meals">已保存的餐食</string>
     <string name="home_kcal_of_format">/ %1$s kcal</string>
     <string name="home_kcal_left_format">还剩 %1$s</string>
+    <string name="home_kj_left_format">还剩 %1$s</string>
+    <string name="home_kilojoules">千焦</string>
     <string name="home_view_more">查看更多</string>
     <string name="home_todays_food">今日饮食</string>
     <string name="home_no_foods_logged">尚未记录食物</string>
@@ -497,6 +505,7 @@
     <string name="progress_include_today">包含今天</string>
     <string name="progress_include_today_caption">卡路里图表和营养平均值</string>
     <string name="progress_avg_format">平均：%1$,d kcal</string>
+    <string name="progress_avg_format_kj">平均：%1$,d kJ</string>
     <string name="progress_no_food">尚未记录食物</string>
 
     <string name="progress_macro_averages">宏量平均值</string>
@@ -537,7 +546,9 @@
     <string name="settings_recalculate_goals">重新计算目标</string>
     <string name="settings_estimated_maintenance">估算维持热量</string>
     <string name="settings_maintenance_deficit_format">热量缺口：%1$,d kcal/天</string>
+    <string name="settings_maintenance_deficit_format_kj">热量缺口：%1$,d kJ/天</string>
     <string name="settings_maintenance_surplus_format">热量盈余：%1$,d kcal/天</string>
+    <string name="settings_maintenance_surplus_format_kj">热量盈余：%1$,d kJ/天</string>
     <string name="settings_maintenance_close">目标接近维持热量</string>
     <string name="settings_estimated_maintenance_info">估算维持热量是你在普通一天中消耗的热量：根据个人资料计算的 BMR（基础代谢率）乘以你的活动水平。吃得低于它就形成减重所需的热量缺口；吃得高于它就形成增重所需的热量盈余。显示的缺口或盈余等于你的热量目标减去这个估算值。这是公式估算，你的实际消耗可能不同，重新计算目标时也可能改为根据你记录的饮食、体重趋势或测得的能量消耗来设定目标。这不是医疗建议。</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -553,6 +564,9 @@
     <string name="settings_height_unit">身高单位</string>
     <string name="settings_weight_unit">体重单位</string>
     <string name="settings_week_starts">每周起始日</string>
+    <string name="settings_energy_unit">能量单位</string>
+    <string name="settings_energy_unit_kcal">千卡 (kcal)</string>
+    <string name="settings_energy_unit_kj">千焦 (kJ)</string>
     <string name="settings_meal_times_customize">自定义</string>
     <string name="settings_week_monday">星期一</string>
     <string name="settings_week_sunday">星期日</string>
@@ -690,6 +704,9 @@
     <string name="notif_streak_text">保持连续记录——记录今天吃的内容。</string>
     <string name="notif_summary_title">今日摘要已就绪</string>
     <string name="notif_summary_text">点按查看今日宏量营养素的完成情况。</string>
+    <string name="notif_summary_deficit_kj">已摄入 %1$d kJ · 已消耗 %2$d · 预计缺口 %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">已摄入 %1$d kJ · 已消耗 %2$d · 预计盈余 %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">已摄入 %1$d kJ · 已消耗 %2$d · 预计平衡</string>
 
     <string name="onboarding_goal_optional">目标(可选)</string>
     <string name="onboarding_goal_set_later">稍后可以在设置中设置。</string>
@@ -718,6 +735,7 @@
     <string name="progress_workout_stat_days">天数</string>
     <string name="progress_workout_no_range">此时间范围内没有已计算的锻炼消耗</string>
     <string name="progress_workout_chart_description">%1$s 至 %2$s 的锻炼消耗图表。总计 %3$d 千卡；最新 %4$d 千卡。</string>
+    <string name="progress_workout_chart_description_kj">%1$s 至 %2$s 的锻炼消耗图表。总计 %3$d 千焦；最新 %4$d 千焦。</string>
     <string name="workout_filter_source">来源</string>
     <string name="workout_source_dataset">数据库</string>
     <string name="workout_source_saved">已保存</string>

@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d من 28 نقطة</string>
     <string name="challenge_days_format">%1$d من 7 أيام</string>
     <string name="challenge_days_kcal_format">%1$d من 7 أيام · %2$d سعرة</string>
+    <string name="challenge_days_kj_format">%1$d من 7 أيام · %2$d كيلوجول</string>
     <string name="challenge_weekly_breakdown">هذا الأسبوع</string>
     <string name="challenge_edit_profile">تعديل الملف</string>
     <string name="challenge_leave_action">مغادرة</string>

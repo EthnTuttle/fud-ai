@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.text.NumberFormat
 import java.time.DayOfWeek
@@ -60,19 +62,18 @@ internal fun WorkoutProgressSection(entries: List<WorkoutSession>) {
             val total = dailyBurns.sumOf(Pair<LocalDate, Int>::second)
             ProgressStatRow(
                 listOf(
-                    stringResource(R.string.progress_workout_stat_total) to
-                        stringResource(R.string.kcal_value_format, total),
+                    stringResource(R.string.progress_workout_stat_total) to energyText(total),
                     stringResource(R.string.progress_workout_stat_average) to
-                        stringResource(
-                            R.string.kcal_value_format,
-                            dailyBurns.map(Pair<LocalDate, Int>::second).average().roundToInt()
-                        ),
-                    stringResource(R.string.progress_workout_stat_latest) to
-                        stringResource(R.string.kcal_value_format, dailyBurns.last().second),
+                        energyText(dailyBurns.map(Pair<LocalDate, Int>::second).average().roundToInt()),
+                    stringResource(R.string.progress_workout_stat_latest) to energyText(dailyBurns.last().second),
                     stringResource(R.string.progress_workout_stat_days) to dailyBurns.size.toString()
                 )
             )
-            WorkoutBurnChart(dailyBurns)
+            val energyUnit = LocalEnergyUnit.current
+            val shownBurns = remember(dailyBurns, energyUnit) {
+                dailyBurns.map { (day, kcal) -> day to energyUnit.displayValue(kcal) }
+            }
+            WorkoutBurnChart(shownBurns)
         }
     }
 }
@@ -305,7 +306,10 @@ private fun WorkoutBurnChart(values: List<Pair<LocalDate, Int>>) {
     DailyBarChart(
         values = values,
         contentDescription = stringResource(
-            R.string.progress_workout_chart_description,
+            LocalEnergyUnit.current.pick(
+                R.string.progress_workout_chart_description,
+                R.string.progress_workout_chart_description_kj
+            ),
             dateFormatter.format(values.first().first),
             dateFormatter.format(values.last().first),
             values.sumOf(Pair<LocalDate, Int>::second),

@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">مسودة تمرين</string>
     <string name="voice_card_dismiss">إغلاق</string>
     <string name="voice_card_totals">%1$d kcal · البروتين: %2$dg · الكربوهيدرات: %3$dg · الدهون: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · البروتين: %2$dg · الكربوهيدرات: %3$dg · الدهون: %4$dg</string>
     <string name="voice_card_log">سجّله</string>
     <string name="voice_card_logged">تم التسجيل</string>
     <string name="voice_card_confirm_title">تأكيد</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">تم الحفظ</string>
     <string name="voice_card_undo">تراجع</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">تسجيل %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">تسجيل %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">تسجيل %1$s من الماء</string>
     <string name="voice_change_start_fast">بدء الصيام · المدة بالساعات: %1$d</string>
     <string name="voice_change_end_fast">إنهاء صيامك · %1$s</string>

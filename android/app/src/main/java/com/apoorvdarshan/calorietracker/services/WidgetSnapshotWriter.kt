@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.apoorvdarshan.calorietracker.data.FoodRepository
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.data.ProfileRepository
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
 import com.apoorvdarshan.calorietracker.models.UserProfile
@@ -56,13 +57,19 @@ class WidgetSnapshotWriter(
             prefs.waterEntries
         ) { enabled, goalMl, unit, entries ->
             WaterWidgetState(enabled, goalMl, unit, entries)
-        }
-    ) { core, water -> WidgetInputs(core, water) }
+        },
+        prefs.energyUnit
+    ) { core, water, energyUnit -> WidgetInputs(core, water, energyUnit) }
         .distinctUntilChanged()
-        .onEach { inputs -> publish(inputs.core.entries, inputs.core.profile, inputs.water) }
+        .onEach { inputs -> publish(inputs.core.entries, inputs.core.profile, inputs.water, inputs.energyUnit) }
         .map { Unit }
 
-    private suspend fun publish(entries: List<FoodEntry>, profile: UserProfile?, water: WaterWidgetState) {
+    private suspend fun publish(
+        entries: List<FoodEntry>,
+        profile: UserProfile?,
+        water: WaterWidgetState,
+        energyUnit: EnergyUnit
+    ) {
         val todaysEntries = entries.filter {
             it.timestamp.atZone(ZoneId.systemDefault()).toLocalDate() == LocalDate.now()
         }
@@ -100,7 +107,8 @@ class WidgetSnapshotWriter(
                 waterTrackingEnabled = water.enabled,
                 waterCurrentMl = waterTodayMl,
                 waterGoalMl = water.goalMl.coerceAtLeast(1),
-                waterUnitRaw = water.unit.storageValue
+                waterUnitRaw = water.unit.storageValue,
+                energyUnitRaw = energyUnit.storageValue
             )
             prefs.setWidgetSnapshot(snapshot)
         }
@@ -124,5 +132,6 @@ private data class WaterWidgetState(
 
 private data class WidgetInputs(
     val core: CoreWidgetState,
-    val water: WaterWidgetState
+    val water: WaterWidgetState,
+    val energyUnit: EnergyUnit
 )

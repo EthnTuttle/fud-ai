@@ -18,6 +18,7 @@
     <string name="widget_fat">Yağ</string>
     <string name="widget_water">Su</string>
     <string name="widget_kcal_left_format">%1$d kcal kaldı</string>
+    <string name="widget_kj_left_format">%1$d kJ kaldı</string>
     <string name="widget_g_left_format">%1$dg kaldı</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">protein g</string>
@@ -51,6 +52,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -61,6 +63,9 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d yeni kayıt · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Tahmini yakım: %1$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -371,6 +376,8 @@
     <string name="home_menu_saved_meals">Kayıtlı Öğünler</string>
     <string name="home_kcal_of_format">%1$s kcal içinden</string>
     <string name="home_kcal_left_format">%1$s kaldı</string>
+    <string name="home_kj_left_format">%1$s kaldı</string>
+    <string name="home_kilojoules">Kilojuller</string>
     <string name="home_macro_left_format">%1$s kaldı</string>
     <string name="home_macro_over_format">%1$s fazla</string>
     <string name="home_macro_no_goal">Hedef yok</string>
@@ -573,6 +580,7 @@
     <string name="progress_workout_stat_days">Gün</string>
     <string name="progress_workout_no_range">Bu aralıkta hesaplanan antrenman yakımı yok</string>
     <string name="progress_workout_chart_description">%1$s ile %2$s arasındaki antrenman yakım grafiği. Toplam %3$d kilokalori; en son %4$d kilokalori.</string>
+    <string name="progress_workout_chart_description_kj">%1$s ile %2$s arasındaki antrenman yakım grafiği. Toplam %3$d kilojul; en son %4$d kilojul.</string>
     <string name="progress_steps_stat_total">Toplam</string>
     <string name="progress_steps_stat_average">Ortalama</string>
     <string name="progress_steps_stat_best_day">En iyi gün</string>
@@ -587,6 +595,7 @@
     <string name="progress_include_today">Bugünü dahil et</string>
     <string name="progress_include_today_caption">Kalori grafiği ve besin ortalamaları</string>
     <string name="progress_avg_format">Ort: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Ort: %1$,d kJ</string>
     <string name="progress_no_food">Henüz yiyecek kaydedilmedi</string>
 
     <string name="progress_macro_averages">Makro Ortalamaları</string>
@@ -688,7 +697,9 @@
     <string name="settings_recalculate_goals">Hedefleri Yeniden Hesapla</string>
     <string name="settings_estimated_maintenance">Tahmini Koruma Kalorisi</string>
     <string name="settings_maintenance_deficit_format">Kalori açığı: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_deficit_format_kj">Kalori açığı: %1$,d kJ/gün</string>
     <string name="settings_maintenance_surplus_format">Kalori fazlası: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_surplus_format_kj">Kalori fazlası: %1$,d kJ/gün</string>
     <string name="settings_maintenance_close">Hedef koruma kalorisine yakın</string>
     <string name="settings_estimated_maintenance_info">Tahmini koruma kalorisi, tipik bir günde yaktığınız kaloridir: profilinizdeki BMR değerinizin aktivite seviyenizle çarpımı. Bunun altında yemek kilo vermek için açık, üstünde yemek kilo almak için fazla oluşturur. Gösterilen açık veya fazla, kalori hedefinizden bu tahminin çıkarılmasıyla bulunur. Bu bir formül tahminidir; gerçek harcamanız farklı olabilir ve hedef yeniden hesaplaması hedefinizi bunun yerine kaydettiğiniz yiyeceklere, kilo eğiliminize veya ölçülen enerji harcamanıza göre belirleyebilir. Bu tıbbi tavsiye değildir.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -729,6 +740,9 @@
     <string name="settings_save_photos_to_gallery">Fotoğraflara Kaydet</string>
     <string name="settings_save_photos_to_gallery_subtitle">Kaydederken öğün fotoğraflarını galerinize de kaydedin</string>
     <string name="settings_week_starts">Hafta Başlangıcı</string>
+    <string name="settings_energy_unit">Enerji Birimi</string>
+    <string name="settings_energy_unit_kcal">Kilokalori (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojul (kJ)</string>
     <string name="settings_meal_times">Öğün Saatleri</string>
     <string name="settings_meal_times_customize">Özelleştir</string>
     <string name="settings_meal_times_description">Otomatik öğün seçiminin bir sonraki öğüne ne zaman geçeceğini ayarlayın.</string>
@@ -997,6 +1011,9 @@
     <string name="notif_summary_deficit">%1$d kcal yenildi · %2$d yakıldı · %3$d kcal tahmini açık</string>
     <string name="notif_summary_surplus">%1$d kcal yenildi · %2$d yakıldı · %3$d kcal tahmini fazla</string>
     <string name="notif_summary_balanced">%1$d kcal yenildi · %2$d yakıldı · tahmini denge</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ yenildi · %2$d yakıldı · %3$d kJ tahmini açık</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ yenildi · %2$d yakıldı · %3$d kJ tahmini fazla</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ yenildi · %2$d yakıldı · tahmini denge</string>
 
     <string name="widget_all_metrics_label">Fud AI Bugün</string>
     <string name="widget_all_metrics_description">Bugünün kalori, protein, karbonhidrat ve yağını tek widget\'ta görün.</string>
@@ -1223,6 +1240,7 @@
     <string name="import_note">Gönderenin tam besin değerleriyle günlüğünüze ekler. Fotoğraf dahil değildir.</string>
     <string name="import_add_to_log">Günlüğe Ekle</string>
     <string name="import_add_to_log_many_format">%1$d\'i Günlüğe Ekle · %2$d kcal</string>
+    <string name="import_add_to_log_many_format_kj">%1$d\'i Günlüğe Ekle · %2$d kJ</string>
     <string name="voice_release_to_cancel">İptal etmek için bırakın</string>
     <string name="voice_slide_to_cancel">‹ iptal etmek için kaydırın</string>
     <string name="camera_error_open">Kamera açılamadı</string>

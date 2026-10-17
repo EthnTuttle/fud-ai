@@ -612,24 +612,29 @@ class ReminderReceiver : BroadcastReceiver() {
         ) ?: return null
         val eaten = container.foodRepository.entriesForDate(today).first().sumOf { it.calories }
         val balance = DailySummaryPolicy.balance(eatenCalories = eaten, burnedCalories = burned)
+        // The balance is decided in kcal; only the numbers shown convert.
+        val energyUnit = container.prefs.energyUnit.first()
+        val shownEaten = energyUnit.displayValue(balance.eatenCalories)
+        val shownBurned = energyUnit.displayValue(balance.burnedCalories)
+        val shownDifference = energyUnit.displayValue(balance.differenceCalories)
 
         return when (balance.direction) {
             CalorieBalanceDirection.DEFICIT -> context.getString(
-                R.string.notif_summary_deficit,
-                balance.eatenCalories,
-                balance.burnedCalories,
-                balance.differenceCalories
+                energyUnit.pick(R.string.notif_summary_deficit, R.string.notif_summary_deficit_kj),
+                shownEaten,
+                shownBurned,
+                shownDifference
             )
             CalorieBalanceDirection.SURPLUS -> context.getString(
-                R.string.notif_summary_surplus,
-                balance.eatenCalories,
-                balance.burnedCalories,
-                balance.differenceCalories
+                energyUnit.pick(R.string.notif_summary_surplus, R.string.notif_summary_surplus_kj),
+                shownEaten,
+                shownBurned,
+                shownDifference
             )
             CalorieBalanceDirection.BALANCED -> context.getString(
-                R.string.notif_summary_balanced,
-                balance.eatenCalories,
-                balance.burnedCalories
+                energyUnit.pick(R.string.notif_summary_balanced, R.string.notif_summary_balanced_kj),
+                shownEaten,
+                shownBurned
             )
         }
     }

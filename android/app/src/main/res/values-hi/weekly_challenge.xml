@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d/28 अंक</string>
     <string name="challenge_days_format">%1$d/7 दिन</string>
     <string name="challenge_days_kcal_format">%1$d/7 दिन · %2$d किलो कैलोरी</string>
+    <string name="challenge_days_kj_format">%1$d/7 दिन · %2$d किलोजूल</string>
     <string name="challenge_weekly_breakdown">इस सप्ताह</string>
     <string name="challenge_edit_profile">प्रोफ़ाइल बदलें</string>
     <string name="challenge_leave_action">छोड़ें</string>

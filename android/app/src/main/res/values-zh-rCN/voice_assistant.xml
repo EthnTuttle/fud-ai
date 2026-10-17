@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">训练草稿</string>
     <string name="voice_card_dismiss">关闭</string>
     <string name="voice_card_totals">%1$d kcal · 蛋白质：%2$dg · 碳水：%3$dg · 脂肪：%4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · 蛋白质：%2$dg · 碳水：%3$dg · 脂肪：%4$dg</string>
     <string name="voice_card_log">记录</string>
     <string name="voice_card_logged">已记录</string>
     <string name="voice_card_confirm_title">确认</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">已保存</string>
     <string name="voice_card_undo">撤销</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">记录 %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">记录 %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">记录 %1$s 饮水</string>
     <string name="voice_change_start_fast">开始 %1$d 小时的断食</string>
     <string name="voice_change_end_fast">结束断食 · %1$s</string>

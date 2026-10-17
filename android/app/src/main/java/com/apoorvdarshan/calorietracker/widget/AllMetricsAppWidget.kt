@@ -104,12 +104,12 @@ private fun AllMetricsWide(snapshot: WidgetSnapshot) {
                 gaugeWidthDp = gaugeW,
                 startHex = snapshot.themeStartHex,
                 endHex = snapshot.themeEndHex,
-                centerLarge = snapshot.calories.toString(),
-                centerSmall = "/ ${snapshot.calorieGoal}"
+                centerLarge = snapshot.displayCalories.toString(),
+                centerSmall = "/ ${snapshot.displayCalorieGoal}"
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
-                text = "${snapshot.caloriesRemaining} left",
+                text = "${snapshot.displayCaloriesRemaining} left",
                 style = TextStyle(
                     color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                     fontWeight = FontWeight.Medium,
@@ -149,8 +149,8 @@ private fun AllMetricsTall(snapshot: WidgetSnapshot) {
                 gaugeWidthDp = gaugeW,
                 startHex = snapshot.themeStartHex,
                 endHex = snapshot.themeEndHex,
-                centerLarge = snapshot.calories.toString(),
-                centerSmall = "/ ${snapshot.calorieGoal}"
+                centerLarge = snapshot.displayCalories.toString(),
+                centerSmall = "/ ${snapshot.displayCalorieGoal}"
             )
         }
         Box(
@@ -158,7 +158,7 @@ private fun AllMetricsTall(snapshot: WidgetSnapshot) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "${snapshot.caloriesRemaining} kcal left",
+                text = energyLeftText(snapshot),
                 style = TextStyle(
                     color = WidgetTheme.themeTextProvider(snapshot.themeStartHex),
                     fontWeight = FontWeight.Medium,

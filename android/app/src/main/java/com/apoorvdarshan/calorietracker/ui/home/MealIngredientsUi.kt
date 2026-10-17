@@ -9,6 +9,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import com.apoorvdarshan.calorietracker.FudAIApp
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
+import com.apoorvdarshan.calorietracker.ui.components.energyUnitLabel
 import com.apoorvdarshan.calorietracker.ui.components.rememberFoodThumbnail
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -116,7 +119,7 @@ internal fun MealIngredientsCard(
                             modifier = Modifier.weight(1f)
                         )
                         Text(
-                            "${MacroValueFormatter.string(ingredient.grams)}g · ${ingredient.calories} kcal",
+                            "${MacroValueFormatter.string(ingredient.grams)}g · ${energyText(ingredient.calories)}",
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f)
                         )
@@ -253,14 +256,16 @@ internal fun MealIngredientEditorDialog(
     onDelete: (() -> Unit)?,
     onDismiss: () -> Unit
 ) {
+    // Calories here (text and base) are in the energy unit in use; save converts to kcal.
+    val energyUnit = LocalEnergyUnit.current
     var name by rememberSaveable(target) { mutableStateOf(target.ingredient.name) }
     var grams by rememberSaveable(target) { mutableStateOf(MacroValueFormatter.string(target.ingredient.grams)) }
-    var calories by rememberSaveable(target) { mutableStateOf(target.ingredient.calories.toString()) }
+    var calories by rememberSaveable(target) { mutableStateOf(energyUnit.displayValue(target.ingredient.calories).toString()) }
     var protein by rememberSaveable(target) { mutableStateOf(MacroValueFormatter.string(target.ingredient.protein)) }
     var carbs by rememberSaveable(target) { mutableStateOf(MacroValueFormatter.string(target.ingredient.carbs)) }
     var fat by rememberSaveable(target) { mutableStateOf(MacroValueFormatter.string(target.ingredient.fat)) }
     var nutritionBase by rememberSaveable(target, stateSaver = IngredientPortionSaver) { mutableStateOf(IngredientPortion(
-        target.ingredient.grams, target.ingredient.calories.toDouble(),
+        target.ingredient.grams, energyUnit.displayAmount(target.ingredient.calories.toDouble()),
         target.ingredient.protein, target.ingredient.carbs, target.ingredient.fat
     )) }
     fun number(text: String) = text.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0 }
@@ -287,7 +292,7 @@ internal fun MealIngredientEditorDialog(
         MealIngredient(
             name = validName,
             grams = parsedGrams,
-            calories = parsedCalories.roundToInt(),
+            calories = energyUnit.toKcal(parsedCalories),
             protein = parsedProtein,
             carbs = parsedCarbs,
             fat = parsedFat,
@@ -307,7 +312,7 @@ internal fun MealIngredientEditorDialog(
             ) {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.sheet_name)) }, singleLine = true)
                 IngredientNumberField(stringResource(R.string.ingredients_weight), grams, ::changeWeight, stringResource(R.string.unit_g))
-                IngredientNumberField(stringResource(R.string.nutrition_label_calories), calories, { calories = it; rebaseNutrition() }, stringResource(R.string.unit_kcal))
+                IngredientNumberField(stringResource(R.string.nutrition_label_calories), calories, { calories = it; rebaseNutrition() }, energyUnitLabel())
                 IngredientNumberField(stringResource(R.string.nutrition_label_protein), protein, { protein = it; rebaseNutrition() }, stringResource(R.string.unit_g))
                 IngredientNumberField(stringResource(R.string.nutrition_label_carbs), carbs, { carbs = it; rebaseNutrition() }, stringResource(R.string.unit_g))
                 IngredientNumberField(stringResource(R.string.nutrition_label_fat), fat, { fat = it; rebaseNutrition() }, stringResource(R.string.unit_g))
