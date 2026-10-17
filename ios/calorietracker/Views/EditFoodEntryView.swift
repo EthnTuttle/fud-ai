@@ -43,6 +43,7 @@ struct EditFoodEntryView: View {
     @State private var baseIngredients: [MealIngredient]
     @State private var servingUnitOptions: [ServingUnitOption]
     @State private var servingSizeIsKnown: Bool
+    @State private var recipeServings = 1
     @State private var ingredientEditor: IngredientEditorTarget?
 
     @State private var emoji: String?
@@ -241,18 +242,37 @@ struct EditFoodEntryView: View {
     }
 
     private func applyIngredientChanges(_ displayedIngredients: [MealIngredient]) {
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        let keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients: displayedIngredients,
+            scale: scale,
+            servings: recipeServings,
+            options: servingUnitOptions,
+            selectedUnitID: selectedServingUnitID
+        )
+        let nextIngredients = keptSplit?.ingredients ?? displayedIngredients
         applyMicros(
             currentMicros.stretched(
                 oldGrams: baseIngredients.ingredientTotals.grams,
-                newGrams: displayedIngredients.ingredientTotals.grams
+                newGrams: nextIngredients.ingredientTotals.grams
             )
         )
-        baseIngredients = displayedIngredients
-        let totals = displayedIngredients.ingredientTotals
+        baseIngredients = nextIngredients
+        let totals = nextIngredients.ingredientTotals
         baseCalories = totals.calories
         baseProtein = totals.protein
         baseCarbs = totals.carbs
         baseFat = totals.fat
+        if let keptSplit {
+            baseServingSizeGrams = totals.grams
+            recipeServings = keptSplit.split.servings
+            servingUnitOptions = keptSplit.split.options
+            selectedServingUnitID = keptSplit.split.selectedUnitID
+            servingSizeGrams = keptSplit.split.servingSizeGrams
+            servingSizeText = keptSplit.split.quantityText
+            servingSizeIsKnown = true
+            return
+        }
         guard totals.grams > 0 else { return }
         baseServingSizeGrams = totals.grams
         servingSizeGrams = totals.grams
@@ -260,6 +280,35 @@ struct EditFoodEntryView: View {
         selectedServingUnitID = ServingUnitOption.grams.unit
         servingUnitOptions = []
         servingSizeIsKnown = true
+        // The edited list is now the whole meal again, so any split is gone.
+        recipeServings = 1
+    }
+
+    /// Shown only for a real ingredient breakdown with a known total mass (#458).
+    /// An entry logged as one serving of a split recipe holds only that portion,
+    /// so it never offers the split again.
+    private var recipeServingsBinding: Binding<Int>? {
+        guard !RecipeServings.isLoggedPortion(options: entry.servingUnitOptions),
+              RecipeServings.isAvailable(
+                  ingredientCount: baseIngredients.count,
+                  totalGrams: baseServingSizeGrams,
+                  servingSizeIsKnown: servingSizeIsKnown
+              )
+        else { return nil }
+        return Binding(get: { recipeServings }, set: applyRecipeServings)
+    }
+
+    private func applyRecipeServings(_ servings: Int) {
+        let split = RecipeServings.split(
+            options: servingUnitOptions,
+            totalGrams: baseServingSizeGrams,
+            servings: servings
+        )
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitID = split.selectedUnitID
+        servingSizeGrams = split.servingSizeGrams
+        servingSizeText = split.quantityText
     }
 
     var body: some View {
@@ -425,7 +474,8 @@ struct EditFoodEntryView: View {
                                     applyIngredientChanges(scaledIngredients + [ingredient])
                                 }
                             )
-                        )
+                        ),
+                        recipeServings: recipeServingsBinding
                     )
 
                     Section {
@@ -683,6 +733,7 @@ struct EditFoodEntryView: View {
                     defaultToGrams: newAnalysis.servingSizeIsKnown && FoodMeasurementSettings.preferGramsByDefault
                 )
                 selectedServingUnitID = initialServingUnitID
+                recipeServings = 1
                 servingSizeGrams = newAnalysis.servingSizeGrams
                 servingSizeText = ServingUnitOption.initialQuantityText(
                     totalGrams: newAnalysis.servingSizeGrams,

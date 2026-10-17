@@ -65,6 +65,8 @@
     <!-- Open Food Facts product metadata -->
     <string name="product_information">Informacje o produkcie</string>
     <string name="product_barcode">Kod kreskowy</string>
+    <string name="barcode_saved_label_title">Używana jest Twoja zapisana etykieta żywieniowa dla tego kodu kreskowego</string>
+    <string name="barcode_saved_label_footer">Open Food Facts nie ma wartości odżywczych dla tego produktu. Aby zapomnieć tę etykietę, usuń wpisy jedzenia, które jej użyły.</string>
     <string name="product_package">Opakowanie</string>
     <string name="product_nutri_score">Nutri-Score</string>
     <string name="product_nova_group">Grupa NOVA</string>
@@ -376,6 +378,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Szczegóły jedzenia</string>
     <string name="sheet_serving">Porcja</string>
+    <string name="recipe_servings_title">Porcje w przepisie</string>
+    <string name="recipe_servings_footer">Ustaw to po dodaniu wszystkich składników. Fud AI dzieli przepis, więc zapisujesz 1 porcję, a Zapisane posiłki zachowują tę wielkość porcji.</string>
+    <string name="cd_recipe_servings_fewer">Mniej porcji</string>
+    <string name="cd_recipe_servings_more">Więcej porcji</string>
     <string name="sheet_nutrition">Odżywianie</string>
     <string name="sheet_meal">Posiłek</string>
     <string name="sheet_more_nutrition">Więcej wartości odżywczych</string>
