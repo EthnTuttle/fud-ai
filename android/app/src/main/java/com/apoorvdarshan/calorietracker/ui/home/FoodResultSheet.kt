@@ -819,7 +819,13 @@ fun FoodResultSheet(
                 val productInfoFields = ProductInfoField.visibleFields(metadata, productInfoShown, productInfoHiddenFields)
                 if (productInfoFields.isNotEmpty()) {
                     item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                    item { FoodProductMetadataCard(metadata, productInfoFields) }
+                    item {
+                        FoodProductMetadataCard(
+                            metadata,
+                            productInfoFields,
+                            profile?.allergenSensitivities.orEmpty()
+                        )
+                    }
                 }
             }
         }

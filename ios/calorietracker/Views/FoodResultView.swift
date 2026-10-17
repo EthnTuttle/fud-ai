@@ -621,7 +621,10 @@ struct FoodResultView: View {
                     }
 
                     if let productMetadata, productMetadata.hasDisplayDetails {
-                        FoodProductMetadataSection(metadata: productMetadata)
+                        FoodProductMetadataSection(
+                            metadata: productMetadata,
+                            allergenSensitivities: profile.configuredAllergenSensitivities
+                        )
                     }
 
                 }

@@ -504,7 +504,10 @@ struct EditFoodEntryView: View {
 
                     if let productMetadata = entry.productMetadata,
                        productMetadata.hasDisplayDetails {
-                        FoodProductMetadataSection(metadata: productMetadata)
+                        FoodProductMetadataSection(
+                            metadata: productMetadata,
+                            allergenSensitivities: profileStore.profile.configuredAllergenSensitivities
+                        )
                     }
 
                     Section("Actions") {
