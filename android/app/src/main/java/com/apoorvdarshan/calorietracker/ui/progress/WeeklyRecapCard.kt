@@ -77,11 +77,14 @@ internal fun WeeklyRecapCard(
     /** From Settings > Week starts on, like the Home and Workouts week strips. */
     firstDayOfWeek: DayOfWeek,
     /** Re-read on each return to the app, so a week that ended meanwhile rolls over. */
-    today: LocalDate
+    today: LocalDate,
+    /** Re-read with [today]: a time zone change can move entries near midnight to
+     *  another day even when the local date stays the same. */
+    zone: ZoneId
 ) {
     // Weeks stepped back from the most recent completed one; session-only.
     var weekOffset by rememberSaveable { mutableIntStateOf(0) }
-    val recap = remember(foods, weights, burnSessions, dayPlans, calorieGoal, proteinGoal, weekOffset, today, firstDayOfWeek) {
+    val recap = remember(foods, weights, burnSessions, dayPlans, calorieGoal, proteinGoal, weekOffset, today, firstDayOfWeek, zone) {
         // Both compared weeks: the one before the recapped week through its last day.
         val comparedStart = WeeklyRecapCalculator.weekStart(today, weekOffset + 1, firstDayOfWeek)
         WeeklyRecapCalculator.compute(
@@ -98,7 +101,7 @@ internal fun WeeklyRecapCard(
             today = today,
             offset = weekOffset,
             firstDayOfWeek = firstDayOfWeek,
-            zone = ZoneId.systemDefault()
+            zone = zone
         )
     }
 

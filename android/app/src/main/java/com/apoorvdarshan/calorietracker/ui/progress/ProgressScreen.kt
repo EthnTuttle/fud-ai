@@ -251,8 +251,10 @@ private fun MyProgressContent(container: AppContainer) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     val weightMetric = weightUnit == "kg"
-    // The Weekly Recap's "today", refreshed on each return to the app.
-    val recapToday = remember(foregroundEpoch) { LocalDate.now() }
+    // The Weekly Recap's time zone and "today", re-read on each return to the app,
+    // so a finished week rolls over and travel regroups late-night entries.
+    val recapZone = remember(foregroundEpoch) { ZoneId.systemDefault() }
+    val recapToday = remember(foregroundEpoch) { LocalDate.now(recapZone) }
 
     var range by rememberSaveable { mutableStateOf(TimeRange.WEEK) }
     // Whole windows stepped back from the current one. Session-only and keyed on
@@ -394,7 +396,8 @@ private fun MyProgressContent(container: AppContainer) {
                         proteinGoal = profile.effectiveProtein,
                         useMetric = weightMetric,
                         firstDayOfWeek = WeeklyRecapCalculator.firstDayOfWeek(weekStartsOnMonday),
-                        today = recapToday
+                        today = recapToday,
+                        zone = recapZone
                     )
                 }
             }

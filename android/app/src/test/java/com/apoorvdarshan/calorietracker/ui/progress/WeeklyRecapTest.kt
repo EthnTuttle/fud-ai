@@ -81,6 +81,51 @@ class WeeklyRecapTest {
         )
     }
 
+    @Test
+    fun aTimeZoneChangeOnTheSameLocalDateRegroupsLateNightEntries() {
+        // The card caches the recap by its inputs, so the zone is one of them: travel
+        // can move entries across midnight while "today" stays Saturday the 17th.
+        val sundayNightUtc = Instant.parse("2026-10-11T20:00:00Z")
+        val foods = listOf(
+            FoodEntry(
+                name = "Meal",
+                calories = 2_000,
+                protein = 150.0,
+                carbs = 0.0,
+                fat = 0.0,
+                timestamp = sundayNightUtc,
+                source = FoodSource.MANUAL
+            )
+        )
+        val weights = listOf(
+            WeightEntry(date = Instant.parse("2026-10-05T08:00:00Z"), weightKg = 80.0),
+            WeightEntry(date = sundayNightUtc, weightKg = 79.5)
+        )
+        fun recap(zone: java.time.ZoneId) = WeeklyRecapCalculator.compute(
+            foods = foods,
+            workouts = emptyList(),
+            weights = weights,
+            calorieGoal = 2_000,
+            proteinGoal = 150,
+            today = LocalDate.parse("2026-10-17"),
+            offset = 0,
+            firstDayOfWeek = DayOfWeek.MONDAY,
+            zone = zone
+        )
+
+        // Sunday 20:00 in UTC ends the recapped week (October 5–11)...
+        val utc = recap(ZoneOffset.UTC)
+        assertEquals(1, utc.current.loggedDays)
+        assertEquals(2, utc.current.weighIns)
+        assertEquals(-0.5, utc.current.weightChangeKg!!, 1e-9)
+
+        // ...but is Monday 05:00 in Tokyo, the current week, so it leaves the recap.
+        val tokyo = recap(java.time.ZoneId.of("Asia/Tokyo"))
+        assertEquals(0, tokyo.current.loggedDays)
+        assertEquals(1, tokyo.current.weighIns)
+        assertNull(tokyo.current.weightChangeKg)
+    }
+
     // Week stats
 
     @Test
