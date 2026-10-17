@@ -50,9 +50,12 @@ struct UserExerciseEditorView: View {
                     }
                 }
 
+                // The fields "Fill with AI" writes are locked while it runs, so its
+                // reply never overwrites an edit made in the meantime.
                 Section("Basics") {
                     TextField("Name", text: $draft.name)
                         .textInputAutocapitalization(.words)
+                        .disabled(isFillingWithAI)
 
                     Picker("Level", selection: $draft.rawLevel) {
                         ForEach(levelOptions, id: \.self) { Text($0).tag($0) }
@@ -61,15 +64,19 @@ struct UserExerciseEditorView: View {
                     Picker("Category", selection: $draft.category) {
                         ForEach(categoryOptions, id: \.self) { Text($0).tag($0) }
                     }
+                    .disabled(isFillingWithAI)
                 }
 
                 Section("Muscles & equipment") {
                     musclePicker(title: "Primary muscles", selection: $draft.primaryMuscles, options: catalog.availablePrimaryMuscles)
+                        .disabled(isFillingWithAI)
                     musclePicker(title: "Secondary muscles", selection: $draft.secondaryMuscles, options: catalog.availableSecondaryMuscles)
+                        .disabled(isFillingWithAI)
 
                     Picker("Equipment", selection: $draft.rawEquipment) {
                         ForEach(equipmentOptions, id: \.self) { Text($0).tag($0) }
                     }
+                    .disabled(isFillingWithAI)
 
                     Picker("Force", selection: $draft.force) {
                         ForEach(forceOptions, id: \.self) { Text($0).tag($0) }
@@ -83,6 +90,7 @@ struct UserExerciseEditorView: View {
                 Section("Instructions") {
                     TextEditor(text: $draft.instructions)
                         .frame(minHeight: 120)
+                        .disabled(isFillingWithAI)
                 }
 
                 if isEditing {
@@ -100,8 +108,9 @@ struct UserExerciseEditorView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
+                    // Waits for a running AI fill, so its suggestions are never dropped.
                     Button("Save") { save() }
-                        .disabled(draft.trimmedName.isEmpty || isPhotoLoading)
+                        .disabled(draft.trimmedName.isEmpty || isPhotoLoading || isFillingWithAI)
                 }
             }
             .task(id: existingItemID) {
@@ -382,7 +391,7 @@ struct UserExerciseEditorView: View {
     }
 
     private func save() {
-        guard let saved = workoutStore.saveUserExercise(draft, existingItemID: existingItemID) else { return }
+        guard !isFillingWithAI, let saved = workoutStore.saveUserExercise(draft, existingItemID: existingItemID) else { return }
         onSaved?(saved)
         dismiss()
     }

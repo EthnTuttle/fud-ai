@@ -137,7 +137,7 @@ class UserExerciseAiFillTest {
         assertEquals("Strength", filled.category)
         assertEquals("Machine", filled.equipment)
         assertEquals(listOf("Chest"), filled.primaryMuscles)
-        assertTrue(filled.secondaryMuscles.isEmpty())
+        assertEquals(listOf("Biceps"), filled.secondaryMuscles)
         assertEquals("Sit tall.\nPress the handles forward.", filled.instructions)
         assertEquals("Intermediate", filled.level)
         assertArrayEquals(photo, filled.photoBytes)
@@ -159,5 +159,55 @@ class UserExerciseAiFillTest {
         assertEquals(listOf("Lats"), filled.primaryMuscles)
         assertEquals(listOf("Biceps"), filled.secondaryMuscles)
         assertEquals("Keep me", filled.instructions)
+    }
+
+    @Test fun primaryMusclesWithoutUsableSecondaryMusclesKeepTheCurrentSecondaryMuscles() {
+        val draft = UserExerciseDraft(
+            name = "Old",
+            primaryMuscles = listOf("Lats"),
+            secondaryMuscles = listOf("Biceps", "Chest", "Shoulders")
+        )
+
+        val filled = UserExerciseAiFill.apply(
+            UserExerciseAiFill.Suggestion(name = "Chest Press", primaryMuscles = listOf("Chest")),
+            draft
+        )
+
+        assertEquals(listOf("Chest"), filled.primaryMuscles)
+        // Chest is primary now, so it leaves the secondary list; the rest stay.
+        assertEquals(listOf("Biceps", "Shoulders"), filled.secondaryMuscles)
+
+        // Secondary muscles that only repeat a primary muscle are not usable either.
+        val refilled = UserExerciseAiFill.apply(
+            UserExerciseAiFill.Suggestion(
+                name = "Chest Press",
+                primaryMuscles = listOf("Triceps"),
+                secondaryMuscles = listOf("Triceps")
+            ),
+            filled
+        )
+
+        assertEquals(listOf("Triceps"), refilled.primaryMuscles)
+        assertEquals(listOf("Biceps", "Shoulders"), refilled.secondaryMuscles)
+    }
+
+    @Test fun suggestedSecondaryMusclesReplaceTheCurrentOnes() {
+        val draft = UserExerciseDraft(
+            name = "Old",
+            primaryMuscles = listOf("Lats"),
+            secondaryMuscles = listOf("Biceps")
+        )
+
+        val filled = UserExerciseAiFill.apply(
+            UserExerciseAiFill.Suggestion(
+                name = "Chest Press",
+                primaryMuscles = listOf("Chest"),
+                secondaryMuscles = listOf("Shoulders", "Triceps")
+            ),
+            draft
+        )
+
+        assertEquals(listOf("Chest"), filled.primaryMuscles)
+        assertEquals(listOf("Shoulders", "Triceps"), filled.secondaryMuscles)
     }
 }

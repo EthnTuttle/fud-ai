@@ -97,12 +97,14 @@ object UserExerciseAiFill {
             equipment = suggestion.equipment ?: draft.equipment
         )
         if (suggestion.primaryMuscles.isNotEmpty()) {
-            result = result.copy(
-                primaryMuscles = suggestion.primaryMuscles,
-                secondaryMuscles = suggestion.secondaryMuscles
-            )
-        } else if (suggestion.secondaryMuscles.isNotEmpty()) {
-            result = result.copy(secondaryMuscles = suggestion.secondaryMuscles.filter { it !in draft.primaryMuscles })
+            result = result.copy(primaryMuscles = suggestion.primaryMuscles)
+        }
+        val suggestedSecondary = suggestion.secondaryMuscles.filter { it !in result.primaryMuscles }
+        if (suggestedSecondary.isNotEmpty()) {
+            result = result.copy(secondaryMuscles = suggestedSecondary)
+        } else if (suggestion.primaryMuscles.isNotEmpty()) {
+            // No usable secondary muscles: keep the current ones, minus any that are now primary.
+            result = result.copy(secondaryMuscles = result.secondaryMuscles.filter { it !in result.primaryMuscles })
         }
         if (suggestion.instructions.isNotEmpty()) {
             result = result.copy(instructions = suggestion.instructions.joinToString("\n"))

@@ -142,7 +142,7 @@ struct UserExerciseAIFillTests {
         #expect(draft.category == "Strength")
         #expect(draft.rawEquipment == "Machine")
         #expect(draft.primaryMuscles == ["Chest"])
-        #expect(draft.secondaryMuscles.isEmpty)
+        #expect(draft.secondaryMuscles == ["Biceps"])
         #expect(draft.instructions == "Sit tall.\nPress the handles forward.")
         #expect(draft.rawLevel == "Intermediate")
         #expect(draft.photoData == photo)
@@ -164,5 +164,56 @@ struct UserExerciseAIFillTests {
         #expect(draft.primaryMuscles == ["Lats"])
         #expect(draft.secondaryMuscles == ["Biceps"])
         #expect(draft.instructions == "Keep me")
+    }
+
+    @Test func primaryMusclesWithoutUsableSecondaryMusclesKeepTheCurrentSecondaryMuscles() {
+        var draft = UserExerciseDraft(
+            name: "Old",
+            primaryMuscles: ["Lats"],
+            secondaryMuscles: ["Biceps", "Chest", "Shoulders"]
+        )
+
+        draft.apply(UserExerciseAIFill.Suggestion(
+            name: "Chest Press",
+            category: nil,
+            equipment: nil,
+            primaryMuscles: ["Chest"],
+            secondaryMuscles: []
+        ))
+
+        #expect(draft.primaryMuscles == ["Chest"])
+        // Chest is primary now, so it leaves the secondary list; the rest stay.
+        #expect(draft.secondaryMuscles == ["Biceps", "Shoulders"])
+
+        // Secondary muscles that only repeat a primary muscle are not usable either.
+        draft.apply(UserExerciseAIFill.Suggestion(
+            name: "Chest Press",
+            category: nil,
+            equipment: nil,
+            primaryMuscles: ["Triceps"],
+            secondaryMuscles: ["Triceps"]
+        ))
+
+        #expect(draft.primaryMuscles == ["Triceps"])
+        #expect(draft.secondaryMuscles == ["Biceps", "Shoulders"])
+    }
+
+    @Test func suggestedSecondaryMusclesReplaceTheCurrentOnes() {
+        var draft = UserExerciseDraft(
+            name: "Old",
+            primaryMuscles: ["Lats"],
+            secondaryMuscles: ["Biceps"]
+        )
+
+        draft.apply(UserExerciseAIFill.Suggestion(
+            name: "Chest Press",
+            category: nil,
+            equipment: nil,
+            primaryMuscles: ["Chest"],
+            secondaryMuscles: ["Shoulders", "Triceps"]
+        ))
+
+        #expect(draft.primaryMuscles == ["Chest"])
+        #expect(draft.secondaryMuscles == ["Shoulders", "Triceps"])
     }
 }

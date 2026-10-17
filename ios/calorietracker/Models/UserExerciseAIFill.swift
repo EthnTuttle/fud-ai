@@ -161,9 +161,13 @@ extension UserExerciseDraft {
         }
         if !suggestion.primaryMuscles.isEmpty {
             primaryMuscles = suggestion.primaryMuscles
-            secondaryMuscles = suggestion.secondaryMuscles
-        } else if !suggestion.secondaryMuscles.isEmpty {
-            secondaryMuscles = suggestion.secondaryMuscles.filter { !primaryMuscles.contains($0) }
+        }
+        let suggestedSecondary = suggestion.secondaryMuscles.filter { !primaryMuscles.contains($0) }
+        if !suggestedSecondary.isEmpty {
+            secondaryMuscles = suggestedSecondary
+        } else if !suggestion.primaryMuscles.isEmpty {
+            // No usable secondary muscles: keep the current ones, minus any that are now primary.
+            secondaryMuscles.removeAll { primaryMuscles.contains($0) }
         }
         if !suggestion.instructions.isEmpty {
             instructions = suggestion.instructions.joined(separator: "\n")
