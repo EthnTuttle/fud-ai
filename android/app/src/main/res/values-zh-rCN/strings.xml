@@ -773,6 +773,9 @@
     <string name="settings_calc_micro_citation">估算值依赖底层 AI 模型的训练数据（USDA FoodData Central、制造商营养标签和科学文献）。准确度会因食物、份量是否清晰可见以及服务商模型而异。对于经常记录的食物，请务必与标签核对。</string>
     <string name="settings_add_menu_standalone">独立方式</string>
     <string name="settings_add_menu_standalone_footer">这些方式直接显示在 + 下，不属于任何分组。</string>
+    <string name="settings_tab_bar">标签栏</string>
+    <string name="settings_tab_bar_section">在标签栏中显示</string>
+    <string name="settings_tab_bar_footer">主页和设置始终显示。</string>
     <string name="about_litert_notices">LiteRT-LM 第三方声明</string>
     <string name="about_litert_notices_load_error">无法加载 LiteRT-LM 第三方声明。</string>
     <string name="settings_model_source">模型来源</string>

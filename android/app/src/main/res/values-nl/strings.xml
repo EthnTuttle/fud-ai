@@ -774,6 +774,9 @@
     <string name="settings_calc_micro_citation">De schattingen zijn gebaseerd op de trainingsgegevens van het onderliggende AI-model (USDA FoodData Central, voedingsetiketten van fabrikanten en wetenschappelijke literatuur). De nauwkeurigheid varieert per voedingsmiddel, de zichtbaarheid van de portiegrootte en het providermodel. Controleer bij voedingsmiddelen die je vaak logt altijd het etiket.</string>
     <string name="settings_add_menu_standalone">Losse methoden</string>
     <string name="settings_add_menu_standalone_footer">Deze methoden staan direct onder +, buiten een groep.</string>
+    <string name="settings_tab_bar">Tabbalk</string>
+    <string name="settings_tab_bar_section">Tonen in tabbalk</string>
+    <string name="settings_tab_bar_footer">Home en Instellingen worden altijd getoond.</string>
     <string name="about_litert_notices">Kennisgevingen van derden voor LiteRT-LM</string>
     <string name="about_litert_notices_load_error">De kennisgevingen van derden voor LiteRT-LM konden niet worden geladen.</string>
     <string name="settings_model_source">Modelbron</string>

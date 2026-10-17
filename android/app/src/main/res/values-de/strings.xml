@@ -774,6 +774,9 @@
     <string name="settings_calc_micro_citation">Die Schätzungen beruhen auf den Trainingsdaten des zugrunde liegenden KI-Modells (USDA FoodData Central, Herstellerangaben, wissenschaftliche Literatur). Die Genauigkeit hängt vom Lebensmittel, der Erkennbarkeit der Portionsgröße und dem Anbietermodell ab. Prüfe bei Lebensmitteln, die du häufig protokollierst, immer die Etikettangaben.</string>
     <string name="settings_add_menu_standalone">Eigenständige Methoden</string>
     <string name="settings_add_menu_standalone_footer">Diese Methoden erscheinen direkt unter +, außerhalb von Gruppen.</string>
+    <string name="settings_tab_bar">Tab-Leiste</string>
+    <string name="settings_tab_bar_section">In der Tab-Leiste anzeigen</string>
+    <string name="settings_tab_bar_footer">Start und Einstellungen werden immer angezeigt.</string>
     <string name="about_litert_notices">Drittanbieterhinweise zu LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Die Drittanbieterhinweise zu LiteRT-LM konnten nicht geladen werden.</string>
     <string name="settings_model_source">Modellquelle</string>

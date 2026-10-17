@@ -1309,6 +1309,9 @@
     <string name="settings_add_menu_add_method">Yöntem Ekle</string>
     <string name="settings_add_menu_group_name">Grup Adı</string>
     <string name="settings_add_menu_new_group">Yeni Grup</string>
+    <string name="settings_tab_bar">Sekme Çubuğu</string>
+    <string name="settings_tab_bar_section">Sekme Çubuğunda Göster</string>
+    <string name="settings_tab_bar_footer">Ana Sayfa ve Ayarlar her zaman gösterilir.</string>
     <string name="settings_quick_actions">Hızlı İşlemler</string>
     <string name="settings_app_icon_shortcuts">Uygulama Simgesi Kısayolları</string>
     <string name="settings_quick_action_number">Hızlı İşlem %1$d</string>

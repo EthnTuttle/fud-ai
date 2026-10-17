@@ -33,6 +33,7 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     val saved = mutableListOf<SavedFood>()
     val storedImages = mutableListOf<String>()
     val shownScreens = mutableListOf<Pair<VoiceScreen, VoiceSettingsSection?>>()
+    var hiddenScreens: Set<VoiceScreen> = emptySet()
     var shownEntry: FoodEntry? = null
     var diary: LocalDate = LocalDate.parse("2026-10-16")
     var fastingEnabled = true
@@ -78,6 +79,7 @@ class FakeVoiceAppPorts : VoiceAppPorts {
     override fun showScreen(screen: VoiceScreen, section: VoiceSettingsSection?) {
         shownScreens += screen to section
     }
+    override fun hiddenScreens(): Set<VoiceScreen> = hiddenScreens
     override fun showDiaryDate(date: LocalDate) {
         diary = date
     }

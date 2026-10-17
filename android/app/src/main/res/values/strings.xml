@@ -1325,6 +1325,9 @@
     <string name="settings_add_menu_restore_a11y">Restore %1$s</string>
     <string name="settings_add_menu_group_name">Group Name</string>
     <string name="settings_add_menu_new_group">New Group</string>
+    <string name="settings_tab_bar">Tab Bar</string>
+    <string name="settings_tab_bar_section">Show in Tab Bar</string>
+    <string name="settings_tab_bar_footer">Home and Settings are always shown.</string>
     <string name="settings_quick_actions">Quick Actions</string>
     <string name="settings_app_icon_shortcuts">App Icon Shortcuts</string>
     <string name="settings_quick_action_number">Quick Action %1$d</string>

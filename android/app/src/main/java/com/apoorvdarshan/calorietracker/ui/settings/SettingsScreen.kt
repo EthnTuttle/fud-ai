@@ -105,6 +105,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Tab
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
@@ -1006,6 +1007,12 @@ fun SettingsScreen(
                     stringResource(R.string.settings_meal_times_customize),
                     icon = Icons.Outlined.Add
                 ) { nav.navigate(FudAIRoutes.ADD_MENU) }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_tab_bar),
+                    stringResource(R.string.settings_meal_times_customize),
+                    icon = Icons.Outlined.Tab
+                ) { nav.navigate(FudAIRoutes.TAB_BAR) }
             }
             }
 
@@ -4549,7 +4556,7 @@ private fun CustomInstructionsBlock(
 }
 
 @Composable
-private fun ToggleRow(
+internal fun ToggleRow(
     label: String,
     checked: Boolean,
     icon: ImageVector? = null,

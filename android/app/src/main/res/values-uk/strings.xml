@@ -1298,6 +1298,9 @@
     <string name="settings_add_menu_add_method">Додати спосіб</string>
     <string name="settings_add_menu_group_name">Назва групи</string>
     <string name="settings_add_menu_new_group">Нова група</string>
+    <string name="settings_tab_bar">Панель вкладок</string>
+    <string name="settings_tab_bar_section">Показувати на панелі вкладок</string>
+    <string name="settings_tab_bar_footer">«Головна» і «Налаштування» показуються завжди.</string>
     <string name="settings_quick_actions">Швидкі дії</string>
     <string name="settings_app_icon_shortcuts">Ярлики значка застосунку</string>
     <string name="settings_quick_action_number">Швидка дія %1$d</string>

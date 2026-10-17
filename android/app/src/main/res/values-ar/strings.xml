@@ -790,6 +790,9 @@
     <string name="settings_calc_micro_citation">تعتمد التقديرات على بيانات تدريب نموذج الذكاء الاصطناعي الأساسي (USDA FoodData Central وملصقات القيم الغذائية من الشركات المصنّعة والمراجع العلمية). تختلف الدقة حسب الطعام ومدى وضوح حجم الحصة ونموذج المزوّد. تحقّق دائمًا من الملصقات للأطعمة التي تسجّلها كثيرًا.</string>
     <string name="settings_add_menu_standalone">طرق مستقلة</string>
     <string name="settings_add_menu_standalone_footer">تظهر هذه الطرق مباشرةً تحت +، خارج أي مجموعة.</string>
+    <string name="settings_tab_bar">شريط التبويبات</string>
+    <string name="settings_tab_bar_section">إظهار في شريط التبويبات</string>
+    <string name="settings_tab_bar_footer">تظهر الرئيسية والإعدادات دائمًا.</string>
     <string name="about_litert_notices">إشعارات الجهات الخارجية لـ LiteRT-LM</string>
     <string name="about_litert_notices_load_error">تعذّر تحميل إشعارات الجهات الخارجية لـ LiteRT-LM.</string>
     <string name="settings_model_source">مصدر النموذج</string>

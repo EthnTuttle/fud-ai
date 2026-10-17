@@ -109,11 +109,12 @@ fun FudAIBottomNavBar(
     currentRoute: String?,
     showAboutBadge: Boolean = false,
     workoutMode: WorkoutTabMode = WorkoutTabMode.Default,
+    hiddenRoutes: Set<String> = emptySet(),
     onTap: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tabs = remember(workoutMode) {
-        BottomTabs.map { tab ->
+    val tabs = remember(workoutMode, hiddenRoutes) {
+        BottomTabs.filterNot { FudAIRoutes.isHiddenTab(it.route, hiddenRoutes) }.map { tab ->
             if (tab.route != FudAIRoutes.WORKOUTS) tab else tab.copy(
                 icon = if (workoutMode == WorkoutTabMode.LOG) {
                     Icons.Filled.SportsGymnastics
@@ -299,7 +300,7 @@ fun FudAIBottomNavBar(
                         modifier = Modifier
                             .width(tabWidthDp)
                             .fillMaxHeight()
-                            .pointerInput(tabWidthPx, tabCount) {
+                            .pointerInput(tabWidthPx, tabs) {
                                 if (tabWidthPx <= 0f) return@pointerInput
                                 detectHorizontalDragGestures(
                                     onDragStart = { startDrag() },

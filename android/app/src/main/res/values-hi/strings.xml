@@ -774,6 +774,9 @@
     <string name="settings_calc_micro_citation">अनुमान अंतर्निहित AI मॉडल के प्रशिक्षण डेटा (USDA FoodData Central, निर्माताओं के पोषण लेबल और वैज्ञानिक साहित्य) पर आधारित हैं। सटीकता भोजन, परोसने की मात्रा की स्पष्टता और प्रोवाइडर मॉडल के अनुसार बदलती है। जिन खाद्य पदार्थों को आप अक्सर दर्ज करते हैं, उनके लेबल से हमेशा मिलान करें।</string>
     <string name="settings_add_menu_standalone">स्वतंत्र तरीके</string>
     <string name="settings_add_menu_standalone_footer">ये तरीके किसी समूह के बाहर, सीधे + के नीचे दिखते हैं।</string>
+    <string name="settings_tab_bar">टैब बार</string>
+    <string name="settings_tab_bar_section">टैब बार में दिखाएँ</string>
+    <string name="settings_tab_bar_footer">होम और सेटिंग्स हमेशा दिखते हैं।</string>
     <string name="about_litert_notices">LiteRT-LM के तृतीय-पक्ष नोटिस</string>
     <string name="about_litert_notices_load_error">LiteRT-LM के तृतीय-पक्ष नोटिस लोड नहीं किए जा सके।</string>
     <string name="settings_model_source">मॉडल का स्रोत</string>

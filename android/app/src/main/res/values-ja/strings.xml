@@ -773,6 +773,9 @@
     <string name="settings_calc_micro_citation">推定値は、基盤となるAIモデルの学習データ（USDA FoodData Central、メーカーの栄養表示、科学文献）に基づきます。精度は食品、分量の見えやすさ、プロバイダーのモデルによって異なります。頻繁に記録する食品は必ずラベルと照合してください。</string>
     <string name="settings_add_menu_standalone">単独の方法</string>
     <string name="settings_add_menu_standalone_footer">これらの方法はグループに入らず、+ の直下に表示されます。</string>
+    <string name="settings_tab_bar">タブバー</string>
+    <string name="settings_tab_bar_section">タブバーに表示</string>
+    <string name="settings_tab_bar_footer">ホームと設定は常に表示されます。</string>
     <string name="about_litert_notices">LiteRT-LM のサードパーティに関する通知</string>
     <string name="about_litert_notices_load_error">LiteRT-LM のサードパーティに関する通知を読み込めませんでした。</string>
     <string name="settings_model_source">モデルの配布元</string>

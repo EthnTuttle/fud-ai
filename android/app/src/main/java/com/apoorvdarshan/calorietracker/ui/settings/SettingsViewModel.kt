@@ -16,6 +16,7 @@ import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.QuickAction
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
+import com.apoorvdarshan.calorietracker.models.TabBarSettings
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WeightGoal
@@ -110,6 +111,8 @@ data class SettingsUiState(
     val addMenuConfig: AddMenuConfig = AddMenuConfig.Default,
     /** False until DataStore has delivered the menu, so the editor cannot save the factory default over a real layout. */
     val addMenuLoaded: Boolean = false,
+    /** Bottom-bar tab routes the user hid (Progress, Coach, Workouts). */
+    val hiddenTabs: Set<String> = emptySet(),
     val localModelStates: Map<LocalModelId, LocalModelState> = emptyMap(),
     /** A goal-relevant input changed since the last Recalculate. Drives a soft nudge on the
      *  Recalculate row; the button stays tappable at all times — this never disables it. */
@@ -258,6 +261,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 container.prefs.quickAction3.first()
             )
             val addMenuConfig = container.prefs.addMenuConfig.first()
+            val hiddenTabs = container.prefs.hiddenTabs.first()
             // Seed the recalc baseline for existing users / first launch so the nudge only fires
             // after a genuine change from here on, never immediately on open.
             val storedSignature = container.prefs.lastRecalcGoalSignature.first()
@@ -331,6 +335,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     diskRead = addMenuConfig,
                 ),
                 addMenuLoaded = menuOnScreen.addMenuLoaded,
+                hiddenTabs = hiddenTabs,
                 workoutSplit = workoutPreferences.split,
                 workoutRpeScale = workoutPreferences.rpeScale,
                 localModelStates = container.localModels.states.value,
@@ -601,6 +606,15 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         _ui.value = _ui.value.copy(addMenuConfig = sanitized, addMenuLoaded = true)
         viewModelScope.launch {
             container.prefs.setAddMenuConfig(sanitized)
+        }
+    }
+
+    fun setTabHidden(route: String, hidden: Boolean) {
+        if (route !in TabBarSettings.Hideable) return
+        val updated = if (hidden) _ui.value.hiddenTabs + route else _ui.value.hiddenTabs - route
+        _ui.value = _ui.value.copy(hiddenTabs = updated)
+        viewModelScope.launch {
+            container.prefs.setHiddenTabs(updated)
         }
     }
 

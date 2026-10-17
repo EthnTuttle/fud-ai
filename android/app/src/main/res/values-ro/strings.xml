@@ -778,6 +778,9 @@
     <string name="settings_calc_micro_citation">Estimările se bazează pe datele de antrenare ale modelului AI subiacent (USDA FoodData Central, etichetele producătorilor și literatura științifică). Precizia variază în funcție de aliment, vizibilitatea dimensiunii porției și modelul furnizorului. Verifică întotdeauna etichetele alimentelor pe care le înregistrezi frecvent.</string>
     <string name="settings_add_menu_standalone">Metode independente</string>
     <string name="settings_add_menu_standalone_footer">Aceste metode apar direct sub +, în afara oricărui grup.</string>
+    <string name="settings_tab_bar">Bara de file</string>
+    <string name="settings_tab_bar_section">Afișează în bara de file</string>
+    <string name="settings_tab_bar_footer">Acasă și Setări sunt afișate mereu.</string>
     <string name="about_litert_notices">Notificări privind terții pentru LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Notificările privind terții pentru LiteRT-LM nu au putut fi încărcate.</string>
     <string name="settings_model_source">Sursa modelului</string>

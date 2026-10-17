@@ -115,6 +115,9 @@ draft, read back the main items and total calories; never call a tool with
   without a capture draft. Awaiting save confirmation does not dismiss it.
 - Navigation is real: `open_screen` switches tabs and pushes the settings
   section; the assistant shrinks to a floating bubble so the screen is visible.
+  Tabs the user hid in Settings > App Settings > Tab Bar (Progress, Coach,
+  Workouts) return `unsupported` and are listed in `get_app_state` as
+  `hidden_screens`.
 - Food analysis, barcode lookup and workout parsing use the app's existing
   pipelines and AI settings (hosted analysis spends hosted actions as today).
 - Dates are the user's local calendar; `today`/`yesterday` accepted where noted.

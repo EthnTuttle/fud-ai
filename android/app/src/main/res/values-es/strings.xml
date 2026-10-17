@@ -775,6 +775,9 @@
     <string name="settings_calc_micro_citation">Las estimaciones se basan en los datos de entrenamiento del modelo de IA subyacente (USDA FoodData Central, etiquetas de fabricantes y literatura científica). La precisión varía según el alimento, la visibilidad del tamaño de la porción y el modelo del proveedor. Contrasta siempre las etiquetas de los alimentos que registras con frecuencia.</string>
     <string name="settings_add_menu_standalone">Métodos independientes</string>
     <string name="settings_add_menu_standalone_footer">Estos métodos aparecen directamente bajo +, fuera de cualquier grupo.</string>
+    <string name="settings_tab_bar">Barra de pestañas</string>
+    <string name="settings_tab_bar_section">Mostrar en la barra de pestañas</string>
+    <string name="settings_tab_bar_footer">Inicio y Ajustes se muestran siempre.</string>
     <string name="about_litert_notices">Avisos de terceros de LiteRT-LM</string>
     <string name="about_litert_notices_load_error">No se pudieron cargar los avisos de terceros de LiteRT-LM.</string>
     <string name="settings_model_source">Fuente del modelo</string>

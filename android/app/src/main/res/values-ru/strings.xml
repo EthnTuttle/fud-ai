@@ -1038,6 +1038,9 @@
     <string name="copy_meal_format">Копировать: %1$s</string>
     <string name="settings_add_menu_standalone">Отдельные способы</string>
     <string name="settings_add_menu_standalone_footer">Эти способы отображаются прямо в меню «+», вне групп.</string>
+    <string name="settings_tab_bar">Панель вкладок</string>
+    <string name="settings_tab_bar_section">Показывать на панели вкладок</string>
+    <string name="settings_tab_bar_footer">«Главная» и «Настройки» показываются всегда.</string>
     <string name="settings_fasting_tracking">Отслеживание голодания</string>
     <string name="settings_fasting_goal">Цель голодания по умолчанию</string>
     <string name="settings_fasting_goal_value">%1$d часов</string>
