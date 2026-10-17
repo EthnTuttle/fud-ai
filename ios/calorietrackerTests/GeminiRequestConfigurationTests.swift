@@ -14,6 +14,28 @@ struct GeminiRequestConfigurationTests {
         #expect(GeminiRequestConfiguration.thinkingLevel(for: " Gemini-3.5-Flash-Lite ") == "minimal")
     }
 
+    @Test func latestAliasesKeepAFastThinkingLevel() throws {
+        // Versionless aliases must not fall through to Gemini's default high thinking (#357/#358).
+        #expect(GeminiRequestConfiguration.thinkingLevel(for: "gemini-flash-lite-latest") == "minimal")
+        #expect(GeminiRequestConfiguration.thinkingLevel(for: "models/gemini-flash-lite-latest") == "minimal")
+        #expect(GeminiRequestConfiguration.thinkingLevel(for: "gemini-flash-latest") == "low")
+        #expect(GeminiRequestConfiguration.thinkingLevel(for: "models/gemini-flash-latest") == "low")
+        #expect(GeminiRequestConfiguration.thinkingLevel(for: " Gemini-Flash-Latest ") == "low")
+
+        let config = try #require(GeminiRequestConfiguration.generationConfig(
+            model: "gemini-flash-latest", maxOutputTokens: 1024, jsonResponse: true
+        ))
+        #expect((config["thinkingConfig"] as? [String: Any])?["thinkingLevel"] as? String == "low")
+    }
+
+    @Test func latestAliasesAreOptInPresetsAndNotTheDefault() {
+        #expect(AIProvider.gemini.models.contains("gemini-flash-latest"))
+        #expect(AIProvider.gemini.models.contains("gemini-flash-lite-latest"))
+        #expect(AIProvider.gemini.defaultModel == "gemini-3.5-flash-lite")
+        #expect(AIProvider.gemini.supportedModelOrDefault("gemini-flash-latest") == "gemini-flash-latest")
+        #expect(AIProvider.upgradedLegacyGeminiModel("gemini-flash-latest") == nil)
+    }
+
     @Test func preGemini3AndUnknownModelsSendNoThinkingLevel() {
         for model in ["gemini-2.5-flash", "gemini-2.0-flash-lite", "gemma-3-27b-it", "custom-proxy-model", "gemini-", ""] {
             #expect(GeminiRequestConfiguration.thinkingLevel(for: model) == nil, "\(model)")

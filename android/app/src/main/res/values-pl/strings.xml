@@ -551,6 +551,7 @@
     <string name="settings_clear_key">Wyczyść klucz</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Starsze pomiary wagi</string>
     <string name="settings_clear_food_log">Wyczyść dziennik jedzenia</string>
     <string name="settings_delete_all_data">Usuń wszystkie dane</string>
     <string name="storage_title">Pamięć</string>
@@ -829,4 +830,5 @@
     <string name="photo_save_permission_denied">Odmowa dostępu do zdjęć</string>
     <string name="settings_save_photos_to_gallery">Zapisuj w Zdjęciach</string>
     <string name="settings_save_photos_to_gallery_subtitle">Zapisuj też zdjęcia posiłków w galerii podczas logowania</string>
+    <string name="label_date">Data</string>
 </resources>

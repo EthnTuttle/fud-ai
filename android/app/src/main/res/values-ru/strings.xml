@@ -551,6 +551,7 @@
     <string name="settings_clear_key">Очистить ключ</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Старые записи веса</string>
     <string name="settings_clear_food_log">Очистить дневник питания</string>
     <string name="settings_delete_all_data">Удалить все данные</string>
     <string name="storage_title">Хранилище</string>

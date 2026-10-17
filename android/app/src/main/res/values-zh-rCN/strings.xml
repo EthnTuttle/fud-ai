@@ -544,6 +544,7 @@
     <string name="settings_clear_key">清除密钥</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">较早的体重记录</string>
     <string name="settings_clear_food_log">清除饮食记录</string>
     <string name="settings_delete_all_data">删除所有数据</string>
     <string name="storage_title">存储空间</string>
@@ -821,4 +822,5 @@
     <string name="settings_save_photos_to_gallery">保存到照片</string>
     <string name="settings_save_photos_to_gallery_subtitle">记录时也将餐食照片保存到相册</string>
     <string name="settings_other_nutrients_note">与卡路里、蛋白质、碳水化合物和脂肪目标分开。</string>
+    <string name="label_date">日期</string>
 </resources>

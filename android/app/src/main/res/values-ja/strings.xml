@@ -544,6 +544,7 @@
     <string name="settings_clear_key">キーを消去</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">過去の体重記録</string>
     <string name="settings_clear_food_log">食事ログを消去</string>
     <string name="settings_delete_all_data">すべてのデータを削除</string>
     <string name="storage_title">ストレージ</string>
@@ -821,4 +822,5 @@
     <string name="settings_save_photos_to_gallery">写真に保存</string>
     <string name="settings_save_photos_to_gallery_subtitle">記録時に食事写真をギャラリーにも保存</string>
     <string name="settings_other_nutrients_note">カロリー・タンパク質・炭水化物・脂質の目標とは別です。</string>
+    <string name="label_date">日付</string>
 </resources>
