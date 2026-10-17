@@ -75,6 +75,7 @@
     <string name="product_labels">标签</string>
     <string name="product_categories">类别</string>
     <string name="product_ingredient_label">配料表</string>
+    <string name="product_possible_allergen">可能的过敏原：%1$s</string>
     <string name="product_info_settings_show">显示产品信息</string>
     <string name="product_info_settings_fields">显示的详细信息</string>
     <string name="product_info_settings_footer">显示在条形码扫描食物的审核和编辑页面末尾。过敏原检查不受影响，只要设置了过敏原敏感项就会始终显示。</string>

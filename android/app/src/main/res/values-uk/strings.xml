@@ -87,6 +87,7 @@
     <string name="product_labels">Мітки</string>
     <string name="product_categories">Категорії</string>
     <string name="product_ingredient_label">Етикетка інгредієнтів</string>
+    <string name="product_possible_allergen">Можливий алерген: %1$s</string>
     <string name="product_info_settings_show">Показувати інформацію про продукт</string>
     <string name="product_info_settings_fields">Відображувані відомості</string>
     <string name="product_info_settings_footer">Показується в кінці екранів перегляду та редагування продуктів, відсканованих за штрихкодом. Перевірка алергенів від цього не залежить і завжди з\'являється, якщо у вас задано чутливість до алергенів.</string>

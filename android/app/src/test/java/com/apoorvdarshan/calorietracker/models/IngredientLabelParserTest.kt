@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.models
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -29,6 +30,14 @@ class IngredientLabelParserTest {
             texts("Water; sugar [cane, beet]; acid: citric acid")
         )
         assertEquals(listOf("小麦粉（国内製造、米国産）", "砂糖", "食塩"), texts("小麦粉（国内製造、米国産）、砂糖、食塩"))
+    }
+
+    @Test
+    fun splitsOnArabicCommasAndSemicolons() {
+        assertEquals(listOf("سكر", "ملح", "حليب"), texts("المكونات: سكر، ملح؛ حليب"))
+        val label = IngredientLabelParser.parse("سكر، ملح. قد يحتوي على مكسرات.")
+        assertEquals(listOf("سكر", "ملح"), label.items.map { it.text })
+        assertEquals(listOf("قد يحتوي على مكسرات."), label.notes.map { it.text })
     }
 
     @Test
@@ -65,6 +74,26 @@ class IngredientLabelParserTest {
     }
 
     @Test
+    fun paragraphFallbackKeepsTheSensitivityWarning() {
+        val single = IngredientLabelParser.parse("Whole milk", sensitivities = listOf("milk"))
+        assertTrue(single.items.isEmpty())
+        assertEquals("Whole milk", single.paragraph?.text)
+        assertEquals(true, single.paragraph?.matchesSensitivity)
+        assertEquals(false, IngredientLabelParser.parse("Whole milk").paragraph?.matchesSensitivity)
+
+        val overLimit = IngredientLabelParser.parse(
+            (1..61).joinToString(", ") { "item $it" } + ", skimmed _milk_ powder",
+            sensitivities = listOf("milk")
+        )
+        assertTrue(overLimit.items.isEmpty())
+        assertEquals(true, overLimit.paragraph?.matchesSensitivity)
+        assertEquals(listOf("milk"), overLimit.paragraph?.segments?.filter { it.isAllergen }?.map { it.text })
+
+        assertNull(IngredientLabelParser.parse("   ").paragraph)
+        assertNull(IngredientLabelParser.parse("Sugar, salt").paragraph)
+    }
+
+    @Test
     fun openFoodFactsAllergenMarkersBecomeEmphasizedSegments() {
         assertEquals(
             listOf(
@@ -98,6 +127,18 @@ class IngredientLabelParserTest {
         )
         assertEquals(listOf(false, true, true, true), items.map { it.matchesSensitivity })
         assertEquals(listOf(false, false), IngredientLabelParser.items("Sugar, whey").map { it.matchesSensitivity })
+    }
+
+    @Test
+    fun entriesWithEitherKindOfAllergenEmphasisAreAnnounced() {
+        val items = IngredientLabelParser.items(
+            "Sugar, skimmed _milk_ powder, hazelnuts",
+            sensitivities = listOf("nuts")
+        )
+        assertEquals(listOf(false, false, true), items.map { it.matchesSensitivity })
+        assertEquals(listOf(false, true, true), items.map { it.announcesAllergen })
+        assertEquals(true, IngredientLabelParser.parse("_Milk_").paragraph?.announcesAllergen)
+        assertEquals(false, IngredientLabelParser.parse("Water").paragraph?.announcesAllergen)
     }
 
     @Test
@@ -199,6 +240,24 @@ class IngredientLabelParserTest {
     }
 
     @Test
+    fun entitiesLeftInThePlainLabelStillMatchTheMarkup() {
+        assertEquals(
+            "Fish & chips, _milk_",
+            IngredientLabelParser.markingAllergens(
+                plain = "Fish &amp; chips, milk",
+                markup = "Fish &amp; chips, <span class=\"allergen\">milk</span>"
+            )
+        )
+        assertEquals(
+            "Fish &amp; chips, _milk_",
+            IngredientLabelParser.markingAllergens(
+                plain = "Fish &amp; chips, milk",
+                markup = "Fish &amp;amp; chips, <span class=\"allergen\">milk</span>"
+            )
+        )
+    }
+
+    @Test
     fun statementsAfterTheListBecomeNotesInsteadOfEntries() {
         // Live product 3228857000166: the precautionary statement must not read as ingredients.
         val label = IngredientLabelParser.parse(
@@ -231,6 +290,30 @@ class IngredientLabelParserTest {
         val footnote = IngredientLabelParser.parse("sugar, cocoa mass¹, salt.\n¹Rainforest Alliance Certified")
         assertEquals(listOf("sugar", "cocoa mass¹", "salt"), footnote.items.map { it.text })
         assertEquals(listOf("¹Rainforest Alliance Certified"), footnote.notes.map { it.text })
+    }
+
+    @Test
+    fun lowercaseStatementsAfterTheListStillBecomeNotes() {
+        val label = IngredientLabelParser.parse(
+            "Ingredients: sugar, salt. may contain nuts, soy.",
+            sensitivities = listOf("nuts")
+        )
+        assertEquals(listOf("sugar", "salt"), label.items.map { it.text })
+        assertEquals(listOf("may contain nuts, soy."), label.notes.map { it.text })
+        assertEquals(listOf(true), label.notes.map { it.matchesSensitivity })
+
+        val french = IngredientLabelParser.parse("sucre, sel. peut contenir des traces de lait, soja.")
+        assertEquals(listOf("sucre", "sel"), french.items.map { it.text })
+        assertEquals(listOf("peut contenir des traces de lait, soja."), french.notes.map { it.text })
+
+        // Matched without accents, as labels and OCR often drop them.
+        val polish = IngredientLabelParser.parse("cukier, sól. moze zawierac orzechy, mleko.")
+        assertEquals(listOf("cukier", "sól"), polish.items.map { it.text })
+        assertEquals(listOf("moze zawierac orzechy, mleko."), polish.notes.map { it.text })
+
+        // Other lowercase words after a full stop keep the list together.
+        assertEquals(listOf("Sugar", "vit. c", "salt"), texts("Sugar, vit. c, salt"))
+        assertEquals(listOf("flavouring. containing milk", "salt"), texts("flavouring. containing milk, salt"))
     }
 
     @Test

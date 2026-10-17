@@ -75,6 +75,7 @@
     <string name="product_labels">Etichete</string>
     <string name="product_categories">Categorii</string>
     <string name="product_ingredient_label">Lista de ingrediente</string>
+    <string name="product_possible_allergen">Posibil alergen: %1$s</string>
     <string name="product_info_settings_show">Afișează informații despre produs</string>
     <string name="product_info_settings_fields">Detalii afișate</string>
     <string name="product_info_settings_footer">Apar la finalul ecranelor de verificare și editare pentru alimentele scanate cu cod de bare. Verificarea alergenilor nu este afectată și apare mereu când ai setate sensibilități la alergeni.</string>

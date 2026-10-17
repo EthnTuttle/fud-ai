@@ -75,6 +75,7 @@
     <string name="product_labels">Selos</string>
     <string name="product_categories">Categorias</string>
     <string name="product_ingredient_label">Lista de ingredientes</string>
+    <string name="product_possible_allergen">Possível alérgeno: %1$s</string>
     <string name="product_info_settings_show">Mostrar informações do produto</string>
     <string name="product_info_settings_fields">Detalhes a mostrar</string>
     <string name="product_info_settings_footer">Aparece no fim das telas de revisão e edição de alimentos escaneados por código de barras. A verificação de alérgenos não é afetada e sempre aparece quando você tem sensibilidades a alérgenos definidas.</string>

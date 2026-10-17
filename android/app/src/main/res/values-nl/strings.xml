@@ -75,6 +75,7 @@
     <string name="product_labels">Keurmerken</string>
     <string name="product_categories">Categorieën</string>
     <string name="product_ingredient_label">Ingrediëntenlijst</string>
+    <string name="product_possible_allergen">Mogelijk allergeen: %1$s</string>
     <string name="product_info_settings_show">Productinformatie tonen</string>
     <string name="product_info_settings_fields">Te tonen details</string>
     <string name="product_info_settings_footer">Wordt onderaan de controle- en bewerkschermen getoond voor voedingsmiddelen die met een barcode zijn gescand. De allergenencontrole verandert niet en verschijnt altijd als je allergeengevoeligheden hebt ingesteld.</string>

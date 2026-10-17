@@ -88,7 +88,8 @@ extension ProductInfoField {
 /// Allergens Open Food Facts flags are bold; entries matching the user's
 /// allergen sensitivities get a warning icon. Statements after the list
 /// ("May contain …") stay sentences below it, and labels that do not split into
-/// a list stay a paragraph.
+/// a list stay a paragraph with the same warning. VoiceOver announces entries
+/// with either kind of allergen emphasis as possible allergens.
 private struct IngredientLabelView: View {
     let title: LocalizedStringKey
     let text: String
@@ -101,10 +102,9 @@ private struct IngredientLabelView: View {
                 .font(.subheadline.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
             if label.items.isEmpty {
-                Text(Self.attributed(IngredientLabelParser.segments(in: text.trimmingCharacters(in: .whitespacesAndNewlines))))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if let paragraph = label.paragraph {
+                    row(for: paragraph, bulleted: false)
+                }
             } else {
                 ForEach(Array(label.items.enumerated()), id: \.offset) { _, item in
                     row(for: item)
@@ -137,9 +137,7 @@ private struct IngredientLabelView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            item.matchesSensitivity
-                ? "\(AllergenAssessment.possibleAllergen.displayName): \(item.text)"
-                : item.text
+            item.announcesAllergen ? Text("Possible allergen: \(item.text)") : Text(verbatim: item.text)
         )
     }
 

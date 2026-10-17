@@ -28,6 +28,14 @@ struct IngredientLabelParserTests {
     }
 
     @Test
+    func splitsOnArabicCommasAndSemicolons() {
+        #expect(texts("المكونات: سكر، ملح؛ حليب") == ["سكر", "ملح", "حليب"])
+        let label = IngredientLabelParser.parse("سكر، ملح. قد يحتوي على مكسرات.")
+        #expect(label.items.map(\.text) == ["سكر", "ملح"])
+        #expect(label.notes.map(\.text) == ["قد يحتوي على مكسرات."])
+    }
+
+    @Test
     func keepsDecimalCommasInsidePercentages() {
         #expect(texts("Zucker, Magermilchpulver 8,7%, Salz") == ["Zucker", "Magermilchpulver 8,7%", "Salz"])
     }
@@ -61,6 +69,26 @@ struct IngredientLabelParserTests {
     }
 
     @Test
+    func paragraphFallbackKeepsTheSensitivityWarning() {
+        let single = IngredientLabelParser.parse("Whole milk", sensitivities: ["milk"])
+        #expect(single.items.isEmpty)
+        #expect(single.paragraph?.text == "Whole milk")
+        #expect(single.paragraph?.matchesSensitivity == true)
+        #expect(IngredientLabelParser.parse("Whole milk").paragraph?.matchesSensitivity == false)
+
+        let overLimit = IngredientLabelParser.parse(
+            (1...61).map { "item \($0)" }.joined(separator: ", ") + ", skimmed _milk_ powder",
+            sensitivities: ["milk"]
+        )
+        #expect(overLimit.items.isEmpty)
+        #expect(overLimit.paragraph?.matchesSensitivity == true)
+        #expect(overLimit.paragraph?.segments.filter(\.isAllergen).map(\.text) == ["milk"])
+
+        #expect(IngredientLabelParser.parse("   ").paragraph == nil)
+        #expect(IngredientLabelParser.parse("Sugar, salt").paragraph == nil)
+    }
+
+    @Test
     func openFoodFactsAllergenMarkersBecomeEmphasizedSegments() {
         #expect(IngredientLabelParser.segments(in: "skimmed _milk_ powder") == [
             .init(text: "skimmed ", isAllergen: false),
@@ -85,6 +113,18 @@ struct IngredientLabelParserTests {
         )
         #expect(items.map(\.matchesSensitivity) == [false, true, true, true])
         #expect(IngredientLabelParser.items(from: "Sugar, whey").map(\.matchesSensitivity) == [false, false])
+    }
+
+    @Test
+    func entriesWithEitherKindOfAllergenEmphasisAreAnnounced() {
+        let items = IngredientLabelParser.items(
+            from: "Sugar, skimmed _milk_ powder, hazelnuts",
+            sensitivities: ["nuts"]
+        )
+        #expect(items.map(\.matchesSensitivity) == [false, false, true])
+        #expect(items.map(\.announcesAllergen) == [false, true, true])
+        #expect(IngredientLabelParser.parse("_Milk_").paragraph?.announcesAllergen == true)
+        #expect(IngredientLabelParser.parse("Water").paragraph?.announcesAllergen == false)
     }
 
     @Test
@@ -158,6 +198,18 @@ struct IngredientLabelParserTests {
     }
 
     @Test
+    func entitiesLeftInThePlainLabelStillMatchTheMarkup() {
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "Fish &amp; chips, milk",
+            markup: #"Fish &amp; chips, <span class="allergen">milk</span>"#
+        ) == "Fish & chips, _milk_")
+        #expect(IngredientLabelParser.markingAllergens(
+            plain: "Fish &amp; chips, milk",
+            markup: #"Fish &amp;amp; chips, <span class="allergen">milk</span>"#
+        ) == "Fish &amp; chips, _milk_")
+    }
+
+    @Test
     func statementsAfterTheListBecomeNotesInsteadOfEntries() {
         // Live product 3228857000166: the precautionary statement must not read as ingredients.
         let label = IngredientLabelParser.parse(
@@ -186,6 +238,30 @@ struct IngredientLabelParserTests {
         let footnote = IngredientLabelParser.parse("sugar, cocoa mass¹, salt.\n¹Rainforest Alliance Certified")
         #expect(footnote.items.map(\.text) == ["sugar", "cocoa mass¹", "salt"])
         #expect(footnote.notes.map(\.text) == ["¹Rainforest Alliance Certified"])
+    }
+
+    @Test
+    func lowercaseStatementsAfterTheListStillBecomeNotes() {
+        let label = IngredientLabelParser.parse(
+            "Ingredients: sugar, salt. may contain nuts, soy.",
+            sensitivities: ["nuts"]
+        )
+        #expect(label.items.map(\.text) == ["sugar", "salt"])
+        #expect(label.notes.map(\.text) == ["may contain nuts, soy."])
+        #expect(label.notes.map(\.matchesSensitivity) == [true])
+
+        let french = IngredientLabelParser.parse("sucre, sel. peut contenir des traces de lait, soja.")
+        #expect(french.items.map(\.text) == ["sucre", "sel"])
+        #expect(french.notes.map(\.text) == ["peut contenir des traces de lait, soja."])
+
+        // Matched without accents, as labels and OCR often drop them.
+        let polish = IngredientLabelParser.parse("cukier, sól. moze zawierac orzechy, mleko.")
+        #expect(polish.items.map(\.text) == ["cukier", "sól"])
+        #expect(polish.notes.map(\.text) == ["moze zawierac orzechy, mleko."])
+
+        // Other lowercase words after a full stop keep the list together.
+        #expect(texts("Sugar, vit. c, salt") == ["Sugar", "vit. c", "salt"])
+        #expect(texts("flavouring. containing milk, salt") == ["flavouring. containing milk", "salt"])
     }
 
     @Test

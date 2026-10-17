@@ -75,6 +75,7 @@
     <string name="product_labels">Labels</string>
     <string name="product_categories">Catégories</string>
     <string name="product_ingredient_label">Liste des ingrédients</string>
+    <string name="product_possible_allergen">Allergène possible : %1$s</string>
     <string name="product_info_settings_show">Afficher les informations sur le produit</string>
     <string name="product_info_settings_fields">Détails à afficher</string>
     <string name="product_info_settings_footer">Affichées à la fin des écrans de vérification et de modification des aliments scannés par code-barres. La vérification des allergènes n\'est pas concernée et apparaît toujours lorsque vous avez défini des sensibilités aux allergènes.</string>

@@ -75,6 +75,7 @@
     <string name="product_labels">ラベル</string>
     <string name="product_categories">カテゴリ</string>
     <string name="product_ingredient_label">原材料表示</string>
+    <string name="product_possible_allergen">アレルゲンの可能性: %1$s</string>
     <string name="product_info_settings_show">製品情報を表示</string>
     <string name="product_info_settings_fields">表示する項目</string>
     <string name="product_info_settings_footer">バーコードでスキャンした食品の確認画面と編集画面の最後に表示されます。アレルゲンチェックには影響せず、アレルゲン感受性を設定している場合は常に表示されます。</string>
