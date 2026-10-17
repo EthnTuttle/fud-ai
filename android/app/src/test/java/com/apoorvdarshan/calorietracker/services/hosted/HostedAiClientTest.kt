@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.SocketPolicy
 import okhttp3.OkHttpClient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -174,6 +175,19 @@ class HostedAiClientTest {
         assertTrue("body was never read", recorder.threads.isNotEmpty())
         assertFalse("body read on the caller's thread", recorder.readOnCaller)
         http.dispatcher.executorService.shutdown()
+    }
+
+    @Test
+    fun quotaHeadersStillApplyWhenTheBodyIsCutOff() = runBlocking {
+        server.enqueue(
+            quotaHeaders(MockResponse().setResponseCode(200).setBody("""{"text":"${"x".repeat(4_000)}"}"""), used = 7)
+                .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY)
+        )
+
+        val error = expectHosted { client.generate("x", emptyList(), null, jsonResponse = false) }
+
+        assertTrue("expected a network error, got $error", error is AiError.Network)
+        assertEquals(7, quota.snapshot.value?.dailyUsed)
     }
 
     private suspend fun expectHosted(block: suspend () -> Unit): AiError {

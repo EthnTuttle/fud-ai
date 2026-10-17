@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services.hosted
 import com.apoorvdarshan.calorietracker.services.SecureHttpClient
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
+import com.apoorvdarshan.calorietracker.services.ai.BodyReadException
 import com.apoorvdarshan.calorietracker.services.ai.awaitBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -156,6 +157,11 @@ class HostedAiClient(
             val response = try {
                 client.newCall(request()).awaitBody()
             } catch (io: IOException) {
+                // The Worker charges once it sends the headers, so keep the quota they report
+                // even when the body was cut off afterwards.
+                if (applyQuota && io is BodyReadException) {
+                    HostedQuotaSnapshot.fromHeaders { name -> io.headers[name] }?.let { s -> quota.apply(s, sequence) }
+                }
                 throw AiError.Network(io)
             }
             val outcome = response.let {

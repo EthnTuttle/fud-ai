@@ -94,6 +94,16 @@ internal class BufferedResponse(val code: Int, val headers: Headers, val body: S
 }
 
 /**
+ * A body read that failed after the status line and headers had arrived. Callers that act on
+ * response headers (the hosted quota) can still read them from here.
+ */
+internal class BodyReadException(
+    val code: Int,
+    val headers: Headers,
+    cause: IOException
+) : IOException(cause.message, cause)
+
+/**
  * Like [await], but reads the whole body on OkHttp's callback thread before resuming, so a caller
  * on the main dispatcher never touches the socket (Android throws NetworkOnMainThreadException
  * when a body read has to wait on the network). The coroutine stays suspended until the body is
@@ -113,7 +123,14 @@ internal suspend fun Call.awaitBody(): BufferedResponse = suspendCancellableCoro
             // Anything thrown out of this callback would crash OkHttp's thread instead of
             // reaching the caller, so failures are handed to the continuation.
             val result = runCatching {
-                response.use { BufferedResponse(it.code, it.headers, it.body.string()) }
+                response.use {
+                    val body = try {
+                        it.body.string()
+                    } catch (e: IOException) {
+                        throw BodyReadException(it.code, it.headers, e)
+                    }
+                    BufferedResponse(it.code, it.headers, body)
+                }
             }
             if (cont.isActive) cont.resumeWith(result)
         }
