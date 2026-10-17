@@ -21,4 +21,6 @@ else
 fi
 
 # Fail before the expensive build if installation did not provide a usable tool.
+# Clear the cache first so a lookup that failed just before the last wait is not reused.
+xcrun --kill-cache
 xcrun metal --version
