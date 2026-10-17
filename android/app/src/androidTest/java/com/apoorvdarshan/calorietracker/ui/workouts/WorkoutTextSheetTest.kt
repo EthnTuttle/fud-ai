@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
@@ -17,6 +18,18 @@ class WorkoutTextSheetTest {
     @get:Rule val compose = createComposeRule()
     private val container get() = (InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as FudAIApp).container
 
+    /**
+     * Typing opens the soft keyboard, and the sheet's imePadding keeps moving its
+     * content while the keyboard animates in. The Compose test clock does not wait
+     * for that system animation, so a tap injected at a button's last position can
+     * land beside it and be dropped (CI failed this way on Add to diary, Continue
+     * and Analyze). A button pressed right after typing is activated through its
+     * click action instead, the way TalkBack does, once it is shown and enabled.
+     */
+    private fun SemanticsNodeInteraction.pressAfterTyping() {
+        performScrollTo().assertIsEnabled().performSemanticsAction(SemanticsActions.OnClick)
+    }
+
     @Test fun descriptionPreviewEditAndExplicitAdd() {
         var saved: WorkoutTextDraft? = null
         var submitted = ""
@@ -31,12 +44,12 @@ class WorkoutTextSheetTest {
             }
         }
         compose.onNodeWithText("Workout description").performTextInput("3 hours of soccer")
-        compose.onNodeWithText("Analyze").performScrollTo().performClick()
+        compose.onNodeWithText("Analyze").pressAfterTyping()
         compose.waitUntil { submitted.isNotEmpty() }
         compose.onNodeWithText("Review workout").assertExists()
         compose.runOnIdle { assertNull(saved) }
         compose.onNodeWithText("Minutes").performScrollTo().performTextReplacement("20")
-        compose.onNodeWithText("Add to diary").performScrollTo().performClick()
+        compose.onNodeWithText("Add to diary").pressAfterTyping()
         compose.waitUntil { saved != null }
         assertEquals("20", saved!!.exercises.single().minutes)
         assertEquals("3 hours of soccer", submitted)
@@ -82,7 +95,7 @@ class WorkoutTextSheetTest {
         compose.onNodeWithText("Barbell").performScrollTo().performClick()
         compose.waitUntil(5000) { requests.size == 2 }
         compose.onNodeWithText("Your answer").performScrollTo().performTextInput("40 kg")
-        compose.onNodeWithText("Continue").performScrollTo().performClick()
+        compose.onNodeWithText("Continue").pressAfterTyping()
         compose.waitUntil(5000) { requests.size == 3 }
         compose.onNodeWithText("Review workout").assertExists()
         val context = kotlinx.serialization.json.Json.parseToJsonElement(requests.last()).jsonObject
@@ -154,7 +167,7 @@ class WorkoutTextSheetTest {
             }
         }
         compose.onNodeWithText("Workout description").performTextInput("soccer")
-        compose.onNodeWithText("Analyze").performScrollTo().performClick()
+        compose.onNodeWithText("Analyze").pressAfterTyping()
         compose.onNodeWithText("How many minutes?").performScrollTo().assertExists()
         compose.onNodeWithText("soccer").assertExists()
         compose.onNodeWithText("Add to diary").assertDoesNotExist()
