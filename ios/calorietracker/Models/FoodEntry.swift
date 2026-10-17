@@ -691,17 +691,14 @@ struct FoodEntry: Identifiable, Codable {
 
     /// Count of extra photos for list-row "+N" badges without loading full JPEG bytes.
     var listThumbnailAdditionalPhotoCount: Int {
-        if !additionalImageFilenames.isEmpty {
-            return additionalImageFilenames.count
-        }
-        return additionalImageData.count
+        max(photoSources.count - 1, 0)
     }
 
     /// New entry for the given log date (new id), copying nutrition and media from this entry.
     /// Uses current time's meal type by default.
     func duplicatedForLogging(at logDate: Date, mealType: MealType = .currentMeal) -> FoodEntry {
         let resolvedMealType = mealType
-        let copiedPhotos = allImageData
+        let copiedPhotos = parentImageData
         return FoodEntry(
             name: name,
             calories: calories,

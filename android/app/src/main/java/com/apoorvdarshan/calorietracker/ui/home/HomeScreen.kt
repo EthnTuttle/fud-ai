@@ -181,7 +181,8 @@ import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
 import com.apoorvdarshan.calorietracker.ui.components.FullScreenImageViewer
-import com.apoorvdarshan.calorietracker.ui.components.rememberFoodThumbnail
+import com.apoorvdarshan.calorietracker.ui.components.rememberFoodThumbnailCandidate
+import com.apoorvdarshan.calorietracker.ui.components.foodPhotoViewerInitialIndex
 import com.apoorvdarshan.calorietracker.ui.components.MacroCard
 import com.apoorvdarshan.calorietracker.ui.components.DateWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialog
@@ -2453,7 +2454,8 @@ private fun FoodRow(
     val container = (ctx.applicationContext as com.apoorvdarshan.calorietracker.FudAIApp).container
     val scope = rememberCoroutineScope()
     val hasPhotos = entry.allImageFilenames.isNotEmpty()
-    val bitmap = rememberFoodThumbnail(container.imageStore, entry.allImageFilenames)
+    val thumbnail = rememberFoodThumbnailCandidate(container.imageStore, entry.thumbnailImageFilenames)
+    val bitmap = thumbnail?.second
     var previewPhotos by remember { mutableStateOf<Pair<List<android.graphics.Bitmap>, Int>?>(null) }
     var isLoadingPreview by remember { mutableStateOf(false) }
     // iOS layout: large 76dp square thumb · column with (Name + heart on left,
@@ -2505,11 +2507,17 @@ private fun FoodRow(
                                 isLoadingPreview = true
                                 val loaded = withContext(Dispatchers.IO) {
                                     entry.allImageFilenames.mapNotNull { filename ->
-                                        container.imageStore.loadForViewer(filename)
+                                        container.imageStore.loadForViewer(filename)?.let { filename to it }
                                     }
                                 }
                                 isLoadingPreview = false
-                                if (loaded.isNotEmpty()) previewPhotos = loaded to 0
+                                if (loaded.isNotEmpty()) {
+                                    val initialIndex = foodPhotoViewerInitialIndex(
+                                        loaded.map { (filename, _) -> filename },
+                                        thumbnail?.first
+                                    )
+                                    previewPhotos = loaded.map { (_, photo) -> photo } to initialIndex
+                                }
                             }
                         }
                     } else {

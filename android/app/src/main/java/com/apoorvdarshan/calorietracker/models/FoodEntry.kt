@@ -140,6 +140,15 @@ data class FoodEntry(
     val allImageFilenames: List<String>
         get() = (listOfNotNull(imageFilename) + additionalImageFilenames + ingredients.flatMap { it.allImageFilenames }).distinct()
 
+    /** Ordered for thumbnail fallback without changing chronological gallery order. */
+    val thumbnailImageFilenames: List<String>
+        get() {
+            val images = allImageFilenames
+            if (!progressiveMeal) return images
+            val finalMealImage = additionalImageFilenames.lastOrNull() ?: return images
+            return listOf(finalMealImage) + images.filterNot { it == finalMealImage }
+        }
+
     /** Remove gallery photos everywhere they occur without changing the logged food. */
     fun withoutImages(filenames: Set<String>): FoodEntry {
         if (allImageFilenames.none { it in filenames }) return this
