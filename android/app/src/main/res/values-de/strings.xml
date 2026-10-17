@@ -478,6 +478,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1J</string>
     <string name="progress_range_all">Alle</string>
+    <string name="progress_previous_period">Vorheriger Zeitraum</string>
+    <string name="progress_next_period">Nächster Zeitraum</string>
 
     <string name="progress_weight_section">Gewicht</string>
     <string name="progress_log_weight">Gewicht erfassen</string>
@@ -493,6 +495,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorien</string>
+    <string name="progress_include_today">Heute einbeziehen</string>
+    <string name="progress_include_today_caption">Kaloriendiagramm und Nährwert-Durchschnitte</string>
     <string name="progress_avg_format">Ø: %1$,d kcal</string>
     <string name="progress_no_food">Noch kein Essen erfasst</string>
 
@@ -699,6 +703,7 @@
     <string name="progress_metric_weight">Gewicht</string>
     <string name="progress_metric_body_fat">Körperfett</string>
     <string name="progress_metric_workouts">Training</string>
+    <string name="progress_metric_steps">Schritte</string>
     <string name="progress_workout_history">Trainingsverlauf</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d berechneter Verbrauch · zum Anzeigen oder Löschen tippen</item>
@@ -714,6 +719,23 @@
     <string name="progress_workout_stat_days">Tage</string>
     <string name="progress_workout_no_range">Keine berechneten Trainingsverbräuche in diesem Zeitraum</string>
     <string name="progress_workout_chart_description">Diagramm des Trainingsverbrauchs von %1$s bis %2$s. Gesamt %3$d Kilokalorien; zuletzt %4$d Kilokalorien.</string>
+    <string name="workout_filter_source">Quelle</string>
+    <string name="workout_source_dataset">Datenbank</string>
+    <string name="workout_source_saved">Gespeichert</string>
+    <string name="workout_source_mine">Meine</string>
+    <string name="workout_mine_empty_title">Noch keine eigenen Übungen</string>
+    <string name="workout_mine_empty_subtitle">Von dir erstellte Übungen erscheinen hier.</string>
+    <string name="workout_exercise_take_photo">Foto aufnehmen</string>
+    <string name="workout_exercise_camera_denied_title">Kamerazugriff erforderlich</string>
+    <string name="workout_exercise_camera_denied_message">Erlaube Fud AI in den Systemeinstellungen den Kamerazugriff, um Übungsfotos aufzunehmen.</string>
+    <string name="progress_steps_stat_total">Gesamt</string>
+    <string name="progress_steps_stat_average">Durchschnitt</string>
+    <string name="progress_steps_stat_best_day">Bester Tag</string>
+    <string name="progress_steps_no_range">Keine Schrittdaten in diesem Zeitraum</string>
+    <string name="progress_steps_footnote">Tägliche Schrittsummen aus Health Connect.</string>
+    <string name="progress_steps_weekly_note">Die Balken zeigen die durchschnittlichen täglichen Schritte pro Woche.</string>
+    <string name="progress_steps_history_note">Health Connect teilt Schritte nur ab etwa 30 Tagen vor der Verbindung mit Fud AI, daher können ältere Tage fehlen.</string>
+    <string name="progress_steps_chart_description">Schrittdiagramm von %1$s bis %2$s. Insgesamt %3$s Schritte; bester Tag %4$s Schritte.</string>
     <string name="progress_log_body_fat">Körperfett protokollieren</string>
     <string name="progress_log_first_body_fat">Erfasse deinen ersten Körperfettwert, um Trends zu sehen</string>
     <string name="progress_log_body_fat_title">Körperfett protokollieren</string>

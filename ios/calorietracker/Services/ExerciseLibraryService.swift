@@ -67,7 +67,7 @@ struct ExerciseLibraryService {
         sort: ExerciseLibrarySort,
         searchText: String
     ) -> [ExerciseLibraryItem] {
-        let filteredItems = exercises.filter { item in
+        let rankedItems: [(item: ExerciseLibraryItem, relevance: Int)] = exercises.compactMap { item in
             let matchesLevel = levels.isEmpty || levels.contains(item.rawLevel)
             let matchesRawEquipment = rawEquipment.isEmpty || rawEquipment.contains(item.rawEquipment)
             let matchesPrimaryMuscle = primaryMuscles.isEmpty || item.primaryMuscles.contains { primaryMuscles.contains($0) }
@@ -75,44 +75,55 @@ struct ExerciseLibraryService {
             let matchesForce = forces.isEmpty || forces.contains(item.force)
             let matchesMechanic = mechanics.isEmpty || mechanics.contains(item.mechanic)
             let matchesCategory = categories.isEmpty || categories.contains(item.category)
-            let matchesSearch = ExerciseSearchMatcher.matches(
-                searchableText: item.searchableText,
-                query: searchText,
-                exerciseID: item.id
-            )
 
-            return matchesLevel &&
+            guard matchesLevel &&
                 matchesRawEquipment &&
                 matchesPrimaryMuscle &&
                 matchesSecondaryMuscle &&
                 matchesForce &&
                 matchesMechanic &&
-                matchesCategory &&
-                matchesSearch
+                matchesCategory,
+                let relevance = ExerciseSearchMatcher.relevance(of: item, query: searchText)
+            else { return nil }
+            return (item, relevance)
         }
 
-        return filteredItems.sorted { lhs, rhs in
-            switch sort {
-            case .name:
-                return lhs.name < rhs.name
-            case .level:
-                if Self.levelSortRank(lhs.rawLevel) == Self.levelSortRank(rhs.rawLevel) {
-                    return lhs.name < rhs.name
-                }
-                return Self.levelSortRank(lhs.rawLevel) < Self.levelSortRank(rhs.rawLevel)
-            case .primaryMuscles:
-                return Self.compare(lhs.primaryMusclesTitle, rhs.primaryMusclesTitle, lhsName: lhs.name, rhsName: rhs.name)
-            case .secondaryMuscles:
-                return Self.compare(lhs.secondaryMusclesTitle, rhs.secondaryMusclesTitle, lhsName: lhs.name, rhsName: rhs.name)
-            case .category:
-                return Self.compare(lhs.category, rhs.category, lhsName: lhs.name, rhsName: rhs.name)
-            case .force:
-                return Self.compare(lhs.force, rhs.force, lhsName: lhs.name, rhsName: rhs.name)
-            case .mechanic:
-                return Self.compare(lhs.mechanic, rhs.mechanic, lhsName: lhs.name, rhsName: rhs.name)
-            case .rawEquipment:
-                return Self.compare(lhs.rawEquipment, rhs.rawEquipment, lhsName: lhs.name, rhsName: rhs.name)
+        // While searching, closer name matches come first; the chosen sort orders
+        // items within the same relevance tier. An empty query ranks everything 0.
+        return rankedItems.sorted { lhs, rhs in
+            if lhs.relevance != rhs.relevance {
+                return lhs.relevance < rhs.relevance
             }
+            return Self.areInIncreasingOrder(lhs.item, rhs.item, sort: sort)
+        }
+        .map(\.item)
+    }
+
+    private static func areInIncreasingOrder(
+        _ lhs: ExerciseLibraryItem,
+        _ rhs: ExerciseLibraryItem,
+        sort: ExerciseLibrarySort
+    ) -> Bool {
+        switch sort {
+        case .name:
+            return lhs.name < rhs.name
+        case .level:
+            if levelSortRank(lhs.rawLevel) == levelSortRank(rhs.rawLevel) {
+                return lhs.name < rhs.name
+            }
+            return levelSortRank(lhs.rawLevel) < levelSortRank(rhs.rawLevel)
+        case .primaryMuscles:
+            return compare(lhs.primaryMusclesTitle, rhs.primaryMusclesTitle, lhsName: lhs.name, rhsName: rhs.name)
+        case .secondaryMuscles:
+            return compare(lhs.secondaryMusclesTitle, rhs.secondaryMusclesTitle, lhsName: lhs.name, rhsName: rhs.name)
+        case .category:
+            return compare(lhs.category, rhs.category, lhsName: lhs.name, rhsName: rhs.name)
+        case .force:
+            return compare(lhs.force, rhs.force, lhsName: lhs.name, rhsName: rhs.name)
+        case .mechanic:
+            return compare(lhs.mechanic, rhs.mechanic, lhsName: lhs.name, rhsName: rhs.name)
+        case .rawEquipment:
+            return compare(lhs.rawEquipment, rhs.rawEquipment, lhsName: lhs.name, rhsName: rhs.name)
         }
     }
 
@@ -154,6 +165,8 @@ struct ExerciseLibraryFilterRequest: Sendable {
     let sort: ExerciseLibrarySort
     let searchText: String
     let splitMuscles: Set<String>
+    /// Library "Source" filter: keep only exercises the user created.
+    let onlyUserExercises: Bool
 }
 
 enum ExerciseLibraryFilterEngine {
@@ -173,6 +186,7 @@ enum ExerciseLibraryFilterEngine {
             sort: request.sort,
             searchText: request.searchText
         )
+        .filter { !request.onlyUserExercises || UserExercise.isUserExercise($0.id) }
 
         guard !request.splitMuscles.isEmpty else {
             return filtered

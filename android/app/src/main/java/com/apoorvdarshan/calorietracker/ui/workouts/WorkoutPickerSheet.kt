@@ -18,12 +18,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -48,6 +50,7 @@ import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.SwapHoriz
@@ -87,15 +90,18 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.ExerciseSort
 import com.apoorvdarshan.calorietracker.data.ExerciseVisual
 import com.apoorvdarshan.calorietracker.models.Gender
+import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.models.WorkoutSplitGroup
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextButton
@@ -111,7 +117,20 @@ private const val PICKER_FILTER_PERSIST_MS = 400L
 
 internal enum class WorkoutPickerSource {
     DATASET,
-    SAVED
+    SAVED,
+    /** Exercises the user created themselves. */
+    MINE;
+
+    fun includes(itemId: String, savedExerciseIds: Set<String>): Boolean = when (this) {
+        DATASET -> true
+        SAVED -> itemId in savedExerciseIds
+        MINE -> UserExercise.isUserExercise(itemId)
+    }
+
+    companion object {
+        /** Stored picker source, falling back to the dataset for missing or unknown values. */
+        fun fromStorage(raw: String?): WorkoutPickerSource = entries.firstOrNull { it.name == raw } ?: DATASET
+    }
 }
 
 internal data class WorkoutPickerRequest(
@@ -234,7 +253,10 @@ internal fun WorkoutPickerSheet(
     ) {
         repository.filtered(
             levels = filter.level?.let(::setOf).orEmpty(),
-            equipment = filter.equipment?.let(::setOf) ?: preferredEquipment,
+            // The profile equipment preference scopes the catalog, but must not hide the
+            // user's own exercises (often "Unspecified" equipment) in the Mine list.
+            equipment = filter.equipment?.let(::setOf)
+                ?: if (source == WorkoutPickerSource.MINE) emptySet() else preferredEquipment,
             primaryMuscles = filter.primaryMuscle?.let(::setOf).orEmpty(),
             secondaryMuscles = filter.secondaryMuscle?.let(::setOf).orEmpty(),
             forces = filter.force?.let(::setOf).orEmpty(),
@@ -243,12 +265,15 @@ internal fun WorkoutPickerSheet(
             sort = filter.sort,
             searchText = debouncedSearch
         ).filter { item ->
-            val matchesSource = source == WorkoutPickerSource.DATASET || item.id in savedExerciseIds
+            val matchesSource = source.includes(item.id, savedExerciseIds)
             val matchesContext = request.muscles.isEmpty() ||
                 item.primaryMuscles.any(request.muscles::contains) ||
                 item.secondaryMuscles.any(request.muscles::contains)
             matchesSource && matchesContext
         }
+    }
+    val hasUserExercises = remember(repository) {
+        repository.exercises.any { UserExercise.isUserExercise(it.id) }
     }
     val muscleOptions = remember(repository, request.muscles) {
         if (request.muscles.isEmpty()) repository.availablePrimaryMuscles
@@ -315,7 +340,7 @@ internal fun WorkoutPickerSheet(
             PickerHeader(
                 title = request.title,
                 count = items.size,
-                showCreate = source == WorkoutPickerSource.DATASET,
+                showCreate = source != WorkoutPickerSource.SAVED,
                 onCreate = onCreateExercise,
                 onDismiss = onDismiss
             )
@@ -440,7 +465,11 @@ internal fun WorkoutPickerSheet(
                 ) {
                     if (items.isEmpty()) {
                         item(key = "empty-picker") {
-                            PickerEmptyState(source = source, onCreateExercise = onCreateExercise)
+                            PickerEmptyState(
+                                source = source,
+                                hasUserExercises = hasUserExercises,
+                                onCreateExercise = onCreateExercise
+                            )
                         }
                     } else {
                         items(items.take(120), key = { it.id }) { item ->
@@ -618,34 +647,47 @@ private fun PickerSourceControl(
     modifier: Modifier = Modifier
 ) {
     FudGlassSurface(modifier = modifier.fillMaxWidth(), cornerRadius = 18.dp, padding = 4.dp) {
-        Row(Modifier.fillMaxWidth()) {
+        // Equal-height segments: a label that wraps to two lines grows all three together.
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
             listOf(
-                WorkoutPickerSource.DATASET to "Dataset",
-                WorkoutPickerSource.SAVED to "Saved"
+                WorkoutPickerSource.DATASET to stringResource(R.string.workout_source_dataset),
+                WorkoutPickerSource.SAVED to stringResource(R.string.workout_source_saved),
+                WorkoutPickerSource.MINE to stringResource(R.string.workout_source_mine)
             ).forEach { (option, label) ->
                 val selected = source == option
                 Row(
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxHeight()
                         .clip(RoundedCornerShape(14.dp))
                         .background(if (selected) AppColors.Calorie.copy(alpha = 0.14f) else androidx.compose.ui.graphics.Color.Transparent)
                         .clickable { onSelect(option) }
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = 10.dp, horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
-                        if (option == WorkoutPickerSource.DATASET) Icons.Filled.Storage else Icons.Filled.Bookmark,
+                        when (option) {
+                            WorkoutPickerSource.DATASET -> Icons.Filled.Storage
+                            WorkoutPickerSource.SAVED -> Icons.Filled.Bookmark
+                            WorkoutPickerSource.MINE -> Icons.Filled.Person
+                        },
                         contentDescription = null,
                         tint = if (selected) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f),
                         modifier = Modifier.size(17.dp)
                     )
-                    Spacer(Modifier.width(7.dp))
+                    Spacer(Modifier.width(6.dp))
+                    // Three segments share the row, so longer translations
+                    // ("Verilənlər bazası", "Base de données") wrap instead of truncating.
                     Text(
                         label,
                         color = if (selected) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f),
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
+                        lineHeight = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -737,34 +779,47 @@ private fun BoxScope.PickerSwipeBackground(offsetPx: Float, isSaved: Boolean) {
 }
 
 @Composable
-private fun PickerEmptyState(source: WorkoutPickerSource, onCreateExercise: (() -> Unit)? = null) {
+private fun PickerEmptyState(
+    source: WorkoutPickerSource,
+    hasUserExercises: Boolean,
+    onCreateExercise: (() -> Unit)? = null
+) {
+    val noCustomExercises = source == WorkoutPickerSource.MINE && !hasUserExercises
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 54.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         Icon(
-            if (source == WorkoutPickerSource.SAVED) Icons.Filled.BookmarkBorder else Icons.Filled.FitnessCenter,
+            when (source) {
+                WorkoutPickerSource.SAVED -> Icons.Filled.BookmarkBorder
+                WorkoutPickerSource.MINE -> Icons.Filled.Person
+                WorkoutPickerSource.DATASET -> Icons.Filled.FitnessCenter
+            },
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
             modifier = Modifier.size(38.dp)
         )
         Text(
-            if (source == WorkoutPickerSource.SAVED) "No saved exercises" else "No matching exercises",
+            when {
+                source == WorkoutPickerSource.SAVED -> "No saved exercises"
+                noCustomExercises -> stringResource(R.string.workout_mine_empty_title)
+                else -> "No matching exercises"
+            },
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
         Text(
-            if (source == WorkoutPickerSource.SAVED) {
-                "Bookmark exercises from the dataset to keep them here."
-            } else {
-                "Try clearing filters — or create your own exercise."
+            when {
+                source == WorkoutPickerSource.SAVED -> "Bookmark exercises from the dataset to keep them here."
+                noCustomExercises -> stringResource(R.string.workout_mine_empty_subtitle)
+                else -> "Try clearing filters — or create your own exercise."
             },
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.52f),
             fontSize = 13.sp
         )
-        if (source == WorkoutPickerSource.DATASET && onCreateExercise != null) {
+        if (source != WorkoutPickerSource.SAVED && onCreateExercise != null) {
             FudGlassTextButton(text = "Create exercise", onClick = onCreateExercise)
         }
     }

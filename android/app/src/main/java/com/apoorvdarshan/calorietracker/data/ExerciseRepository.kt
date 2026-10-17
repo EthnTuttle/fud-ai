@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.data
 import android.content.Context
 import android.os.SystemClock
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.InputStreamReader
@@ -52,17 +53,23 @@ class ExerciseRepository private constructor(
         sort: ExerciseSort = ExerciseSort.NAME,
         searchText: String = ""
     ): List<ExerciseItem> {
-        val items = exercises.filter { item ->
-            (levels.isEmpty() || levels.contains(item.level)) &&
+        val rankedItems = exercises.mapNotNull { item ->
+            val matchesFilters = (levels.isEmpty() || levels.contains(item.level)) &&
                 (equipment.isEmpty() || equipment.contains(item.equipment)) &&
                 (primaryMuscles.isEmpty() || item.primaryMuscles.any { primaryMuscles.contains(it) }) &&
                 (secondaryMuscles.isEmpty() || item.secondaryMuscles.any { secondaryMuscles.contains(it) }) &&
                 (forces.isEmpty() || forces.contains(item.force)) &&
                 (mechanics.isEmpty() || mechanics.contains(item.mechanic)) &&
-                (categories.isEmpty() || categories.contains(item.category)) &&
-                ExerciseSearch.matches(item.searchableText, searchText, item.id)
+                (categories.isEmpty() || categories.contains(item.category))
+            if (!matchesFilters) return@mapNotNull null
+            ExerciseSearch.relevance(item, searchText)?.let { relevance -> item to relevance }
         }
-        return items.sortedWith(comparator(sort))
+        // While searching, closer name matches come first; the chosen sort orders
+        // items within the same relevance tier. An empty query ranks everything 0.
+        val byItem = comparator(sort)
+        val byRelevance = compareBy<Pair<ExerciseItem, Int>> { it.second }
+            .thenComparator { a, b -> byItem.compare(a.first, b.first) }
+        return rankedItems.sortedWith(byRelevance).map { it.first }
     }
 
     fun visualFor(
@@ -184,5 +191,8 @@ class ExerciseRepository private constructor(
 
         /** Asset URI for a bundled exercise image filename (Coil-loadable). */
         fun imageAssetUri(filename: String): String = "file:///android_asset/$filename"
+
+        @VisibleForTesting
+        fun forTests(exercises: List<ExerciseItem>): ExerciseRepository = ExerciseRepository(exercises, emptyMap())
     }
 }

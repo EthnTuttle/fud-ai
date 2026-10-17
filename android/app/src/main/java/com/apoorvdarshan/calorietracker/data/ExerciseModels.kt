@@ -41,19 +41,12 @@ data class ExerciseItem(
             return if (parts.isEmpty()) "Database metadata" else parts.joinToString(" - ")
         }
 
-    /** Lowercased haystack for free-text search (precomputed once). */
-    val searchableText: String by lazy(LazyThreadSafetyMode.NONE) {
-        buildList {
-            add(name)
-            add(level)
-            add(force)
-            add(mechanic)
-            add(category)
-            add(equipment)
-            add(primaryMuscles.joinToString(" "))
-            add(secondaryMuscles.joinToString(" "))
-            add(instructions.joinToString(" "))
-        }.joinToString(" ").lowercase()
+    /** Word lists for free-text search (precomputed once; mirrors iOS `searchIndex`). */
+    val searchIndex: ExerciseSearchIndex by lazy(LazyThreadSafetyMode.NONE) {
+        ExerciseSearchIndex(
+            name = name,
+            metadata = listOf(equipment, category).filter { it != "Unspecified" } + primaryMuscles
+        )
     }
 
     companion object {

@@ -1642,11 +1642,29 @@ private struct WorkoutLogEmptyRoutineRow: View {
 
 // MARK: - Exercise picker
 
-private enum WorkoutLogPickerSource: String, CaseIterable, Identifiable {
+enum WorkoutLogPickerSource: String, CaseIterable, Identifiable {
     case dataset = "Dataset"
     case saved = "Saved"
+    /// Exercises the user created themselves.
+    case mine = "Mine"
 
     var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .dataset: return String(localized: "Dataset")
+        case .saved: return String(localized: "Saved")
+        case .mine: return String(localized: "Mine")
+        }
+    }
+
+    func includes(itemID: String, savedIDs: Set<String>) -> Bool {
+        switch self {
+        case .dataset: return true
+        case .saved: return savedIDs.contains(itemID)
+        case .mine: return UserExercise.isUserExercise(itemID)
+        }
+    }
 }
 
 private struct WorkoutLogPickerContext: Hashable {
@@ -1812,7 +1830,7 @@ private struct WorkoutLogExercisePickerSheet: View {
                     if showsSourcePicker {
                         Picker("Source", selection: sourceBinding) {
                             ForEach(WorkoutLogPickerSource.allCases) { source in
-                                Text(source.rawValue).tag(source)
+                                Text(source.title).tag(source)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -1835,9 +1853,9 @@ private struct WorkoutLogExercisePickerSheet: View {
                 Section {
                     if displayExercises.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(!showsSourcePicker || source == .saved ? "No saved workouts yet." : "No matching exercises.")
+                            Text(emptyStateMessage)
                                 .foregroundStyle(Color.workoutMutedText)
-                            if source == .dataset {
+                            if source != .saved {
                                 Button {
                                     isCreateExercisePresented = true
                                 } label: {
@@ -1917,7 +1935,7 @@ private struct WorkoutLogExercisePickerSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if source == .dataset {
+                    if source != .saved {
                         Button {
                             isCreateExercisePresented = true
                         } label: {
@@ -2002,13 +2020,22 @@ private struct WorkoutLogExercisePickerSheet: View {
         }.joined(separator: ";")
     }
 
+    private var emptyStateMessage: LocalizedStringKey {
+        if source == .saved { return "No saved workouts yet." }
+        if source == .mine && workoutStore.userExercises.isEmpty { return "No custom exercises yet." }
+        return "No matching exercises."
+    }
+
     private func libraryItemStillExists(_ itemID: String) -> Bool {
         workoutStore.exerciseLibrary.exercises.contains { $0.id == itemID }
     }
 
     private func refreshDisplayExercises() {
+        // The profile equipment preference scopes the catalog, but must not hide the
+        // user's own exercises (often "Unspecified" equipment) in the Mine list.
+        let implicitEquipment: Set<String> = source == .mine ? [] : Set(availableEquipment)
         let effectiveEquipment = selectedEquipment.isEmpty
-            ? Set(availableEquipment)
+            ? implicitEquipment
             : selectedEquipment
         let filtered = library.filtered(
             levels: selectedLevels,
@@ -2026,7 +2053,7 @@ private struct WorkoutLogExercisePickerSheet: View {
             let matchesContext = request.context.muscles.isEmpty
                 || item.primaryMuscles.contains(where: request.context.muscles.contains)
                 || item.secondaryMuscles.contains(where: request.context.muscles.contains)
-            let matchesSource = source == .dataset || workoutStore.savedExerciseIDs.contains(item.id)
+            let matchesSource = source.includes(itemID: item.id, savedIDs: workoutStore.savedExerciseIDs)
             return matchesContext && matchesSource
         }
     }

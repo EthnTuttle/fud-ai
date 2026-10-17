@@ -481,6 +481,8 @@
     <string name="progress_range_6m">6М</string>
     <string name="progress_range_year">1Г</string>
     <string name="progress_range_all">Всё</string>
+    <string name="progress_previous_period">Предыдущий период</string>
+    <string name="progress_next_period">Следующий период</string>
 
     <string name="progress_weight_section">Вес</string>
     <string name="progress_log_weight">Записать вес</string>
@@ -498,6 +500,8 @@
     </plurals>
 
     <string name="progress_calories_section">Калории</string>
+    <string name="progress_include_today">Учитывать сегодня</string>
+    <string name="progress_include_today_caption">График калорий и средние значения питания</string>
     <string name="progress_avg_format">Сред.: %1$,d ккал</string>
     <string name="progress_no_food">Пока нет записей о еде</string>
 
@@ -704,6 +708,7 @@
     <string name="progress_metric_weight">Вес</string>
     <string name="progress_metric_body_fat">Жир тела</string>
     <string name="progress_metric_workouts">Тренировки</string>
+    <string name="progress_metric_steps">Шаги</string>
     <string name="progress_workout_history">История тренировок</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d расчёт расхода · коснитесь, чтобы посмотреть или удалить</item>
@@ -721,6 +726,14 @@
     <string name="progress_workout_stat_days">Дни</string>
     <string name="progress_workout_no_range">За этот период нет рассчитанного расхода тренировок</string>
     <string name="progress_workout_chart_description">График расхода тренировок с %1$s по %2$s. Всего %3$d килокалорий; последнее значение %4$d килокалорий.</string>
+    <string name="progress_steps_stat_total">Итого</string>
+    <string name="progress_steps_stat_average">Среднее</string>
+    <string name="progress_steps_stat_best_day">Лучший день</string>
+    <string name="progress_steps_no_range">Нет данных о шагах за этот период</string>
+    <string name="progress_steps_footnote">Суммы шагов за день из Health Connect.</string>
+    <string name="progress_steps_weekly_note">Столбцы показывают среднее число шагов в день за каждую неделю.</string>
+    <string name="progress_steps_history_note">Health Connect передаёт шаги только примерно с 30 дней до подключения Fud AI, поэтому более ранние дни могут отсутствовать.</string>
+    <string name="progress_steps_chart_description">График шагов с %1$s по %2$s. Всего %3$s шагов; лучший день — %4$s шагов.</string>
     <string name="progress_log_body_fat">Записать жир</string>
     <string name="progress_log_first_body_fat">Запишите первое измерение жира, чтобы увидеть динамику</string>
     <string name="progress_log_body_fat_title">Записать жир</string>
@@ -843,6 +856,15 @@
     <string name="empty_title">Нет подходящих упражнений</string>
     <string name="workout_empty_subtitle">Попробуйте другие фильтры — или создайте своё упражнение.</string>
     <string name="workout_create_exercise">Создать упражнение</string>
+    <string name="workout_filter_source">Источник</string>
+    <string name="workout_source_dataset">База данных</string>
+    <string name="workout_source_saved">Сохранённые</string>
+    <string name="workout_source_mine">Мои</string>
+    <string name="workout_mine_empty_title">Пока нет своих упражнений</string>
+    <string name="workout_mine_empty_subtitle">Здесь появятся созданные вами упражнения.</string>
+    <string name="workout_exercise_take_photo">Сделать снимок</string>
+    <string name="workout_exercise_camera_denied_title">Нужен доступ к камере</string>
+    <string name="workout_exercise_camera_denied_message">Чтобы фотографировать упражнения, разрешите Fud AI использовать камеру в системных настройках.</string>
     <string name="filter_all">Все</string>
     <string name="filter_all_count">Все %d</string>
     <string name="hide_details">Скрыть детали</string>

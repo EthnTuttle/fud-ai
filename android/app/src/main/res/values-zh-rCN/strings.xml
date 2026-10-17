@@ -477,6 +477,8 @@
     <string name="progress_range_6m">6月</string>
     <string name="progress_range_year">1年</string>
     <string name="progress_range_all">全部</string>
+    <string name="progress_previous_period">上一时段</string>
+    <string name="progress_next_period">下一时段</string>
 
     <string name="progress_weight_section">体重</string>
     <string name="progress_log_weight">记录体重</string>
@@ -492,6 +494,8 @@
     </plurals>
 
     <string name="progress_calories_section">卡路里</string>
+    <string name="progress_include_today">包含今天</string>
+    <string name="progress_include_today_caption">卡路里图表和营养平均值</string>
     <string name="progress_avg_format">平均：%1$,d kcal</string>
     <string name="progress_no_food">尚未记录食物</string>
 
@@ -698,6 +702,7 @@
     <string name="progress_metric_weight">体重</string>
     <string name="progress_metric_body_fat">体脂</string>
     <string name="progress_metric_workouts">锻炼</string>
+    <string name="progress_metric_steps">步数</string>
     <string name="progress_workout_history">锻炼历史</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d 条已计算消耗 · 点按查看或删除</item>
@@ -713,6 +718,23 @@
     <string name="progress_workout_stat_days">天数</string>
     <string name="progress_workout_no_range">此时间范围内没有已计算的锻炼消耗</string>
     <string name="progress_workout_chart_description">%1$s 至 %2$s 的锻炼消耗图表。总计 %3$d 千卡；最新 %4$d 千卡。</string>
+    <string name="workout_filter_source">来源</string>
+    <string name="workout_source_dataset">数据库</string>
+    <string name="workout_source_saved">已保存</string>
+    <string name="workout_source_mine">我的</string>
+    <string name="workout_mine_empty_title">还没有自定义动作</string>
+    <string name="workout_mine_empty_subtitle">你创建的动作会显示在这里。</string>
+    <string name="workout_exercise_take_photo">拍照</string>
+    <string name="workout_exercise_camera_denied_title">需要相机权限</string>
+    <string name="workout_exercise_camera_denied_message">请在系统设置中允许 Fud AI 使用相机，以便为动作拍照。</string>
+    <string name="progress_steps_stat_total">总计</string>
+    <string name="progress_steps_stat_average">平均</string>
+    <string name="progress_steps_stat_best_day">最佳单日</string>
+    <string name="progress_steps_no_range">此时间范围内没有步数数据</string>
+    <string name="progress_steps_footnote">来自 Health Connect 的每日步数总计。</string>
+    <string name="progress_steps_weekly_note">柱形显示每周的日均步数。</string>
+    <string name="progress_steps_history_note">Health Connect 只共享连接 Fud AI 前约 30 天起的步数，因此更早的日期可能缺失。</string>
+    <string name="progress_steps_chart_description">%1$s 至 %2$s 的步数图表。共 %3$s 步；最佳单日 %4$s 步。</string>
     <string name="progress_log_body_fat">记录体脂</string>
     <string name="progress_log_first_body_fat">记录你的第一个体脂百分比以查看趋势</string>
     <string name="progress_log_body_fat_title">记录体脂</string>
