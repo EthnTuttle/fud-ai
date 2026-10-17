@@ -207,30 +207,24 @@ class CloudBackupCoordinator(
     private suspend fun restoreFromDrive(token: String, fileId: String) = withContext(Dispatchers.IO) {
         withTempArchive { zip ->
             drive.download(token, fileId, zip)
-            applyArchive(zip)
+            applyArchive(zip, fileId)
         }
-        prefs.setCloudBackupFileId(fileId)
-        prefs.setCloudBackupEnabled(true)
     }
 
-    suspend fun applyArchive(zip: File) = withContext(Dispatchers.IO) {
-        // Validates the whole archive before anything local is cleared.
-        val document = CloudBackupArchive.readDocument(zip)
-        val enabled = true
+    private suspend fun applyArchive(zip: File, fileId: String) {
         val email = prefs.cloudBackupAccountEmail.first()
-        val fileId = prefs.cloudBackupFileId.first()
-        images.clearAll()
-        CloudBackupArchive.forEachPhoto(zip) { name, input -> images.restoreStream(name, input) }
-        prefs.restoreCloudBackupValues(document.payload.values)
-        // Device-specific Health Connect tokens must not transfer. Mark food
-        // restore done so Health Connect skips a second import of the same IDs.
-        prefs.clearHealthChangesToken()
-        prefs.setHealthFoodRestoreDone(true)
-        prefs.setCloudBackupEnabled(enabled)
-        prefs.setCloudBackupAccountEmail(email)
-        prefs.setCloudBackupFileId(fileId)
-        prefs.setCloudBackupLastHash(document.content_sha256)
-        prefs.setCloudBackupLastAt(document.exported_at)
+        CloudBackupRestore.apply(zip, images) { document ->
+            prefs.restoreCloudBackupValues(document.payload.values)
+            // Device-specific Health Connect tokens must not transfer. Mark food
+            // restore done so Health Connect skips a second import of the same IDs.
+            prefs.clearHealthChangesToken()
+            prefs.setHealthFoodRestoreDone(true)
+            prefs.setCloudBackupEnabled(true)
+            prefs.setCloudBackupAccountEmail(email)
+            prefs.setCloudBackupFileId(fileId)
+            prefs.setCloudBackupLastHash(document.content_sha256)
+            prefs.setCloudBackupLastAt(document.exported_at)
+        }
     }
 
     private fun snapshotPhotos(): List<CloudBackupPhoto> =

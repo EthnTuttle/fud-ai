@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.LruCache
 import androidx.annotation.VisibleForTesting
+import com.apoorvdarshan.calorietracker.backup.CloudBackupPhotoStore
 import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder.scaledToMaxDimension
 import java.io.ByteArrayOutputStream
@@ -23,7 +24,7 @@ class FoodImageStore private constructor(
     private val filesRoot: File,
     cleanupLegacyThumbnails: Boolean,
     thumbnailCacheKb: Int
-) {
+) : CloudBackupPhotoStore {
     private val dir: File = File(filesRoot, DIR_NAME).apply { mkdirs() }
     private val thumbnailDir: File = File(filesRoot, THUMBNAIL_DIR_NAME).apply { mkdirs() }
     private val thumbnailCache = object : LruCache<String, Bitmap>(thumbnailCacheKb) {
@@ -124,7 +125,7 @@ class FoodImageStore private constructor(
     }.getOrDefault(false)
 
     /** Like [restoreBytes], but copies from [input] so a restore never holds the whole photo. */
-    fun restoreStream(filename: String, input: InputStream): Boolean = runCatching {
+    override fun restoreStream(filename: String, input: InputStream): Boolean = runCatching {
         val file = File(dir, filename)
         FileOutputStream(file).use { input.copyTo(it) }
         runCatching {
@@ -151,7 +152,7 @@ class FoodImageStore private constructor(
         evictThumbnails(filename)
     }
 
-    fun clearAll() {
+    override fun clearAll() {
         dir.listFiles()?.forEach { runCatching { it.delete() } }
         thumbnailDir.listFiles()?.forEach { runCatching { it.delete() } }
         thumbnailCache.evictAll()
