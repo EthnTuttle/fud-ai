@@ -671,6 +671,7 @@
     <string name="workout_source_mine">Miei</string>
     <string name="workout_mine_empty_title">Ancora nessun esercizio personalizzato</string>
     <string name="workout_mine_empty_subtitle">Gli esercizi che crei compaiono qui.</string>
+    <string name="workout_exercise_take_photo">Scatta foto</string>
     <string name="progress_log_body_fat">Registra grasso corporeo</string>
     <string name="progress_log_first_body_fat">Registra il tuo primo % di grasso corporeo per vedere le tendenze</string>
     <string name="progress_log_body_fat_title">Registra grasso corporeo</string>

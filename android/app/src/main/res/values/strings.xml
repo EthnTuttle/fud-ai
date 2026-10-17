@@ -984,6 +984,7 @@
     <string name="workout_source_mine">Mine</string>
     <string name="workout_mine_empty_title">No custom exercises yet</string>
     <string name="workout_mine_empty_subtitle">Exercises you create show up here.</string>
+    <string name="workout_exercise_take_photo">Take photo</string>
     <string name="filter_all">All</string>
     <string name="filter_all_count">All %d</string>
     <string name="hide_details">Hide details</string>

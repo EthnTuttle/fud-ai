@@ -799,6 +799,7 @@
     <string name="workout_source_mine">Мои</string>
     <string name="workout_mine_empty_title">Пока нет своих упражнений</string>
     <string name="workout_mine_empty_subtitle">Здесь появятся созданные вами упражнения.</string>
+    <string name="workout_exercise_take_photo">Сделать снимок</string>
     <string name="filter_all">Все</string>
     <string name="filter_all_count">Все %d</string>
     <string name="hide_details">Скрыть детали</string>

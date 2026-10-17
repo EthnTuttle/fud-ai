@@ -671,6 +671,7 @@
     <string name="workout_source_mine">Les miens</string>
     <string name="workout_mine_empty_title">Aucun exercice personnalisé pour l’instant</string>
     <string name="workout_mine_empty_subtitle">Les exercices que vous créez apparaissent ici.</string>
+    <string name="workout_exercise_take_photo">Prendre une photo</string>
     <string name="progress_log_body_fat">Enregistrer la masse grasse</string>
     <string name="progress_log_first_body_fat">Enregistre ton premier % de masse grasse pour voir les tendances</string>
     <string name="progress_log_body_fat_title">Enregistrer la masse grasse</string>

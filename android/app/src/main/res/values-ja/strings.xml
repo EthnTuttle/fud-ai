@@ -669,6 +669,7 @@
     <string name="workout_source_mine">自作</string>
     <string name="workout_mine_empty_title">自作の種目はまだありません</string>
     <string name="workout_mine_empty_subtitle">作成した種目がここに表示されます。</string>
+    <string name="workout_exercise_take_photo">写真を撮る</string>
     <string name="progress_log_body_fat">体脂肪を記録</string>
     <string name="progress_log_first_body_fat">傾向を見るには、最初の体脂肪率を記録してください</string>
     <string name="progress_log_body_fat_title">体脂肪を記録</string>

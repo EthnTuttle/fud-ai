@@ -669,6 +669,7 @@
     <string name="workout_source_mine">我的</string>
     <string name="workout_mine_empty_title">还没有自定义动作</string>
     <string name="workout_mine_empty_subtitle">你创建的动作会显示在这里。</string>
+    <string name="workout_exercise_take_photo">拍照</string>
     <string name="progress_log_body_fat">记录体脂</string>
     <string name="progress_log_first_body_fat">记录你的第一个体脂百分比以查看趋势</string>
     <string name="progress_log_body_fat_title">记录体脂</string>

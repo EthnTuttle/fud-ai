@@ -972,6 +972,7 @@
     <string name="workout_source_mine">Benimkiler</string>
     <string name="workout_mine_empty_title">Henüz özel egzersiz yok</string>
     <string name="workout_mine_empty_subtitle">Oluşturduğunuz egzersizler burada görünür.</string>
+    <string name="workout_exercise_take_photo">Fotoğraf çek</string>
     <string name="filter_all">Tümü</string>
     <string name="filter_all_count">Tümü %d</string>
     <string name="hide_details">Detayları gizle</string>

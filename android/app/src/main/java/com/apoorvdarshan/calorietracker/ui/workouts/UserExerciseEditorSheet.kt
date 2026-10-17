@@ -2,6 +2,8 @@
 
 package com.apoorvdarshan.calorietracker.ui.workouts
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -24,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,16 +54,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.WorkoutRepository
 import com.apoorvdarshan.calorietracker.models.PlannedExercise
 import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.models.UserExerciseDraft
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
+import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,8 +105,9 @@ fun UserExerciseEditorSheet(
     var secondaryMuscles by remember(existingItemId) { mutableStateOf(existingTemplate?.secondaryMuscles.orEmpty()) }
     var photoBytes by remember(existingItemId) { mutableStateOf<ByteArray?>(null) }
     var removePhoto by remember(existingItemId) { mutableStateOf(false) }
-    var previewUri by remember(existingItemId) {
-        mutableStateOf(
+    // Coil model for the photo preview: a Uri (stored or picked photo) or camera JPEG bytes.
+    var previewModel by remember(existingItemId) {
+        mutableStateOf<Any?>(
             existingTemplate?.imagePaths?.firstOrNull()?.let { filename ->
                 imageStore.file(filename).takeIf(File::isFile)?.let(Uri::fromFile)
             }
@@ -108,6 +116,21 @@ fun UserExerciseEditorSheet(
     var isPhotoLoading by remember(existingItemId) { mutableStateOf(false) }
     var photoLoadGeneration by remember(existingItemId) { mutableIntStateOf(0) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var showCamera by remember { mutableStateOf(false) }
+    val hasCamera = remember(context) {
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+    }
+    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) showCamera = true
+    }
+
+    fun openCamera() {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            showCamera = true
+        } else {
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         uri ?: return@rememberLauncherForActivityResult
@@ -125,7 +148,7 @@ fun UserExerciseEditorSheet(
                 if (bytes != null) {
                     photoBytes = bytes
                     removePhoto = false
-                    previewUri = uri
+                    previewModel = uri
                 }
             } finally {
                 if (generation == photoLoadGeneration) {
@@ -133,6 +156,21 @@ fun UserExerciseEditorSheet(
                 }
             }
         }
+    }
+
+    if (showCamera) {
+        InAppCameraCaptureDialog(
+            onCapture = { bytes ->
+                showCamera = false
+                // Supersedes any library photo still loading; saving downsizes it like picked photos.
+                photoLoadGeneration += 1
+                photoBytes = bytes
+                removePhoto = false
+                previewModel = bytes
+                isPhotoLoading = false
+            },
+            onDismiss = { showCamera = false }
+        )
     }
 
     if (showDeleteConfirmation) {
@@ -195,9 +233,9 @@ fun UserExerciseEditorSheet(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                if (previewUri != null) {
+                if (previewModel != null) {
                     AsyncImage(
-                        model = previewUri,
+                        model = previewModel,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
@@ -210,17 +248,28 @@ fun UserExerciseEditorSheet(
                 }
             }
 
-            if (previewUri != null) {
-                TextButton(
-                    onClick = {
-                        photoLoadGeneration += 1
-                        previewUri = null
-                        photoBytes = null
-                        removePhoto = true
-                        isPhotoLoading = false
-                    },
-                    enabled = !isPhotoLoading
-                ) { Text("Remove photo", color = colors.accent) }
+            if (hasCamera || previewModel != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (hasCamera) {
+                        TextButton(onClick = { openCamera() }, enabled = !isPhotoLoading) {
+                            Icon(Icons.Filled.CameraAlt, null, tint = colors.accent, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.size(6.dp))
+                            Text(stringResource(R.string.workout_exercise_take_photo), color = colors.accent)
+                        }
+                    }
+                    if (previewModel != null) {
+                        TextButton(
+                            onClick = {
+                                photoLoadGeneration += 1
+                                previewModel = null
+                                photoBytes = null
+                                removePhoto = true
+                                isPhotoLoading = false
+                            },
+                            enabled = !isPhotoLoading
+                        ) { Text("Remove photo", color = colors.accent) }
+                    }
+                }
             }
 
             OutlinedTextField(

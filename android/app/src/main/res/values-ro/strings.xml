@@ -674,6 +674,7 @@
     <string name="workout_source_mine">Ale mele</string>
     <string name="workout_mine_empty_title">Încă nu ai exerciții personalizate</string>
     <string name="workout_mine_empty_subtitle">Exercițiile pe care le creezi apar aici.</string>
+    <string name="workout_exercise_take_photo">Fă o fotografie</string>
     <string name="progress_log_body_fat">Înregistrează grăsimea corporală</string>
     <string name="progress_log_first_body_fat">Înregistrează primul tău % de grăsime corporală pentru a vedea tendințele</string>
     <string name="progress_log_body_fat_title">Înregistrează grăsimea corporală</string>
