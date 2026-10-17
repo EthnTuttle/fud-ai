@@ -36,6 +36,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -134,6 +137,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
@@ -147,6 +151,7 @@ import com.apoorvdarshan.calorietracker.ui.util.clockTimePattern
 import com.apoorvdarshan.calorietracker.ui.util.formattedWholeNumber
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.pluralStringResource
@@ -187,8 +192,8 @@ import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextField
 import com.apoorvdarshan.calorietracker.ui.components.WeekEnergyStrip
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavDockedControlPadding
-import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
+import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantButton
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
@@ -411,6 +416,17 @@ DisposableEffect(lifecycleOwner, vm) {
         selectedFoodIds = emptySet()
     }
 
+    // The voice assistant opens a logged food's edit sheet here (open_food_entry).
+    val voiceUi by container.voiceAssistant.ui.collectAsState()
+    val pendingVoiceEntry by container.navigator.pendingFoodEntry.collectAsState()
+    LaunchedEffect(pendingVoiceEntry, allEntries) {
+        val id = pendingVoiceEntry ?: return@LaunchedEffect
+        val entry = allEntries.firstOrNull { it.id == id } ?: return@LaunchedEffect
+        selectedFoodIds = emptySet()
+        editingEntry = entry
+        container.navigator.pendingFoodEntry.value = null
+    }
+
     val today = LocalDate.now()
     val selectedDate = ui.date
     val isToday = selectedDate == today
@@ -437,6 +453,12 @@ DisposableEffect(lifecycleOwner, vm) {
             sortOrder = ui.foodLogSortOrder
         )
     }
+
+    val actionSize = 60.dp
+    val actionGap = 12.dp
+    val actionBottom = 100.dp
+    val diaryBottomClearance = actionBottom + actionSize + actionGap +
+        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     // No topBar: the empty TopAppBar used to act as the status-bar spacer, but the
     // ad strip above this screen (TabWithBanner) now owns that inset.
@@ -500,8 +522,11 @@ DisposableEffect(lifecycleOwner, vm) {
         Box(Modifier.fillMaxSize().padding(padding)) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = if (selectionMode) 8.dp else BottomNavScrollPadding + 72.dp)
+                .fillMaxSize().testTag("home.diary"),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                top = 8.dp,
+                bottom = if (selectionMode) 8.dp else diaryBottomClearance
+            )
         ) {
             // Week strip — verbatim port of WeekEnergyStrip in HomeComponents.swift,
             // with horizontal pagination across 53 weeks of history.
@@ -689,20 +714,25 @@ CalorieHero(
             }
         }
 
-        // Floating "+" add button — overlaid bottom-right and lifted above the docked
-        // bottom nav bar. The parent Scaffold renders content full-screen behind the
-        // bar, so the Scaffold FAB slot would sit hidden underneath it. Mirrors the iOS
-        // ContentView FAB: .overlay(alignment: .bottomTrailing) + .padding(.bottom).
+        // Transparent floating controls preserve the full scrolling diary. Extra end
+        // padding lets its final card scroll clear of both buttons and the docked tabs.
         if (!selectionMode) {
-        Box(
+        Row(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(end = 24.dp, bottom = 100.dp)
+                .padding(end = 24.dp, bottom = actionBottom),
+            horizontalArrangement = Arrangement.spacedBy(actionGap),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            if (!voiceUi.visible) {
+                VoiceAssistantButton(onClick = container.voiceAssistant::requestStart)
+            }
+            Box {
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .testTag("home.add")
+                    .size(actionSize)
                     .clip(CircleShape)
                     .background(AppColors.Calorie)
                     .clickable {
@@ -824,6 +854,7 @@ CalorieHero(
                     }
                 }
             }
+        }
         }
         }
         }
@@ -1821,89 +1852,98 @@ private fun MealSectionHeader(
     onSortDismiss: () -> Unit = {},
     onSortOrderSelected: (FoodLogSortOrder) -> Unit = {}
 ) {
-    // iOS layout: small dim icon + sentence-case label, regular weight ~17sp.
-    Row(
+    Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 22.dp, end = 30.dp, top = 18.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = 22.dp, end = 30.dp, top = 18.dp, bottom = 10.dp)
     ) {
-        Icon(
-            mealIcon(meal),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            stringResource(meal.displayNameRes),
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f)
-        )
-        if (showSortMenu) {
-            Spacer(Modifier.width(12.dp))
-            Box {
-                Row(
-                    modifier = Modifier.clickable { onSortClick() },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        Icons.Filled.SwapVert,
-                        contentDescription = null,
-                        tint = AppColors.Calorie,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        stringResource(R.string.sort),
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColors.Calorie
-                    )
-                }
-                SheetGlassDropdownMenu(
-                    expanded = sortMenuExpanded,
-                    onDismissRequest = onSortDismiss,
-                    menuWidth = 226.dp
-                ) {
-                    for (order in FoodLogSortOrder.values()) {
-                        SheetGlassDropdownMenuItem(
-                            label = stringResource(order.displayNameRes),
-                            selected = order == sortOrder,
-                            reserveSelectionSlot = true,
-                            onClick = { onSortOrderSelected(order) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                mealIcon(meal),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                modifier = Modifier.size(16.dp).testTag("home.mealHeader.${meal.name}.icon")
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                stringResource(meal.displayNameRes),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                modifier = Modifier.weight(1f, fill = false).testTag("home.mealHeader.${meal.name}.title")
+            )
+            if (showSortMenu) {
+                Spacer(Modifier.width(12.dp))
+                Box {
+                    Row(
+                        modifier = Modifier.clickable { onSortClick() },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.SwapVert,
+                            contentDescription = null,
+                            tint = AppColors.Calorie,
+                            modifier = Modifier.size(16.dp)
                         )
+                        Text(
+                            stringResource(R.string.sort),
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppColors.Calorie
+                        )
+                    }
+                    SheetGlassDropdownMenu(
+                        expanded = sortMenuExpanded,
+                        onDismissRequest = onSortDismiss,
+                        menuWidth = 226.dp
+                    ) {
+                        for (order in FoodLogSortOrder.values()) {
+                            SheetGlassDropdownMenuItem(
+                                label = stringResource(order.displayNameRes),
+                                selected = order == sortOrder,
+                                reserveSelectionSlot = true,
+                                onClick = { onSortOrderSelected(order) }
+                            )
+                        }
                     }
                 }
             }
-        }
-        // Combined nutrients for this meal (issue #103: chicken + pasta + sauce = one total)
-        if (totalCalories != null) {
-            Spacer(Modifier.weight(1f))
-            // Share the whole meal as a fudai://add-meal link (issue #107)
+            // Share remains a separate target next to the title and sort control.
             if (onShare != null) {
+                Spacer(Modifier.width(8.dp))
                 Icon(
                     Icons.Filled.IosShare,
                     contentDescription = stringResource(R.string.cd_share_meal),
                     tint = AppColors.Calorie,
                     modifier = Modifier
-                        .clickable { onShare() }
+                        .clickable(role = Role.Button, onClick = onShare)
                         .padding(4.dp)
                         .size(18.dp),
                 )
-                Spacer(Modifier.width(14.dp))
             }
-            Column(horizontalAlignment = Alignment.End) {
+        }
+        // Keep the combined meal totals under the title on the leading half, clear
+        // of the floating voice/+ controls even while this header scrolls past them.
+        if (totalCalories != null) {
+            Column(
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .fillMaxWidth(0.5f)
+                    .testTag("home.mealHeader.${meal.name}.totals"),
+                horizontalAlignment = Alignment.Start
+            ) {
                 Text(
                     "${totalCalories.formattedWholeNumber()} kcal",
                     fontSize = 15.sp,
+                    lineHeight = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.Calorie
                 )
                 Text(
                     "${totalProtein.roundToInt()}P · ${totalCarbs.roundToInt()}C · ${totalFat.roundToInt()}F",
                     fontSize = 12.sp,
+                    lineHeight = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                 )
@@ -2345,6 +2385,7 @@ private fun WaterLogRow(
 
     Row(
         Modifier
+            .testTag("diary.water.${entry.id}")
             .fillMaxWidth()
             .clip(rowShape)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
@@ -2421,6 +2462,7 @@ private fun FoodRow(
     // time on right) · pink kcal · serving · macro tag pills row.
     Row(
         Modifier
+            .testTag("diary.food.${entry.id}")
             .fillMaxWidth()
             .clip(rowShape)
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.86f))
@@ -3045,11 +3087,11 @@ internal fun ManualEntryDialog(
                     onValueChange = { name = it },
                     placeholder = stringResource(R.string.manual_name_placeholder),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("manual.name")
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    NumberField(stringResource(R.string.manual_calories), calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f))
+                    NumberField(stringResource(R.string.manual_calories), calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f).testTag("manual.calories"))
                     NumberField(stringResource(R.string.manual_protein), protein, { protein = filterDecimalInput(it) }, Modifier.weight(1f), decimal = true)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -3129,7 +3171,7 @@ internal fun ManualEntryDialog(
                         )
                     },
                     enabled = canSave,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("manual.save")
                 )
                 TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.action_cancel), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))

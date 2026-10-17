@@ -55,7 +55,7 @@ Android Studio is needed for the SDK + bundled JDK, but you can do all your day-
 
 The site is plain HTML/CSS with a validation-only npm build step and no framework. It is deployed with Cloudflare Workers Static Assets from `web/` using `web/wrangler.toml`.
 
-Marketing screenshots live in `web/assets/screenshots/` and are also used by the README. When replacing screenshots, update the whole set together so the website and README stay in sync.
+Website screenshots live in `web/assets/screenshots/` and are also used by the README. When replacing screenshots, update the whole set together so the website and README stay in sync. App Store and Play listing images live in `store/screenshots/` and `store/graphics/` (see [store/README.md](store/README.md#metadata-layout)). Promo, social and launch graphics do not belong in the repository.
 
 ## First-Run Setup (both platforms)
 
@@ -115,22 +115,36 @@ npm run check
 
 ```bash
 cd android
-./gradlew :app:testDebugUnitTest :app:lintRelease
+./gradlew :app:testDebugUnitTest :app:lintRelease :app:assembleRelease -PworkoutVectors=none
 ```
 
 The web suite includes fast-check generated-input tests for malformed JSON,
 unknown fields and score validation. They run 1,000 generated cases per property
 on each check; use the reported seed and shrink path to reproduce a failure.
 
-Run affected iOS tests through Xcode's Test action on a supported simulator. Run
-instrumented Android tests on an emulator or device for Android framework paths.
+Run the iOS unit and UI suites on an Apple Silicon Mac with a supported Xcode:
+
+```bash
+bash scripts/test-ios.sh
+```
+
+See [iOS testing](docs/ios-testing.md) for simulator requirements, test isolation,
+results, and coverage limits. You can also use Xcode's Test action. See
+[Android testing](docs/android-testing.md) to run the instrumentation/UI suite on
+a disposable emulator and inspect its reports. The suite uses the isolated Debug
+app; real hardware and store sandbox checks remain separate.
 Do not uninstall an existing app or clear its data as part of routine validation.
 
-The Quality checks workflow runs web tests, Android unit tests and Android lint
-on pushes, pull requests and daily. Release workflows require these checks before
-creating their release artifacts/entries. Before an App Store release through
-Xcode Cloud, the maintainer must also verify a successful Quality checks run for
-the exact release commit and run the affected iOS tests. Resolve lint errors;
+The Quality checks workflow runs web tests, Android unit tests, Release lint and
+unsigned Release packaging, plus Android emulator instrumentation/UI tests on
+pushes, relevant pull requests and daily. The separate iOS tests workflow runs the full
+Debug simulator app, unit tests and key UI flows on relevant pushes and pull
+requests, daily, and on demand; it fails if either test bundle runs no tests.
+Release workflows require Quality checks and their offline store-script tests
+before creating their release artifacts/entries, and the iOS Release workflow
+also runs the iOS tests on the tagged commit before it archives anything. App
+Store builds are archived, signed and uploaded by the iOS Release workflow on
+`ios-v*` tags (see [store/README.md](store/README.md)). Resolve lint errors;
 review warnings and document any accepted limitations before release. Security
 findings require explicit triage and remediation, not a blanket lint baseline.
 
@@ -140,8 +154,9 @@ iPhone release tags are `ios-vX.Y`. Android release tags are `android-vX.Y`. Bef
 [`RELEASE_NOTES.md`](RELEASE_NOTES.md). Summarize user-visible changes, upgrade
 impact and publicly known security fixes, including identifiers when available.
 Do not substitute raw commit logs for release notes. Keep App Store and Google
-Play copy aligned with this summary. The release workflows reject tags without
-an exact reviewed note section.
+Play copy aligned with this summary. A tag without a section still gets a GitHub
+Release with GitHub's generated notes; an empty or duplicated section fails the
+release before anything is built.
 
 ## Reporting Issues
 

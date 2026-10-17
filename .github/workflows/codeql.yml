@@ -1,8 +1,9 @@
 # Static analysis (SAST) with GitHub CodeQL.
 #
 # One job per language, each with a sparse checkout of just the directories that
-# language lives in, so no job has to download the 1.2 GB workout-frame corpus in
-# shared/ or the review artifacts in artifacts/.
+# language lives in, so no job downloads the 1.2 GB workout-frame corpus in
+# shared/. A newer push to a pull request cancels its older analysis; pushes to
+# main, the weekly schedule and manual runs never are.
 #
 #   javascript-typescript  web/ (Cloudflare Worker + static site), scripts/*.mjs
 #   python                 scripts/*.py, local-models/verify_catalog.py
@@ -10,7 +11,7 @@
 #   actions                .github/workflows/*.yml
 #
 # Swift (ios/) is not analyzed: CodeQL's Swift extractor needs a macOS runner and a
-# full xcodebuild, which Xcode Cloud already owns for this project.
+# full xcodebuild; iOS builds run in ios-tests.yml and ios-release.yml instead.
 
 name: CodeQL
 
@@ -27,6 +28,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: codeql-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -42,25 +47,30 @@ jobs:
           - language: javascript-typescript
             build-mode: none
             sparse-checkout: |
-              web
-              scripts
+              /web/
+              /scripts/
           - language: python
             build-mode: none
             sparse-checkout: |
-              scripts
-              local-models
+              /scripts/
+              /local-models/
+          # The Android sources plus the two small workout files Gradle reads while
+          # configuring the build; not the frames.
           - language: java-kotlin
             build-mode: manual
             sparse-checkout: |
-              android
-              shared
+              /android/
+              /shared/workout-vectors/exercise-visual-manifest.json
+              /shared/workout-vectors/sample-pack.txt
           - language: actions
             build-mode: none
-            sparse-checkout: .github
+            sparse-checkout: |
+              /.github/
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          sparse-checkout-cone-mode: false
           sparse-checkout: ${{ matrix.sparse-checkout }}
           persist-credentials: false
 
@@ -83,7 +93,7 @@ jobs:
         uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -95,9 +105,11 @@ jobs:
       - name: Build Android sources for CodeQL
         if: matrix.language == 'java-kotlin'
         working-directory: android
-        run: ./gradlew --no-daemon :app:compileDebugKotlin -PworkoutVectors=none
+        # CodeQL only analyzes code it sees being compiled, so never restore compiled
+        # classes from Gradle's build or configuration cache here.
+        run: ./gradlew --no-daemon --no-build-cache --no-configuration-cache :app:compileDebugKotlin -PworkoutVectors=none
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
           category: /language:${{ matrix.language }}

@@ -1,6 +1,69 @@
 import Foundation
 import UserNotifications
 
+/// Every change to pending notification requests goes through this one serial
+/// queue, never the main thread. UNUserNotificationCenter's remove calls wait for
+/// a synchronous reply from the notification daemon; made on the main thread, a
+/// slow daemon froze the UI for minutes (seen in CI after toggling the water
+/// reminder). The queue keeps removes and adds in the order the app made them, so
+/// a reminder that is removed and re-added is never left removed, and each change
+/// keeps the app running in the background until it has reached the daemon, so a
+/// reminder switched off just before the app is closed is still cancelled.
+nonisolated enum PendingNotificationRequests {
+    private static let queue = DispatchQueue(
+        label: "com.apoorvdarshan.calorietracker.pending-notification-requests",
+        qos: .utility
+    )
+
+    /// Queues `work`, holding an expiring-activity assertion from now until it has run.
+    private static func perform(_ work: @escaping @Sendable (UNUserNotificationCenter) -> Void) {
+        let finished = DispatchSemaphore(value: 0)
+        ProcessInfo.processInfo.performExpiringActivity(withReason: "Update pending notifications") { expired in
+            // Called again with `expired` when the time is up; the work still runs on resume.
+            if !expired { finished.wait() }
+        }
+        queue.async {
+            work(UNUserNotificationCenter.current())
+            finished.signal()
+        }
+    }
+
+    static func remove(_ identifiers: [String]) {
+        perform { $0.removePendingNotificationRequests(withIdentifiers: identifiers) }
+    }
+
+    static func removeAll() {
+        perform { $0.removeAllPendingNotificationRequests() }
+    }
+
+    static func add(_ request: UNNotificationRequest) {
+        perform { $0.add(request) }
+    }
+
+    /// Builds the request when the queue reaches it, so a countdown trigger starts
+    /// when it is added, after any earlier, slower change. Returning nil adds nothing.
+    static func addWhenQueued(_ makeRequest: @escaping @Sendable () -> UNNotificationRequest?) {
+        perform { center in
+            if let request = makeRequest() { center.add(request) }
+        }
+    }
+
+    /// Adds once every earlier change has been applied, and reports whether it worked.
+    static func addAfterPendingChanges(_ request: UNNotificationRequest) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            perform { center in
+                center.add(request) { error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else {
+                        continuation.resume()
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Observable
 class NotificationManager {
     var authorizationStatus: UNAuthorizationStatus = .notDetermined
@@ -30,10 +93,8 @@ class NotificationManager {
         lunchEnabled: Bool, lunchHour: Int, lunchMinute: Int,
         dinnerEnabled: Bool, dinnerHour: Int, dinnerMinute: Int
     ) {
-        let center = UNUserNotificationCenter.current()
-
         // Cancel existing meal reminders
-        center.removePendingNotificationRequests(withIdentifiers: [
+        PendingNotificationRequests.remove([
             "meal.breakfast", "meal.lunch", "meal.dinner"
         ])
 
@@ -78,14 +139,13 @@ class NotificationManager {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
         let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
+        PendingNotificationRequests.add(request)
     }
 
     // MARK: - Water Reminder (repeating daily)
 
     func scheduleWaterReminder(enabled: Bool, hour: Int, minute: Int) {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ["water.reminder"])
+        PendingNotificationRequests.remove(["water.reminder"])
         guard enabled else { return }
 
         let content = UNMutableNotificationContent()
@@ -97,38 +157,43 @@ class NotificationManager {
         dateComponents.hour = hour
         dateComponents.minute = minute
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-        center.add(UNNotificationRequest(identifier: "water.reminder", content: content, trigger: trigger))
+        PendingNotificationRequests.add(UNNotificationRequest(identifier: "water.reminder", content: content, trigger: trigger))
     }
 
     // MARK: - Fasting Goal (one-shot)
 
     func scheduleFastingGoal(enabled: Bool, session: FastingSession?) {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ["fasting.goal"])
+        PendingNotificationRequests.remove(["fasting.goal"])
         guard enabled, let session, session.isActive else { return }
 
-        let interval = session.goalDate.timeIntervalSinceNow
-        guard interval > 1 else { return }
+        let goalDate = session.goalDate
+        guard goalDate.timeIntervalSinceNow > 1 else { return }
 
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Fasting Goal Reached")
         let goal = FastingDurationFormatter.goal(minutes: session.goalMinutes)
         content.body = String(localized: "You reached your \(goal) fasting goal. End the fast when you're ready.")
         content.sound = .default
+        let message = content.copy() as! UNNotificationContent
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
-        center.add(UNNotificationRequest(identifier: "fasting.goal", content: content, trigger: trigger))
+        // The countdown is measured when the request is added, so a slow earlier
+        // change cannot push the reminder past the goal.
+        PendingNotificationRequests.addWhenQueued {
+            let interval = goalDate.timeIntervalSinceNow
+            guard interval > 1 else { return nil }
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            return UNNotificationRequest(identifier: "fasting.goal", content: message, trigger: trigger)
+        }
     }
 
     func cancelFastingGoal() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["fasting.goal"])
+        PendingNotificationRequests.remove(["fasting.goal"])
     }
 
     // MARK: - Streak Reminder (one-shot, rescheduled on foreground/log)
 
     func scheduleStreakReminder(enabled: Bool, hour: Int, minute: Int, hasLoggedToday: Bool, currentStreak: Int) {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ["smart.streak"])
+        PendingNotificationRequests.remove(["smart.streak"])
 
         guard enabled, !hasLoggedToday, currentStreak > 0 else { return }
 
@@ -150,14 +215,13 @@ class NotificationManager {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: "smart.streak", content: content, trigger: trigger)
-        center.add(request)
+        PendingNotificationRequests.add(request)
     }
 
     // MARK: - Daily Summary (one-shot, rescheduled on foreground/log)
 
     func scheduleDailySummary(enabled: Bool, hour: Int, minute: Int, todayCalories: Int, calorieGoal: Int) {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ["smart.summary"])
+        PendingNotificationRequests.remove(["smart.summary"])
 
         guard enabled else { return }
 
@@ -179,7 +243,7 @@ class NotificationManager {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: "smart.summary", content: content, trigger: trigger)
-        center.add(request)
+        PendingNotificationRequests.add(request)
     }
 
     // MARK: - Weight Log Reminder (one-shot, rescheduled on foreground/log)
@@ -188,8 +252,7 @@ class NotificationManager {
     /// logged a weight today — same "smart" pattern as the streak reminder so
     /// users who weigh in early don't get a redundant evening ping.
     func scheduleWeightLogReminder(enabled: Bool, hour: Int, minute: Int, hasLoggedWeightToday: Bool) {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ["smart.weight"])
+        PendingNotificationRequests.remove(["smart.weight"])
 
         guard enabled, !hasLoggedWeightToday else { return }
 
@@ -210,7 +273,7 @@ class NotificationManager {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: "smart.weight", content: content, trigger: trigger)
-        center.add(request)
+        PendingNotificationRequests.add(request)
     }
 
     // MARK: - Body Fat Log Reminder (one-shot, rescheduled on foreground/log)
@@ -219,8 +282,7 @@ class NotificationManager {
     /// already logged one today. Most users don't measure body fat daily, so
     /// this defaults OFF — users opt in via Settings → Notifications.
     func scheduleBodyFatLogReminder(enabled: Bool, hour: Int, minute: Int, hasLoggedBodyFatToday: Bool) {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: ["smart.bodyfat"])
+        PendingNotificationRequests.remove(["smart.bodyfat"])
 
         guard enabled, !hasLoggedBodyFatToday else { return }
 
@@ -241,7 +303,7 @@ class NotificationManager {
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: "smart.bodyfat", content: content, trigger: trigger)
-        center.add(request)
+        PendingNotificationRequests.add(request)
     }
 
     // MARK: - Convenience: Reschedule Data-Dependent Notifications
@@ -325,7 +387,7 @@ class NotificationManager {
 
         let request = UNNotificationRequest(identifier: Self.appUpdateNotificationID, content: content, trigger: nil)
         do {
-            try await UNUserNotificationCenter.current().add(request)
+            try await PendingNotificationRequests.addAfterPendingChanges(request)
             UserDefaults.standard.set(version, forKey: "lastNotifiedAppUpdateVersion")
         } catch {
             // Best-effort; nothing to recover.
@@ -424,7 +486,7 @@ class NotificationManager {
 
         let request = UNNotificationRequest(identifier: Self.productHuntLaunchNotificationID, content: content, trigger: trigger)
         do {
-            try await center.add(request)
+            try await PendingNotificationRequests.addAfterPendingChanges(request)
             UserDefaults.standard.set(true, forKey: Self.productHuntLaunchScheduledKey)
         } catch {
             // Best-effort; retried on the next launch.
@@ -434,7 +496,7 @@ class NotificationManager {
     // MARK: - Cancel All
 
     func cancelAllNotifications() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        PendingNotificationRequests.removeAll()
     }
 
     // MARK: - Streak Computation

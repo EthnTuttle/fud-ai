@@ -5,5 +5,4 @@
 # Supply-chain sensitive paths: CI definitions, release signing, dependency policy.
 /.github/ @apoorvdarshan
 /android/gradle/ @apoorvdarshan
-/android/release/ @apoorvdarshan
 /SECURITY.md @apoorvdarshan

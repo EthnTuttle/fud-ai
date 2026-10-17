@@ -52,16 +52,29 @@ struct AddMenuConfigTests {
         #expect(decoded.groups[0].methods == [.camera, .voice])
     }
 
-    @Test func loadFallsBackToDefaultWhenAllMethodsUnknown() {
+    @Test(arguments: [false, true])
+    func loadFallsBackToDefaultWhenAllMethodsUnknown(flatLayout: Bool) {
         let suiteName = "AddMenuConfigTests.unknown.\(UUID().uuidString)"
         let store = UserDefaults(suiteName: suiteName)!
         defer { store.removePersistentDomain(forName: suiteName) }
 
-        let json = """
+        let json = flatLayout ? """
+        {"version":1,"groups":[],"flatMethods":["unknown_future_method"]}
+        """ : """
         {"version":1,"groups":[{"id":"00000000-0000-0000-0000-000000000001","name":"Quick","methods":["unknown_future_method"]}],"flatMethods":[]}
         """
         store.set(json.data(using: .utf8), forKey: AddMenuConfig.storageKey)
         #expect(AddMenuSettings.load(store: store) == .iOSDefault)
+    }
+
+    @Test func explicitlyEmptyMenuStaysEmptyAfterReload() {
+        let suiteName = "AddMenuConfigTests.empty.\(UUID().uuidString)"
+        let store = UserDefaults(suiteName: suiteName)!
+        defer { store.removePersistentDomain(forName: suiteName) }
+
+        let empty = AddMenuConfig(groups: [], flatMethods: [])
+        AddMenuSettings.save(empty, store: store)
+        #expect(AddMenuSettings.load(store: store) == empty)
     }
 
     @Test func sanitizeDropsEmptyGroups() {

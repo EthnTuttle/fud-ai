@@ -1,3 +1,4 @@
+import { GITHUB_ISSUES_WEBHOOK_PATH, handleGitHubIssueClosure, retryDiscordIssueClosures } from "./discord-issue-closures";
 import { MEAL_SHARE_API, handleMealShareRequest } from "./meal-shares";
 import {
   CHALLENGE_API_PREFIX,
@@ -67,6 +68,10 @@ export default {
       );
     }
 
+    if (url.pathname === GITHUB_ISSUES_WEBHOOK_PATH) {
+      return handleGitHubIssueClosure(request, env, context);
+    }
+
     if (url.pathname === DISCORD_INTERACTIONS_PATH) {
       return handleDiscordInteractionsRequest(
         request,
@@ -94,7 +99,11 @@ export default {
   },
 
   scheduled(_controller: ScheduledController, env: Env, context: ExecutionContext): void {
-    context.waitUntil(runScheduledMaintenance(env));
+    if (_controller.cron === "*/5 * * * *") {
+      context.waitUntil(retryDiscordIssueClosures(env));
+    } else {
+      context.waitUntil(runScheduledMaintenance(env));
+    }
   },
 } satisfies ExportedHandler<Env>;
 

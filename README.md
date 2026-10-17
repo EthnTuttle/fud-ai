@@ -290,7 +290,6 @@ ios/
 ├── calorietrackerTests/              # Unit test target (boilerplate)
 ├── calorietrackerUITests/            # UI test target (boilerplate)
 ├── FudAIWidgets/                     # Widget extension target (Home + Lock Screen)
-├── screenshots/                      # App Store screenshot sources
 └── calorietracker/
     ├── calorietrackerApp.swift       # Entry point, environment setup
     ├── ContentView.swift             # 5-tab layout (Home, Progress, Coach, Settings, Workouts)
@@ -330,8 +329,9 @@ ios/
 ## Build & Run
 
 ```bash
-# Clone
-git clone https://github.com/apoorvdarshan/fud-ai.git
+# Clone. --filter=blob:none downloads only the files in the current version,
+# not every image and binary in the history.
+git clone --filter=blob:none https://github.com/apoorvdarshan/fud-ai.git
 cd fud-ai
 ```
 

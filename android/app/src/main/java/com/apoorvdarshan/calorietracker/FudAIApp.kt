@@ -43,6 +43,9 @@ import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelId
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelManager
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalWhisperRuntime
 import com.apoorvdarshan.calorietracker.services.speech.SpeechService
+import com.apoorvdarshan.calorietracker.services.voice.VoiceAssistantController
+import com.apoorvdarshan.calorietracker.services.voice.createVoicePreviewController
+import com.apoorvdarshan.calorietracker.ui.navigation.AppNavigator
 import com.apoorvdarshan.calorietracker.widget.WidgetRefreshScheduler
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -63,7 +66,11 @@ import java.util.UUID
  * Application-scoped singleton wiring. Manual DI (no Hilt) — repositories and
  * services are instantiated once and handed to ViewModels via [container].
  */
-class FudAIApp : Application() {
+open class FudAIApp : Application() {
+
+    // Instrumentation supplies a test-only Application subclass. Production
+    // always starts the normal services; there is no Intent or saved reset flag.
+    open val backgroundServicesEnabled: Boolean = true
 
     lateinit var container: AppContainer
         private set
@@ -82,6 +89,11 @@ class FudAIApp : Application() {
         // Re-apply the AndroidX per-app locale list on API 32 and below, where
         // AppCompat stores it. Empty list = follow the system language.
         AppCompatDelegate.setApplicationLocales(AppCompatDelegate.getApplicationLocales())
+        if (!backgroundServicesEnabled) {
+            container = AppContainer(this)
+            ExerciseRepository.warm(this)
+            return
+        }
         // RevenueCat must be configured before the container reads its app user id.
         runCatching { BillingManager.configure(this) }
             .onFailure { Log.e("FudAIApp", "RevenueCat configure failed", it) }
@@ -194,6 +206,7 @@ data class GoalCalculationEvidenceContext(
 )
 
 class AppContainer(app: FudAIApp) {
+    val backgroundServicesEnabled = app.backgroundServicesEnabled
     val appContext = app.applicationContext
     val localModels = LocalModelManager(app, FoodAnalysisService.defaultClient)
     val prefs = PreferencesStore(
@@ -279,6 +292,14 @@ class AppContainer(app: FudAIApp) {
     val speechService = SpeechService(prefs, keyStore, localWhisper = localWhisper, hosted = hostedAccess)
 
     val widgetSnapshotWriter = WidgetSnapshotWriter(app, prefs, foodRepository, profileRepository)
+
+    /** Shared navigation state: what each screen shows, and requests from the voice assistant. */
+    val navigator = AppNavigator()
+
+    /** The live voice assistant (the orb). Created on first use. */
+    val voiceAssistant: VoiceAssistantController by lazy { VoiceAssistantController(this) }
+    /** Settings sample playback; never starts a conversation or microphone. */
+    val voicePreview by lazy { createVoicePreviewController(this) }
     /**
      * App-scoped flag set by [HomeViewModel] while a food analysis request is
      * in flight. The bottom nav reads this so the bar can hide during the

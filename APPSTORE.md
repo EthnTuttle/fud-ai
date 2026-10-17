@@ -144,8 +144,8 @@ See `docs/HOSTED_AI_REVENUECAT.md` for the RevenueCat + App Store Connect checkl
 **Subscriptions:**
 - `com.apoorvdarshan.calorietracker.plus.monthly` (~$8.99)
 - `com.apoorvdarshan.calorietracker.plus.yearly` (~$69.99)
-- `com.apoorvdarshan.calorietracker.pro.monthly` (~$17.99)
-- `com.apoorvdarshan.calorietracker.pro.yearly` (~$149.99)
+- `com.apoorvdarshan.calorietracker.pro.monthly` (~$19.99)
+- `com.apoorvdarshan.calorietracker.pro.yearly` (~$179.99)
 
 **Credit packs (consumables):**
 - `com.apoorvdarshan.calorietracker.credits.50` ($1.99)

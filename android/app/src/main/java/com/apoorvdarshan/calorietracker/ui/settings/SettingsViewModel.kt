@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -331,6 +332,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 localModelStates = container.localModels.states.value,
                 goalsNeedRecalc = needsRecalc(profile)
             )
+            followAssistantSettings()
 
             // Permission reconciliation may open Health Connect's provider and backfill data, so
             // it must never sit on the critical path for displaying Settings. Refresh only the
@@ -347,6 +349,35 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     reconciledHealthConnect,
                 goalsNeedRecalc = needsRecalc(reconciledProfile ?: _ui.value.profile)
             )
+        }
+    }
+
+    /**
+     * The voice assistant can change appearance, theme colour, units and the water goal
+     * while Settings holds the snapshot above; follow them so the rows stay current.
+     * Started after the snapshot so a change made meanwhile is applied on top of it.
+     */
+    private fun followAssistantSettings() {
+        val prefs = container.prefs
+        viewModelScope.launch {
+            prefs.appearanceMode.distinctUntilChanged().collect { _ui.value = _ui.value.copy(appearanceMode = it) }
+        }
+        viewModelScope.launch {
+            prefs.appThemeColor.distinctUntilChanged().collect {
+                _ui.value = _ui.value.copy(appThemeColor = AppThemeColor.fromKey(it))
+            }
+        }
+        viewModelScope.launch {
+            prefs.heightUnit.distinctUntilChanged().collect { _ui.value = _ui.value.copy(heightUnit = it) }
+        }
+        viewModelScope.launch {
+            prefs.weightUnit.distinctUntilChanged().collect { _ui.value = _ui.value.copy(weightUnit = it) }
+        }
+        viewModelScope.launch {
+            prefs.waterDailyGoalMl.distinctUntilChanged().collect { _ui.value = _ui.value.copy(waterDailyGoalMl = it) }
+        }
+        viewModelScope.launch {
+            prefs.waterUnit.distinctUntilChanged().collect { _ui.value = _ui.value.copy(waterUnit = it) }
         }
     }
 

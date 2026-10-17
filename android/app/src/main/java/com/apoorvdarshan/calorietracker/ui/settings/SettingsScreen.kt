@@ -90,6 +90,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
@@ -134,6 +135,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -145,6 +147,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -188,6 +191,7 @@ import com.apoorvdarshan.calorietracker.services.health.HealthAvailabilityMessag
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectAvailability
 import com.apoorvdarshan.calorietracker.services.health.healthAvailabilityMessageKind
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelId
+import com.apoorvdarshan.calorietracker.services.voice.VoiceSettingsSection
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelIneligibility
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelInstallStatus
 import com.apoorvdarshan.calorietracker.services.ondevice.LocalModelState
@@ -279,6 +283,7 @@ internal enum class SettingsCategory(
     AI_ACCESS(R.string.settings_category_ai_access, Icons.Outlined.WorkspacePremium),
     AI_PROVIDERS(R.string.settings_category_ai_providers, Icons.Outlined.SmartToy),
     SPEECH_TO_TEXT(R.string.settings_section_speech, Icons.Outlined.Mic),
+    VOICE_ASSISTANT(R.string.settings_category_voice_assistant, Icons.Outlined.RecordVoiceOver),
     APP_PREFERENCES(R.string.settings_section_app, Icons.Outlined.Palette),
     WORKOUT(R.string.settings_section_workout, Icons.Outlined.FitnessCenter),
     HEALTH_DATA(R.string.settings_section_health, Icons.Outlined.Favorite),
@@ -309,9 +314,42 @@ internal enum class SettingsCategory(
         AboutSettingsCategory.LEGAL
     );
 
+    /** The voice assistant's name for this category (`open_screen` / `get_app_state`). */
+    val voiceSection: VoiceSettingsSection?
+        get() = when (this) {
+            PERSONAL_INFO -> VoiceSettingsSection.PROFILE
+            GOALS_NUTRITION -> VoiceSettingsSection.GOALS
+            TRACKING_REMINDERS -> VoiceSettingsSection.REMINDERS
+            NOTIFICATIONS -> VoiceSettingsSection.NOTIFICATIONS
+            AI_ACCESS, AI_PROVIDERS -> VoiceSettingsSection.AI_PROVIDERS
+            SPEECH_TO_TEXT -> VoiceSettingsSection.SPEECH
+            VOICE_ASSISTANT -> VoiceSettingsSection.VOICE_ASSISTANT
+            APP_PREFERENCES -> VoiceSettingsSection.APPEARANCE
+            WORKOUT -> VoiceSettingsSection.WORKOUTS
+            HEALTH_DATA -> VoiceSettingsSection.HEALTH
+            DATA_MANAGEMENT -> VoiceSettingsSection.DATA
+            APP_UPDATES, SUPPORT, HELP_FEEDBACK, COMMUNITY, LEGAL -> VoiceSettingsSection.ABOUT
+        }
+
     companion object {
         val preferenceEntries = entries.filter { it.aboutCategory == null }
         val appInfoEntries = entries.filter { it.aboutCategory != null }
+
+        /** Where the voice assistant's settings section opens; About lands on App Updates. */
+        fun forVoiceSection(section: VoiceSettingsSection): SettingsCategory = when (section) {
+            VoiceSettingsSection.PROFILE -> PERSONAL_INFO
+            VoiceSettingsSection.GOALS -> GOALS_NUTRITION
+            VoiceSettingsSection.REMINDERS -> TRACKING_REMINDERS
+            VoiceSettingsSection.NOTIFICATIONS -> NOTIFICATIONS
+            VoiceSettingsSection.AI_PROVIDERS -> AI_PROVIDERS
+            VoiceSettingsSection.SPEECH -> SPEECH_TO_TEXT
+            VoiceSettingsSection.APPEARANCE -> APP_PREFERENCES
+            VoiceSettingsSection.WORKOUTS -> WORKOUT
+            VoiceSettingsSection.HEALTH -> HEALTH_DATA
+            VoiceSettingsSection.DATA -> DATA_MANAGEMENT
+            VoiceSettingsSection.VOICE_ASSISTANT -> VOICE_ASSISTANT
+            VoiceSettingsSection.ABOUT -> APP_UPDATES
+        }
     }
 }
 
@@ -357,6 +395,21 @@ fun SettingsScreen(
         if (popToRootTick > 0) {
             selectedCategory = null
         }
+    }
+    // The voice assistant opens a section through the app navigator and reads back which
+    // one is on screen.
+    val pendingVoiceSection by container.navigator.pendingSettingsSection.collectAsState()
+    LaunchedEffect(pendingVoiceSection) {
+        pendingVoiceSection?.let { section ->
+            selectedCategory = SettingsCategory.forVoiceSection(section)
+            container.navigator.pendingSettingsSection.value = null
+        }
+    }
+    LaunchedEffect(selectedCategory) {
+        container.navigator.settingsSection.value = selectedCategory?.voiceSection
+    }
+    DisposableEffect(Unit) {
+        onDispose { container.navigator.settingsSection.value = null }
     }
     val settingsHomeScrollState = rememberScrollState()
     val settingsDetailScrollState = remember(selectedCategory) { ScrollState(initial = 0) }
@@ -636,6 +689,9 @@ fun SettingsScreen(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
+                // Keep voice switches in the touchable viewport above the floating tabs.
+                // Padding inside the scroll content alone cannot constrain bring-into-view.
+                .padding(bottom = if (selectedCategory == SettingsCategory.VOICE_ASSISTANT) BottomNavScrollPadding else 0.dp)
                 .verticalScroll(
                     if (selectedCategory == null) settingsHomeScrollState
                     else settingsDetailScrollState
@@ -964,6 +1020,7 @@ fun SettingsScreen(
                     stringResource(R.string.settings_water_tracking),
                     ui.waterTrackingEnabled,
                     icon = Icons.Filled.WaterDrop,
+                    switchModifier = Modifier.testTag("settings.water.enabled"),
                     onChange = vm::setWaterTrackingEnabled
                 )
                 if (ui.waterTrackingEnabled) {
@@ -1377,6 +1434,13 @@ fun SettingsScreen(
             }
             }
 
+            if (selectedCategory == SettingsCategory.VOICE_ASSISTANT) {
+                VoiceAssistantSettings(
+                    container = container,
+                    onOpenAiProviders = { selectedCategory = SettingsCategory.AI_PROVIDERS }
+                )
+            }
+
             // Section 6 — Health & Data (matches iOS Section "Health & Data")
             if (selectedCategory == SettingsCategory.HEALTH_DATA) {
             SectionCard {
@@ -1623,7 +1687,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(Modifier.height(BottomNavScrollPadding))
+            Spacer(Modifier.height(if (selectedCategory == SettingsCategory.VOICE_ASSISTANT) 0.dp else BottomNavScrollPadding))
         }
     }
 
@@ -2012,6 +2076,7 @@ private fun SettingsCategoryRows(
     categories.forEachIndexed { index, category ->
         Row(
             modifier = Modifier
+                .testTag("settings.category.${category.name}")
                 .fillMaxWidth()
                 .clickable { onSelect(category) }
                 .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -4411,6 +4476,7 @@ private fun ToggleRow(
     checked: Boolean,
     icon: ImageVector? = null,
     subtitle: String? = null,
+    switchModifier: Modifier = Modifier,
     onChange: (Boolean) -> Unit
 ) {
     Row(
@@ -4431,7 +4497,7 @@ private fun ToggleRow(
                 )
             }
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = onChange, modifier = switchModifier)
     }
 }
 

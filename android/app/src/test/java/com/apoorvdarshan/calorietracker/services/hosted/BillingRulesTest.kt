@@ -32,7 +32,7 @@ class BillingRulesTest {
     @Test
     fun yearlySavingsMatchesTheListPrices() {
         assertEquals(35, yearlySavingsPercent(8_990_000, "USD", 69_990_000, "USD"))
-        assertEquals(31, yearlySavingsPercent(17_990_000, "USD", 149_990_000, "USD"))
+        assertEquals(25, yearlySavingsPercent(19_990_000, "USD", 179_990_000, "USD"))
         assertNull(yearlySavingsPercent(8_990_000, "USD", 69_990_000, "EUR"))
         assertNull(yearlySavingsPercent(8_990_000, "USD", 107_000_000, "USD"))
     }

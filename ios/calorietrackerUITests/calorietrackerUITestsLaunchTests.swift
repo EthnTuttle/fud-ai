@@ -1,32 +1,29 @@
-//
-//  calorietrackerUITestsLaunchTests.swift
-//  calorietrackerUITests
-//
-//  Created by Apoorv Darshan on 05/02/26.
-//
-
 import XCTest
 
 final class calorietrackerUITestsLaunchTests: XCTestCase {
-
-    override class var runsForEachTargetApplicationUIConfiguration: Bool {
-        true
-    }
-
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
     @MainActor
-    func testLaunch() throws {
+    func testLaunchShowsMainNavigationAndHome() throws {
         let app = XCUIApplication()
+        app.launchArguments = [
+            "--ui-testing", "--ui-testing-reset", "--ui-testing-onboarded",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "-WorkoutVectorsBaseURL", "none",
+        ]
         app.launch()
 
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
+        XCTAssertTrue(app.buttons["home.add"].waitForExistence(timeout: 15))
+        for tab in ["Home", "Progress", "Coach", "Settings", "Workouts"] {
+            XCTAssertTrue(app.tabBars.buttons[tab].exists, "Missing main tab: \(tab)")
+        }
+        XCTAssertTrue(app.tabBars.buttons["Home"].isSelected)
+        XCTAssertFalse(app.buttons["Get Started"].exists)
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = "Launch Screen"
+        attachment.name = "Home navigation"
         attachment.lifetime = .keepAlways
         add(attachment)
     }

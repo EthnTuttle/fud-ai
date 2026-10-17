@@ -68,7 +68,7 @@ android {
         // Release uses localized @string/app_name; debug overrides to "Fud AI Debug".
         manifestPlaceholders["launcherAppName"] = "@string/app_name"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.apoorvdarshan.calorietracker.testing.FudAITestRunner"
 
         val oauthProps = Properties().apply {
             val file = rootProject.file("oauth.properties")
@@ -146,6 +146,8 @@ android {
         compose = true
         // AdsConfig gates real vs test ad units on BuildConfig.DEBUG.
         buildConfig = true
+        // voice_shortcut_package (below) for the static launcher shortcut.
+        resValues = true
     }
 
     lint {
@@ -343,6 +345,12 @@ abstract class PrepareWorkoutVectorAssetsTask : DefaultTask() {
 
 androidComponents {
     onVariants { variant ->
+        // res/xml/shortcuts.xml targets this package, so the "Talk to Fud AI" shortcut opens
+        // the variant it ships in (debug builds carry a .debug suffix).
+        variant.resValues.put(
+            variant.makeResValueKey("string", "voice_shortcut_package"),
+            variant.applicationId.map { com.android.build.api.variant.ResValue(it, "Target package of the voice shortcut") }
+        )
         val isRelease = variant.buildType == "release"
         val requested = workoutVectorsModeProperty.orNull
         // Gradle configures every variant even for `assembleDebug`, so the release variant
@@ -378,6 +386,13 @@ androidComponents {
 
 kotlin {
     jvmToolchain(17)
+}
+
+// Unit tests also read repository files that are not task inputs (the workout manifest
+// and frames, this build script), so a cached result could hide a change to them. Test
+// results are never taken from the build cache; compiled classes still are.
+tasks.withType<Test>().configureEach {
+    outputs.doNotCacheIf("unit tests read undeclared repository files") { true }
 }
 
 dependencies {
@@ -423,12 +438,15 @@ dependencies {
     implementation(libs.revenuecat.purchases)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation("com.squareup.okhttp3:mockwebserver:${libs.versions.okhttp.get()}")
     testImplementation("com.squareup.okhttp3:okhttp-tls:${libs.versions.okhttp.get()}")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test:core:1.7.0")
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

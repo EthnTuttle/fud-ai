@@ -263,6 +263,69 @@ struct DiaryPersistenceSafetyTests {
 
     // MARK: - FoodStore
 
+    @Test(arguments: ["add", "update", "delete"])
+    func acceptedFoodWritesStayConsistentWhenExplicitFlushWouldFail(operation: String) throws {
+        let suite = "DiaryPersistenceSafetyTests.Flush.\(UUID().uuidString)"
+        let defaults = try #require(FailedFlushDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        #expect(!defaults.synchronize())
+
+        var original = makeMeal()
+        let originalData = Data("original photo".utf8)
+        // Use a distinct storage ID so replacing the photo writes a new file.
+        let originalFilename = try #require(FoodImageStore.shared.store(data: originalData, for: UUID()))
+        original.imageFilename = originalFilename
+        defer { FoodImageStore.shared.delete(filename: originalFilename) }
+        defaults.set(try JSONEncoder().encode([original]), forKey: FoodStore.storageKey)
+
+        let store = FoodStore(observesExternalChanges: false, defaults: defaults)
+        var callbacks = 0
+        var added = 0
+        var updated = 0
+        var deleted = 0
+        store.onEntriesChanged = { callbacks += 1 }
+        store.onEntryAdded = { _ in added += 1 }
+        store.onEntryUpdated = { _ in updated += 1 }
+        store.onEntryDeleted = { _ in deleted += 1 }
+
+        var changed = operation == "add" ? makeMeal() : original
+        changed.name = "Changed meal"
+        changed.imageFilename = nil
+        let replacementData = Data("replacement photo".utf8)
+        changed.imageData = replacementData
+        let replacementFilename = "\(changed.id.uuidString).jpg"
+        defer { FoodImageStore.shared.delete(filename: replacementFilename) }
+
+        switch operation {
+        case "add": #expect(store.addEntry(changed))
+        case "update": #expect(store.updateEntry(changed))
+        default: #expect(store.deleteEntry(original))
+        }
+
+        let persisted = try JSONDecoder().decode([FoodEntry].self, from: #require(defaults.data(forKey: FoodStore.storageKey)))
+        let reloaded = FoodStore(observesExternalChanges: false, defaults: defaults)
+        #expect(store.entries.map(\.id) == persisted.map(\.id))
+        #expect(reloaded.entries.map(\.id) == persisted.map(\.id))
+        #expect(callbacks == 1)
+        #expect(added == (operation == "add" ? 1 : 0))
+        #expect(updated == (operation == "update" ? 1 : 0))
+        #expect(deleted == (operation == "delete" ? 1 : 0))
+        store.reloadFromDefaults()
+        #expect(store.entries.map(\.id) == persisted.map(\.id))
+
+        if operation == "delete" {
+            #expect(persisted.isEmpty)
+            #expect(FoodImageStore.shared.load(filename: originalFilename) == nil)
+        } else {
+            #expect(persisted.count == (operation == "add" ? 2 : 1))
+            let saved = try #require(reloaded.entries.first { $0.id == changed.id })
+            #expect(saved.name == "Changed meal")
+            #expect(saved.allImageFilenames == [replacementFilename])
+            #expect(saved.allImageData == [replacementData])
+            #expect(FoodImageStore.shared.load(filename: originalFilename) == (operation == "add" ? originalData : nil))
+        }
+    }
+
     @Test func corruptFoodBlobIsPreservedAndAddIsRefusedUntilBackedUp() throws {
         try withDefaults { defaults, _ in
             let garbage = Data("[{\"id\": \"broken\"".utf8)
@@ -431,4 +494,9 @@ struct DiaryPersistenceSafetyTests {
         }
         try body(defaults, backupDir)
     }
+}
+
+/// Simulates a failed explicit disk flush after UserDefaults has accepted set().
+private final class FailedFlushDefaults: UserDefaults, @unchecked Sendable {
+    override func synchronize() -> Bool { false }
 }

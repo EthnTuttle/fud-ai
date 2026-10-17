@@ -1,0 +1,265 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Calories today in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Calories today in ${applicationName}",
+              "How many calories in ${applicationName}",
+              "Today's nutrition in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Log food in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log food in ${applicationName}",
+              "Add food in ${applicationName}",
+              "Track food in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Log my weight in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log my weight in ${applicationName}",
+              "Record weight in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Quick action one in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Quick action one in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Quick action three in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Quick action three in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Quick action two in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Quick action two in ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Talk to ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "ar" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "تحدث إلى ${applicationName}",
+              "ابدأ دردشة صوتية في ${applicationName}"
+            ]
+          }
+        },
+        "az" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} ilə danış",
+              "${applicationName} ilə səsli söhbət başlat"
+            ]
+          }
+        },
+        "cs" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Mluvit s ${applicationName}",
+              "Spustit hlasový chat v ${applicationName}"
+            ]
+          }
+        },
+        "de" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Mit ${applicationName} sprechen",
+              "Sprachchat in ${applicationName} starten"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Talk to ${applicationName}",
+              "Start a voice chat in ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Hablar con ${applicationName}",
+              "Iniciar un chat de voz en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Parler à ${applicationName}",
+              "Démarrer une conversation vocale dans ${applicationName}"
+            ]
+          }
+        },
+        "hi" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} से बात करो",
+              "${applicationName} में वॉइस चैट शुरू करो"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Parla con ${applicationName}",
+              "Avvia una chat vocale in ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName}と話す",
+              "${applicationName}で音声チャットを開始"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName}와 대화하기",
+              "${applicationName}에서 음성 채팅 시작"
+            ]
+          }
+        },
+        "nl" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Praat met ${applicationName}",
+              "Start een spraakgesprek in ${applicationName}"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Porozmawiaj z ${applicationName}",
+              "Rozpocznij czat głosowy w ${applicationName}"
+            ]
+          }
+        },
+        "pt-BR" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Falar com o ${applicationName}",
+              "Iniciar um chat de voz no ${applicationName}"
+            ]
+          }
+        },
+        "ro" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Vorbește cu ${applicationName}",
+              "Pornește un chat vocal în ${applicationName}"
+            ]
+          }
+        },
+        "ru" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Поговорить с ${applicationName}",
+              "Начать голосовой чат в ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName} ile konuş",
+              "${applicationName} içinde sesli sohbet başlat"
+            ]
+          }
+        },
+        "uk" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Поговорити з ${applicationName}",
+              "Почати голосовий чат у ${applicationName}"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "与${applicationName}对话",
+              "在${applicationName}中开始语音聊天"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

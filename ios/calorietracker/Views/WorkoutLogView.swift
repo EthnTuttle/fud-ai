@@ -79,6 +79,7 @@ struct WorkoutLogView: View {
     @State private var isCopySheetPresented = false
     @State private var isTextSheetPresented = false
     @State private var workoutInputUsesVoice = false
+    @State private var voiceAssistant = VoiceAssistantController.shared
     @State private var selectedDetailItem: ExerciseLibraryItem?
     @State private var historyRequest: WorkoutLogExerciseHistoryRequest?
 
@@ -397,11 +398,16 @@ struct WorkoutLogView: View {
                     }
                 }
                 .overlay(alignment: .bottomTrailing) {
-                    addExerciseMenu
-                        .padding(24)
-                        .simultaneousGesture(
-                            TapGesture().onEnded(dismissSetKeyboard)
-                        )
+                    HStack(spacing: 12) {
+                        if !voiceAssistant.isActive {
+                            VoiceAssistantHomeButton(controller: voiceAssistant)
+                        }
+                        addExerciseMenu
+                    }
+                    .padding(24)
+                    .simultaneousGesture(
+                        TapGesture().onEnded(dismissSetKeyboard)
+                    )
                 }
             }
             // Keep the chrome quiet: the date strip and burn calculator lead.

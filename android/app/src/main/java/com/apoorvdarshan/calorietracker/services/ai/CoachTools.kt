@@ -179,6 +179,7 @@ class CoachTools(
             .take(args.boundedLimit(default = 200, maximum = 365))
         val entries = filtered.map { food ->
             linkedMapOf<String, Any?>(
+                "entry_id" to food.id.toString(),
                 "date" to isoDate(food.timestamp),
                 "name" to food.name,
                 "kcal" to food.calories,

@@ -28,6 +28,43 @@ import java.util.UUID
 
 class WorkoutRepositoryTest {
     @Test
+    fun voiceUndoRestoresTheOriginalBurnAndQueuesItsHealthWrite() = runBlocking {
+        val previous = burnSession().copy(caloriesBurned = 713)
+        val store = FakeWorkoutStateStore(WorkoutPersistedState(completedSessions = listOf(previous)))
+        val repository = WorkoutRepository(store)
+        val day = LocalDate.parse(previous.diaryDateKey)
+        val beforePlan = repository.planNow(day)
+        val draft = com.apoorvdarshan.calorietracker.models.WorkoutTextDraft(day.toString(), listOf(
+            com.apoorvdarshan.calorietracker.models.WorkoutTextExercise(exerciseId = null, name = "Soccer", minutes = "20")
+        ))
+        repository.addTextWorkout(draft, emptyList())
+        val added = repository.planNow(day).exercises.single()
+        repository.upsertCalculatedWorkout(day, 100, WorkoutWeightUnit.KG)
+        repository.removeExercise(added.id, day)
+
+        assertTrue(repository.restoreBurnAfterUndo(previous, beforePlan))
+        val state = repository.snapshot()
+        val restored = state.completedSessions.single()
+        assertEquals(previous.copy(healthSyncVersion = 2), restored)
+        assertEquals(713, restored.caloriesBurned)
+        assertFalse(previous.id.toString() in state.healthDeletionTombstones)
+        assertTrue(previous.id.toString() in state.pendingHealthUpsertIds)
+        assertEquals(beforePlan, repository.planNow(day))
+    }
+
+    @Test
+    fun voiceUndoDoesNotRestoreOldCaloriesOverALaterPlanEdit() = runBlocking {
+        val previous = burnSession()
+        val repository = WorkoutRepository(FakeWorkoutStateStore())
+        val day = LocalDate.parse(previous.diaryDateKey)
+        val before = repository.planNow(day)
+        repository.toggleExercise(exerciseItem(), day)
+        val changed = repository.snapshot()
+        assertFalse(repository.restoreBurnAfterUndo(previous, before))
+        assertEquals(changed, repository.snapshot())
+    }
+
+    @Test
     fun customActivityRemainsAvailableAfterItsSourceEntryIsDeleted() = runBlocking {
         val store = FakeWorkoutStateStore()
         val repository = WorkoutRepository(store)

@@ -114,7 +114,18 @@ private enum AppUpdateChecker {
 // MARK: - Main Content View
 struct ContentView: View {
     @Environment(NotificationManager.self) private var notificationManager
+    @Environment(FoodStore.self) private var foodStore
+    @Environment(WaterStore.self) private var waterStore
+    @Environment(FastingStore.self) private var fastingStore
+    @Environment(WeightStore.self) private var weightStore
+    @Environment(BodyFatStore.self) private var bodyFatStore
+    @Environment(StrengthWorkoutStore.self) private var strengthWorkoutStore
+    @Environment(ProfileStore.self) private var profileStore
+    @Environment(ChatStore.self) private var chatStore
+    @Environment(BodyMeasurementStore.self) private var bodyMeasurementStore
     @Environment(\.scenePhase) private var scenePhase
+    @State private var voiceAssistant = VoiceAssistantController.shared
+    @State private var assistantNavigator = VoiceAssistantNavigator.shared
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @AppStorage(WorkoutTabMode.storageKey) private var workoutTabModeRaw = WorkoutTabMode.defaultMode.rawValue
     @State private var appUpdateState: AppUpdateState = .idle
@@ -134,7 +145,9 @@ struct ContentView: View {
     var body: some View {
         standardTabView
             .tint(AppThemeColor.color(for: appThemeColorRaw).color)
+            .background(VoiceAssistantWindowInstaller(controller: voiceAssistant))
             .task {
+                attachVoiceAssistant()
                 consumePendingLaunchRoutes()
                 await refreshAppUpdateState()
                 await runPostUpdatePromptsIfNeeded()
@@ -186,11 +199,64 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: .foodLogMethodRequested)) { _ in
                 consumePendingLaunchRoutes()
             }
+            .onReceive(NotificationCenter.default.publisher(for: VoiceAssistantLaunchRequest.notification)) { _ in
+                consumePendingLaunchRoutes()
+            }
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
                     consumePendingLaunchRoutes()
                 }
             }
+            .onChange(of: voiceAssistant.presentation, initial: true) { _, presentation in
+                VoiceAssistantWindowManager.shared.setVisible(presentation != .hidden)
+            }
+            .onChange(of: assistantNavigator.screenRequest?.id) { _, _ in
+                applyAssistantScreenRequest()
+            }
+            .onChange(of: selectedTab, initial: true) { _, tab in
+                assistantNavigator.currentScreen = Self.screen(for: tab)
+            }
+    }
+
+    /// Hands the app's stores to the voice assistant.
+    private func attachVoiceAssistant() {
+        let profileStore = profileStore
+        voiceAssistant.attach(VoiceAssistantController.AppData(
+            stores: VoiceAssistantStores(
+                food: foodStore,
+                water: waterStore,
+                fasting: fastingStore,
+                weight: weightStore,
+                bodyFat: bodyFatStore,
+                workouts: strengthWorkoutStore,
+                profile: { profileStore.profile },
+                saveProfile: { $0.save() }
+            ),
+            chat: chatStore,
+            bodyMeasurements: bodyMeasurementStore
+        ))
+    }
+
+    /// The voice assistant moves between tabs like the user would.
+    private func applyAssistantScreenRequest() {
+        guard let screen = assistantNavigator.takeScreenRequest() else { return }
+        selectedTab = switch screen {
+        case .home: .home
+        case .progress: .progress
+        case .coach: .coach
+        case .workouts: .workouts
+        case .settings: .settings
+        }
+    }
+
+    private static func screen(for tab: AppTab) -> VoiceAssistantScreen {
+        switch tab {
+        case .home: .home
+        case .progress: .progress
+        case .coach: .coach
+        case .settings: .settings
+        case .workouts: .workouts
+        }
     }
 
     private var standardTabView: some View {
@@ -256,6 +322,10 @@ struct ContentView: View {
     }
 
     private func consumePendingLaunchRoutes() {
+        // Siri, the Action Button and the Control Center control open the assistant.
+        if VoiceAssistantLaunchRequest.consumePending() {
+            voiceAssistant.start()
+        }
         if let action = QuickActionCoordinator.consumePending() {
             selectedTab = .home
             quickActionRequest = QuickActionRequest(action: action)
@@ -269,6 +339,7 @@ struct ContentView: View {
 
     @MainActor
     private func refreshAppUpdateState(force: Bool = false) async {
+        guard !SimulatorTestEnvironment.isRunningTests else { return }
         if !force && appUpdateState.hasStartedCheck {
             return
         }
@@ -290,6 +361,7 @@ struct ContentView: View {
     /// Hosted upsell is marked seen when shown; meet-the-developer is marked seen only on Done.
     @MainActor
     private func runPostUpdatePromptsIfNeeded() async {
+        guard !SimulatorTestEnvironment.isRunningTests else { return }
         // Let the first frame and any launch route (quick action / deep link) settle first.
         try? await Task.sleep(for: .seconds(2))
         guard quickActionRequest == nil, foodLogMethodRequest == nil else {
@@ -935,6 +1007,8 @@ struct HomeView: View {
     @State private var showMultiPhotoCaptureSheet = false
     @State private var contextDescription: String = ""
     @State private var showContextSheet = false
+    @State private var voiceAssistant = VoiceAssistantController.shared
+    @State private var assistantNavigator = VoiceAssistantNavigator.shared
 
     enum ActiveSheet: String, Identifiable {
         case analyzing, foodResult, analyzingText, lookingUpBarcode, editFood, importSharedMeal
@@ -1329,6 +1403,114 @@ private var dailyStepsTaskKey: String {
         }
     }
 
+    /// The diary scrolls behind these floating controls and can scroll fully above them.
+    private var homeActionBar: some View {
+        HStack(spacing: 12) {
+            // The live session uses its own floating controls.
+            if !voiceAssistant.isActive {
+                VoiceAssistantHomeButton(controller: voiceAssistant)
+            }
+            Menu {
+                if fastingTrackingEnabled {
+                    Section {
+                        if fastingStore.activeSession != nil {
+                            Menu {
+                                Button {
+                                    endFast()
+                                } label: {
+                                    Label("End Fast", systemImage: "stop.fill")
+                                }
+                                Button(role: .destructive) {
+                                    fastingStore.cancelActive()
+                                    notificationManager.cancelFastingGoal()
+                                } label: {
+                                    Label("Cancel Fast", systemImage: "trash")
+                                }
+                            } label: {
+                                Label("Fasting", systemImage: "timer")
+                            }
+                        } else {
+                            Button {
+                                presentFoodDestination {
+                                    showFastingStart = true
+                                }
+                            } label: {
+                                Label("Start Fast", systemImage: "timer")
+                            }
+                        }
+                    }
+                }
+                if waterTrackingEnabled {
+                    Section {
+                        Menu {
+                            waterQuickMenuItems
+                        } label: {
+                            Label("Water", systemImage: "drop.fill")
+                        }
+                    }
+                }
+                if fastingStore.activeSession == nil {
+                    configuredFoodAddMenuContent
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 60, height: 60)
+                    .background(AppColors.calorie, in: Circle())
+            }
+            .accessibilityIdentifier("home.add")
+            .popover(isPresented: $showTextPopover) {
+                TextFoodInputView(
+                    onCancel: {
+                        showTextPopover = false
+                    },
+                    onSubmit: { description in
+                        showTextPopover = false
+                        currentImage = nil
+                        currentImages = []
+                        currentEmoji = nil
+                        currentFoodSource = .textInput
+                        afterLoggingPresentationDismisses {
+                            startTextAnalysis(description)
+                        }
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+            .popover(isPresented: $showVoicePopover) {
+                VoiceInputView(
+                    onCancel: {
+                        showVoicePopover = false
+                    },
+                    onSubmit: { description in
+                        showVoicePopover = false
+                        currentImage = nil
+                        currentImages = []
+                        currentEmoji = nil
+                        currentFoodSource = .textInput
+                        afterLoggingPresentationDismisses {
+                            startTextAnalysis(description)
+                        }
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+            .popover(isPresented: $showManualPopover) {
+                ManualEntryView(
+                    logDate: logDateForSelectedDay,
+                    onCancel: { showManualPopover = false },
+                    onSave: { entry in
+                        showManualPopover = false
+                        if !foodStore.addEntry(entry) { showFoodLoggingBlocked = true }
+                    }
+                )
+                .presentationCompactAdaptation(.popover)
+            }
+        }
+        .padding(24)
+    }
+
     var body: some View {
         homeContent
             .alert(pendingDiaryDeletion?.title ?? "Delete Entry?", isPresented: isDiaryDeletionPresented, presenting: pendingDiaryDeletion) { target in
@@ -1339,6 +1521,45 @@ private var dailyStepsTaskKey: String {
             } message: { target in
                 Text(target.message)
             }
+            .background {
+                // The compact assistant floats where the orb button sits, above the tab bar.
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { assistantNavigator.contentBottomInset = proxy.safeAreaInsets.bottom }
+                        .onChange(of: proxy.safeAreaInsets.bottom) { _, inset in
+                            assistantNavigator.contentBottomInset = inset
+                        }
+                }
+            }
+            .onChange(of: selectedDate, initial: true) { _, date in
+                assistantNavigator.homeDiaryDate = date
+            }
+            .onChange(of: assistantNavigator.diaryDateRequest?.id) { _, _ in
+                handleAssistantRequests()
+            }
+            .onChange(of: assistantNavigator.foodEntryRequest?.id) { _, _ in
+                handleAssistantRequests()
+            }
+            .onAppear {
+                handleAssistantRequests()
+            }
+    }
+
+    /// The voice assistant shows a diary day or opens a logged food for editing.
+    private func handleAssistantRequests() {
+        if let day = assistantNavigator.takeDiaryDateRequest() {
+            selectedFoodIDs.removeAll()
+            selectedDate = day
+        }
+        guard let entryID = assistantNavigator.takeFoodEntryRequest(),
+              let entry = foodStore.entries.first(where: { $0.id == entryID }) else { return }
+        selectedFoodIDs.removeAll()
+        let hadSheet = activeSheet != nil
+        activeSheet = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + (hadSheet ? 0.45 : 0.1)) {
+            editingEntry = entry
+            activeSheet = .editFood
+        }
     }
 
     private var homeContent: some View {
@@ -1547,48 +1768,58 @@ private var dailyStepsTaskKey: String {
                                 .listRowBackground(AppColors.appCard)
                             }
                         } header: {
-                            HStack(alignment: .center) {
-                                Label(group.meal.displayName, systemImage: group.meal.icon)
-                                if group.id == mealGroups.first?.id {
-                                    Menu {
-                                        Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
-                                            ForEach(FoodLogSortOrder.allCases) { order in
-                                                Text(order.displayName).tag(order.rawValue)
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(alignment: .center) {
+                                    Label(group.meal.displayName, systemImage: group.meal.icon)
+                                        .accessibilityIdentifier("home.meal.title")
+                                    if group.id == mealGroups.first?.id {
+                                        Menu {
+                                            Picker("Food Log Order", selection: $foodLogSortOrderRaw) {
+                                                ForEach(FoodLogSortOrder.allCases) { order in
+                                                    Text(order.displayName).tag(order.rawValue)
+                                                }
+                                            }
+                                        } label: {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "arrow.up.arrow.down")
+                                                    .font(.system(.caption2, design: .rounded, weight: .semibold))
+                                                Text("Sort")
+                                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                             }
                                         }
-                                    } label: {
-                                        HStack(spacing: 6) {
-                                            Image(systemName: "arrow.up.arrow.down")
-                                                .font(.system(.caption2, design: .rounded, weight: .semibold))
-                                            Text("Sort")
+                                        .tint(AppColors.calorie)
+                                        .textCase(nil)
+                                        .padding(.leading, 8)
+                                    }
+                                    if !group.foodEntries.isEmpty {
+                                        Button {
+                                            MealShare.presentShareSheet(for: group.foodEntries)
+                                        } label: {
+                                            Image(systemName: "square.and.arrow.up")
                                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                                .foregroundStyle(AppColors.calorie)
                                         }
+                                        .buttonStyle(.plain)
+                                        .padding(.leading, 8)
+                                        .textCase(nil)
                                     }
-                                    .tint(AppColors.calorie)
-                                    .textCase(nil)
-                                    .padding(.leading, 8)
+                                    Spacer(minLength: 0)
                                 }
-                                Spacer()
                                 if !group.foodEntries.isEmpty {
-                                    // Share and totals include food only; water and fasting have no calories/macros.
-                                    Button {
-                                        MealShare.presentShareSheet(for: group.foodEntries)
-                                    } label: {
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                            .foregroundStyle(AppColors.calorie)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .padding(.trailing, 12)
-                                    .textCase(nil)
-                                    VStack(alignment: .trailing, spacing: 1) {
+                                    // Keep food totals on the leading side, clear of the floating controls.
+                                    VStack(alignment: .leading, spacing: 1) {
                                         Text("\(group.totalCalories.formatted()) kcal")
                                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                             .foregroundStyle(AppColors.calorie)
+                                            .accessibilityIdentifier("home.meal.calories")
                                         Text("\(Int(group.totalProtein.rounded()))P · \(Int(group.totalCarbs.rounded()))C · \(Int(group.totalFat.rounded()))F")
                                             .font(.system(.caption2, design: .rounded, weight: .medium))
                                             .foregroundStyle(.secondary)
+                                            .accessibilityIdentifier("home.meal.macros")
                                     }
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.trailing, isFoodSelectionMode ? 0 : (voiceAssistant.isActive ? 72 : 144))
                                     .textCase(nil)
                                 }
                             }
@@ -1629,107 +1860,9 @@ private var dailyStepsTaskKey: String {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .overlay(alignment: .bottomTrailing) {
-                Menu {
-                    if fastingTrackingEnabled {
-                        Section {
-                            if fastingStore.activeSession != nil {
-                                Menu {
-                                    Button {
-                                        endFast()
-                                    } label: {
-                                        Label("End Fast", systemImage: "stop.fill")
-                                    }
-                                    Button(role: .destructive) {
-                                        fastingStore.cancelActive()
-                                        notificationManager.cancelFastingGoal()
-                                    } label: {
-                                        Label("Cancel Fast", systemImage: "trash")
-                                    }
-                                } label: {
-                                    Label("Fasting", systemImage: "timer")
-                                }
-                            } else {
-                                Button {
-                                    presentFoodDestination {
-                                        showFastingStart = true
-                                    }
-                                } label: {
-                                    Label("Start Fast", systemImage: "timer")
-                                }
-                            }
-                        }
-                    }
-                    if waterTrackingEnabled {
-                        Section {
-                            Menu {
-                                waterQuickMenuItems
-                            } label: {
-                                Label("Water", systemImage: "drop.fill")
-                            }
-                        }
-                    }
-                    if fastingStore.activeSession == nil {
-                        configuredFoodAddMenuContent
-                    }
-                } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 26, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 60, height: 60)
-                                .background(AppColors.calorie, in: Circle())
-                        }
-                        .accessibilityIdentifier("home.add")
-                        .opacity(isFoodSelectionMode ? 0 : 1)
-                        .disabled(isFoodSelectionMode)
-                        .allowsHitTesting(!isFoodSelectionMode)
-                        .popover(isPresented: $showTextPopover) {
-                            TextFoodInputView(
-                                onCancel: {
-                                    showTextPopover = false
-                                },
-                                onSubmit: { description in
-                                    showTextPopover = false
-                                    currentImage = nil
-                                    currentImages = []
-                                    currentEmoji = nil
-                                    currentFoodSource = .textInput
-                                    afterLoggingPresentationDismisses {
-                                        startTextAnalysis(description)
-                                    }
-                                }
-                            )
-                            .presentationCompactAdaptation(.popover)
-                        }
-                        .popover(isPresented: $showVoicePopover) {
-                            VoiceInputView(
-                                onCancel: {
-                                    showVoicePopover = false
-                                },
-                                onSubmit: { description in
-                                    showVoicePopover = false
-                                    currentImage = nil
-                                    currentImages = []
-                                    currentEmoji = nil
-                                    currentFoodSource = .textInput
-                                    afterLoggingPresentationDismisses {
-                                        startTextAnalysis(description)
-                                    }
-                                }
-                            )
-                            .presentationCompactAdaptation(.popover)
-                        }
-                        .popover(isPresented: $showManualPopover) {
-                            ManualEntryView(
-                                logDate: logDateForSelectedDay,
-                                onCancel: { showManualPopover = false },
-                                onSave: { entry in
-                                    showManualPopover = false
-                                    if !foodStore.addEntry(entry) { showFoodLoggingBlocked = true }
-                                }
-                            )
-                            .presentationCompactAdaptation(.popover)
-                        }
-                        .padding(24)
+                if !isFoodSelectionMode {
+                    homeActionBar
+                }
             }
             .fullScreenCover(isPresented: $showCamera) {
                 CameraView(
@@ -2697,6 +2830,15 @@ private enum BarcodeLookupAlertPresenter {
 // MARK: - Siri Phrases
 private struct SiriPhrasesSettingsView: View {
     private let groups: [SiriPhraseGroup] = [
+        // Localized like the phrase Siri listens for (AppShortcuts.xcstrings).
+        SiriPhraseGroup(
+            title: String(localized: "Voice Assistant"),
+            icon: "waveform.circle.fill",
+            phrases: [
+                String(localized: "Talk to Fud AI"),
+                String(localized: "Start a voice chat in Fud AI"),
+            ]
+        ),
         SiriPhraseGroup(
             title: "Log Food",
             icon: "fork.knife",
@@ -4338,6 +4480,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
     case aiAccess
     case aiProviders
     case speechToText
+    case voiceAssistant
     case appPreferences
     case workout
     case healthData
@@ -4356,6 +4499,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
         .aiAccess,
         .aiProviders,
         .speechToText,
+        .voiceAssistant,
         .appPreferences,
         .workout,
         .healthData,
@@ -4381,6 +4525,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .aiAccess: "AI Access"
         case .aiProviders: "AI Providers & Fallbacks"
         case .speechToText: "Speech-to-Text"
+        case .voiceAssistant: "Voice Assistant"
         case .appPreferences: "App Settings"
         case .workout: "Workout"
         case .healthData: "Health & Data"
@@ -4402,6 +4547,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
         case .aiAccess: "key.horizontal"
         case .aiProviders: "sparkles"
         case .speechToText: "waveform"
+        case .voiceAssistant: "waveform.circle"
         case .appPreferences: "slider.horizontal.3"
         case .workout: "dumbbell"
         case .healthData: "heart"
@@ -4506,6 +4652,8 @@ struct ProfileView: View {
         var id: String { rawValue }
     }
     @State private var activeSheet: ActiveSheet?
+    @State private var settingsPath: [ProfileSettingsCategory] = []
+    @State private var assistantNavigator = VoiceAssistantNavigator.shared
     @State private var showExportDiary = false
     @State private var showImportDiary = false
     @State private var showDeleteConfirmation = false
@@ -4628,13 +4776,15 @@ struct ProfileView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar(.visible, for: .navigationBar)
             } else {
-                NavigationStack {
+                NavigationStack(path: $settingsPath) {
                     settingsHub
                         .navigationDestination(for: ProfileSettingsCategory.self) { category in
                             if category == .notifications {
                                 NotificationSettingsView()
                             } else if category == .aiAccess {
                                 HostedAISettingsView()
+                            } else if category == .voiceAssistant {
+                                VoiceAssistantSettingsView()
                             } else {
                                 ProfileView(
                                     updateState: $updateState,
@@ -4644,8 +4794,23 @@ struct ProfileView: View {
                             }
                         }
                 }
+                .onChange(of: assistantNavigator.settingsRequest?.id) { _, _ in
+                    applyAssistantSettingsRequest()
+                }
+                .onChange(of: settingsPath) { _, path in
+                    assistantNavigator.settingsSection = path.last
+                }
+                .onAppear {
+                    applyAssistantSettingsRequest()
+                }
             }
         }
+    }
+
+    /// The voice assistant opens a Settings section (or the Settings list).
+    private func applyAssistantSettingsRequest() {
+        guard let request = assistantNavigator.takeSettingsRequest() else { return }
+        settingsPath = request.map { [$0] } ?? []
     }
 
     private var settingsHub: some View {
@@ -5156,6 +5321,7 @@ struct ProfileView: View {
                         }
                         Spacer()
                         Toggle("Water Tracking", isOn: $waterTrackingEnabled)
+                            .accessibilityIdentifier("settings.water.enabled")
                             .labelsHidden()
                             .tint(AppColors.calorie)
                             .onChange(of: waterTrackingEnabled) { _, isEnabled in
