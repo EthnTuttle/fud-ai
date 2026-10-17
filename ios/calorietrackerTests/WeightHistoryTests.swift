@@ -30,6 +30,49 @@ struct WeightHistoryTests {
         }
     }
 
+    @Test func deletedReadingStaysDeletedWhenHealthHoldsItFromTwoSources() throws {
+        try withStore { store, _ in
+            // A scale and an app mirroring it both wrote the same weigh-in; the
+            // import keeps one entry because they share the day and value.
+            let morning = try #require(Calendar.current.date(
+                bySettingHour: 8, minute: 0, second: 0, of: Date(timeIntervalSince1970: 1_790_000_000)
+            ))
+            let scale = WeightHealthSample(weightKg: 80.0, date: morning, fudaiID: nil)
+            let mirror = WeightHealthSample(weightKg: 80.0, date: scale.date.addingTimeInterval(600), fudaiID: nil)
+            store.importHealthSamples([scale, mirror], restoreOwnSamplesIfEmpty: false)
+            let imported = try #require(store.entries.first)
+            #expect(store.entries.count == 1)
+
+            store.deleteEntry(imported)
+
+            // The observer now sees the mirror's sample as the latest reading.
+            #expect(store.isDeletedHealthSample(mirror))
+            store.importHealthSamples([scale, mirror], restoreOwnSamplesIfEmpty: true)
+            #expect(store.entries.isEmpty)
+
+            // A different value that day is a different weigh-in.
+            let reweigh = WeightHealthSample(weightKg: 79.6, date: mirror.date.addingTimeInterval(600), fudaiID: nil)
+            #expect(!store.isDeletedHealthSample(reweigh))
+        }
+    }
+
+    @Test func deletionTombstoneMatchesOwnSamplesOnlyByIDOrExactReading() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+        let day = Date(timeIntervalSince1970: 1_790_000_000) // 14:13 UTC
+        let tombstone = WeightDeletionTombstone(entryID: UUID(), date: day, weightKg: 72)
+
+        // The same value re-logged in Fud AI later that day is a new entry.
+        let relogged = WeightHealthSample(weightKg: 72, date: day.addingTimeInterval(1_800), fudaiID: UUID())
+        #expect(!tombstone.matches(relogged, calendar: calendar))
+        #expect(tombstone.matches(
+            WeightHealthSample(weightKg: 72, date: day, fudaiID: UUID()), calendar: calendar
+        ))
+        #expect(tombstone.matches(
+            WeightHealthSample(weightKg: 72, date: day.addingTimeInterval(1_800), fudaiID: nil), calendar: calendar
+        ))
+    }
+
     @Test func deletionTombstonesPersistAcrossLaunches() throws {
         try withStore { store, defaults in
             let entry = WeightEntry(date: Date(timeIntervalSince1970: 1_790_000_000), weightKg: 70)

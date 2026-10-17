@@ -203,7 +203,7 @@ class WeightStore {
         for sample in samples {
             let day = calendar.startOfDay(for: sample.date)
             if loggedByDay[day, default: []].contains(where: { abs($0 - sample.weightKg) < 0.01 }) { continue }
-            if tombstones.contains(where: { $0.matches(sample) }) { continue }
+            if tombstones.contains(where: { $0.matches(sample, calendar: calendar) }) { continue }
             if let fudaiID = sample.fudaiID {
                 // Own samples are either already represented or synthetic
                 // profile pushes (writeWeight(kg:date:)) that never had an entry.
