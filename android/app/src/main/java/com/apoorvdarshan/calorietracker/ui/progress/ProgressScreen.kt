@@ -96,6 +96,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -1388,7 +1389,7 @@ private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoa
 }
 
 @Composable
-private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int) {
+internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int) {
     val maxValue = dailyCalories.maxOf { it.second }.coerceAtLeast(goal).toDouble()
     val gradientStart = AppColors.CalorieStart
     val gradientEnd = AppColors.CalorieEnd
@@ -1439,9 +1440,13 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
                 Canvas(
                     Modifier
                         .fillMaxSize()
+                        .testTag("progress.calorieChart")
                         // Tap pins a day's value (tap it again to clear); a horizontal
                         // drag scrubs across bars. Vertical drags stay with the page scroll.
-                        .pointerInput(n, barAreaWidthPx) {
+                        // Keyed on the data, like selectedIndex: another period with the
+                        // same bar count must restart these handlers, or they keep
+                        // writing the previous period's discarded selection state.
+                        .pointerInput(dailyCalories, barAreaWidthPx) {
                             detectTapGestures { offset ->
                                 val index = calorieBarIndexAt(offset.x, startX, barWidth, gap, n)
                                 if (index == null || index == selectedIndex) {
@@ -1451,7 +1456,7 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
                                 }
                             }
                         }
-                        .pointerInput(n, barAreaWidthPx) {
+                        .pointerInput(dailyCalories, barAreaWidthPx) {
                             var gestureX = 0f
                             detectHorizontalDragGestures(
                                 onDragStart = { offset ->
