@@ -671,6 +671,11 @@
     <string name="settings_goal_weight">Цільова вага</string>
     <string name="settings_calories">Калорії</string>
     <string name="settings_recalculate_goals">Перерахувати цілі</string>
+    <string name="settings_estimated_maintenance">Орієнтовна норма підтримки</string>
+    <string name="settings_maintenance_deficit_format">Дефіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format">Профіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_close">Ціль близька до норми підтримки</string>
+    <string name="settings_estimated_maintenance_info">Орієнтовна норма підтримки — це калорії, які ви спалюєте у звичайний день: ваш BMR із профілю, помножений на рівень активності. Якщо їсти менше, виникає дефіцит для схуднення; якщо більше — профіцит для набору ваги. Показаний дефіцит або профіцит — це ваша ціль калорій мінус ця оцінка. Це розрахунок за формулою, тож реальні витрати можуть відрізнятися, а перерахунок цілей може встановити ціль на основі записаної їжі, динаміки ваги або виміряних витрат енергії. Це не медична порада.</string>
     <string name="settings_macro_pinned_format">%1$d г</string>
     <string name="settings_macro_auto_format">%1$d г · авто</string>
     <string name="settings_macro_pinned_a11y">Закріплено</string>

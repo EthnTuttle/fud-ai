@@ -509,6 +509,11 @@
     <string name="settings_goal_weight">Streefgewicht</string>
     <string name="settings_calories">Calorieën</string>
     <string name="settings_recalculate_goals">Doelen opnieuw berekenen</string>
+    <string name="settings_estimated_maintenance">Geschatte onderhoudsbehoefte</string>
+    <string name="settings_maintenance_deficit_format">Tekort: %1$,d kcal/dag</string>
+    <string name="settings_maintenance_surplus_format">Overschot: %1$,d kcal/dag</string>
+    <string name="settings_maintenance_close">Doel ligt dicht bij onderhoud</string>
+    <string name="settings_estimated_maintenance_info">Geschatte onderhoudsbehoefte is het aantal calorieën dat je op een gemiddelde dag verbrandt: je BMR uit je profiel vermenigvuldigd met je activiteitsniveau. Eet je minder, dan heb je een tekort om af te vallen; eet je meer, dan heb je een overschot om aan te komen. Het getoonde tekort of overschot is je caloriedoel min deze schatting. Het is een schatting op basis van een formule, dus je werkelijke verbruik kan afwijken, en het herberekenen van doelen kan je doel in plaats daarvan baseren op je gelogde voeding, gewichtstrend of gemeten energieverbruik. Dit is geen medisch advies.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Vastgezet</string>

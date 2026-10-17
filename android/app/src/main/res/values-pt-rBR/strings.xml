@@ -510,6 +510,11 @@
     <string name="settings_goal_weight">Peso-meta</string>
     <string name="settings_calories">Calorias</string>
     <string name="settings_recalculate_goals">Recalcular metas</string>
+    <string name="settings_estimated_maintenance">Manutenção estimada</string>
+    <string name="settings_maintenance_deficit_format">Déficit: %1$,d kcal/dia</string>
+    <string name="settings_maintenance_surplus_format">Superávit: %1$,d kcal/dia</string>
+    <string name="settings_maintenance_close">A meta está próxima da manutenção</string>
+    <string name="settings_estimated_maintenance_info">A manutenção estimada são as calorias que você queimaria em um dia típico: sua TMB (BMR) do perfil multiplicada pelo seu nível de atividade. Comer abaixo disso gera um déficit para perder peso; comer acima gera um superávit para ganhar. O déficit ou superávit exibido é sua meta de calorias menos esta estimativa. É uma estimativa por fórmula, então seu gasto real pode ser diferente, e o recálculo de metas pode definir sua meta com base nos alimentos registrados, na tendência de peso ou no gasto energético medido. Isto não é aconselhamento médico.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Fixado</string>

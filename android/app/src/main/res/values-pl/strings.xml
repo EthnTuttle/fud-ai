@@ -515,6 +515,11 @@
     <string name="settings_goal_weight">Waga docelowa</string>
     <string name="settings_calories">Kalorie</string>
     <string name="settings_recalculate_goals">Przelicz cele</string>
+    <string name="settings_estimated_maintenance">Szacowane kalorie na utrzymanie</string>
+    <string name="settings_maintenance_deficit_format">Deficyt: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_surplus_format">Nadwyżka: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_close">Cel jest bliski utrzymaniu</string>
+    <string name="settings_estimated_maintenance_info">Szacowane kalorie na utrzymanie to kalorie, które spalasz w typowy dzień: Twoje BMR z profilu pomnożone przez poziom aktywności. Jedzenie poniżej tej wartości to deficyt pozwalający schudnąć; powyżej — nadwyżka pozwalająca przytyć. Pokazany deficyt lub nadwyżka to Twój cel kaloryczny minus ta szacunkowa wartość. To szacunek oparty na wzorze, więc Twoje rzeczywiste spalanie może się różnić, a przeliczanie celów może ustalić cel na podstawie zapisanych posiłków, trendu wagi lub zmierzonego spalania energii. To nie jest porada medyczna.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Przypięte</string>

@@ -172,6 +172,7 @@ import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.Gender
+import com.apoorvdarshan.calorietracker.models.MaintenanceBreakdown
 import com.apoorvdarshan.calorietracker.models.MealSchedule
 import com.apoorvdarshan.calorietracker.models.OptionalNutrient
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
@@ -230,6 +231,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.time.LocalTime
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private enum class SettingsSheet {
@@ -386,6 +388,7 @@ fun SettingsScreen(
     var showDefaultGramsInfo by remember { mutableStateOf(false) }
     var showHealthEnergyGoalsInfo by remember { mutableStateOf(false) }
     var showAdaptiveGoalsInfo by remember { mutableStateOf(false) }
+    var showMaintenanceInfo by remember { mutableStateOf(false) }
     var showCloudEnableConfirm by remember { mutableStateOf(false) }
     var showCloudRestoreChoice by remember { mutableStateOf(false) }
     var showCloudDeleteConfirm by remember { mutableStateOf(false) }
@@ -835,6 +838,8 @@ fun SettingsScreen(
                         lockEnabled = lockEnabled,
                         onClick = { openGoal(SettingsSheet.CALORIES) }
                     )
+                    HorizontalDivider()
+                    MaintenanceEstimateRow(p.maintenanceBreakdown) { showMaintenanceInfo = true }
                     HorizontalDivider()
                     LockableGoalRow(
                         label = stringResource(R.string.macro_protein),
@@ -1943,6 +1948,20 @@ fun SettingsScreen(
             FudGlassDialogActions(
                 primaryText = stringResource(R.string.action_ok),
                 onPrimary = { showHealthEnergyGoalsInfo = false }
+            )
+        }
+    }
+
+    if (showMaintenanceInfo) {
+        FudGlassDialog(onDismissRequest = { showMaintenanceInfo = false }) {
+            Text(stringResource(R.string.settings_estimated_maintenance), fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.settings_estimated_maintenance_info),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
+            )
+            FudGlassDialogActions(
+                primaryText = stringResource(R.string.action_ok),
+                onPrimary = { showMaintenanceInfo = false }
             )
         }
     }
@@ -4415,6 +4434,57 @@ private fun LockableGoalRow(
                 locked -> AppColors.Calorie
                 else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
             },
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+/**
+ * Read-only Daily Targets row: the formula maintenance estimate (BMR × activity) and the daily
+ * deficit or surplus of the calorie target against it. Tapping explains how it's estimated.
+ */
+@Composable
+private fun MaintenanceEstimateRow(
+    breakdown: MaintenanceBreakdown,
+    onClick: () -> Unit
+) {
+    val amount = abs(breakdown.dailyDifference)
+    val balanceText = when (breakdown.balance) {
+        MaintenanceBreakdown.Balance.DEFICIT -> stringResource(R.string.settings_maintenance_deficit_format, amount)
+        MaintenanceBreakdown.Balance.SURPLUS -> stringResource(R.string.settings_maintenance_surplus_format, amount)
+        MaintenanceBreakdown.Balance.MAINTENANCE -> stringResource(R.string.settings_maintenance_close)
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FudIconBubble(icon = Icons.Outlined.Speed, size = 22.dp, iconSize = 14.dp)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.settings_estimated_maintenance),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                balanceText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f)
+            )
+        }
+        Text(
+            stringResource(R.string.kcal_value_format, breakdown.maintenanceCalories),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(start = 12.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Icon(
+            Icons.Outlined.Info,
+            contentDescription = stringResource(R.string.action_info),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
             modifier = Modifier.size(18.dp)
         )
     }

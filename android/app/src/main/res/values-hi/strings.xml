@@ -509,6 +509,11 @@
     <string name="settings_goal_weight">लक्ष्य वज़न</string>
     <string name="settings_calories">कैलोरी</string>
     <string name="settings_recalculate_goals">लक्ष्य पुनः गणना करें</string>
+    <string name="settings_estimated_maintenance">अनुमानित मेंटेनेंस कैलोरी</string>
+    <string name="settings_maintenance_deficit_format">घाटा: %1$,d kcal/दिन</string>
+    <string name="settings_maintenance_surplus_format">अधिशेष: %1$,d kcal/दिन</string>
+    <string name="settings_maintenance_close">लक्ष्य मेंटेनेंस के करीब है</string>
+    <string name="settings_estimated_maintenance_info">अनुमानित मेंटेनेंस कैलोरी वे कैलोरी हैं जो आप एक सामान्य दिन में जलाते हैं: आपकी प्रोफ़ाइल से BMR को आपके गतिविधि स्तर से गुणा करके। इससे कम खाने पर वज़न घटाने के लिए घाटा होता है; इससे ज़्यादा खाने पर वज़न बढ़ाने के लिए अधिशेष होता है। दिखाया गया घाटा या अधिशेष आपके कैलोरी लक्ष्य में से यह अनुमान घटाकर निकलता है। यह फ़ॉर्मूले पर आधारित अनुमान है, इसलिए आपकी असली खपत अलग हो सकती है, और लक्ष्य की पुनर्गणना आपके लॉग किए गए भोजन, वज़न के रुझान या मापी गई ऊर्जा खपत के आधार पर लक्ष्य तय कर सकती है। यह चिकित्सा सलाह नहीं है।</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · ऑटो</string>
     <string name="settings_macro_pinned_a11y">पिन किया गया</string>

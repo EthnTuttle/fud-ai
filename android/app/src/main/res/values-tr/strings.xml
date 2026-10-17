@@ -669,6 +669,11 @@
     <string name="settings_goal_weight">Hedef Kilo</string>
     <string name="settings_calories">Kalori</string>
     <string name="settings_recalculate_goals">Hedefleri Yeniden Hesapla</string>
+    <string name="settings_estimated_maintenance">Tahmini Koruma Kalorisi</string>
+    <string name="settings_maintenance_deficit_format">Kalori açığı: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_surplus_format">Kalori fazlası: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_close">Hedef koruma kalorisine yakın</string>
+    <string name="settings_estimated_maintenance_info">Tahmini koruma kalorisi, tipik bir günde yaktığınız kaloridir: profilinizdeki BMR değerinizin aktivite seviyenizle çarpımı. Bunun altında yemek kilo vermek için açık, üstünde yemek kilo almak için fazla oluşturur. Gösterilen açık veya fazla, kalori hedefinizden bu tahminin çıkarılmasıyla bulunur. Bu bir formül tahminidir; gerçek harcamanız farklı olabilir ve hedef yeniden hesaplaması hedefinizi bunun yerine kaydettiğiniz yiyeceklere, kilo eğiliminize veya ölçülen enerji harcamanıza göre belirleyebilir. Bu tıbbi tavsiye değildir.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · otomatik</string>
     <string name="settings_macro_pinned_a11y">Sabitlendi</string>

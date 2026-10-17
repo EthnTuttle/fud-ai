@@ -521,6 +521,11 @@
     <string name="settings_goal_weight">وزن الهدف</string>
     <string name="settings_calories">السعرات الحرارية</string>
     <string name="settings_recalculate_goals">إعادة حساب الأهداف</string>
+    <string name="settings_estimated_maintenance">سعرات الحفاظ المقدّرة</string>
+    <string name="settings_maintenance_deficit_format">العجز: %1$,d kcal/يوم</string>
+    <string name="settings_maintenance_surplus_format">الفائض: %1$,d kcal/يوم</string>
+    <string name="settings_maintenance_close">الهدف قريب من سعرات الحفاظ</string>
+    <string name="settings_estimated_maintenance_info">سعرات الحفاظ المقدّرة هي السعرات التي تحرقها في يوم عادي: معدل الأيض الأساسي (BMR) من ملفك الشخصي مضروبًا في مستوى نشاطك. تناول أقل منها يعني عجزًا لخسارة الوزن، وتناول أكثر منها يعني فائضًا لزيادته. العجز أو الفائض المعروض هو هدف السعرات لديك مطروحًا منه هذا التقدير. إنه تقدير بمعادلة، لذا قد يختلف حرقك الفعلي، وقد تحدد إعادة حساب الأهداف هدفك بدلًا من ذلك بناءً على الطعام المسجل أو اتجاه وزنك أو حرق الطاقة المقاس. هذه ليست نصيحة طبية.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · تلقائي</string>
     <string name="settings_macro_pinned_a11y">مثبّت</string>

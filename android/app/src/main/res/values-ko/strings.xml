@@ -508,6 +508,11 @@
     <string name="settings_goal_weight">목표 체중</string>
     <string name="settings_calories">칼로리</string>
     <string name="settings_recalculate_goals">목표 다시 계산</string>
+    <string name="settings_estimated_maintenance">예상 유지 칼로리</string>
+    <string name="settings_maintenance_deficit_format">칼로리 적자: %1$,d kcal/일</string>
+    <string name="settings_maintenance_surplus_format">칼로리 잉여: %1$,d kcal/일</string>
+    <string name="settings_maintenance_close">목표가 유지 칼로리에 가깝습니다</string>
+    <string name="settings_estimated_maintenance_info">예상 유지 칼로리는 평소 하루에 소모하는 칼로리입니다. 프로필의 BMR(기초대사량)에 활동 수준을 곱해 계산합니다. 이보다 적게 먹으면 체중 감량을 위한 칼로리 적자, 많이 먹으면 체중 증가를 위한 칼로리 잉여가 됩니다. 표시되는 적자 또는 잉여는 칼로리 목표에서 이 추정치를 뺀 값입니다. 공식에 따른 추정치이므로 실제 소모량과 다를 수 있으며, 목표 재계산은 기록한 음식, 체중 추세 또는 측정된 에너지 소모를 바탕으로 목표를 정할 수도 있습니다. 이는 의학적 조언이 아닙니다.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · 자동</string>
     <string name="settings_macro_pinned_a11y">고정됨</string>

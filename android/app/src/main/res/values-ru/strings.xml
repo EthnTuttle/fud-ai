@@ -515,6 +515,11 @@
     <string name="settings_goal_weight">Целевой вес</string>
     <string name="settings_calories">Калории</string>
     <string name="settings_recalculate_goals">Пересчитать цели</string>
+    <string name="settings_estimated_maintenance">Оценочная норма поддержания</string>
+    <string name="settings_maintenance_deficit_format">Дефицит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format">Профицит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_close">Цель близка к норме поддержания</string>
+    <string name="settings_estimated_maintenance_info">Оценочная норма поддержания — это калории, которые вы сжигаете в обычный день: ваш BMR из профиля, умноженный на уровень активности. Если есть меньше, получается дефицит для снижения веса; если больше — профицит для набора. Показанный дефицит или профицит — это ваша цель по калориям минус эта оценка. Это расчёт по формуле, поэтому реальный расход может отличаться, а пересчёт целей может задать цель на основе записанной еды, динамики веса или измеренного расхода энергии. Это не медицинская рекомендация.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · авто</string>
     <string name="settings_macro_pinned_a11y">Закреплено</string>

@@ -471,6 +471,11 @@
     <string name="settings_goal_weight">Cílová váha</string>
     <string name="settings_calories">Kalorie</string>
     <string name="settings_recalculate_goals">Přepočítat cíle</string>
+    <string name="settings_estimated_maintenance">Odhadovaný udržovací příjem</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/den</string>
+    <string name="settings_maintenance_surplus_format">Přebytek: %1$,d kcal/den</string>
+    <string name="settings_maintenance_close">Cíl je blízko udržovacímu příjmu</string>
+    <string name="settings_estimated_maintenance_info">Odhadovaný udržovací příjem je počet kalorií, které spálíte v běžný den: váš BMR z profilu vynásobený úrovní aktivity. Když jíte méně, vzniká deficit pro hubnutí; když více, vzniká přebytek pro nabírání. Zobrazený deficit nebo přebytek je váš kalorický cíl minus tento odhad. Jde o odhad podle vzorce, takže skutečný výdej se může lišit, a přepočet cílů může nastavit cíl podle zaznamenaného jídla, vývoje hmotnosti nebo naměřeného výdeje energie. Nejde o lékařskou radu.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Připnuto</string>

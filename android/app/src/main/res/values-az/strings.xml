@@ -509,6 +509,11 @@
     <string name="settings_goal_weight">Hədəf Çəki</string>
     <string name="settings_calories">Kalorilər</string>
     <string name="settings_recalculate_goals">Hədəfləri Yenidən Hesabla</string>
+    <string name="settings_estimated_maintenance">Təxmini saxlama kalorisi</string>
+    <string name="settings_maintenance_deficit_format">Kəsir: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_surplus_format">Artıq kalori: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_close">Hədəf saxlama kalorisinə yaxındır</string>
+    <string name="settings_estimated_maintenance_info">Təxmini saxlama kalorisi adi bir gündə yandırdığınız kaloridir: profilinizdəki BMR aktivlik səviyyənizə vurulur. Bundan az yemək arıqlamaq üçün kəsir, çox yemək isə çəki almaq üçün artıq kalori yaradır. Göstərilən kəsir və ya artıq kalori hədəf kalorinizdən bu təxminin çıxılmasıdır. Bu düstur əsaslı təxmindir, ona görə real sərfiniz fərqlənə bilər və hədəflərin yenidən hesablanması hədəfinizi qeyd etdiyiniz qida, çəki meyli və ya ölçülmüş enerji sərfi əsasında təyin edə bilər. Bu tibbi məsləhət deyil.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · avto</string>
     <string name="settings_macro_pinned_a11y">Sabitlənmiş</string>

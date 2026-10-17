@@ -512,6 +512,11 @@
     <string name="settings_goal_weight">Greutate obiectiv</string>
     <string name="settings_calories">Calorii</string>
     <string name="settings_recalculate_goals">Recalculează obiectivele</string>
+    <string name="settings_estimated_maintenance">Menținere estimată</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/zi</string>
+    <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/zi</string>
+    <string name="settings_maintenance_close">Obiectivul este aproape de menținere</string>
+    <string name="settings_estimated_maintenance_info">Menținerea estimată reprezintă caloriile pe care le-ai arde într-o zi obișnuită: BMR-ul din profilul tău înmulțit cu nivelul de activitate. Dacă mănânci sub această valoare, ai un deficit pentru a slăbi; dacă mănânci peste, ai un surplus pentru a lua în greutate. Deficitul sau surplusul afișat este obiectivul tău caloric minus această estimare. Este o estimare pe bază de formulă, așa că arderea ta reală poate diferi, iar recalcularea obiectivelor îți poate stabili obiectivul pe baza alimentelor înregistrate, a tendinței greutății sau a energiei arse măsurate. Aceasta nu este o recomandare medicală.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Fixat</string>

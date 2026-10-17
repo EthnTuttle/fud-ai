@@ -676,6 +676,11 @@
     <string name="settings_goal_weight">Goal Weight</string>
     <string name="settings_calories">Calories</string>
     <string name="settings_recalculate_goals">Recalculate Goals</string>
+    <string name="settings_estimated_maintenance">Estimated Maintenance</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/day</string>
+    <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/day</string>
+    <string name="settings_maintenance_close">Target is close to maintenance</string>
+    <string name="settings_estimated_maintenance_info">Estimated maintenance is the calories you would burn on a typical day: your BMR from your profile multiplied by your activity level. Eating below it is a deficit for losing weight; eating above it is a surplus for gaining. The deficit or surplus shown is your calorie target minus this estimate. It is a formula estimate, so your real burn can differ, and goal recalculation may set your target from your logged food, weight trend or measured energy burn instead. This is not medical advice.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Pinned</string>

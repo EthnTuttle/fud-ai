@@ -508,6 +508,11 @@
     <string name="settings_goal_weight">目标体重</string>
     <string name="settings_calories">卡路里</string>
     <string name="settings_recalculate_goals">重新计算目标</string>
+    <string name="settings_estimated_maintenance">估算维持热量</string>
+    <string name="settings_maintenance_deficit_format">热量缺口：%1$,d kcal/天</string>
+    <string name="settings_maintenance_surplus_format">热量盈余：%1$,d kcal/天</string>
+    <string name="settings_maintenance_close">目标接近维持热量</string>
+    <string name="settings_estimated_maintenance_info">估算维持热量是你在普通一天中消耗的热量：根据个人资料计算的 BMR（基础代谢率）乘以你的活动水平。吃得低于它就形成减重所需的热量缺口；吃得高于它就形成增重所需的热量盈余。显示的缺口或盈余等于你的热量目标减去这个估算值。这是公式估算，你的实际消耗可能不同，重新计算目标时也可能改为根据你记录的饮食、体重趋势或测得的能量消耗来设定目标。这不是医疗建议。</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · 自动</string>
     <string name="settings_macro_pinned_a11y">已固定</string>

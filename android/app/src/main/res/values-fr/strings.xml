@@ -510,6 +510,11 @@
     <string name="settings_goal_weight">Poids cible</string>
     <string name="settings_calories">Calories</string>
     <string name="settings_recalculate_goals">Recalculer les objectifs</string>
+    <string name="settings_estimated_maintenance">Maintien estimé</string>
+    <string name="settings_maintenance_deficit_format">Déficit : %1$,d kcal/jour</string>
+    <string name="settings_maintenance_surplus_format">Surplus : %1$,d kcal/jour</string>
+    <string name="settings_maintenance_close">L’objectif est proche du maintien</string>
+    <string name="settings_estimated_maintenance_info">Le maintien estimé correspond aux calories que vous brûleriez lors d’une journée type : votre métabolisme de base (BMR) issu de votre profil multiplié par votre niveau d’activité. Manger en dessous crée un déficit pour perdre du poids ; manger au-dessus crée un surplus pour en prendre. Le déficit ou le surplus affiché correspond à votre objectif calorique moins cette estimation. C’est une estimation par formule : votre dépense réelle peut différer, et le recalcul des objectifs peut fixer votre objectif à partir de vos repas enregistrés, de votre tendance de poids ou de votre dépense énergétique mesurée. Ceci n’est pas un avis médical.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Épinglé</string>

@@ -46857,6 +46857,566 @@
         }
       }
     },
+    "Estimated Maintenance": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سعرات الحفاظ المقدّرة"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Təxmini saxlama kalorisi"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odhadovaný udržovací příjem"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschätzter Erhaltungsbedarf"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantenimiento estimado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maintien estimé"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुमानित मेंटेनेंस कैलोरी"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantenimento stimato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推定維持カロリー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예상 유지 칼로리"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschatte onderhoudsbehoefte"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szacowane kalorie na utrzymanie"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manutenção estimada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menținere estimată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценочная норма поддержания"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tahmini Koruma Kalorisi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Орієнтовна норма підтримки"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "估算维持热量"
+          }
+        }
+      }
+    },
+    "Deficit: %@ kcal/day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العجز: %@ kcal/يوم"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kəsir: %@ kcal/gün"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deficit: %@ kcal/den"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defizit: %@ kcal/Tag"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déficit: %@ kcal/día"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déficit : %@ kcal/jour"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "घाटा: %@ kcal/दिन"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deficit: %@ kcal/giorno"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カロリー不足: %@ kcal/日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "칼로리 적자: %@ kcal/일"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekort: %@ kcal/dag"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deficyt: %@ kcal/dzień"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déficit: %@ kcal/dia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deficit: %@ kcal/zi"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дефицит: %@ ккал/день"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalori açığı: %@ kcal/gün"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дефіцит: %@ ккал/день"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "热量缺口：%@ kcal/天"
+          }
+        }
+      }
+    },
+    "Surplus: %@ kcal/day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفائض: %@ kcal/يوم"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artıq kalori: %@ kcal/gün"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přebytek: %@ kcal/den"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überschuss: %@ kcal/Tag"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Superávit: %@ kcal/día"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surplus : %@ kcal/jour"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अधिशेष: %@ kcal/दिन"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surplus: %@ kcal/giorno"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カロリー余剰: %@ kcal/日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "칼로리 잉여: %@ kcal/일"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overschot: %@ kcal/dag"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadwyżka: %@ kcal/dzień"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Superávit: %@ kcal/dia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Surplus: %@ kcal/zi"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профицит: %@ ккал/день"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalori fazlası: %@ kcal/gün"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профіцит: %@ ккал/день"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "热量盈余：%@ kcal/天"
+          }
+        }
+      }
+    },
+    "Target is close to maintenance": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف قريب من سعرات الحفاظ"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hədəf saxlama kalorisinə yaxındır"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cíl je blízko udržovacímu příjmu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel liegt nahe am Erhaltungsbedarf"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El objetivo está cerca del mantenimiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’objectif est proche du maintien"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लक्ष्य मेंटेनेंस के करीब है"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’obiettivo è vicino al mantenimento"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目標は維持カロリーに近い値です"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목표가 유지 칼로리에 가깝습니다"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doel ligt dicht bij onderhoud"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cel jest bliski utrzymaniu"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A meta está próxima da manutenção"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiectivul este aproape de menținere"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цель близка к норме поддержания"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedef koruma kalorisine yakın"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ціль близька до норми підтримки"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标接近维持热量"
+          }
+        }
+      }
+    },
+    "Estimated maintenance is the calories you would burn on a typical day: your BMR from your profile multiplied by your activity level. Eating below it is a deficit for losing weight; eating above it is a surplus for gaining. The deficit or surplus shown is your calorie target minus this estimate. It is a formula estimate, so your real burn can differ, and goal recalculation may set your target from your logged food, weight trend or measured energy burn instead. This is not medical advice.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سعرات الحفاظ المقدّرة هي السعرات التي تحرقها في يوم عادي: معدل الأيض الأساسي (BMR) من ملفك الشخصي مضروبًا في مستوى نشاطك. تناول أقل منها يعني عجزًا لخسارة الوزن، وتناول أكثر منها يعني فائضًا لزيادته. العجز أو الفائض المعروض هو هدف السعرات لديك مطروحًا منه هذا التقدير. إنه تقدير بمعادلة، لذا قد يختلف حرقك الفعلي، وقد تحدد إعادة حساب الأهداف هدفك بدلًا من ذلك بناءً على الطعام المسجل أو اتجاه وزنك أو حرق الطاقة المقاس. هذه ليست نصيحة طبية."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Təxmini saxlama kalorisi adi bir gündə yandırdığınız kaloridir: profilinizdəki BMR aktivlik səviyyənizə vurulur. Bundan az yemək arıqlamaq üçün kəsir, çox yemək isə çəki almaq üçün artıq kalori yaradır. Göstərilən kəsir və ya artıq kalori hədəf kalorinizdən bu təxminin çıxılmasıdır. Bu düstur əsaslı təxmindir, ona görə real sərfiniz fərqlənə bilər və hədəflərin yenidən hesablanması hədəfinizi qeyd etdiyiniz qida, çəki meyli və ya ölçülmüş enerji sərfi əsasında təyin edə bilər. Bu tibbi məsləhət deyil."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odhadovaný udržovací příjem je počet kalorií, které spálíte v běžný den: váš BMR z profilu vynásobený úrovní aktivity. Když jíte méně, vzniká deficit pro hubnutí; když více, vzniká přebytek pro nabírání. Zobrazený deficit nebo přebytek je váš kalorický cíl minus tento odhad. Jde o odhad podle vzorce, takže skutečný výdej se může lišit, a přepočet cílů může nastavit cíl podle zaznamenaného jídla, vývoje hmotnosti nebo naměřeného výdeje energie. Nejde o lékařskou radu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der geschätzte Erhaltungsbedarf ist die Kalorienmenge, die du an einem typischen Tag verbrennst: dein Grundumsatz (BMR) aus deinem Profil multipliziert mit deinem Aktivitätslevel. Isst du weniger, entsteht ein Defizit zum Abnehmen; isst du mehr, ein Überschuss zum Zunehmen. Das angezeigte Defizit bzw. der Überschuss ist dein Kalorienziel minus diese Schätzung. Es ist eine Formelschätzung, dein tatsächlicher Verbrauch kann abweichen, und die Zielberechnung kann dein Ziel stattdessen aus deinen erfassten Mahlzeiten, deinem Gewichtstrend oder deinem gemessenen Energieverbrauch festlegen. Dies ist keine medizinische Beratung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El mantenimiento estimado son las calorías que quemarías en un día típico: tu BMR según tu perfil multiplicado por tu nivel de actividad. Comer por debajo es un déficit para perder peso; comer por encima es un superávit para ganarlo. El déficit o superávit mostrado es tu objetivo de calorías menos esta estimación. Es una estimación por fórmula, así que tu gasto real puede variar, y el recálculo de objetivos puede fijar tu objetivo a partir de tus comidas registradas, tu tendencia de peso o tu gasto energético medido. Esto no es consejo médico."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le maintien estimé correspond aux calories que vous brûleriez lors d’une journée type : votre métabolisme de base (BMR) issu de votre profil multiplié par votre niveau d’activité. Manger en dessous crée un déficit pour perdre du poids ; manger au-dessus crée un surplus pour en prendre. Le déficit ou le surplus affiché correspond à votre objectif calorique moins cette estimation. C’est une estimation par formule : votre dépense réelle peut différer, et le recalcul des objectifs peut fixer votre objectif à partir de vos repas enregistrés, de votre tendance de poids ou de votre dépense énergétique mesurée. Ceci n’est pas un avis médical."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुमानित मेंटेनेंस कैलोरी वे कैलोरी हैं जो आप एक सामान्य दिन में जलाते हैं: आपकी प्रोफ़ाइल से BMR को आपके गतिविधि स्तर से गुणा करके। इससे कम खाने पर वज़न घटाने के लिए घाटा होता है; इससे ज़्यादा खाने पर वज़न बढ़ाने के लिए अधिशेष होता है। दिखाया गया घाटा या अधिशेष आपके कैलोरी लक्ष्य में से यह अनुमान घटाकर निकलता है। यह फ़ॉर्मूले पर आधारित अनुमान है, इसलिए आपकी असली खपत अलग हो सकती है, और लक्ष्य की पुनर्गणना आपके लॉग किए गए भोजन, वज़न के रुझान या मापी गई ऊर्जा खपत के आधार पर लक्ष्य तय कर सकती है। यह चिकित्सा सलाह नहीं है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il mantenimento stimato sono le calorie che bruceresti in una giornata tipo: il tuo BMR dal profilo moltiplicato per il tuo livello di attività. Mangiare meno crea un deficit per perdere peso; mangiare di più crea un surplus per aumentarlo. Il deficit o surplus mostrato è il tuo obiettivo calorico meno questa stima. È una stima basata su una formula, quindi il tuo consumo reale può essere diverso, e il ricalcolo degli obiettivi può impostare il tuo obiettivo in base al cibo registrato, all’andamento del peso o al consumo energetico misurato. Questo non è un consiglio medico."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推定維持カロリーは、普段の1日に消費するカロリーの目安です。プロフィールのBMR（基礎代謝）に活動レベルを掛けて算出します。これより少なく食べると減量のためのカロリー不足、多く食べると増量のためのカロリー余剰になります。表示される不足・余剰は、カロリー目標からこの推定値を引いたものです。計算式による推定のため実際の消費量とは異なる場合があり、目標の再計算では記録した食事、体重の傾向、または測定された消費エネルギーから目標が設定されることもあります。これは医療上のアドバイスではありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예상 유지 칼로리는 평소 하루에 소모하는 칼로리입니다. 프로필의 BMR(기초대사량)에 활동 수준을 곱해 계산합니다. 이보다 적게 먹으면 체중 감량을 위한 칼로리 적자, 많이 먹으면 체중 증가를 위한 칼로리 잉여가 됩니다. 표시되는 적자 또는 잉여는 칼로리 목표에서 이 추정치를 뺀 값입니다. 공식에 따른 추정치이므로 실제 소모량과 다를 수 있으며, 목표 재계산은 기록한 음식, 체중 추세 또는 측정된 에너지 소모를 바탕으로 목표를 정할 수도 있습니다. 이는 의학적 조언이 아닙니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschatte onderhoudsbehoefte is het aantal calorieën dat je op een gemiddelde dag verbrandt: je BMR uit je profiel vermenigvuldigd met je activiteitsniveau. Eet je minder, dan heb je een tekort om af te vallen; eet je meer, dan heb je een overschot om aan te komen. Het getoonde tekort of overschot is je caloriedoel min deze schatting. Het is een schatting op basis van een formule, dus je werkelijke verbruik kan afwijken, en het herberekenen van doelen kan je doel in plaats daarvan baseren op je gelogde voeding, gewichtstrend of gemeten energieverbruik. Dit is geen medisch advies."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szacowane kalorie na utrzymanie to kalorie, które spalasz w typowy dzień: Twoje BMR z profilu pomnożone przez poziom aktywności. Jedzenie poniżej tej wartości to deficyt pozwalający schudnąć; powyżej — nadwyżka pozwalająca przytyć. Pokazany deficyt lub nadwyżka to Twój cel kaloryczny minus ta szacunkowa wartość. To szacunek oparty na wzorze, więc Twoje rzeczywiste spalanie może się różnić, a przeliczanie celów może ustalić cel na podstawie zapisanych posiłków, trendu wagi lub zmierzonego spalania energii. To nie jest porada medyczna."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A manutenção estimada são as calorias que você queimaria em um dia típico: sua TMB (BMR) do perfil multiplicada pelo seu nível de atividade. Comer abaixo disso gera um déficit para perder peso; comer acima gera um superávit para ganhar. O déficit ou superávit exibido é sua meta de calorias menos esta estimativa. É uma estimativa por fórmula, então seu gasto real pode ser diferente, e o recálculo de metas pode definir sua meta com base nos alimentos registrados, na tendência de peso ou no gasto energético medido. Isto não é aconselhamento médico."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menținerea estimată reprezintă caloriile pe care le-ai arde într-o zi obișnuită: BMR-ul din profilul tău înmulțit cu nivelul de activitate. Dacă mănânci sub această valoare, ai un deficit pentru a slăbi; dacă mănânci peste, ai un surplus pentru a lua în greutate. Deficitul sau surplusul afișat este obiectivul tău caloric minus această estimare. Este o estimare pe bază de formulă, așa că arderea ta reală poate diferi, iar recalcularea obiectivelor îți poate stabili obiectivul pe baza alimentelor înregistrate, a tendinței greutății sau a energiei arse măsurate. Aceasta nu este o recomandare medicală."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценочная норма поддержания — это калории, которые вы сжигаете в обычный день: ваш BMR из профиля, умноженный на уровень активности. Если есть меньше, получается дефицит для снижения веса; если больше — профицит для набора. Показанный дефицит или профицит — это ваша цель по калориям минус эта оценка. Это расчёт по формуле, поэтому реальный расход может отличаться, а пересчёт целей может задать цель на основе записанной еды, динамики веса или измеренного расхода энергии. Это не медицинская рекомендация."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tahmini koruma kalorisi, tipik bir günde yaktığınız kaloridir: profilinizdeki BMR değerinizin aktivite seviyenizle çarpımı. Bunun altında yemek kilo vermek için açık, üstünde yemek kilo almak için fazla oluşturur. Gösterilen açık veya fazla, kalori hedefinizden bu tahminin çıkarılmasıyla bulunur. Bu bir formül tahminidir; gerçek harcamanız farklı olabilir ve hedef yeniden hesaplaması hedefinizi bunun yerine kaydettiğiniz yiyeceklere, kilo eğiliminize veya ölçülen enerji harcamanıza göre belirleyebilir. Bu tıbbi tavsiye değildir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Орієнтовна норма підтримки — це калорії, які ви спалюєте у звичайний день: ваш BMR із профілю, помножений на рівень активності. Якщо їсти менше, виникає дефіцит для схуднення; якщо більше — профіцит для набору ваги. Показаний дефіцит або профіцит — це ваша ціль калорій мінус ця оцінка. Це розрахунок за формулою, тож реальні витрати можуть відрізнятися, а перерахунок цілей може встановити ціль на основі записаної їжі, динаміки ваги або виміряних витрат енергії. Це не медична порада."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "估算维持热量是你在普通一天中消耗的热量：根据个人资料计算的 BMR（基础代谢率）乘以你的活动水平。吃得低于它就形成减重所需的热量缺口；吃得高于它就形成增重所需的热量盈余。显示的缺口或盈余等于你的热量目标减去这个估算值。这是公式估算，你的实际消耗可能不同，重新计算目标时也可能改为根据你记录的饮食、体重趋势或测得的能量消耗来设定目标。这不是医疗建议。"
+          }
+        }
+      }
+    },
     "Teal": {
       "extractionState": "manual",
       "localizations": {
