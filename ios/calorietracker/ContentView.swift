@@ -1912,7 +1912,11 @@ private var dailyStepsTaskKey: String {
                     showMultiPhotoCaptureSheet = true
                 }
             }
-            .sheet(isPresented: $showMultiPhotoCaptureSheet) {
+            .sheet(isPresented: $showMultiPhotoCaptureSheet, onDismiss: {
+                // Removing the last photo or swiping the sheet down leaves the
+                // label scan, so its barcode must not reach a later photo log (#485).
+                labelScanBarcode.captureSheetDismissed()
+            }) {
                 MultiPhotoCaptureSheet(
                     images: $captureImages,
                     isImportingPhotos: isImportingPhotos,
@@ -1920,6 +1924,7 @@ private var dailyStepsTaskKey: String {
                     description: $contextDescription,
                     onAddPhoto: {
                         guard captureImages.count < 10 else { return }
+                        labelScanBarcode.keepForAnotherPhoto()
                         showMultiPhotoCaptureSheet = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                             showCamera = true

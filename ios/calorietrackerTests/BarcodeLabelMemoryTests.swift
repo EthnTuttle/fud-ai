@@ -79,6 +79,35 @@ struct BarcodeLabelMemoryTests {
         #expect(handoff.take() == "222")
     }
 
+    @Test func closingTheCaptureSheetClearsTheBarcodeUnlessItOpensTheCamera() {
+        var handoff = LabelScanBarcodeHandoff()
+        handoff.arm("4006381333931")
+
+        // "Add photo" steps aside for the camera, so the label scan goes on.
+        handoff.keepForAnotherPhoto()
+        handoff.captureSheetDismissed()
+        #expect(handoff.barcode == "4006381333931")
+
+        // Removing the last photo or swiping the sheet down is a way out.
+        handoff.captureSheetDismissed()
+        #expect(handoff.barcode == nil)
+
+        // A pending camera step never outlives a cleared or re-armed scan.
+        handoff.arm("4006381333931")
+        handoff.keepForAnotherPhoto()
+        handoff.clear()
+        handoff.arm("5000112637922")
+        handoff.captureSheetDismissed()
+        #expect(handoff.barcode == nil)
+
+        handoff.arm("4006381333931")
+        handoff.keepForAnotherPhoto()
+        #expect(handoff.take() == "4006381333931")
+        handoff.arm("5000112637922")
+        handoff.captureSheetDismissed()
+        #expect(handoff.barcode == nil)
+    }
+
     @Test func reviewAnalysisKeepsTheSavedLabelNutritionServingAndBarcode() {
         var entry = labelEntry("Protein bar", barcode: "4006381333931", at: 1_000)
         entry.fiber = 6

@@ -68,18 +68,38 @@ enum BarcodeLabelMemory {
 /// stale code can never attach to an unrelated log.
 struct LabelScanBarcodeHandoff: Equatable {
     private(set) var barcode: String?
+    /// The capture sheet is closing only so the camera can take another photo.
+    private var keepsThroughNextSheetDismissal = false
 
     mutating func arm(_ barcode: String?) {
         let trimmed = barcode?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         self.barcode = trimmed.isEmpty ? nil : trimmed
+        keepsThroughNextSheetDismissal = false
     }
 
     mutating func take() -> String? {
-        defer { barcode = nil }
+        defer { clear() }
         return barcode
     }
 
     mutating func clear() {
         barcode = nil
+        keepsThroughNextSheetDismissal = false
+    }
+
+    /// "Add photo" closes the capture sheet to open the camera; the label scan
+    /// goes on, so the next sheet dismissal keeps the barcode.
+    mutating func keepForAnotherPhoto() {
+        keepsThroughNextSheetDismissal = true
+    }
+
+    /// The capture sheet closed. Unless it only stepped aside for the camera,
+    /// that is a way out of the label scan (last photo removed, swiped down).
+    mutating func captureSheetDismissed() {
+        if keepsThroughNextSheetDismissal {
+            keepsThroughNextSheetDismissal = false
+        } else {
+            clear()
+        }
     }
 }
