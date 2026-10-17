@@ -4269,10 +4269,15 @@ private fun LocalModelRow(
             LocalModelInstallStatus.Installed ->
                 TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
             LocalModelInstallStatus.NotInstalled,
-            is LocalModelInstallStatus.Failed ->
+            is LocalModelInstallStatus.Failed -> {
                 TextButton(onClick = onDownload, enabled = state.eligible) {
                     Text(stringResource(R.string.action_download))
                 }
+                // An interrupted download keeps its bytes for resuming; Delete frees them.
+                if (state.keptBytes > 0L) {
+                    TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
+                }
+            }
         }
     }
 }
