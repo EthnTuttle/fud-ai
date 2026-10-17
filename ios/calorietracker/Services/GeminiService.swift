@@ -224,7 +224,7 @@ struct GeminiService {
     """
 
     private static let ingredientBreakdownInstruction = """
-    ingredients is required. For a meal with multiple meaningful foods, return each food once using this exact object shape: {"name":"...","grams":0.0,"calories":0,"protein":0.0,"carbs":0.0,"fat":0.0}. Ingredient grams and macros must describe the analyzed amount and add up approximately to the meal totals. Return [] for a nutrition label, a single simple food, or when a reliable breakdown is not possible. Every ingredient must have a positive grams estimate even when no weight is shown. For screenshots or photos of menus, recipes, meal plans, or food-logging apps that list several dishes, return each listed dish as its own ingredient using its listed calories/macros.
+    ingredients is required. For a meal with multiple meaningful foods, return each food once using this exact object shape: {"name":"...","grams":0.0,"calories":0,"protein":0.0,"carbs":0.0,"fat":0.0}. Ingredient grams and macros must describe the analyzed amount and add up approximately to the meal totals. Return [] for a nutrition label, a single simple food, or when a reliable breakdown is not possible. Every ingredient must have a positive grams estimate even when no weight is shown. For screenshots or photos of menus, recipes, meal plans, or food-logging apps that list several dishes, return each listed dish as its own ingredient using its listed calories/macros. Return at most 20 ingredients; when there are more foods or dishes, combine similar or minor ones so the list still covers the whole meal. Never add a total or subtotal row as an ingredient.
     """
 
     // MARK: - Public API (unchanged interface)
@@ -1473,16 +1473,20 @@ struct GeminiService {
         ).withIngredientMacroTotals()
     }
 
+    /// The prompts ask for at most this many entries; a longer list is dropped, never truncated.
     private static let maxIngredientCount = 20
     /// Pure fat; a repaired weight that implies more energy per gram is not a real food.
     private static let maxIngredientCaloriesPerGram = 9.0
     /// A list covering less than this share of the meal calories is missing dishes.
     private static let minIngredientCalorieCoverage = 0.5
+    /// A list adding up to more than this share also counts something twice, such as a total row.
+    private static let maxIngredientCalorieCoverage = 1.5
 
     /// The breakdown replaces the meal macros, so it must be complete or absent (#343):
     /// any entry that cannot be kept or repaired drops the whole list and the model's
     /// meal totals stay. Missing ingredient weights (common for screenshots of meal lists
-    /// that only show calories) are estimated from the meal weight instead of dropping the dish.
+    /// that only show calories) are estimated from the meal weight left after the listed
+    /// weights instead of dropping the dish. Mirrors Android FoodJsonParser.parseIngredients.
     private static func parseIngredientBreakdown(
         _ raw: Any?,
         mealCalories: Int,
@@ -1497,22 +1501,21 @@ struct GeminiService {
             var carbs: Double
             var fat: Double
         }
-        func number(_ value: Any?) -> Double? {
-            guard let value = (value as? NSNumber)?.doubleValue, value.isFinite else { return nil }
-            return value
-        }
         var drafts: [Draft] = []
         for item in items {
             guard let item = item as? [String: Any],
                   let name = (item["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !name.isEmpty,
-                  let calories = number(item["calories"]),
-                  let protein = number(item["protein"]),
-                  let carbs = number(item["carbs"]),
-                  let fat = number(item["fat"]),
+                  let calories = ingredientNumber(item["calories"]),
+                  let protein = ingredientNumber(item["protein"]),
+                  let carbs = ingredientNumber(item["carbs"]),
+                  let fat = ingredientNumber(item["fat"]),
                   [calories, protein, carbs, fat].allSatisfy({ $0 >= 0 })
             else { return [] }
-            let grams = number(item["grams"]).flatMap { $0 > 0 ? $0 : nil }
+            let listedGrams = ingredientNumber(item["grams"])
+            // 0 is the prompt's placeholder for an unknown weight; a negative weight is malformed.
+            if let listedGrams, listedGrams < 0 { return [] }
+            let grams = listedGrams.flatMap { $0 > 0 ? $0 : nil }
             // Without a weight or calories there is nothing to estimate the weight from.
             if grams == nil && calories <= 0 { return [] }
             drafts.append(Draft(name: name, grams: grams, calories: calories, protein: protein, carbs: carbs, fat: fat))
@@ -1523,13 +1526,10 @@ struct GeminiService {
         if missingCalories > 0 {
             guard let mealGrams, mealGrams > 0 else { return [] }
             let remainingGrams = mealGrams - drafts.compactMap(\.grams).reduce(0, +)
-            if remainingGrams > 0, missingCalories / remainingGrams <= maxIngredientCaloriesPerGram {
-                gramsPerMissingCalorie = remainingGrams / missingCalories
-            } else if mealCalories > 0 {
-                gramsPerMissingCalorie = mealGrams / Double(mealCalories)
-            } else {
-                return []
-            }
+            // The repaired weights must fit in the meal: when the listed weights leave no room
+            // for the missing dishes, the numbers disagree and no repair is reliable.
+            guard remainingGrams > 0, missingCalories / remainingGrams <= maxIngredientCaloriesPerGram else { return [] }
+            gramsPerMissingCalorie = remainingGrams / missingCalories
         }
 
         let ingredients = drafts.map { draft in
@@ -1542,11 +1542,26 @@ struct GeminiService {
                 fat: draft.fat
             )
         }
-        if mealCalories > 0,
-           Double(ingredients.ingredientTotals.calories) < Double(mealCalories) * minIngredientCalorieCoverage {
-            return []
+        if mealCalories > 0 {
+            let coverage = Double(ingredients.ingredientTotals.calories) / Double(mealCalories)
+            guard coverage >= minIngredientCalorieCoverage, coverage <= maxIngredientCalorieCoverage else { return [] }
         }
         return ingredients
+    }
+
+    /// Ingredient numbers as JSON numbers or numeric strings ("156"), like Android's jsonNumber,
+    /// so one quoted value does not drop the whole breakdown. Booleans and non-finite values are not numbers.
+    static func ingredientNumber(_ value: Any?) -> Double? {
+        let number: Double?
+        if let string = value as? String {
+            number = Double(string.trimmingCharacters(in: .whitespacesAndNewlines))
+        } else if let value = value as? NSNumber, CFGetTypeID(value) != CFBooleanGetTypeID() {
+            number = value.doubleValue
+        } else {
+            number = nil
+        }
+        guard let number, number.isFinite else { return nil }
+        return number
     }
 
     static func parseAllergensFromLabReport(from text: String) throws -> [String] {

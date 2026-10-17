@@ -177,19 +177,41 @@ struct ServingUnitFallbackTests {
         #expect(analysis.protein == 40)
     }
 
-    @Test func implausibleRemainingWeightFallsBackToMealEnergyDensity() throws {
+    @Test func missingWeightsThatCannotFitInTheMealWeightDropTheBreakdown() throws {
+        // 10 g left for a 500 kcal dish, and no weight left at all: a repair would make the
+        // ingredients outweigh the 400 g meal, so the header totals stay instead.
+        for saladGrams in [390, 420] {
+            let analysis = try GeminiService.parseFoodAnalysis(from: """
+            {"name":"Plate","calories":600,"protein":30,"carbs":60,"fat":25,"serving_size_grams":400,"unit_options":[],
+             "ingredients":[
+               {"name":"Salad","grams":\(saladGrams),"calories":100,"protein":5,"carbs":10,"fat":5},
+               {"name":"Pasta","calories":500,"protein":25,"carbs":50,"fat":20}
+             ]}
+            """)
+
+            #expect(analysis.ingredients.isEmpty)
+            #expect(analysis.calories == 600)
+            #expect(analysis.protein == 30)
+        }
+    }
+
+    @Test func numericStringsAreReadAsNumbersLikeAndroid() throws {
         let analysis = try GeminiService.parseFoodAnalysis(from: """
-        {"name":"Plate","calories":600,"protein":30,"carbs":60,"fat":25,"serving_size_grams":400,"unit_options":[],
+        {"name":"Lunch","calories":700,"protein":40,"carbs":80,"fat":24,"serving_size_grams":600,"unit_options":[],
          "ingredients":[
-           {"name":"Salad","grams":390,"calories":100,"protein":5,"carbs":10,"fat":5},
-           {"name":"Pasta","calories":500,"protein":25,"carbs":50,"fat":20}
+           {"name":"Dish 1","grams":"150","calories":"156","protein":"10","carbs":20,"fat":4},
+           {"name":"Dish 2","grams":450,"calories":544,"protein":30,"carbs":60,"fat":20}
          ]}
         """)
 
-        #expect(analysis.ingredients.count == 2)
-        let pastaGrams = try #require(analysis.ingredients.last?.grams)
-        #expect(abs(pastaGrams - 333.3) < 0.001)
-        #expect(analysis.calories == 600)
+        #expect(analysis.ingredients.map(\.name) == ["Dish 1", "Dish 2"])
+        #expect(analysis.ingredients.first?.grams == 150)
+        #expect(analysis.ingredients.first?.calories == 156)
+        #expect(analysis.calories == 700)
+        #expect(GeminiService.ingredientNumber(" 12.5 ") == 12.5)
+        #expect(GeminiService.ingredientNumber(true) == nil)
+        #expect(GeminiService.ingredientNumber("about 200") == nil)
+        #expect(GeminiService.ingredientNumber("NaN") == nil)
     }
 
     @Test func malformedIngredientDropsTheWholeBreakdownAndKeepsMealTotals() throws {
@@ -198,6 +220,9 @@ struct ServingUnitFallbackTests {
             #"{"name":"","grams":150,"calories":200,"protein":4,"carbs":44,"fat":1}"#,
             #"{"name":"Rice","grams":150,"calories":-5,"protein":4,"carbs":44,"fat":1}"#,
             #"{"name":"Water","grams":0,"calories":0,"protein":0,"carbs":0,"fat":0}"#,
+            #"{"name":"Rice","grams":-150,"calories":200,"protein":4,"carbs":44,"fat":1}"#,
+            #"{"name":"Rice","grams":150,"calories":true,"protein":4,"carbs":44,"fat":1}"#,
+            #"{"name":"Rice","grams":150,"calories":"about 200","protein":4,"carbs":44,"fat":1}"#,
             #""Rice""#,
         ]
         for malformed in malformedItems {
@@ -253,6 +278,30 @@ struct ServingUnitFallbackTests {
         #expect(analysis.ingredients.isEmpty)
         #expect(analysis.calories == 700)
         #expect(analysis.protein == 40)
+    }
+
+    @Test func breakdownAddingUpToFarMoreThanTheMealCaloriesIsDropped() throws {
+        // A meal-list screenshot's total row echoed as a dish would double the logged calories.
+        let analysis = try GeminiService.parseFoodAnalysis(from: """
+        {"name":"Lunch","calories":700,"protein":40,"carbs":80,"fat":24,"serving_size_grams":600,"unit_options":[],
+         "ingredients":[
+           {"name":"Dish 1","grams":150,"calories":156,"protein":10,"carbs":20,"fat":4},
+           {"name":"Dish 2","grams":450,"calories":544,"protein":30,"carbs":60,"fat":20},
+           {"name":"Total","grams":600,"calories":700,"protein":40,"carbs":80,"fat":24}
+         ]}
+        """)
+
+        #expect(analysis.ingredients.isEmpty)
+        #expect(analysis.calories == 700)
+        #expect(analysis.protein == 40)
+    }
+
+    @Test func promptsStateTheIngredientCapSoLongMenusAreGroupedInsteadOfDropped() {
+        for progressiveMeal in [false, true] {
+            let prompt = GeminiService.multiPhotoAnalysisPrompt(progressiveMeal: progressiveMeal)
+            #expect(prompt.contains("Return at most 20 ingredients"))
+            #expect(prompt.contains("Never add a total or subtotal row as an ingredient."))
+        }
     }
 
     @Test func parseFoodKeepsMealMacrosWhenIngredientsAreMissing() throws {

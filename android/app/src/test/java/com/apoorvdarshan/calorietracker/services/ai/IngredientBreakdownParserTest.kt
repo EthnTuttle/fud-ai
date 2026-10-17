@@ -46,20 +46,46 @@ class IngredientBreakdownParserTest {
     }
 
     @Test
-    fun implausibleRemainingWeightFallsBackToMealEnergyDensity() {
-        val ingredients = FoodJsonParser.parseIngredients(
+    fun missingWeightsThatCannotFitInTheMealWeightDropTheBreakdown() {
+        // 10 g left for a 500 kcal dish, and no weight left at all: a repair would make the
+        // ingredients outweigh the 400 g meal, so the header totals stay instead.
+        for (saladGrams in listOf(390, 420)) {
+            val analysis = mealAnalysis(
+                calories = 600,
+                protein = 30.0,
+                carbs = 60.0,
+                fat = 25.0,
+                servingSizeGrams = 400.0,
+                ingredientsJson = """
+                    {"name":"Salad","grams":$saladGrams,"calories":100,"protein":5,"carbs":10,"fat":5},
+                    {"name":"Pasta","calories":500,"protein":25,"carbs":50,"fat":20}
+                """
+            )
+
+            assertTrue("salad $saladGrams g", analysis.ingredients.isEmpty())
+            assertEquals(600, analysis.calories)
+            assertEquals(30.0, analysis.protein, 0.0)
+        }
+    }
+
+    @Test
+    fun numericStringsAreReadAsNumbers() {
+        val analysis = mealAnalysis(
+            calories = 700,
+            protein = 40.0,
+            carbs = 80.0,
+            fat = 24.0,
+            servingSizeGrams = 600.0,
+            ingredientsJson = """
+                {"name":"Dish 1","grams":"150","calories":"156","protein":"10","carbs":20,"fat":4},
+                {"name":"Dish 2","grams":450,"calories":544,"protein":30,"carbs":60,"fat":20}
             """
-            {"ingredients":[
-              {"name":"Salad","grams":390,"calories":100,"protein":5,"carbs":10,"fat":5},
-              {"name":"Pasta","calories":500,"protein":25,"carbs":50,"fat":20}
-            ]}
-            """.trimIndent(),
-            mealCalories = 600,
-            mealGrams = 400.0
         )
 
-        assertEquals(2, ingredients.size)
-        assertEquals(333.3, ingredients.last().grams, 0.001)
+        assertEquals(listOf("Dish 1", "Dish 2"), analysis.ingredients.map { it.name })
+        assertEquals(150.0, analysis.ingredients.first().grams, 0.0)
+        assertEquals(156, analysis.ingredients.first().calories)
+        assertEquals(700, analysis.calories)
     }
 
     @Test
@@ -69,6 +95,9 @@ class IngredientBreakdownParserTest {
             """{"name":"","grams":150,"calories":200,"protein":4,"carbs":44,"fat":1}""",
             """{"name":"Rice","grams":150,"calories":-5,"protein":4,"carbs":44,"fat":1}""",
             """{"name":"Water","grams":0,"calories":0,"protein":0,"carbs":0,"fat":0}""",
+            """{"name":"Rice","grams":-150,"calories":200,"protein":4,"carbs":44,"fat":1}""",
+            """{"name":"Rice","grams":150,"calories":true,"protein":4,"carbs":44,"fat":1}""",
+            """{"name":"Rice","grams":150,"calories":"about 200","protein":4,"carbs":44,"fat":1}""",
             "\"Rice\""
         )
         for (malformed in malformedItems) {
@@ -142,6 +171,36 @@ class IngredientBreakdownParserTest {
         assertTrue(analysis.ingredients.isEmpty())
         assertEquals(700, analysis.calories)
         assertEquals(40.0, analysis.protein, 0.0)
+    }
+
+    @Test
+    fun breakdownAddingUpToFarMoreThanTheMealCaloriesIsDropped() {
+        // A meal-list screenshot's total row echoed as a dish would double the logged calories.
+        val analysis = mealAnalysis(
+            calories = 700,
+            protein = 40.0,
+            carbs = 80.0,
+            fat = 24.0,
+            servingSizeGrams = 600.0,
+            ingredientsJson = """
+                {"name":"Dish 1","grams":150,"calories":156,"protein":10,"carbs":20,"fat":4},
+                {"name":"Dish 2","grams":450,"calories":544,"protein":30,"carbs":60,"fat":20},
+                {"name":"Total","grams":600,"calories":700,"protein":40,"carbs":80,"fat":24}
+            """
+        )
+
+        assertTrue(analysis.ingredients.isEmpty())
+        assertEquals(700, analysis.calories)
+        assertEquals(40.0, analysis.protein, 0.0)
+    }
+
+    @Test
+    fun promptsStateTheIngredientCapSoLongMenusAreGroupedInsteadOfDropped() {
+        for (progressiveMeal in listOf(false, true)) {
+            val prompt = multiPhotoAnalysisPrompt(progressiveMeal = progressiveMeal)
+            assertTrue(prompt.contains("Return at most 20 ingredients"))
+            assertTrue(prompt.contains("Never add a total or subtotal row as an ingredient."))
+        }
     }
 
     /** Mirrors parseFoodResponse: meal macros come from the header unless a breakdown replaces them. */
