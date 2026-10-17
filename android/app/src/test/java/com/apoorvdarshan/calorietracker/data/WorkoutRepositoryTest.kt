@@ -323,7 +323,41 @@ class WorkoutRepositoryTest {
         val exercise = repository.planNow(date).exercises.single()
         assertEquals("Running_Outdoor", exercise.itemId)
         assertEquals(2_700.0, exercise.timer!!.savedSeconds, 0.001)
+        assertEquals(WorkoutIntensity.MODERATE, exercise.timer!!.intensity)
         assertTrue(exercise.sets.isEmpty())
+
+        // The quick Walking/Running sheet passes the chosen effort, and it drives the burn.
+        repository.logQuickCardio(
+            exerciseItem().copy(id = "Walking_Outdoor", name = "Walking", category = "cardio"),
+            minutes = 94,
+            date = date.plusDays(1),
+            intensity = WorkoutIntensity.LIGHT
+        )
+        val walk = repository.planNow(date.plusDays(1)).exercises.single()
+        assertEquals(WorkoutIntensity.LIGHT, walk.timer!!.intensity)
+        assertEquals(269, repository.calculateBurn(date.plusDays(1), 90.7, WorkoutWeightUnit.LBS)!!.caloriesBurned)
+    }
+
+    @Test
+    fun choosingEffortBeforeStartingKeepsTheTimerIdleUntilStarted() = runBlocking {
+        val repository = WorkoutRepository(FakeWorkoutStateStore())
+        val date = LocalDate.of(2026, 9, 8)
+        val start = Instant.parse("2026-09-08T10:00:00Z")
+        repository.toggleExercise(exerciseItem().copy(id = "Walking_Treadmill", category = "cardio"), date)
+        val exercise = repository.planNow(date).exercises.single()
+
+        repository.setTimerIntensity(exercise.id, date, WorkoutIntensity.VIGOROUS)
+        val idle = repository.planNow(date).exercises.single().timer!!
+        assertFalse(idle.hasStarted)
+        assertFalse(repository.planNow(date).exercises.single().hasCalculableWork)
+
+        repository.updateTimer(exercise.id, date, ExerciseTimerAction.START, start)
+        repository.updateTimer(exercise.id, date, ExerciseTimerAction.STOP, start.plusSeconds(600))
+        val saved = repository.planNow(date).exercises.single().timer!!
+        assertTrue(saved.hasStarted)
+        assertEquals(WorkoutIntensity.VIGOROUS, saved.intensity)
+        // (4.8 - 1) MET × 3.5 × 70 kg / 200 × 10 min.
+        assertEquals(47, repository.calculateBurn(date, 70.0, WorkoutWeightUnit.KG)!!.caloriesBurned)
     }
 
     @Test

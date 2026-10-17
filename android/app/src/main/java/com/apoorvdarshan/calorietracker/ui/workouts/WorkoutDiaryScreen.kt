@@ -48,6 +48,7 @@ import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
@@ -126,6 +127,8 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.PlannedExercise
 import com.apoorvdarshan.calorietracker.models.ExerciseTimerAction
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
+import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
+import com.apoorvdarshan.calorietracker.models.WorkoutBurnEstimator
 import com.apoorvdarshan.calorietracker.models.WorkoutSetInput
 import com.apoorvdarshan.calorietracker.models.PlannedSet
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -377,7 +380,8 @@ internal fun WorkoutDiaryScreen(
                             onWeight = { setId, value -> viewModel.updateWeight(exercise.id, setId, value) },
                             onReps = { setId, value -> viewModel.updateReps(exercise.id, setId, value) },
                             onRpe = { setId, value -> viewModel.updateRpe(exercise.id, setId, value) },
-                            onTimerAction = { viewModel.updateTimer(exercise.id, it) }
+                            onTimerAction = { viewModel.updateTimer(exercise.id, it) },
+                            onEffort = { viewModel.setTimerIntensity(exercise.id, it) }
                         )
                     }
                 }
@@ -575,8 +579,8 @@ internal fun WorkoutDiaryScreen(
         OutdoorActivityDurationSheet(
             activity = activity,
             onDismiss = { outdoorActivitySheet = null },
-            onLog = { minutes ->
-                viewModel.logQuickOutdoorActivity(activity, minutes)
+            onLog = { minutes, intensity ->
+                viewModel.logQuickOutdoorActivity(activity, minutes, intensity)
             }
         )
     }
@@ -1148,7 +1152,8 @@ private fun WorkoutExerciseCard(
     onWeight: (UUID, String) -> Unit,
     onReps: (UUID, String) -> Unit,
     onRpe: (UUID, String) -> Unit,
-    onTimerAction: (ExerciseTimerAction) -> Unit
+    onTimerAction: (ExerciseTimerAction) -> Unit,
+    onEffort: (WorkoutIntensity) -> Unit
 ) {
     FudGlassSurface(
         modifier = modifier.fillMaxWidth(),
@@ -1269,8 +1274,14 @@ private fun WorkoutExerciseCard(
                         Icon(Icons.Filled.Add, contentDescription = "Add blank set", modifier = Modifier.size(18.dp))
                     }
                 } else {
-                    Text("Timed activity", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f), fontSize = 12.sp)
-                    Spacer(Modifier.weight(1f))
+                    // Cardio has no RPE fields, so effort is chosen directly (Moderate by default).
+                    // The weighted box lets a long translation ellipsize instead of squeezing the buttons.
+                    Box(Modifier.weight(1f)) {
+                        WorkoutEffortChip(
+                            effort = WorkoutBurnEstimator.timerIntensity(exercise, rpeScale),
+                            onSelect = onEffort
+                        )
+                    }
                 }
                 WorkoutExerciseTimer(exercise, onTimerAction)
                 IconButton(onClick = onToggleSaved, modifier = Modifier.size(36.dp)) {
@@ -1317,12 +1328,66 @@ private fun WorkoutExerciseCard(
     }
 }
 
+internal val WorkoutIntensity.labelRes: Int
+    get() = when (this) {
+        WorkoutIntensity.LIGHT -> R.string.workout_effort_light
+        WorkoutIntensity.MODERATE -> R.string.workout_effort_moderate
+        WorkoutIntensity.VIGOROUS -> R.string.workout_effort_vigorous
+    }
+
+@Composable
+private fun WorkoutEffortChip(
+    effort: WorkoutIntensity,
+    onSelect: (WorkoutIntensity) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val effortLabel = stringResource(effort.labelRes)
+    val chipLabel = stringResource(R.string.workout_effort_value, effortLabel)
+    Box {
+        Row(
+            modifier = Modifier
+                .minimumInteractiveComponentSize()
+                .clip(CircleShape)
+                .background(AppColors.Calorie.copy(alpha = 0.12f))
+                .clickable(role = Role.DropdownList) { expanded = true }
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                chipLabel,
+                color = AppColors.Calorie,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(18.dp))
+        }
+        SheetGlassDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, menuWidth = 200.dp) {
+            WorkoutIntensity.entries.forEach { option ->
+                SheetGlassDropdownMenuItem(
+                    label = stringResource(option.labelRes),
+                    selected = option == effort,
+                    reserveSelectionSlot = true,
+                    onClick = {
+                        expanded = false
+                        if (option != effort) onSelect(option)
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun WorkoutExerciseTimer(
     exercise: PlannedExercise,
     onAction: (ExerciseTimerAction) -> Unit
 ) {
-    val timer = exercise.timer
+    // Choosing an effort first stores an empty timer; it still reads as "Start timer".
+    val timer = exercise.timer?.takeIf { it.hasStarted }
     var now by remember { mutableStateOf(Instant.now()) }
     var menuExpanded by remember { mutableStateOf(false) }
     var pendingAction by remember { mutableStateOf<ExerciseTimerAction?>(null) }

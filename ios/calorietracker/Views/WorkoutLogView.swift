@@ -316,6 +316,9 @@ struct WorkoutLogView: View {
                                         dismissSetKeyboard()
                                         workoutStore.updateTimer(action, exerciseID: exercise.id, on: selectedDate)
                                     },
+                                    setEffort: { intensity in
+                                        workoutStore.setTimerIntensity(intensity, exerciseID: exercise.id, on: selectedDate)
+                                    },
                                     updateSetCount: { count in
                                         workoutStore.setSetCount(count, exerciseID: exercise.id, on: selectedDate)
                                     },
@@ -526,8 +529,8 @@ struct WorkoutLogView: View {
                 .presentationDragIndicator(.visible)
             }
             .sheet(item: $outdoorActivitySheet) { activity in
-                OutdoorActivityDurationSheet(activity: activity) { minutes in
-                    logQuickOutdoorActivity(activity, minutes: minutes)
+                OutdoorActivityDurationSheet(activity: activity) { minutes, intensity in
+                    logQuickOutdoorActivity(activity, minutes: minutes, intensity: intensity)
                 }
             }
         }
@@ -650,14 +653,18 @@ struct WorkoutLogView: View {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    private func logQuickOutdoorActivity(_ activity: OutdoorActivityDurationSheet.ActivityKind, minutes: Int) {
+    private func logQuickOutdoorActivity(
+        _ activity: OutdoorActivityDurationSheet.ActivityKind,
+        minutes: Int,
+        intensity: StrengthWorkoutIntensity
+    ) {
         guard minutes > 0 else { return }
         let exerciseID = activity == .walking
             ? OutdoorActivitySettings.walkingExerciseID
             : OutdoorActivitySettings.runningExerciseID
         guard let item = library.exercises.first(where: { $0.id == exerciseID }) else { return }
 
-        workoutStore.logQuickCardio(item, minutes: minutes, on: selectedDate)
+        workoutStore.logQuickCardio(item, minutes: minutes, on: selectedDate, intensity: intensity)
         if let estimate = StrengthWorkoutBurnEstimator.estimate(
             exercises: workoutStore.exercises(for: selectedDate),
             bodyWeightKg: currentBodyWeightKg,
@@ -1087,6 +1094,7 @@ private struct WorkoutLogExerciseCard: View {
     let toggleSaved: () -> Void
     let removeExercise: () -> Void
     let timerAction: (StrengthExerciseTimerAction) -> Void
+    let setEffort: (StrengthWorkoutIntensity) -> Void
     let updateSetCount: (Int) -> Void
     let updateWeight: (UUID, String) -> Void
     let updateReps: (UUID, String) -> Void
@@ -1173,6 +1181,11 @@ private struct WorkoutLogExerciseCard: View {
                     Image(systemName: isCardio ? "figure.run" : "list.number")
                         .font(.caption.weight(.heavy))
                         .foregroundStyle(Color.workoutMutedText)
+
+                    if isCardio {
+                        // Cardio has no RPE fields, so effort is chosen directly (Moderate by default).
+                        effortMenu
+                    }
 
                     Spacer(minLength: 0)
 
@@ -1268,6 +1281,35 @@ private struct WorkoutLogExerciseCard: View {
     private var shadowColor: Color {
         colorScheme == .light ? .clear : Color.black.opacity(0.22)
     }
+
+    private var effortMenu: some View {
+        let effort = StrengthWorkoutBurnEstimator.timerIntensity(for: exercise, defaultRPEScale: rpeScale)
+        return Menu {
+            Picker("Effort", selection: Binding(get: { effort }, set: { if $0 != effort { setEffort($0) } })) {
+                ForEach(StrengthWorkoutIntensity.allCases) { option in
+                    Text(option.localizedTitle).tag(option)
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Text("Effort: \(effort.localizedTitle)")
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.bold))
+            }
+            .font(.system(.caption, design: .rounded, weight: .heavy))
+            .foregroundStyle(Color.workoutAccent)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.workoutAccent.opacity(0.12), in: Capsule())
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Effort")
+        .accessibilityValue(effort.localizedTitle)
+    }
 }
 
 /// Compact row used while reordering: large, labeled arrows instead of a
@@ -1348,15 +1390,17 @@ private struct WorkoutExerciseTimerControls: View {
 
     private var isRunning: Bool { timer?.isRunning == true }
     private var isSaved: Bool { timer?.isSaved == true }
+    /// Choosing an effort first stores an empty timer; it still reads as "Start timer".
+    private var hasStarted: Bool { timer?.hasStarted == true }
 
     var body: some View {
         Button {
-            if timer == nil { action(.start) } else { showingActions = true }
+            if !hasStarted { action(.start) } else { showingActions = true }
         } label: {
             VStack(spacing: 1) {
                 Image(systemName: isRunning ? "stopwatch.fill" : "stopwatch")
                     .font(.system(size: 17, weight: .bold))
-                if timer != nil {
+                if hasStarted {
                     TimelineView(.animation(minimumInterval: 1, paused: !isRunning)) { context in
                         Text(durationText(at: context.date))
                             .font(.system(size: 9, weight: .semibold, design: .rounded).monospacedDigit())
@@ -1370,9 +1414,9 @@ private struct WorkoutExerciseTimerControls: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .foregroundStyle(timer == nil ? Color.workoutMutedText.opacity(0.72) : Color.workoutAccent)
-        .accessibilityLabel("\(timer == nil ? "Start timer" : "Timer options") for \(exerciseName)")
-        .accessibilityValue(timer == nil ? "" : "\(durationText(at: .now)), \(isRunning ? "running" : (isSaved ? "saved" : "paused"))")
+        .foregroundStyle(!hasStarted ? Color.workoutMutedText.opacity(0.72) : Color.workoutAccent)
+        .accessibilityLabel("\(!hasStarted ? "Start timer" : "Timer options") for \(exerciseName)")
+        .accessibilityValue(!hasStarted ? "" : "\(durationText(at: .now)), \(isRunning ? "running" : (isSaved ? "saved" : "paused"))")
         .accessibilityIdentifier("workout.timer.\(exerciseID).primary")
         .confirmationDialog("Timer for \(exerciseName)", isPresented: $showingActions, titleVisibility: .visible) {
             Button(isRunning ? "Pause" : "Resume") { action(isRunning ? .pause : .resume) }
