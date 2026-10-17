@@ -10,6 +10,7 @@ import com.apoorvdarshan.calorietracker.services.FoodImageDecoder.scaledToMaxDim
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -118,6 +119,16 @@ class FoodImageStore private constructor(
         File(dir, filename).writeBytes(bytes)
         runCatching {
             FoodImageDecoder.decode(bytes, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
+        }
+        true
+    }.getOrDefault(false)
+
+    /** Like [restoreBytes], but copies from [input] so a restore never holds the whole photo. */
+    fun restoreStream(filename: String, input: InputStream): Boolean = runCatching {
+        val file = File(dir, filename)
+        FileOutputStream(file).use { input.copyTo(it) }
+        runCatching {
+            FoodImageDecoder.decode(file, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
         }
         true
     }.getOrDefault(false)

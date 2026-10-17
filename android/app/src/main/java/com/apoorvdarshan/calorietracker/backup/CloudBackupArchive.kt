@@ -3,8 +3,11 @@ package com.apoorvdarshan.calorietracker.backup
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.FilterInputStream
+import java.io.InputStream
 import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -73,18 +76,34 @@ data class CloudBackupValue(
     }
 }
 
-data class CloudBackupUnpack(
-    val document: CloudBackupDocument,
-    val photos: Map<String, ByteArray>,
-)
+/**
+ * One photo for the archive. Its bytes are read from [open] only while its own
+ * zip entry is written, so a backup never holds every photo in memory (#484).
+ */
+class CloudBackupPhoto(
+    val name: String,
+    val size: Long,
+    val open: () -> InputStream,
+) {
+    companion object {
+        fun fromFile(name: String, file: File) =
+            CloudBackupPhoto(name, file.length()) { FileInputStream(file) }
+    }
+}
 
 object CloudBackupArchive {
+    private const val TEMP_PREFIX = "fudai-backup-"
+
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
 
-    fun contentHash(values: Map<String, CloudBackupValue>, photos: Map<String, ByteArray>): String {
+    fun contentHash(values: Map<String, CloudBackupValue>, photos: List<CloudBackupPhoto>): String =
+        contentHash(values, photos.associate { it.name to it.size })
+
+    // Photos count by name and byte size only, so the hash never needs photo bytes.
+    private fun contentHash(values: Map<String, CloudBackupValue>, photoSizes: Map<String, Long>): String {
         val canonical = buildString {
             values.toSortedMap().forEach { (key, value) ->
                 append(key).append('=')
@@ -97,23 +116,28 @@ object CloudBackupArchive {
                 }
                 append('\n')
             }
-            photos.toSortedMap().forEach { (name, bytes) ->
-                append("photo:").append(name).append(':').append(bytes.size).append('\n')
+            photoSizes.toSortedMap().forEach { (name, size) ->
+                append("photo:").append(name).append(':').append(size).append('\n')
             }
         }
         return sha256(canonical.toByteArray(Charsets.UTF_8))
     }
 
+    /**
+     * Writes the backup zip to [destination]: backup.json first, then one
+     * photos/<name> entry per photo, streamed straight from disk.
+     */
     fun pack(
+        destination: File,
         values: Map<String, CloudBackupValue>,
-        photos: Map<String, ByteArray>,
+        photos: List<CloudBackupPhoto>,
         exportedAt: String,
         appVersion: String,
         platform: String = "android",
-    ): ByteArray {
+    ) {
         val filtered = values.filterKeys { it !in CloudBackupPolicy.excludedKeys }
-        val safePhotos = photos.mapNotNull { (name, bytes) ->
-            CloudBackupPolicy.safePhotoName(name)?.let { it to bytes }
+        val safePhotos = photos.mapNotNull { photo ->
+            CloudBackupPolicy.safePhotoName(photo.name)?.let { it to photo }
         }.toMap()
         val document = CloudBackupDocument(
             format = CloudBackupPolicy.FORMAT,
@@ -121,36 +145,44 @@ object CloudBackupArchive {
             exported_at = exportedAt,
             app_version = appVersion,
             platform = platform,
-            content_sha256 = contentHash(filtered, safePhotos),
+            content_sha256 = contentHash(filtered, safePhotos.mapValues { it.value.size }),
             payload = CloudBackupPayload(values = filtered),
         )
         val payload = json.encodeToString(document).toByteArray(Charsets.UTF_8)
-        val out = ByteArrayOutputStream()
-        ZipOutputStream(out).use { zip ->
+        ZipOutputStream(destination.outputStream().buffered()).use { zip ->
             zip.putNextEntry(ZipEntry(CloudBackupPolicy.PAYLOAD_NAME))
             zip.write(payload)
             zip.closeEntry()
-            for ((name, bytes) in safePhotos) {
-                zip.putNextEntry(ZipEntry(CloudBackupPolicy.PHOTOS_DIR + name))
-                zip.write(bytes)
-                zip.closeEntry()
+            for ((name, photo) in safePhotos) {
+                // Deleted since the snapshot: leave it out rather than fail the backup.
+                val input = try {
+                    photo.open()
+                } catch (_: FileNotFoundException) {
+                    continue
+                }
+                input.use {
+                    zip.putNextEntry(ZipEntry(CloudBackupPolicy.PHOTOS_DIR + name))
+                    it.copyTo(zip)
+                    zip.closeEntry()
+                }
             }
         }
-        return out.toByteArray()
     }
 
-    fun unpack(bytes: ByteArray): CloudBackupUnpack {
+    /**
+     * Reads and validates backup.json. Every entry is read to the end so a
+     * corrupt archive fails its CRC check here, before local data is replaced.
+     */
+    fun readDocument(archive: File): CloudBackupDocument {
         var payload: ByteArray? = null
-        val photos = linkedMapOf<String, ByteArray>()
-        ZipInputStream(ByteArrayInputStream(bytes)).use { zip ->
+        ZipInputStream(archive.inputStream().buffered()).use { zip ->
+            val skip = ByteArray(DEFAULT_BUFFER_SIZE)
             while (true) {
                 val entry = zip.nextEntry ?: break
-                val data = zip.readBytes()
-                when {
-                    entry.name == CloudBackupPolicy.PAYLOAD_NAME -> payload = data
-                    entry.name.startsWith(CloudBackupPolicy.PHOTOS_DIR) -> {
-                        CloudBackupPolicy.safePhotoName(entry.name)?.let { photos[it] = data }
-                    }
+                if (entry.name == CloudBackupPolicy.PAYLOAD_NAME) {
+                    payload = zip.readBytes()
+                } else {
+                    while (zip.read(skip) >= 0) continue
                 }
             }
         }
@@ -160,7 +192,44 @@ object CloudBackupArchive {
         require(document.format_version <= CloudBackupPolicy.VERSION) {
             "This backup needs a newer Fud AI"
         }
-        return CloudBackupUnpack(document, photos)
+        return document
+    }
+
+    /** Hands each restorable photo to [restore] one at a time. [restore] must not close the stream. */
+    fun forEachPhoto(archive: File, restore: (name: String, input: InputStream) -> Unit) {
+        ZipInputStream(archive.inputStream().buffered()).use { zip ->
+            val entryStream = object : FilterInputStream(zip) {
+                override fun close() = Unit
+            }
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                if (!entry.name.startsWith(CloudBackupPolicy.PHOTOS_DIR)) continue
+                val name = CloudBackupPolicy.safePhotoName(entry.name) ?: continue
+                restore(name, entryStream)
+            }
+        }
+    }
+
+    /** Runs [block] with a new archive file in [dir] and always deletes it afterwards. */
+    inline fun <T> withTempArchive(dir: File, block: (File) -> T): T {
+        val file = createTempArchive(dir)
+        try {
+            return block(file)
+        } finally {
+            file.delete()
+        }
+    }
+
+    fun createTempArchive(dir: File): File {
+        dir.mkdirs()
+        return File.createTempFile(TEMP_PREFIX, ".zip", dir)
+    }
+
+    /** Removes archives left behind when the process died mid-backup. */
+    fun deleteTempArchives(dir: File) {
+        dir.listFiles()
+            ?.filter { it.isFile && it.name.startsWith(TEMP_PREFIX) }
+            ?.forEach { it.delete() }
     }
 
     fun sha256(bytes: ByteArray): String {
