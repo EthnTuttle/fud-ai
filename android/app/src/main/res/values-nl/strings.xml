@@ -716,6 +716,7 @@
     <string name="whats_new_v30_adaptive">Adaptieve doelen en Energieverbruik zijn niet langer experimenteel en staan standaard aan bij nieuwe installaties.</string>
     <string name="whats_new_v30_widgets">Widgets vernieuwd: de snelheidsmeterstijl van Home, getekend op de echte grootte van elk widget.</string>
     <string name="whats_new_v30_restore">Opnieuw geïnstalleerd of een nieuwe telefoon? Je voedingslogboek, gewicht en vetpercentage worden nu automatisch hersteld uit Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">Niet genoeg vrije opslagruimte om deze back-up terug te zetten. Maak wat ruimte vrij en probeer het opnieuw.</string>
     <string name="settings_fasting_tracking">Vasten bijhouden</string>
     <string name="settings_fasting_goal">Standaard vastendoel</string>
     <string name="settings_fasting_goal_value">%1$d uur</string>
