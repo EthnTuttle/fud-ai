@@ -965,6 +965,18 @@ struct AllWeightHistoryView: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
+                        // Visible delete — swipe-only deletion read as "can't delete" (#518).
+                        Button {
+                            pendingDeletion = entry
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel(Text("Delete"))
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
