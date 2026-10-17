@@ -26,6 +26,9 @@ class AppNavigator {
     /** The NavHost route on screen, published by [FudAINavHost]. */
     val currentRoute = MutableStateFlow<String?>(null)
 
+    /** Tab routes the user hid from the bottom bar, published by [FudAINavHost]. */
+    val hiddenTabs = MutableStateFlow<Set<String>>(emptySet())
+
     /** The Settings section on screen (null at the hub), published by the Settings screen. */
     val settingsSection = MutableStateFlow<VoiceSettingsSection?>(null)
 

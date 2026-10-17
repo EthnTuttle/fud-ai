@@ -178,6 +178,7 @@
     <string name="nav_progress">Postęp</string>
     <string name="nav_coach">Trener</string>
     <string name="nav_settings">Ustawienia</string>
+    <string name="nav_workouts">Treningi</string>
     <string name="nav_about">O aplikacji</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -483,6 +484,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1R</string>
     <string name="progress_range_all">Wszystko</string>
+    <string name="progress_previous_period">Poprzedni okres</string>
+    <string name="progress_next_period">Następny okres</string>
 
     <string name="progress_weight_section">Waga</string>
     <string name="progress_log_weight">Dodaj wagę</string>
@@ -500,6 +503,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorie</string>
+    <string name="progress_include_today">Uwzględnij dzisiaj</string>
+    <string name="progress_include_today_caption">Wykres kalorii i średnie wartości odżywcze</string>
     <string name="progress_avg_format">Śr.: %1$,d kcal</string>
     <string name="progress_no_food">Brak zapisanych posiłków</string>
 
@@ -561,6 +566,10 @@
     <string name="settings_week_monday">Poniedziałek</string>
     <string name="settings_week_sunday">Niedziela</string>
     <string name="settings_notifications">Powiadomienia</string>
+    <string name="settings_water_quick_add">Ilości szybkiego dodawania</string>
+    <string name="settings_water_quick_add_amount">Ilość %1$d</string>
+    <string name="settings_water_quick_add_invalid">Wpisz ilość do %1$s.</string>
+    <string name="settings_water_quick_add_footer">Wyświetlane w menu + do zapisywania wody jednym dotknięciem.</string>
     <string name="settings_battery_opt">Optymalizacja baterii</string>
     <string name="settings_battery_opt_value">Dodaj Fud AI do wyjątków</string>
 
@@ -702,6 +711,7 @@
     <string name="progress_metric_weight">Waga</string>
     <string name="progress_metric_body_fat">Tkanka tłuszczowa</string>
     <string name="progress_metric_workouts">Treningi</string>
+    <string name="progress_metric_steps">Kroki</string>
     <string name="progress_workout_history">Historia treningów</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d obliczony wydatek energii · dotknij, aby wyświetlić lub usunąć</item>
@@ -719,6 +729,23 @@
     <string name="progress_workout_stat_days">Dni</string>
     <string name="progress_workout_no_range">Brak obliczonych spałań treningowych w tym zakresie</string>
     <string name="progress_workout_chart_description">Wykres spalania treningowego od %1$s do %2$s. Razem %3$d kilokalorii; ostatnie %4$d kilokalorii.</string>
+    <string name="workout_filter_source">Źródło</string>
+    <string name="workout_source_dataset">Baza danych</string>
+    <string name="workout_source_saved">Zapisane</string>
+    <string name="workout_source_mine">Moje</string>
+    <string name="workout_mine_empty_title">Brak własnych ćwiczeń</string>
+    <string name="workout_mine_empty_subtitle">Utworzone przez Ciebie ćwiczenia pojawią się tutaj.</string>
+    <string name="workout_exercise_take_photo">Zrób zdjęcie</string>
+    <string name="workout_exercise_camera_denied_title">Potrzebny dostęp do aparatu</string>
+    <string name="workout_exercise_camera_denied_message">Aby robić zdjęcia ćwiczeń, zezwól Fud AI na korzystanie z aparatu w ustawieniach systemowych.</string>
+    <string name="progress_steps_stat_total">Suma</string>
+    <string name="progress_steps_stat_average">Średnia</string>
+    <string name="progress_steps_stat_best_day">Najlepszy dzień</string>
+    <string name="progress_steps_no_range">Brak danych o krokach w tym okresie</string>
+    <string name="progress_steps_footnote">Dzienne sumy kroków z Health Connect.</string>
+    <string name="progress_steps_weekly_note">Słupki pokazują średnią dzienną liczbę kroków w każdym tygodniu.</string>
+    <string name="progress_steps_history_note">Health Connect udostępnia kroki tylko z około 30 dni przed połączeniem Fud AI, więc starszych dni może brakować.</string>
+    <string name="progress_steps_chart_description">Wykres kroków od %1$s do %2$s. Łącznie %3$s kroków; najlepszy dzień %4$s kroków.</string>
     <string name="progress_log_body_fat">Dodaj pomiar tkanki tłuszczowej</string>
     <string name="progress_log_first_body_fat">Dodaj pierwszy pomiar % tkanki tłuszczowej, aby zobaczyć trendy</string>
     <string name="progress_log_body_fat_title">Dodaj pomiar tkanki tłuszczowej</string>
@@ -824,6 +851,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). „Ilościowe określenie wpływu nierównowagi energetycznej na masę ciała”. Lancet 378(9793):826–837. Klasyczna reguła 3500 kcal na funt pochodzi od Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „Przegląd systematyczny, metaanaliza i metaregresja wpływu suplementacji białkiem na przyrost masy mięśniowej i siły wywołany treningiem oporowym”. Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Szacunki opierają się na danych treningowych bazowego modelu AI (USDA FoodData Central, etykietach producentów i literaturze naukowej). Dokładność zależy od produktu, widoczności wielkości porcji i modelu dostawcy. W przypadku często rejestrowanych produktów zawsze porównuj wynik z etykietą.</string>
+    <string name="settings_add_menu_standalone">Samodzielne metody</string>
+    <string name="settings_add_menu_standalone_footer">Te metody pojawiają się bezpośrednio pod +, poza grupami.</string>
+    <string name="settings_tab_bar">Pasek kart</string>
+    <string name="settings_tab_bar_section">Pokazuj na pasku kart</string>
+    <string name="settings_tab_bar_footer">Ekran główny i Ustawienia są zawsze widoczne.</string>
     <string name="about_litert_notices">Informacje zewnętrzne LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Nie udało się wczytać informacji zewnętrznych LiteRT-LM.</string>
     <string name="settings_model_source">Źródło modelu</string>

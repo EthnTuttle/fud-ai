@@ -176,6 +176,7 @@
     <string name="nav_progress">진행 상황</string>
     <string name="nav_coach">코치</string>
     <string name="nav_settings">설정</string>
+    <string name="nav_workouts">운동</string>
     <string name="nav_about">정보</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -476,6 +477,8 @@
     <string name="progress_range_6m">6개월</string>
     <string name="progress_range_year">1년</string>
     <string name="progress_range_all">전체</string>
+    <string name="progress_previous_period">이전 기간</string>
+    <string name="progress_next_period">다음 기간</string>
 
     <string name="progress_weight_section">체중</string>
     <string name="progress_log_weight">체중 기록</string>
@@ -491,6 +494,8 @@
     </plurals>
 
     <string name="progress_calories_section">칼로리</string>
+    <string name="progress_include_today">오늘 포함</string>
+    <string name="progress_include_today_caption">칼로리 차트와 영양 평균</string>
     <string name="progress_avg_format">평균: %1$,d kcal</string>
     <string name="progress_no_food">아직 기록된 음식이 없어요</string>
 
@@ -552,6 +557,10 @@
     <string name="settings_week_monday">월요일</string>
     <string name="settings_week_sunday">일요일</string>
     <string name="settings_notifications">알림</string>
+    <string name="settings_water_quick_add">빠른 추가 양</string>
+    <string name="settings_water_quick_add_amount">양 %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s 이하의 양을 입력하세요.</string>
+    <string name="settings_water_quick_add_footer">+ 메뉴에 표시되어 한 번의 탭으로 물을 기록할 수 있습니다.</string>
     <string name="settings_battery_opt">배터리 최적화</string>
     <string name="settings_battery_opt_value">Fud AI 화이트리스트 추가</string>
 
@@ -693,6 +702,7 @@
     <string name="progress_metric_weight">체중</string>
     <string name="progress_metric_body_fat">체지방</string>
     <string name="progress_metric_workouts">운동</string>
+    <string name="progress_metric_steps">걸음 수</string>
     <string name="progress_workout_history">운동 기록</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">계산된 소모량 %1$d개 · 탭하여 보기 또는 삭제</item>
@@ -708,6 +718,23 @@
     <string name="progress_workout_stat_days">일수</string>
     <string name="progress_workout_no_range">이 기간에 계산된 운동 소모량이 없습니다</string>
     <string name="progress_workout_chart_description">%1$s부터 %2$s까지의 운동 소모 차트. 총 %3$d킬로칼로리, 최근 %4$d킬로칼로리.</string>
+    <string name="workout_filter_source">출처</string>
+    <string name="workout_source_dataset">데이터베이스</string>
+    <string name="workout_source_saved">저장됨</string>
+    <string name="workout_source_mine">내 운동</string>
+    <string name="workout_mine_empty_title">아직 직접 만든 운동이 없습니다</string>
+    <string name="workout_mine_empty_subtitle">직접 만든 운동이 여기에 표시됩니다.</string>
+    <string name="workout_exercise_take_photo">사진 찍기</string>
+    <string name="workout_exercise_camera_denied_title">카메라 접근 권한이 필요합니다</string>
+    <string name="workout_exercise_camera_denied_message">운동 사진을 찍으려면 시스템 설정에서 Fud AI의 카메라 사용을 허용하세요.</string>
+    <string name="progress_steps_stat_total">합계</string>
+    <string name="progress_steps_stat_average">평균</string>
+    <string name="progress_steps_stat_best_day">최고 기록일</string>
+    <string name="progress_steps_no_range">이 기간의 걸음 수 데이터가 없습니다</string>
+    <string name="progress_steps_footnote">Health Connect의 일일 걸음 수 합계입니다.</string>
+    <string name="progress_steps_weekly_note">막대는 주별 하루 평균 걸음 수를 보여줍니다.</string>
+    <string name="progress_steps_history_note">Health Connect는 Fud AI를 연결하기 약 30일 전부터의 걸음 수만 공유하므로 그 이전 날짜는 빠질 수 있습니다.</string>
+    <string name="progress_steps_chart_description">%1$s~%2$s 걸음 수 차트. 합계 %3$s보, 최고 기록일 %4$s보.</string>
     <string name="progress_log_body_fat">체지방 기록</string>
     <string name="progress_log_first_body_fat">추이를 보려면 첫 체지방률을 기록하세요</string>
     <string name="progress_log_body_fat_title">체지방 기록</string>
@@ -813,6 +840,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). “에너지 불균형이 체중에 미치는 영향의 정량화.” Lancet 378(9793):826–837. 파운드당 3,500 kcal이라는 고전적 규칙은 Wishnofsky M (1958), Am J Clin Nutr 6:542–546에서 유래했습니다.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “저항 운동으로 인한 근육량 및 근력 증가에 단백질 보충이 미치는 영향에 대한 체계적 문헌고찰, 메타분석 및 메타회귀.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">추정치는 기반 AI 모델의 학습 데이터(USDA FoodData Central, 제조업체 영양 표시, 과학 문헌)를 바탕으로 합니다. 정확도는 음식, 1회 제공량의 가시성, 제공자 모델에 따라 달라집니다. 자주 기록하는 음식은 항상 라벨과 대조하세요.</string>
+    <string name="settings_add_menu_standalone">개별 방법</string>
+    <string name="settings_add_menu_standalone_footer">이 방법들은 그룹 없이 + 바로 아래에 표시됩니다.</string>
+    <string name="settings_tab_bar">탭 바</string>
+    <string name="settings_tab_bar_section">탭 바에 표시</string>
+    <string name="settings_tab_bar_footer">홈과 설정은 항상 표시됩니다.</string>
     <string name="about_litert_notices">LiteRT-LM 서드 파티 고지사항</string>
     <string name="about_litert_notices_load_error">LiteRT-LM 서드 파티 고지사항을 불러올 수 없습니다.</string>
     <string name="settings_model_source">모델 출처</string>

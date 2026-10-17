@@ -435,6 +435,9 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1R</string>
     <string name="progress_range_all">Vše</string>
+    <string name="progress_metric_steps">Kroky</string>
+    <string name="progress_previous_period">Předchozí období</string>
+    <string name="progress_next_period">Další období</string>
 
     <string name="progress_weight_section">Váha</string>
     <string name="progress_log_weight">Zapsat váhu</string>
@@ -454,6 +457,16 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorie</string>
+    <string name="progress_steps_stat_total">Celkem</string>
+    <string name="progress_steps_stat_average">Průměr</string>
+    <string name="progress_steps_stat_best_day">Nejlepší den</string>
+    <string name="progress_steps_no_range">V tomto období nejsou žádná data o krocích</string>
+    <string name="progress_steps_footnote">Denní součty kroků z Health Connect.</string>
+    <string name="progress_steps_weekly_note">Sloupce ukazují průměrný denní počet kroků za každý týden.</string>
+    <string name="progress_steps_history_note">Health Connect sdílí kroky jen zhruba od 30 dnů před připojením Fud AI, takže starší dny mohou chybět.</string>
+    <string name="progress_steps_chart_description">Graf kroků od %1$s do %2$s. Celkem %3$s kroků; nejlepší den %4$s kroků.</string>
+    <string name="progress_include_today">Zahrnout dnešek</string>
+    <string name="progress_include_today_caption">Graf kalorií a průměry živin</string>
     <string name="progress_avg_format">Průměr: %1$d kcal</string>
     <string name="progress_no_food">Zatím žádné zapsané jídlo</string>
 
@@ -552,6 +565,10 @@
     <string name="settings_water_unit">Jednotka vody</string>
     <string name="settings_water_unit_ml">Mililitry (ml)</string>
     <string name="settings_water_unit_fl_oz">Tekuté unce (fl oz)</string>
+    <string name="settings_water_quick_add">Množství pro rychlé přidání</string>
+    <string name="settings_water_quick_add_amount">Množství %1$d</string>
+    <string name="settings_water_quick_add_invalid">Zadejte množství nejvýše %1$s.</string>
+    <string name="settings_water_quick_add_footer">Zobrazuje se v nabídce + pro zapsání vody jedním klepnutím.</string>
     <string name="settings_notif_water_reminder">Připomenutí pití</string>
     <string name="settings_battery_opt">Optimalizace baterie</string>
     <string name="settings_battery_opt_value">Přidat Fud AI na výjimky</string>
@@ -744,6 +761,15 @@
     <string name="empty_subtitle">Zkus jiný sval, vybavení nebo hledaný výraz — nebo resetuj filtry výše.</string>
     <string name="empty_title">Žádné cviky neodpovídají</string>
     <string name="filter_all">Vše</string>
+    <string name="workout_filter_source">Zdroj</string>
+    <string name="workout_source_dataset">Databáze</string>
+    <string name="workout_source_saved">Uložené</string>
+    <string name="workout_source_mine">Moje</string>
+    <string name="workout_mine_empty_title">Zatím žádné vlastní cviky</string>
+    <string name="workout_mine_empty_subtitle">Cviky, které vytvoříte, se zobrazí zde.</string>
+    <string name="workout_exercise_take_photo">Pořídit fotku</string>
+    <string name="workout_exercise_camera_denied_title">Je potřeba přístup k fotoaparátu</string>
+    <string name="workout_exercise_camera_denied_message">Chcete-li fotit cviky, povolte aplikaci Fud AI přístup k fotoaparátu v nastavení systému.</string>
     <string name="filter_all_count">Vše %d</string>
     <string name="hide_details">Skrýt detaily</string>
     <string name="instructions">Provedení</string>
@@ -953,9 +979,6 @@
     <string name="water_one_glass_amount">1 sklenice (~250 ml)</string>
     <string name="water_two_glasses_amount">2 sklenice (~500 ml)</string>
     <string name="water_three_glasses_amount">3 sklenice (~750 ml)</string>
-    <string name="water_one_glass_dynamic">1 sklenice (~%1$s)</string>
-    <string name="water_two_glasses_dynamic">2 sklenice (~%1$s)</string>
-    <string name="water_three_glasses_dynamic">3 sklenice (~%1$s)</string>
     <string name="water_custom_amount">Vlastní množství</string>
     <string name="water_add">Přidat vodu</string>
     <string name="notif_update_title">Aktualizace k dispozici</string>
@@ -1065,6 +1088,11 @@
     <string name="progressive_meal_description">Fotka 1 → 2 → 3 sleduje každou ingredienci přidanou na stejný talíř. Viditelné rozdíly na kuchyňské váze se stanou hmotnostmi ingrediencí.</string>
     <string name="progressive_meal_info_title">Jak Postupné jídlo funguje</string>
     <string name="progressive_meal_info_body">Použij, když každá fotka ukazuje stejný talíř po přidání další ingredience. Zachovej pořadí fotek a nech displej kuchyňské váhy viditelný. Fud AI použije rozdíl mezi po sobě jdoucími údaji váhy k odhadu každé nové ingredience. Nech vypnuté, pokud jsou fotky jen různé úhly stejného jídla.</string>
+    <string name="settings_add_menu_standalone">Samostatné metody</string>
+    <string name="settings_add_menu_standalone_footer">Tyto metody se zobrazují přímo pod +, mimo skupiny.</string>
+    <string name="settings_tab_bar">Panel karet</string>
+    <string name="settings_tab_bar_section">Zobrazit v panelu karet</string>
+    <string name="settings_tab_bar_footer">Domů a Nastavení se zobrazují vždy.</string>
     <string name="settings_quick_actions">Rychlé akce</string>
     <string name="settings_app_icon_shortcuts">Zkratky ikony aplikace</string>
     <string name="settings_quick_action_number">Rychlá akce %1$d</string>

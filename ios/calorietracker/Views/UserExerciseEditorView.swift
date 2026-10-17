@@ -16,6 +16,8 @@ struct UserExerciseEditorView: View {
     @State private var loadedItemID: String?
     @State private var isPhotoLoading = false
     @State private var photoLoadGeneration = 0
+    @State private var isCameraPresented = false
+    @State private var capturedImage: UIImage?
 
     private var isEditing: Bool { existingItemID != nil }
 
@@ -101,6 +103,15 @@ struct UserExerciseEditorView: View {
             .onChange(of: selectedPhotoItem) { _, item in
                 Task { await loadPhoto(from: item) }
             }
+            .fullScreenCover(isPresented: $isCameraPresented) {
+                CameraView(image: $capturedImage)
+                    .ignoresSafeArea()
+            }
+            .onChange(of: capturedImage) { _, image in
+                guard let image else { return }
+                capturedImage = nil
+                useCapturedPhoto(image)
+            }
             .confirmationDialog(
                 "Delete this custom exercise?",
                 isPresented: $showDeleteConfirmation,
@@ -148,6 +159,15 @@ struct UserExerciseEditorView: View {
             Label(previewImage == nil ? "Choose photo" : "Replace photo", systemImage: "photo")
         }
         .disabled(isPhotoLoading)
+
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            Button {
+                isCameraPresented = true
+            } label: {
+                Label("Take photo", systemImage: "camera")
+            }
+            .disabled(isPhotoLoading)
+        }
 
         if previewImage != nil {
             Button("Remove photo", role: .destructive) {
@@ -265,9 +285,31 @@ struct UserExerciseEditorView: View {
         }
     }
 
+    private func useCapturedPhoto(_ image: UIImage) {
+        guard draft.setCapturedPhoto(image) else { return }
+        // Supersedes any library photo that is still loading.
+        photoLoadGeneration += 1
+        selectedPhotoItem = nil
+        previewImage = image
+        isPhotoLoading = false
+    }
+
     private func save() {
         guard let saved = workoutStore.saveUserExercise(draft, existingItemID: existingItemID) else { return }
         onSaved?(saved)
         dismiss()
+    }
+}
+
+extension UserExerciseDraft {
+    /// Uses a camera capture as the exercise photo. Captures arrive at full sensor
+    /// resolution, so they are stored as a downscaled JPEG; a pending "Remove photo"
+    /// is cancelled. Returns false when the image cannot be encoded.
+    @discardableResult
+    mutating func setCapturedPhoto(_ image: UIImage) -> Bool {
+        guard let data = try? GeminiService.encodedJPEGData(for: image) else { return false }
+        photoData = data
+        removePhoto = false
+        return true
     }
 }

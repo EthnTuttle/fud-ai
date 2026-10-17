@@ -47,6 +47,15 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.io.File
 
+internal enum class CaptureLens { BACK, FRONT }
+
+/** The back camera when present, else the front one; null when the device has neither. */
+internal fun preferredCaptureLens(hasBack: Boolean, hasFront: Boolean): CaptureLens? = when {
+    hasBack -> CaptureLens.BACK
+    hasFront -> CaptureLens.FRONT
+    else -> null
+}
+
 @Composable
 fun InAppCameraCaptureDialog(
     onCapture: (ByteArray) -> Unit,
@@ -84,9 +93,20 @@ fun InAppCameraCaptureDialog(
 
             runCatching {
                 cameraProvider.unbindAll()
+                // Devices with only a front camera (some tablets and Chromebooks) still
+                // report a camera, so fall back to it instead of failing to bind.
+                val lens = preferredCaptureLens(
+                    hasBack = runCatching { cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) }
+                        .getOrDefault(true),
+                    hasFront = runCatching { cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA) }
+                        .getOrDefault(false)
+                ) ?: error("No camera available")
                 val camera = cameraProvider.bindToLifecycle(
                     lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    when (lens) {
+                        CaptureLens.BACK -> CameraSelector.DEFAULT_BACK_CAMERA
+                        CaptureLens.FRONT -> CameraSelector.DEFAULT_FRONT_CAMERA
+                    },
                     preview,
                     capture
                 )

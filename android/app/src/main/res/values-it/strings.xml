@@ -176,6 +176,7 @@
     <string name="nav_progress">Progressi</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Impostazioni</string>
+    <string name="nav_workouts">Allenamenti</string>
     <string name="nav_about">Informazioni</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -478,6 +479,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1A</string>
     <string name="progress_range_all">Tutto</string>
+    <string name="progress_previous_period">Periodo precedente</string>
+    <string name="progress_next_period">Periodo successivo</string>
 
     <string name="progress_weight_section">Peso</string>
     <string name="progress_log_weight">Registra peso</string>
@@ -493,6 +496,8 @@
     </plurals>
 
     <string name="progress_calories_section">Calorie</string>
+    <string name="progress_include_today">Includi oggi</string>
+    <string name="progress_include_today_caption">Grafico delle calorie e medie nutrizionali</string>
     <string name="progress_avg_format">Media: %1$,d kcal</string>
     <string name="progress_no_food">Nessun cibo ancora registrato</string>
 
@@ -554,6 +559,10 @@
     <string name="settings_week_monday">Lunedì</string>
     <string name="settings_week_sunday">Domenica</string>
     <string name="settings_notifications">Notifiche</string>
+    <string name="settings_water_quick_add">Quantità di aggiunta rapida</string>
+    <string name="settings_water_quick_add_amount">Quantità %1$d</string>
+    <string name="settings_water_quick_add_invalid">Inserisci una quantità fino a %1$s.</string>
+    <string name="settings_water_quick_add_footer">Mostrate nel menu + per registrare l’acqua con un tocco.</string>
     <string name="settings_battery_opt">Ottimizzazione batteria</string>
     <string name="settings_battery_opt_value">Aggiungi Fud AI alla whitelist</string>
 
@@ -695,6 +704,7 @@
     <string name="progress_metric_weight">Peso</string>
     <string name="progress_metric_body_fat">Grasso corporeo</string>
     <string name="progress_metric_workouts">Allenamenti</string>
+    <string name="progress_metric_steps">Passi</string>
     <string name="progress_workout_history">Cronologia allenamenti</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d consumo calcolato · tocca per vedere o eliminare</item>
@@ -710,6 +720,23 @@
     <string name="progress_workout_stat_days">Giorni</string>
     <string name="progress_workout_no_range">Nessun consumo di allenamento calcolato in questo intervallo</string>
     <string name="progress_workout_chart_description">Grafico del consumo degli allenamenti dal %1$s al %2$s. Totale: %3$d chilocalorie; ultimo: %4$d chilocalorie.</string>
+    <string name="workout_filter_source">Origine</string>
+    <string name="workout_source_dataset">Database</string>
+    <string name="workout_source_saved">Salvati</string>
+    <string name="workout_source_mine">Miei</string>
+    <string name="workout_mine_empty_title">Ancora nessun esercizio personalizzato</string>
+    <string name="workout_mine_empty_subtitle">Gli esercizi che crei compaiono qui.</string>
+    <string name="workout_exercise_take_photo">Scatta foto</string>
+    <string name="workout_exercise_camera_denied_title">È necessario l’accesso alla fotocamera</string>
+    <string name="workout_exercise_camera_denied_message">Consenti a Fud AI di usare la fotocamera nelle impostazioni di sistema per scattare foto degli esercizi.</string>
+    <string name="progress_steps_stat_total">Totale</string>
+    <string name="progress_steps_stat_average">Media</string>
+    <string name="progress_steps_stat_best_day">Giorno migliore</string>
+    <string name="progress_steps_no_range">Nessun dato sui passi in questo intervallo</string>
+    <string name="progress_steps_footnote">Totali giornalieri dei passi da Health Connect.</string>
+    <string name="progress_steps_weekly_note">Le barre mostrano la media dei passi giornalieri di ogni settimana.</string>
+    <string name="progress_steps_history_note">Health Connect condivide i passi solo da circa 30 giorni prima del collegamento di Fud AI, quindi i giorni precedenti potrebbero mancare.</string>
+    <string name="progress_steps_chart_description">Grafico dei passi dal %1$s al %2$s. Totale %3$s passi; giorno migliore %4$s passi.</string>
     <string name="progress_log_body_fat">Registra grasso corporeo</string>
     <string name="progress_log_first_body_fat">Registra il tuo primo % di grasso corporeo per vedere le tendenze</string>
     <string name="progress_log_body_fat_title">Registra grasso corporeo</string>
@@ -815,6 +842,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «Quantificazione dell’effetto dello squilibrio energetico sul peso corporeo». Lancet 378(9793):826–837. La classica regola delle 3.500 kcal per libbra deriva da Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Revisione sistematica, meta-analisi e meta-regressione dell’effetto dell’integrazione proteica sugli aumenti di massa muscolare e forza indotti dall’allenamento di resistenza». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Le stime si basano sui dati di addestramento del modello IA sottostante (USDA FoodData Central, etichette dei produttori e letteratura scientifica). La precisione varia in base all’alimento, alla visibilità delle dimensioni della porzione e al modello del provider. Verifica sempre le etichette degli alimenti che registri spesso.</string>
+    <string name="settings_add_menu_standalone">Metodi indipendenti</string>
+    <string name="settings_add_menu_standalone_footer">Questi metodi appaiono direttamente sotto +, fuori da qualsiasi gruppo.</string>
+    <string name="settings_tab_bar">Barra delle schede</string>
+    <string name="settings_tab_bar_section">Mostra nella barra delle schede</string>
+    <string name="settings_tab_bar_footer">Home e Impostazioni sono sempre visibili.</string>
     <string name="about_litert_notices">Avvisi di terze parti per LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Impossibile caricare gli avvisi di terze parti per LiteRT-LM.</string>
     <string name="settings_model_source">Fonte del modello</string>

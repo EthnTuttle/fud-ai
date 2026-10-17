@@ -33,17 +33,114 @@ enum TimeRange: String, CaseIterable {
         }
     }
 
-    func dateRange() -> ClosedRange<Date> {
-        let calendar = Calendar.current
-        let end = calendar.startOfDay(for: .now)
-        let start = calendar.date(byAdding: .day, value: -(days - 1), to: end)!
+    /// All has no earlier window to step back to.
+    var supportsPeriodNavigation: Bool { self != .allTime }
+
+    /// Inclusive local calendar days (start-of-day dates) covered by this range.
+    /// `offset` steps back whole windows — 0 is the window ending on `endDay`,
+    /// 1 the one just before it — so the rolling windows stay contiguous while
+    /// browsing past periods.
+    func dayRange(
+        offset: Int = 0,
+        endingAt endDay: Date = .now,
+        calendar: Calendar = .current
+    ) -> ClosedRange<Date> {
+        let lastDay = calendar.startOfDay(for: endDay)
+        let end = calendar.date(byAdding: .day, value: -days * max(offset, 0), to: lastDay) ?? lastDay
+        let start = calendar.date(byAdding: .day, value: -(days - 1), to: end) ?? end
         return start...end
+    }
+
+    /// The calorie / nutrition window. Excluding today ends it yesterday — and
+    /// shifts past periods by the same day so they stay contiguous — so a
+    /// still-in-progress log doesn't drag the averages down.
+    func nutritionDayRange(
+        offset: Int = 0,
+        includeToday: Bool,
+        today: Date = .now,
+        calendar: Calendar = .current
+    ) -> ClosedRange<Date> {
+        let endDay = includeToday
+            ? today
+            : calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: today)) ?? today
+        return dayRange(offset: offset, endingAt: endDay, calendar: calendar)
+    }
+
+    /// The same window as `dayRange`, stretched to the last instant of its final
+    /// day for timestamped readings. A range ending at midnight dropped weigh-ins
+    /// and body-fat readings logged earlier today from the 1W chart.
+    func timestampRange(
+        offset: Int = 0,
+        endingAt endDay: Date = .now,
+        calendar: Calendar = .current
+    ) -> ClosedRange<Date> {
+        let days = dayRange(offset: offset, endingAt: endDay, calendar: calendar)
+        guard let nextDay = calendar.date(byAdding: .day, value: 1, to: days.upperBound) else { return days }
+        return days.lowerBound...Date(timeIntervalSinceReferenceDate: nextDay.timeIntervalSinceReferenceDate.nextDown)
+    }
+
+    /// Localized "Oct 11 – 17" label for a `dayRange`, adding the year once the
+    /// window leaves the current year.
+    static func periodLabel(
+        for days: ClosedRange<Date>,
+        now: Date = .now,
+        calendar: Calendar = .current
+    ) -> String {
+        let showsYear = !calendar.isDate(days.lowerBound, equalTo: now, toGranularity: .year)
+            || !calendar.isDate(days.upperBound, equalTo: now, toGranularity: .year)
+        let style: Date.IntervalFormatStyle = showsYear
+            ? .interval.year().month(.abbreviated).day()
+            : .interval.month(.abbreviated).day()
+        return (days.lowerBound..<days.upperBound).formatted(style)
+    }
+}
+
+// MARK: - Period Navigator
+
+/// Arrows + date label under the range picker for stepping through past
+/// windows. Arrows instead of a page swipe because the charts already own
+/// horizontal drags for their value inspectors.
+struct ProgressPeriodNavigator: View {
+    let label: String
+    let canGoForward: Bool
+    let onPrevious: () -> Void
+    let onNext: () -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button(action: onPrevious) {
+                Image(systemName: "chevron.backward")
+                    .font(.system(.subheadline, weight: .semibold))
+                    .frame(width: 44, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel(Text("Previous period"))
+
+            Text(label)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .frame(maxWidth: .infinity)
+
+            Button(action: onNext) {
+                Image(systemName: "chevron.forward")
+                    .font(.system(.subheadline, weight: .semibold))
+                    .frame(width: 44, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .disabled(!canGoForward)
+            .accessibilityLabel(Text("Next period"))
+        }
+        .tint(AppColors.calorie)
+        .padding(.horizontal, 4)
+        .progressCardStyle(cornerRadius: 14)
     }
 }
 
 extension ClosedRange where Bound == Date {
     /// True when `date` falls on a calendar day this range covers. The
-    /// `TimeRange.dateRange()` bounds are day starts, so timestamped readings
+    /// `TimeRange.dayRange()` bounds are day starts, so timestamped readings
     /// must be compared by day — a plain `contains` excludes everything logged
     /// after midnight on the last day (today).
     func containsDay(of date: Date, calendar: Calendar = .current) -> Bool {
@@ -413,6 +510,16 @@ struct WeightChartSection: View {
 struct CalorieChartSection: View {
     let dailyCalories: [(date: Date, calories: Int)]
     let calorieGoal: Int
+    @State private var selectedDay: Date?
+    /// Axis a drag committed to at its first movement, keyed by where it began:
+    /// only a clearly horizontal drag scrubs (and clears on release), so a page
+    /// scroll that starts on the chart leaves a tap-pinned value alone.
+    @State private var dragLock: (start: CGPoint, scrubs: Bool)?
+
+    private var selectedItem: (date: Date, calories: Int)? {
+        guard let selectedDay else { return nil }
+        return dailyCalories.first { $0.date == selectedDay }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -431,6 +538,8 @@ struct CalorieChartSection: View {
             if dailyCalories.isEmpty {
                 emptyState(String(localized: "No food logged yet"))
             } else {
+                let selected = selectedItem
+
                 Chart {
                     ForEach(dailyCalories, id: \.date) { item in
                         BarMark(
@@ -440,12 +549,19 @@ struct CalorieChartSection: View {
                         .foregroundStyle(
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .bottom, endPoint: .top)
                         )
+                        .opacity(selected == nil || selected?.date == item.date ? 1 : 0.4)
                         .cornerRadius(4)
                     }
 
                     RuleMark(y: .value("Goal", calorieGoal))
                         .foregroundStyle(AppColors.calorie.opacity(0.6))
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+
+                    if let selected {
+                        RuleMark(x: .value("Selected date", Self.barCenter(for: selected.date)))
+                            .foregroundStyle(AppColors.calorie.opacity(0.6))
+                            .lineStyle(StrokeStyle(lineWidth: 1.25, dash: [3, 3]))
+                    }
                 }
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: calorieXStride)) { _ in
@@ -470,10 +586,114 @@ struct CalorieChartSection: View {
                     )
                 }
                 .frame(height: 190)
+                .chartOverlay { proxy in
+                    GeometryReader { geometry in
+                        let plotFrame = proxy.plotFrame.map { geometry[$0] }
+
+                        ZStack(alignment: .topLeading) {
+                            // Tap pins a day's value; a clearly horizontal drag scrubs
+                            // across bars. Other drags are the page scroll: they neither
+                            // move nor clear the selection.
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .simultaneousGesture(
+                                    SpatialTapGesture()
+                                        .onEnded { value in
+                                            guard let plotFrame,
+                                                  let day = nearestDay(at: value.location.x - plotFrame.minX, proxy: proxy)
+                                            else { return }
+                                            if day == selected?.date {
+                                                selectedDay = nil
+                                            } else {
+                                                selectedDay = day
+                                                UISelectionFeedbackGenerator().selectionChanged()
+                                            }
+                                        }
+                                )
+                                .simultaneousGesture(
+                                    DragGesture(minimumDistance: 6)
+                                        .onChanged { value in
+                                            if dragLock?.start != value.startLocation {
+                                                dragLock = (value.startLocation, Self.isClearlyHorizontal(value.translation))
+                                            }
+                                            guard dragLock?.scrubs == true,
+                                                  let plotFrame,
+                                                  let day = nearestDay(at: value.location.x - plotFrame.minX, proxy: proxy),
+                                                  day != selectedDay else { return }
+                                            selectedDay = day
+                                            UISelectionFeedbackGenerator().selectionChanged()
+                                        }
+                                        .onEnded { value in
+                                            guard let lock = dragLock, lock.start == value.startLocation else { return }
+                                            dragLock = nil
+                                            guard lock.scrubs else { return }
+                                            withAnimation(.easeOut(duration: 0.16)) {
+                                                selectedDay = nil
+                                            }
+                                        }
+                                )
+
+                            if let selected,
+                               let plotFrame,
+                               let barX = proxy.position(forX: Self.barCenter(for: selected.date)) {
+                                calorieInspectorLabel(for: selected)
+                                    .fixedSize()
+                                    .position(
+                                        x: min(max(plotFrame.minX + barX, plotFrame.minX + 56), plotFrame.maxX - 56),
+                                        y: plotFrame.minY + 26
+                                    )
+                                    .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                            }
+                        }
+                    }
+                }
+                .animation(.snappy(duration: 0.16), value: selectedDay)
+                .onChange(of: dailyCalories.map(\.date)) { _, _ in
+                    selectedDay = nil
+                }
             }
         }
         .padding()
         .progressCardStyle()
+    }
+
+    /// Whether a drag's first movement is clearly sideways (well over its
+    /// vertical travel) rather than the start of a page scroll.
+    static func isClearlyHorizontal(_ translation: CGSize) -> Bool {
+        abs(translation.width) > abs(translation.height) * 1.5
+    }
+
+    /// Bars are binned by day, so their visual centre is midday.
+    private static func barCenter(for day: Date) -> Date {
+        Calendar.current.date(byAdding: .hour, value: 12, to: day) ?? day
+    }
+
+    private func nearestDay(at plotX: CGFloat, proxy: ChartProxy) -> Date? {
+        guard let date: Date = proxy.value(atX: plotX) else { return nil }
+        return dailyCalories.min {
+            abs(Self.barCenter(for: $0.date).timeIntervalSince(date))
+                < abs(Self.barCenter(for: $1.date).timeIntervalSince(date))
+        }?.date
+    }
+
+    @ViewBuilder
+    private func calorieInspectorLabel(for item: (date: Date, calories: Int)) -> some View {
+        VStack(spacing: 1) {
+            Text(item.date.formatted(date: .abbreviated, time: .omitted))
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .foregroundStyle(.secondary)
+            Text("\(item.calories.formatted()) kcal")
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                .foregroundStyle(.primary)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(AppColors.calorie.opacity(0.22), lineWidth: 0.75)
+        }
+        .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
     }
 
     private var calorieXStride: Int {
@@ -483,6 +703,38 @@ struct CalorieChartSection: View {
         if count <= 90 { return 14 }
         if count <= 180 { return 30 }
         return 60
+    }
+}
+
+// MARK: - Include Today Toggle
+
+/// Progress switch for leaving today's still-in-progress log out of the
+/// calorie chart and nutrition averages.
+struct ProgressIncludeTodayToggle: View {
+    @Binding var isOn: Bool
+    /// The shifted nutrition window, shown while it differs from the range label above.
+    let rangeLabel: String?
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Include today")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                Text(caption)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .tint(AppColors.calorie)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .progressCardStyle(cornerRadius: 14)
+    }
+
+    private var caption: String {
+        let scope = String(localized: "Calorie chart and nutrition averages")
+        guard let rangeLabel else { return scope }
+        return "\(scope) · \(rangeLabel)"
     }
 }
 
@@ -505,22 +757,25 @@ struct ProgressFoodRangeStats {
         nutrientItems: []
     )
 
+    /// `endDay` is the newest local day in the window (today unless the user
+    /// is browsing a past period); the window covers `dayCount` days up to it.
     static func compute(
         entries: [FoodEntry],
         dayCount: Int,
+        endDay: Date = .now,
         profile: UserProfile,
-        optionalGoals: OptionalNutrientGoals
+        optionalGoals: OptionalNutrientGoals,
+        calendar: Calendar = .current
     ) -> ProgressFoodRangeStats {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-        guard let rangeStart = calendar.date(byAdding: .day, value: -(dayCount - 1), to: today) else {
+        let lastDay = calendar.startOfDay(for: endDay)
+        guard let rangeStart = calendar.date(byAdding: .day, value: -(dayCount - 1), to: lastDay) else {
             return .empty
         }
 
         var buckets: [Date: [FoodEntry]] = [:]
         for entry in entries {
             let day = calendar.startOfDay(for: entry.timestamp)
-            guard day >= rangeStart, day <= today else { continue }
+            guard day >= rangeStart, day <= lastDay else { continue }
             buckets[day, default: []].append(entry)
         }
 

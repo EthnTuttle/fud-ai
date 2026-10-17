@@ -176,6 +176,7 @@
     <string name="nav_progress">Tərəqqi</string>
     <string name="nav_coach">Məşqçi</string>
     <string name="nav_settings">Parametrlər</string>
+    <string name="nav_workouts">Məşqlər</string>
     <string name="nav_about">Haqqında</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -477,6 +478,8 @@
     <string name="progress_range_6m">6A</string>
     <string name="progress_range_year">1İ</string>
     <string name="progress_range_all">Hamısı</string>
+    <string name="progress_previous_period">Əvvəlki dövr</string>
+    <string name="progress_next_period">Növbəti dövr</string>
 
     <string name="progress_weight_section">Çəki</string>
     <string name="progress_log_weight">Çəkini Qeyd Et</string>
@@ -492,6 +495,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorilər</string>
+    <string name="progress_include_today">Bu günü daxil et</string>
+    <string name="progress_include_today_caption">Kalori qrafiki və qidalanma ortalamaları</string>
     <string name="progress_avg_format">Orta: %1$,d kcal</string>
     <string name="progress_no_food">Hələ yemək qeyd edilməyib</string>
 
@@ -553,6 +558,10 @@
     <string name="settings_week_monday">Bazar ertəsi</string>
     <string name="settings_week_sunday">Bazar</string>
     <string name="settings_notifications">Bildirişlər</string>
+    <string name="settings_water_quick_add">Sürətli əlavə miqdarları</string>
+    <string name="settings_water_quick_add_amount">Miqdar %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s qədər miqdar daxil edin.</string>
+    <string name="settings_water_quick_add_footer">Bir toxunuşla su qeydi üçün + menyusunda göstərilir.</string>
     <string name="settings_battery_opt">Batareya Optimizasiyası</string>
     <string name="settings_battery_opt_value">Fud AI-ı ağ siyahıya əlavə et</string>
 
@@ -694,6 +703,7 @@
     <string name="progress_metric_weight">Çəki</string>
     <string name="progress_metric_body_fat">Bədən yağı</string>
     <string name="progress_metric_workouts">Məşqlər</string>
+    <string name="progress_metric_steps">Addımlar</string>
     <string name="progress_workout_history">Məşq tarixçəsi</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d hesablanmış sərfiyyat · baxmaq və ya silmək üçün toxunun</item>
@@ -709,6 +719,23 @@
     <string name="progress_workout_stat_days">Gün</string>
     <string name="progress_workout_no_range">Bu aralıqda hesablanmış məşq sərfiyyatı yoxdur</string>
     <string name="progress_workout_chart_description">Məşq sərfiyyatı qrafiki: %1$s–%2$s. Cəmi %3$d kkal; son %4$d kkal.</string>
+    <string name="workout_filter_source">Mənbə</string>
+    <string name="workout_source_dataset">Verilənlər bazası</string>
+    <string name="workout_source_saved">Saxlanılan</string>
+    <string name="workout_source_mine">Mənimkilər</string>
+    <string name="workout_mine_empty_title">Hələ fərdi məşq yoxdur</string>
+    <string name="workout_mine_empty_subtitle">Yaratdığınız məşqlər burada görünür.</string>
+    <string name="workout_exercise_take_photo">Şəkil çək</string>
+    <string name="workout_exercise_camera_denied_title">Kameraya giriş lazımdır</string>
+    <string name="workout_exercise_camera_denied_message">Məşq şəkilləri çəkmək üçün sistem ayarlarında Fud AI tətbiqinə kameradan istifadə icazəsi ver.</string>
+    <string name="progress_steps_stat_total">Cəmi</string>
+    <string name="progress_steps_stat_average">Orta</string>
+    <string name="progress_steps_stat_best_day">Ən yaxşı gün</string>
+    <string name="progress_steps_no_range">Bu aralıqda addım məlumatı yoxdur</string>
+    <string name="progress_steps_footnote">Health Connect-dən gündəlik addım cəmi.</string>
+    <string name="progress_steps_weekly_note">Sütunlar hər həftə üçün orta gündəlik addım sayını göstərir.</string>
+    <string name="progress_steps_history_note">Health Connect yalnız Fud AI-ı qoşmazdan təxminən 30 gün əvvəldən olan addımları paylaşır, buna görə köhnə günlər görünməyə bilər.</string>
+    <string name="progress_steps_chart_description">%1$s – %2$s addım qrafiki. Cəmi %3$s addım; ən yaxşı gün %4$s addım.</string>
     <string name="progress_log_body_fat">Bədən yağını qeyd et</string>
     <string name="progress_log_first_body_fat">Trendləri görmək üçün ilk bədən yağı %-ni qeyd edin</string>
     <string name="progress_log_body_fat_title">Bədən yağını qeyd et</string>
@@ -814,6 +841,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «Enerji balanssızlığının bədən çəkisinə təsirinin kəmiyyətcə qiymətləndirilməsi». Lancet 378(9793):826–837. Hər funt üçün klassik 3 500 kkal qaydası Wishnofsky M (1958), Am J Clin Nutr 6:542–546 məqaləsindən qaynaqlanır.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Müqavimət məşqlərinin yaratdığı əzələ kütləsi və güc artımına zülal əlavələrinin təsirinin sistematik icmalı, meta-analizi və meta-reqressiyası». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Təxminlər əsas AI modelinin təlim məlumatlarına (USDA FoodData Central, istehsalçıların qida etiketləri və elmi ədəbiyyat) əsaslanır. Dəqiqlik qidaya, porsiya ölçüsünün görünməsinə və provayder modelinə görə dəyişir. Tez-tez qeyd etdiyiniz qidaların etiketlərini həmişə yoxlayın.</string>
+    <string name="settings_add_menu_standalone">Müstəqil üsullar</string>
+    <string name="settings_add_menu_standalone_footer">Bu üsullar heç bir qrupa daxil olmadan birbaşa + altında görünür.</string>
+    <string name="settings_tab_bar">Tab paneli</string>
+    <string name="settings_tab_bar_section">Tab panelində göstər</string>
+    <string name="settings_tab_bar_footer">Ana Səhifə və Parametrlər həmişə göstərilir.</string>
     <string name="about_litert_notices">LiteRT-LM üçün üçüncü tərəf bildirişləri</string>
     <string name="about_litert_notices_load_error">LiteRT-LM üçün üçüncü tərəf bildirişlərini yükləmək mümkün olmadı.</string>
     <string name="settings_model_source">Modelin mənbəyi</string>

@@ -176,6 +176,7 @@
     <string name="nav_progress">التقدم</string>
     <string name="nav_coach">المدرب</string>
     <string name="nav_settings">الإعدادات</string>
+    <string name="nav_workouts">التمارين</string>
     <string name="nav_about">حول</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -485,6 +486,8 @@
     <string name="progress_range_6m">6ش</string>
     <string name="progress_range_year">1س</string>
     <string name="progress_range_all">الكل</string>
+    <string name="progress_previous_period">الفترة السابقة</string>
+    <string name="progress_next_period">الفترة التالية</string>
 
     <string name="progress_weight_section">الوزن</string>
     <string name="progress_log_weight">تسجيل الوزن</string>
@@ -504,6 +507,8 @@
     </plurals>
 
     <string name="progress_calories_section">السعرات الحرارية</string>
+    <string name="progress_include_today">تضمين اليوم</string>
+    <string name="progress_include_today_caption">مخطط السعرات ومتوسطات التغذية</string>
     <string name="progress_avg_format">المتوسط: %1$,d kcal</string>
     <string name="progress_no_food">لم يتم تسجيل أي طعام بعد</string>
 
@@ -565,6 +570,10 @@
     <string name="settings_week_monday">الإثنين</string>
     <string name="settings_week_sunday">الأحد</string>
     <string name="settings_notifications">الإشعارات</string>
+    <string name="settings_water_quick_add">كميات الإضافة السريعة</string>
+    <string name="settings_water_quick_add_amount">الكمية %1$d</string>
+    <string name="settings_water_quick_add_invalid">أدخل كمية حتى %1$s.</string>
+    <string name="settings_water_quick_add_footer">تظهر في قائمة + لتسجيل الماء بنقرة واحدة.</string>
     <string name="settings_battery_opt">تحسين البطارية</string>
     <string name="settings_battery_opt_value">إضافة Fud AI للقائمة البيضاء</string>
 
@@ -706,6 +715,7 @@
     <string name="progress_metric_weight">الوزن</string>
     <string name="progress_metric_body_fat">نسبة الدهون</string>
     <string name="progress_metric_workouts">التمارين</string>
+    <string name="progress_metric_steps">الخطوات</string>
     <string name="progress_workout_history">سجل التمارين</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="zero">%1$d عملية حرق محسوبة · اضغط للعرض أو الحذف</item>
@@ -725,6 +735,23 @@
     <string name="progress_workout_stat_days">أيام</string>
     <string name="progress_workout_no_range">لا توجد عمليات حرق تمارين محسوبة في هذه الفترة</string>
     <string name="progress_workout_chart_description">مخطط حرق التمارين من %1$s إلى %2$s. الإجمالي %3$d سعرة حرارية؛ الأحدث %4$d سعرة حرارية.</string>
+    <string name="workout_filter_source">المصدر</string>
+    <string name="workout_source_dataset">قاعدة البيانات</string>
+    <string name="workout_source_saved">المحفوظة</string>
+    <string name="workout_source_mine">تماريني</string>
+    <string name="workout_mine_empty_title">لا توجد تمارين مخصصة بعد</string>
+    <string name="workout_mine_empty_subtitle">تظهر هنا التمارين التي تنشئها.</string>
+    <string name="workout_exercise_take_photo">التقاط صورة</string>
+    <string name="workout_exercise_camera_denied_title">يلزم السماح بالوصول إلى الكاميرا</string>
+    <string name="workout_exercise_camera_denied_message">اسمح لـ Fud AI باستخدام الكاميرا في إعدادات النظام لالتقاط صور التمارين.</string>
+    <string name="progress_steps_stat_total">الإجمالي</string>
+    <string name="progress_steps_stat_average">المتوسط</string>
+    <string name="progress_steps_stat_best_day">أفضل يوم</string>
+    <string name="progress_steps_no_range">لا توجد بيانات خطوات في هذه الفترة</string>
+    <string name="progress_steps_footnote">إجمالي الخطوات اليومية من Health Connect.</string>
+    <string name="progress_steps_weekly_note">تعرض الأعمدة متوسط الخطوات اليومية لكل أسبوع.</string>
+    <string name="progress_steps_history_note">يشارك Health Connect الخطوات بدءًا من نحو 30 يومًا قبل ربط Fud AI فقط، لذا قد تكون الأيام الأقدم مفقودة.</string>
+    <string name="progress_steps_chart_description">مخطط الخطوات من %1$s إلى %2$s. الإجمالي %3$s خطوة؛ أفضل يوم %4$s خطوة.</string>
     <string name="progress_log_body_fat">تسجيل نسبة الدهون</string>
     <string name="progress_log_first_body_fat">سجّل أول قياس لنسبة الدهون لرؤية الاتجاهات</string>
     <string name="progress_log_body_fat_title">تسجيل نسبة الدهون</string>
@@ -830,6 +857,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «التحديد الكمي لتأثير اختلال توازن الطاقة في وزن الجسم». Lancet 378(9793):826–837. تعود قاعدة 3,500 سعرة حرارية لكل رطل الكلاسيكية إلى Wishnofsky M (1958)، Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «مراجعة منهجية وتحليل تلوي وانحدار تلوي لتأثير مكملات البروتين في الزيادات الناتجة عن تمارين المقاومة في كتلة العضلات وقوتها». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">تعتمد التقديرات على بيانات تدريب نموذج الذكاء الاصطناعي الأساسي (USDA FoodData Central وملصقات القيم الغذائية من الشركات المصنّعة والمراجع العلمية). تختلف الدقة حسب الطعام ومدى وضوح حجم الحصة ونموذج المزوّد. تحقّق دائمًا من الملصقات للأطعمة التي تسجّلها كثيرًا.</string>
+    <string name="settings_add_menu_standalone">طرق مستقلة</string>
+    <string name="settings_add_menu_standalone_footer">تظهر هذه الطرق مباشرةً تحت +، خارج أي مجموعة.</string>
+    <string name="settings_tab_bar">شريط التبويبات</string>
+    <string name="settings_tab_bar_section">إظهار في شريط التبويبات</string>
+    <string name="settings_tab_bar_footer">تظهر الرئيسية والإعدادات دائمًا.</string>
     <string name="about_litert_notices">إشعارات الجهات الخارجية لـ LiteRT-LM</string>
     <string name="about_litert_notices_load_error">تعذّر تحميل إشعارات الجهات الخارجية لـ LiteRT-LM.</string>
     <string name="settings_model_source">مصدر النموذج</string>

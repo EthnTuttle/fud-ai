@@ -269,6 +269,7 @@
     <string name="progress_metric_weight">Вага</string>
     <string name="progress_metric_body_fat">Відсоток жиру</string>
     <string name="progress_metric_workouts">Тренування</string>
+    <string name="progress_metric_steps">Кроки</string>
     <string name="progress_log_body_fat">Записати відсоток жиру</string>
     <string name="progress_log_first_body_fat">Зареєструйте свій перший показник жиру в організмі, щоб переглянути тенденції</string>
     <string name="progress_log_body_fat_title">Записати відсоток жиру</string>
@@ -538,6 +539,8 @@
     <string name="progress_range_6m">6 міс.</string>
     <string name="progress_range_year">1 рік</string>
     <string name="progress_range_all">Весь час</string>
+    <string name="progress_previous_period">Попередній період</string>
+    <string name="progress_next_period">Наступний період</string>
 
     <string name="progress_weight_section">Вага</string>
     <string name="progress_log_weight">Записати вагу</string>
@@ -573,8 +576,18 @@
     <string name="progress_workout_stat_days">Дні</string>
     <string name="progress_workout_no_range">За цей період немає розрахованого спалювання від тренувань</string>
     <string name="progress_workout_chart_description">Графік спалювання від тренувань з %1$s по %2$s. Усього %3$d кілокалорій; останнє значення %4$d кілокалорій.</string>
+    <string name="progress_steps_stat_total">Разом</string>
+    <string name="progress_steps_stat_average">Середнє</string>
+    <string name="progress_steps_stat_best_day">Найкращий день</string>
+    <string name="progress_steps_no_range">Немає даних про кроки за цей період</string>
+    <string name="progress_steps_footnote">Денні суми кроків з Health Connect.</string>
+    <string name="progress_steps_weekly_note">Стовпці показують середню кількість кроків на день за кожен тиждень.</string>
+    <string name="progress_steps_history_note">Health Connect передає кроки лише приблизно з 30 днів до підключення Fud AI, тому давніші дні можуть бути відсутні.</string>
+    <string name="progress_steps_chart_description">Графік кроків з %1$s по %2$s. Усього %3$s кроків; найкращий день — %4$s кроків.</string>
 
     <string name="progress_calories_section">Калорії</string>
+    <string name="progress_include_today">Враховувати сьогодні</string>
+    <string name="progress_include_today_caption">Графік калорій і середні показники харчування</string>
     <string name="progress_avg_format">Середнє: %1$d ккал</string>
     <string name="progress_no_food">Їжу ще не зареєстровано</string>
 
@@ -739,6 +752,10 @@
     <string name="settings_water_unit">Одиниці води</string>
     <string name="settings_water_unit_ml">Мілілітри (мл)</string>
     <string name="settings_water_unit_fl_oz">Рідкі унції (fl oz)</string>
+    <string name="settings_water_quick_add">Об’єми швидкого додавання</string>
+    <string name="settings_water_quick_add_amount">Об’єм %1$d</string>
+    <string name="settings_water_quick_add_invalid">Введіть об’єм до %1$s.</string>
+    <string name="settings_water_quick_add_footer">Показуються в меню «+», щоб записувати воду одним дотиком.</string>
     <string name="settings_fasting_tracking">Відстеження голодування</string>
     <string name="settings_walk_run_quick_log">Ходьба та біг</string>
     <string name="settings_walk_run_quick_log_footer">За замовчуванням вимкнено. Коли увімкнено, ходьба та біг з\'являються в меню «+» тренувань для швидкого запису на відкритому повітрі.</string>
@@ -987,6 +1004,15 @@
     <string name="empty_title">Немає відповідних вправ</string>
     <string name="workout_empty_subtitle">Спробуйте інші фільтри — або створіть власну вправу.</string>
     <string name="workout_create_exercise">Створити вправу</string>
+    <string name="workout_filter_source">Джерело</string>
+    <string name="workout_source_dataset">База даних</string>
+    <string name="workout_source_saved">Збережені</string>
+    <string name="workout_source_mine">Мої</string>
+    <string name="workout_mine_empty_title">Ще немає власних вправ</string>
+    <string name="workout_mine_empty_subtitle">Тут з’являться створені вами вправи.</string>
+    <string name="workout_exercise_take_photo">Зробити знімок</string>
+    <string name="workout_exercise_camera_denied_title">Потрібен доступ до камери</string>
+    <string name="workout_exercise_camera_denied_message">Щоб фотографувати вправи, дозвольте Fud AI використовувати камеру в системних налаштуваннях.</string>
     <string name="filter_all">Усі</string>
     <string name="filter_all_count">Усі %d</string>
     <string name="hide_details">Сховати деталі</string>
@@ -1237,9 +1263,6 @@
     <string name="water_one_glass_amount">1 склянка (~250 мл)</string>
     <string name="water_two_glasses_amount">2 склянки (~500 мл)</string>
     <string name="water_three_glasses_amount">3 склянки (~750 мл)</string>
-    <string name="water_one_glass_dynamic">1 склянка (~%1$s)</string>
-    <string name="water_two_glasses_dynamic">2 склянки (~%1$s)</string>
-    <string name="water_three_glasses_dynamic">3 склянки (~%1$s)</string>
     <string name="water_custom_amount">Власна кількість</string>
     <string name="nutrient_custom_amount">Власна кількість</string>
     <string name="nutrient_use_preset_wheel">Використати колесо прокрутки</string>
@@ -1320,13 +1343,17 @@
     <string name="settings_add_menu_title">Меню «+»</string>
     <string name="settings_add_menu_food_section">Меню додавання їжі</string>
     <string name="settings_add_menu_groups">Групи</string>
-    <string name="settings_add_menu_flat">Плоске меню</string>
+    <string name="settings_add_menu_standalone">Окремі способи</string>
+    <string name="settings_add_menu_standalone_footer">Ці способи з’являються безпосередньо в меню «+», поза групами.</string>
     <string name="settings_add_menu_hidden">Приховані способи</string>
     <string name="settings_add_menu_reset">Скинути до стандартних</string>
     <string name="settings_add_menu_footer">Налаштуйте меню їжі кнопки «+» на головному екрані. Вода та голодування залишаються окремими, якщо увімкнено. Це не змінює швидкі дії значка додатка.</string>
     <string name="settings_add_menu_add_method">Додати спосіб</string>
     <string name="settings_add_menu_group_name">Назва групи</string>
     <string name="settings_add_menu_new_group">Нова група</string>
+    <string name="settings_tab_bar">Панель вкладок</string>
+    <string name="settings_tab_bar_section">Показувати на панелі вкладок</string>
+    <string name="settings_tab_bar_footer">«Головна» і «Налаштування» показуються завжди.</string>
     <string name="settings_quick_actions">Швидкі дії</string>
     <string name="settings_app_icon_shortcuts">Ярлики значка застосунку</string>
     <string name="settings_quick_action_number">Швидка дія %1$d</string>

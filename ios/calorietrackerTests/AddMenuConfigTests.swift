@@ -77,6 +77,69 @@ struct AddMenuConfigTests {
         #expect(AddMenuSettings.load(store: store) == empty)
     }
 
+    @Test func groupsAndStandaloneMethodsCoexistAfterReload() {
+        let suiteName = "AddMenuConfigTests.mixed.\(UUID().uuidString)"
+        let store = UserDefaults(suiteName: suiteName)!
+        defer { store.removePersistentDomain(forName: suiteName) }
+
+        let mixed = AddMenuConfig(
+            groups: [AddMenuGroupConfig(name: "Scan", methods: [.camera, .barcode])],
+            flatMethods: [.voice, .text]
+        )
+        AddMenuSettings.save(mixed, store: store)
+        let loaded = AddMenuSettings.load(store: store)
+        #expect(loaded.version == 2)
+        #expect(loaded.groups.map(\.methods) == [[.camera, .barcode]])
+        #expect(loaded.flatMethods == [.voice, .text])
+        #expect(loaded.visibleMethods == [.camera, .barcode, .voice, .text])
+    }
+
+    @Test func sanitizeKeepsAMethodInItsGroupBeforeTheStandaloneList() {
+        let config = AddMenuConfig(
+            groups: [AddMenuGroupConfig(name: "Scan", methods: [.camera])],
+            flatMethods: [.camera, .voice]
+        ).sanitized()
+        #expect(config.groups[0].methods == [.camera])
+        #expect(config.flatMethods == [.voice])
+    }
+
+    @Test func versionOneGroupedMenuStillIgnoresItsFlatList() {
+        let json = """
+        {"version":1,"groups":[{"id":"00000000-0000-0000-0000-000000000001","name":"Quick","methods":["camera"]}],"flatMethods":["voice"]}
+        """
+        let config = AddMenuSettings.decode(Data(json.utf8))
+        #expect(config.groups.map(\.methods) == [[.camera]])
+        #expect(config.flatMethods.isEmpty)
+        #expect(config.version == AddMenuConfig.currentVersion)
+    }
+
+    @Test func versionOneFlatMenuDecodesUnchanged() {
+        let json = """
+        {"version":1,"groups":[],"flatMethods":["voice","camera"]}
+        """
+        let config = AddMenuSettings.decode(Data(json.utf8))
+        #expect(config.groups.isEmpty)
+        #expect(config.flatMethods == [.voice, .camera])
+    }
+
+    @Test func assigningMovesAMethodBetweenGroupAndStandalone() {
+        let groupID = UUID()
+        let config = AddMenuConfig(
+            groups: [AddMenuGroupConfig(id: groupID, name: "Scan", methods: [.camera, .barcode])],
+            flatMethods: [.voice]
+        )
+
+        let standalone = config.assigning(.barcode, to: .standalone)
+        #expect(standalone.groups[0].methods == [.camera])
+        #expect(standalone.flatMethods == [.voice, .barcode])
+
+        let grouped = standalone.assigning(.voice, to: .group(groupID))
+        #expect(grouped.groups[0].methods == [.camera, .voice])
+        #expect(grouped.flatMethods == [.barcode])
+
+        #expect(config.assigning(.text, to: .group(UUID())) == config)
+    }
+
     @Test func sanitizeDropsEmptyGroups() {
         let config = AddMenuConfig(
             groups: [

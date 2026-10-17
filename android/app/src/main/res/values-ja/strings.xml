@@ -176,6 +176,7 @@
     <string name="nav_progress">進捗</string>
     <string name="nav_coach">コーチ</string>
     <string name="nav_settings">設定</string>
+    <string name="nav_workouts">ワークアウト</string>
     <string name="nav_about">情報</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -476,6 +477,8 @@
     <string name="progress_range_6m">6ヶ月</string>
     <string name="progress_range_year">1年</string>
     <string name="progress_range_all">すべて</string>
+    <string name="progress_previous_period">前の期間</string>
+    <string name="progress_next_period">次の期間</string>
 
     <string name="progress_weight_section">体重</string>
     <string name="progress_log_weight">体重を記録</string>
@@ -491,6 +494,8 @@
     </plurals>
 
     <string name="progress_calories_section">カロリー</string>
+    <string name="progress_include_today">今日を含める</string>
+    <string name="progress_include_today_caption">カロリーグラフと栄養の平均</string>
     <string name="progress_avg_format">平均: %1$,d kcal</string>
     <string name="progress_no_food">まだ食事が記録されていません</string>
 
@@ -552,6 +557,10 @@
     <string name="settings_week_monday">月曜日</string>
     <string name="settings_week_sunday">日曜日</string>
     <string name="settings_notifications">通知</string>
+    <string name="settings_water_quick_add">クイック追加の量</string>
+    <string name="settings_water_quick_add_amount">量 %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s までの量を入力してください。</string>
+    <string name="settings_water_quick_add_footer">+ メニューに表示され、ワンタップで水分を記録できます。</string>
     <string name="settings_battery_opt">バッテリー最適化</string>
     <string name="settings_battery_opt_value">Fud AI を除外</string>
 
@@ -693,6 +702,7 @@
     <string name="progress_metric_weight">体重</string>
     <string name="progress_metric_body_fat">体脂肪</string>
     <string name="progress_metric_workouts">ワークアウト</string>
+    <string name="progress_metric_steps">歩数</string>
     <string name="progress_workout_history">ワークアウト履歴</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">計算済み消費 %1$d 件 · タップして表示または削除</item>
@@ -708,6 +718,23 @@
     <string name="progress_workout_stat_days">日数</string>
     <string name="progress_workout_no_range">この期間に計算済みのワークアウト消費はありません</string>
     <string name="progress_workout_chart_description">%1$sから%2$sまでのワークアウト消費グラフ。合計%3$dキロカロリー、最新%4$dキロカロリー。</string>
+    <string name="workout_filter_source">作成元</string>
+    <string name="workout_source_dataset">データベース</string>
+    <string name="workout_source_saved">保存済み</string>
+    <string name="workout_source_mine">自作</string>
+    <string name="workout_mine_empty_title">自作の種目はまだありません</string>
+    <string name="workout_mine_empty_subtitle">作成した種目がここに表示されます。</string>
+    <string name="workout_exercise_take_photo">写真を撮る</string>
+    <string name="workout_exercise_camera_denied_title">カメラへのアクセスが必要です</string>
+    <string name="workout_exercise_camera_denied_message">種目の写真を撮るには、システム設定でFud AIによるカメラの使用を許可してください。</string>
+    <string name="progress_steps_stat_total">合計</string>
+    <string name="progress_steps_stat_average">平均</string>
+    <string name="progress_steps_stat_best_day">最高の日</string>
+    <string name="progress_steps_no_range">この期間の歩数データはありません</string>
+    <string name="progress_steps_footnote">Health Connect の1日の歩数合計です。</string>
+    <string name="progress_steps_weekly_note">棒は各週の1日あたりの平均歩数を示します。</string>
+    <string name="progress_steps_history_note">Health Connect が共有する歩数は Fud AI を接続する約30日前以降のものだけのため、それより前の日は表示されない場合があります。</string>
+    <string name="progress_steps_chart_description">%1$s〜%2$s の歩数グラフ。合計 %3$s 歩、最高の日は %4$s 歩。</string>
     <string name="progress_log_body_fat">体脂肪を記録</string>
     <string name="progress_log_first_body_fat">傾向を見るには、最初の体脂肪率を記録してください</string>
     <string name="progress_log_body_fat_title">体脂肪を記録</string>
@@ -813,6 +840,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011).「エネルギー不均衡が体重に及ぼす影響の定量化。」Lancet 378(9793):826–837. 1ポンド当たり3,500 kcalという古典的な法則は、Wishnofsky M (1958), Am J Clin Nutr 6:542–546に由来します。</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018).「レジスタンストレーニングによる筋量と筋力の増加に対するたんぱく質補給の効果についての系統的レビュー、メタ解析、メタ回帰。」Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">推定値は、基盤となるAIモデルの学習データ（USDA FoodData Central、メーカーの栄養表示、科学文献）に基づきます。精度は食品、分量の見えやすさ、プロバイダーのモデルによって異なります。頻繁に記録する食品は必ずラベルと照合してください。</string>
+    <string name="settings_add_menu_standalone">単独の方法</string>
+    <string name="settings_add_menu_standalone_footer">これらの方法はグループに入らず、+ の直下に表示されます。</string>
+    <string name="settings_tab_bar">タブバー</string>
+    <string name="settings_tab_bar_section">タブバーに表示</string>
+    <string name="settings_tab_bar_footer">ホームと設定は常に表示されます。</string>
     <string name="about_litert_notices">LiteRT-LM のサードパーティに関する通知</string>
     <string name="about_litert_notices_load_error">LiteRT-LM のサードパーティに関する通知を読み込めませんでした。</string>
     <string name="settings_model_source">モデルの配布元</string>

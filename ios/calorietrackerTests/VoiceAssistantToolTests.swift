@@ -738,6 +738,23 @@ struct VoiceAssistantToolTests {
         #expect(harness.host.ended)
     }
 
+    @Test func hiddenTabsCannotBeOpenedAndAreReported() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        harness.defaults.set("coach,workouts", forKey: TabBarSettings.hiddenTabsKey)
+
+        let coach = await harness.executor.execute(name: "open_screen", arguments: ["screen": "coach"])
+        #expect(coach["ok"] as? Bool == false)
+        #expect(coach["error"] as? String == "unsupported")
+        #expect(harness.host.opened.isEmpty)
+
+        let progress = await harness.executor.execute(name: "open_screen", arguments: ["screen": "progress"])
+        #expect(progress["ok"] as? Bool == true)
+        #expect(harness.host.opened.last?.screen == .progress)
+
+        let state = await harness.executor.execute(name: "get_app_state", arguments: [:])
+        #expect(state["hidden_screens"] as? [String] == ["coach", "workouts"])
+    }
+
     @Test func everyOpenScreenSectionMapsToASettingsSection() throws {
         let specs = try VoiceAssistantToolCatalog.load()
         let openScreen = try #require(specs.first { $0.name == "open_screen" })

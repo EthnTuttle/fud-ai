@@ -382,6 +382,13 @@ class VoiceToolExecutor(
         return ToolResults.ok {
             put("screen", screen.screen?.wireValue ?: "other")
             screen.section?.let { put("settings_section", it.wireValue) }
+            // open_screen can't show these until the user turns them back on.
+            val hidden = ports.hiddenScreens()
+            if (hidden.isNotEmpty()) {
+                putJsonArray("hidden_screens") {
+                    VoiceScreen.entries.filter { it in hidden }.forEach { add(JsonPrimitive(it.wireValue)) }
+                }
+            }
             put("diary_date", VoiceArguments.formatDate(diaryDate))
             put("today", VoiceArguments.formatDate(today))
             put("time", VoiceArguments.formatTime(localTime(ports.now())))
@@ -429,6 +436,12 @@ class VoiceToolExecutor(
         }
         if (section != null && screen != VoiceScreen.SETTINGS) {
             fail(ToolError.INVALID_ARGUMENTS, "settings_section only works with screen=settings.")
+        }
+        if (screen in ports.hiddenScreens()) {
+            fail(
+                ToolError.UNSUPPORTED,
+                "The user hid the ${screen.wireValue} tab. It can be shown again in Settings > App Settings > Tab Bar."
+            )
         }
         ports.showScreen(screen, section)
         return ToolResults.ok {

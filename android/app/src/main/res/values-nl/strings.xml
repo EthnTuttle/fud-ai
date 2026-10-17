@@ -176,6 +176,7 @@
     <string name="nav_progress">Voortgang</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Instellingen</string>
+    <string name="nav_workouts">Trainingen</string>
     <string name="nav_about">Over</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -477,6 +478,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1J</string>
     <string name="progress_range_all">Alles</string>
+    <string name="progress_previous_period">Vorige periode</string>
+    <string name="progress_next_period">Volgende periode</string>
 
     <string name="progress_weight_section">Gewicht</string>
     <string name="progress_log_weight">Gewicht loggen</string>
@@ -492,6 +495,8 @@
     </plurals>
 
     <string name="progress_calories_section">Calorieën</string>
+    <string name="progress_include_today">Vandaag meetellen</string>
+    <string name="progress_include_today_caption">Caloriegrafiek en voedingsgemiddelden</string>
     <string name="progress_avg_format">Gem.: %1$,d kcal</string>
     <string name="progress_no_food">Nog geen eten geregistreerd</string>
 
@@ -553,6 +558,10 @@
     <string name="settings_week_monday">Maandag</string>
     <string name="settings_week_sunday">Zondag</string>
     <string name="settings_notifications">Meldingen</string>
+    <string name="settings_water_quick_add">Hoeveelheden voor snel toevoegen</string>
+    <string name="settings_water_quick_add_amount">Hoeveelheid %1$d</string>
+    <string name="settings_water_quick_add_invalid">Voer een hoeveelheid tot %1$s in.</string>
+    <string name="settings_water_quick_add_footer">Getoond in het +-menu om water met één tik te registreren.</string>
     <string name="settings_battery_opt">Batterijoptimalisatie</string>
     <string name="settings_battery_opt_value">Fud AI op witte lijst</string>
 
@@ -694,6 +703,7 @@
     <string name="progress_metric_weight">Gewicht</string>
     <string name="progress_metric_body_fat">Vetpercentage</string>
     <string name="progress_metric_workouts">Work-outs</string>
+    <string name="progress_metric_steps">Stappen</string>
     <string name="progress_workout_history">Work-outgeschiedenis</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d berekende verbranding · tik om te bekijken of verwijderen</item>
@@ -709,6 +719,23 @@
     <string name="progress_workout_stat_days">Dagen</string>
     <string name="progress_workout_no_range">Geen berekende work-outverbrandingen in deze periode</string>
     <string name="progress_workout_chart_description">Grafiek van trainingsverbranding van %1$s tot %2$s. Totaal %3$d kilocalorieën; laatste %4$d kilocalorieën.</string>
+    <string name="workout_filter_source">Bron</string>
+    <string name="workout_source_dataset">Database</string>
+    <string name="workout_source_saved">Opgeslagen</string>
+    <string name="workout_source_mine">Eigen</string>
+    <string name="workout_mine_empty_title">Nog geen eigen oefeningen</string>
+    <string name="workout_mine_empty_subtitle">Oefeningen die je maakt, verschijnen hier.</string>
+    <string name="workout_exercise_take_photo">Maak foto</string>
+    <string name="workout_exercise_camera_denied_title">Toegang tot de camera nodig</string>
+    <string name="workout_exercise_camera_denied_message">Geef Fud AI in de systeeminstellingen toegang tot de camera om foto’s van oefeningen te maken.</string>
+    <string name="progress_steps_stat_total">Totaal</string>
+    <string name="progress_steps_stat_average">Gemiddelde</string>
+    <string name="progress_steps_stat_best_day">Beste dag</string>
+    <string name="progress_steps_no_range">Geen stappengegevens in deze periode</string>
+    <string name="progress_steps_footnote">Dagelijkse stappentotalen uit Health Connect.</string>
+    <string name="progress_steps_weekly_note">De balken tonen het gemiddelde aantal stappen per dag voor elke week.</string>
+    <string name="progress_steps_history_note">Health Connect deelt alleen stappen vanaf ongeveer 30 dagen voordat je Fud AI koppelde, dus oudere dagen kunnen ontbreken.</string>
+    <string name="progress_steps_chart_description">Stappengrafiek van %1$s tot %2$s. Totaal %3$s stappen; beste dag %4$s stappen.</string>
     <string name="progress_log_body_fat">Vetpercentage loggen</string>
     <string name="progress_log_first_body_fat">Log je eerste vetpercentage om trends te zien</string>
     <string name="progress_log_body_fat_title">Vetpercentage loggen</string>
@@ -814,6 +841,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). ‘Kwantificering van het effect van energieonbalans op het lichaamsgewicht.’ Lancet 378(9793):826–837. De klassieke regel van 3.500 kcal per pond is afkomstig van Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). ‘Een systematische review, meta-analyse en meta-regressie van het effect van eiwitsuppletie op door krachttraining veroorzaakte toename in spiermassa en kracht.’ Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">De schattingen zijn gebaseerd op de trainingsgegevens van het onderliggende AI-model (USDA FoodData Central, voedingsetiketten van fabrikanten en wetenschappelijke literatuur). De nauwkeurigheid varieert per voedingsmiddel, de zichtbaarheid van de portiegrootte en het providermodel. Controleer bij voedingsmiddelen die je vaak logt altijd het etiket.</string>
+    <string name="settings_add_menu_standalone">Losse methoden</string>
+    <string name="settings_add_menu_standalone_footer">Deze methoden staan direct onder +, buiten een groep.</string>
+    <string name="settings_tab_bar">Tabbalk</string>
+    <string name="settings_tab_bar_section">Tonen in tabbalk</string>
+    <string name="settings_tab_bar_footer">Home en Instellingen worden altijd getoond.</string>
     <string name="about_litert_notices">Kennisgevingen van derden voor LiteRT-LM</string>
     <string name="about_litert_notices_load_error">De kennisgevingen van derden voor LiteRT-LM konden niet worden geladen.</string>
     <string name="settings_model_source">Modelbron</string>

@@ -774,27 +774,25 @@ CalorieHero(
                         }
                         if (ui.activeFast == null) {
                             val addMenuConfig = ui.addMenuConfig
-                            if (addMenuConfig.usesFlatLayout) {
-                                val methods = addMenuConfig.resolvedFlatMethods()
-                                methods.forEach { method ->
-                                    SheetGlassDropdownMenuItem(
-                                        label = stringResource(method.titleRes),
-                                        leadingIcon = method.icon
-                                    ) { performFoodLogMethod(method) }
-                                }
-                                insertedFoodBlock = methods.isNotEmpty()
-                            } else {
-                                val groups = addMenuConfig.resolvedGroups()
-                                groups.forEachIndexed { index, group ->
-                                    if (index > 0) SheetHairline()
-                                    SheetGlassDropdownMenuItem(
-                                        label = group.displayName(),
-                                        leadingIcon = group.methods.firstOrNull()?.icon ?: FoodLogMethodDefaultGroupIcon,
-                                        trailingIcon = Icons.Filled.ChevronRight
-                                    ) { addMenuDestination = AddMenuDestination.FoodGroup(index) }
-                                }
-                                insertedFoodBlock = groups.isNotEmpty()
+                            val groups = addMenuConfig.resolvedGroups()
+                            groups.forEachIndexed { index, group ->
+                                if (index > 0) SheetHairline()
+                                SheetGlassDropdownMenuItem(
+                                    label = group.displayName(),
+                                    leadingIcon = group.methods.firstOrNull()?.icon ?: FoodLogMethodDefaultGroupIcon,
+                                    trailingIcon = Icons.Filled.ChevronRight
+                                ) { addMenuDestination = AddMenuDestination.FoodGroup(index) }
                             }
+                            // Standalone methods follow the groups directly under +.
+                            val standalone = addMenuConfig.resolvedFlatMethods()
+                            if (groups.isNotEmpty() && standalone.isNotEmpty()) SheetHairline()
+                            standalone.forEach { method ->
+                                SheetGlassDropdownMenuItem(
+                                    label = stringResource(method.titleRes),
+                                    leadingIcon = method.icon
+                                ) { performFoodLogMethod(method) }
+                            }
+                            insertedFoodBlock = groups.isNotEmpty() || standalone.isNotEmpty()
                         }
                         if (ui.waterTrackingEnabled) {
                             maybeFoodBoundaryHairline()
@@ -836,9 +834,9 @@ CalorieHero(
                     }
 
                     AddMenuDestination.Water -> {
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_one_glass_dynamic, ui.waterUnit.format(250)), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(250) }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_two_glasses_dynamic, ui.waterUnit.format(500)), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(500) }
-                        SheetGlassDropdownMenuItem(label = stringResource(R.string.water_three_glasses_dynamic, ui.waterUnit.format(750)), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(750) }
+                        ui.waterQuickAddPresetsMl.forEach { milliliters ->
+                            SheetGlassDropdownMenuItem(label = ui.waterUnit.format(milliliters), leadingIcon = Icons.Filled.WaterDrop) { showAddMenu = false; addMenuDestination = null; vm.addWater(milliliters) }
+                        }
                         SheetGlassDropdownMenuItem(label = stringResource(R.string.water_custom_amount), leadingIcon = Icons.Filled.DriveFileRenameOutline) { showAddMenu = false; addMenuDestination = null; showCustomWaterLog = true }
                         SheetGlassDropdownMenuItem(label = stringResource(R.string.back), leadingIcon = Icons.Filled.ChevronLeft) { addMenuDestination = null }
                     }

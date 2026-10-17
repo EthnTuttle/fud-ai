@@ -128,6 +128,7 @@ struct ContentView: View {
     @State private var assistantNavigator = VoiceAssistantNavigator.shared
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @AppStorage(WorkoutTabMode.storageKey) private var workoutTabModeRaw = WorkoutTabMode.defaultMode.rawValue
+    @AppStorage(TabBarSettings.hiddenTabsKey) private var hiddenTabsRaw = ""
     @State private var appUpdateState: AppUpdateState = .idle
     @State private var selectedTab: AppTab = .home
     @State private var quickActionRequest: QuickActionRequest?
@@ -140,6 +141,10 @@ struct ContentView: View {
 
     private var workoutsTabIcon: String {
         WorkoutTabMode.mode(for: workoutTabModeRaw).tabIcon
+    }
+
+    private var hiddenTabs: Set<HideableTab> {
+        TabBarSettings.decode(hiddenTabsRaw)
     }
 
     var body: some View {
@@ -216,6 +221,12 @@ struct ContentView: View {
             .onChange(of: selectedTab, initial: true) { _, tab in
                 assistantNavigator.currentScreen = Self.screen(for: tab)
             }
+            .onChange(of: hiddenTabsRaw, initial: true) { _, _ in
+                // A tab hidden while it is selected falls back to Home.
+                if let tab = selectedTab.hideableTab, hiddenTabs.contains(tab) {
+                    selectedTab = .home
+                }
+            }
     }
 
     /// Hands the app's stores to the voice assistant.
@@ -239,7 +250,9 @@ struct ContentView: View {
 
     /// The voice assistant moves between tabs like the user would.
     private func applyAssistantScreenRequest() {
-        guard let screen = assistantNavigator.takeScreenRequest() else { return }
+        guard let screen = assistantNavigator.takeScreenRequest(),
+              TabBarSettings.hiddenTab(for: screen, in: hiddenTabs) == nil
+        else { return }
         selectedTab = switch screen {
         case .home: .home
         case .progress: .progress
@@ -277,19 +290,23 @@ struct ContentView: View {
                     Text("Home")
                 }
 
-            ProgressTabView()
-                .tag(AppTab.progress)
-                .tabItem {
-                    Image(systemName: "chart.bar.fill")
-                    Text("Progress")
-                }
+            if !hiddenTabs.contains(.progress) {
+                ProgressTabView()
+                    .tag(AppTab.progress)
+                    .tabItem {
+                        Image(systemName: "chart.bar.fill")
+                        Text("Progress")
+                    }
+            }
 
-            ChatView()
-                .tag(AppTab.coach)
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("Coach")
-                }
+            if !hiddenTabs.contains(.coach) {
+                ChatView()
+                    .tag(AppTab.coach)
+                    .tabItem {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                        Text("Coach")
+                    }
+            }
 
             ProfileView(
                 updateState: $appUpdateState,
@@ -304,12 +321,14 @@ struct ContentView: View {
                 }
                 .badge(appUpdateState.isUpdateAvailable ? "!" : nil)
 
-            WorkoutsView()
-                .tag(AppTab.workouts)
-                .tabItem {
-                    Image(systemName: workoutsTabIcon)
-                    Text("Workouts")
-                }
+            if !hiddenTabs.contains(.workouts) {
+                WorkoutsView()
+                    .tag(AppTab.workouts)
+                    .tabItem {
+                        Image(systemName: workoutsTabIcon)
+                        Text("Workouts")
+                    }
+            }
         }
     }
 
@@ -319,6 +338,9 @@ struct ContentView: View {
         case coach
         case settings
         case workouts
+
+        /// Nil for Home and Settings, which can't be hidden.
+        var hideableTab: HideableTab? { HideableTab(rawValue: rawValue) }
     }
 
     private func consumePendingLaunchRoutes() {
@@ -1157,9 +1179,12 @@ struct HomeView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(WaterQuickAddPresets.key) private var waterQuickAddPresetsRaw = ""
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
     @AppStorage(FastingSettings.notificationEnabledKey) private var fastingGoalNotificationEnabled = true
+    /// Observed so + menu edits in Settings refresh Home right away.
+    @AppStorage(AddMenuConfig.storageKey) private var addMenuConfigData: Data?
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @Environment(ProfileStore.self) private var profileStore
     @State private var homeBurnLine: String?
@@ -1394,20 +1419,14 @@ private var dailyStepsTaskKey: String {
         } label: {
             Label("Custom", systemImage: "slider.horizontal.3")
         }
-        Button {
-            logWater(750)
-        } label: {
-            Label("3 Glasses (~\(waterUnit.formatted(milliliters: 750)))", systemImage: "drop.fill")
-        }
-        Button {
-            logWater(500)
-        } label: {
-            Label("2 Glasses (~\(waterUnit.formatted(milliliters: 500)))", systemImage: "drop.fill")
-        }
-        Button {
-            logWater(250)
-        } label: {
-            Label("1 Glass (~\(waterUnit.formatted(milliliters: 250)))", systemImage: "drop.fill")
+        // Largest first, as the fixed 3/2/1 glass presets were.
+        let presets = WaterQuickAddPresets.decode(waterQuickAddPresetsRaw).reversed()
+        ForEach(Array(presets.enumerated()), id: \.offset) { _, milliliters in
+            Button {
+                logWater(milliliters)
+            } label: {
+                Label(waterUnit.formatted(milliliters: milliliters), systemImage: "drop.fill")
+            }
         }
     }
 
@@ -2731,23 +2750,22 @@ private var dailyStepsTaskKey: String {
 extension HomeView {
     @ViewBuilder
     var configuredFoodAddMenuContent: some View {
-        let config = AddMenuSettings.load()
-        if config.usesFlatLayout {
+        let config = AddMenuSettings.decode(addMenuConfigData)
+        ForEach(config.groups.filter { !$0.methods.isEmpty }) { group in
+            Section {
+                Menu {
+                    ForEach(group.methods) { method in
+                        addMenuButton(for: method)
+                    }
+                } label: {
+                    Label(group.name, systemImage: addMenuGroupIcon(for: group))
+                }
+            }
+        }
+        if !config.flatMethods.isEmpty {
             Section {
                 ForEach(config.flatMethods) { method in
                     addMenuButton(for: method)
-                }
-            }
-        } else {
-            ForEach(config.groups.filter { !$0.methods.isEmpty }) { group in
-                Section {
-                    Menu {
-                        ForEach(group.methods) { method in
-                            addMenuButton(for: method)
-                        }
-                    } label: {
-                        Label(group.name, systemImage: addMenuGroupIcon(for: group))
-                    }
                 }
             }
         }
@@ -4115,8 +4133,15 @@ struct ProgressTabView: View {
     @Environment(ProfileStore.self) private var profileStore
     @Environment(StrengthWorkoutStore.self) private var strengthWorkoutStore
     @Environment(ImportedHealthWorkoutStore.self) private var importedHealthWorkoutStore
+    @Environment(HealthKitManager.self) private var healthKitManager
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
+    @AppStorage("healthKitEnabled") private var healthKitEnabled = false
+    /// Off ends the calorie chart and nutrition averages yesterday (#514).
+    @AppStorage("progressIncludeToday") private var includeToday = true
     @State private var timeRange: TimeRange = .week
+    /// Whole windows stepped back from the current one; session-only, reset
+    /// whenever the range changes.
+    @State private var periodOffset = 0
     @State private var showLogWeight = false
     @State private var showLogBodyFat = false
     @State private var showGoalReached = false
@@ -4128,22 +4153,53 @@ struct ProgressTabView: View {
     @State private var progressOverviewMode: ProgressOverviewMode = .myProgress
     @State private var foodRangeStats: ProgressFoodRangeStats?
     @State private var isLoadingFoodRangeStats = false
+    /// Daily steps for the selected window; nil while loading.
+    @State private var stepDays: [StepDay]?
+    /// The window `stepDays` belongs to, so a refresh of the same window keeps
+    /// its bars on screen instead of flashing the spinner.
+    @State private var stepDaysWindow: ClosedRange<Date>?
+    /// Bumped on each return from the background so the Steps card re-reads
+    /// totals that kept counting while the app was away.
+    @State private var stepsRefreshEpoch = 0
+    @State private var wasInBackground = false
+    @Environment(\.scenePhase) private var scenePhase
 
     private var userProfile: UserProfile { profileStore.profile }
 
     private var foodRangeStatsTaskKey: String {
         let latest = foodStore.entries.first?.id.uuidString ?? "none"
-        return "\(timeRange.rawValue)|\(foodStore.entries.count)|\(latest)"
+        return "\(timeRange.rawValue)|\(periodOffset)|\(includeToday)|\(foodStore.entries.count)|\(latest)"
     }
 
-    private var dateRange: ClosedRange<Date> { timeRange.dateRange() }
+    /// Switching ranges always lands on the current window, in the same
+    /// update so the nutrition task restarts once.
+    private var timeRangeSelection: Binding<TimeRange> {
+        Binding(
+            get: { timeRange },
+            set: { newRange in
+                timeRange = newRange
+                periodOffset = 0
+            }
+        )
+    }
+
+    /// Selected window as whole local days (for day-keyed data).
+    private var dateRange: ClosedRange<Date> { timeRange.dayRange(offset: periodOffset) }
+
+    /// Selected window through the last instant of its final day (for timestamped readings).
+    private var timestampRange: ClosedRange<Date> { timeRange.timestampRange(offset: periodOffset) }
+
+    /// Window for the calorie chart and nutrition averages.
+    private var nutritionDateRange: ClosedRange<Date> {
+        timeRange.nutritionDayRange(offset: periodOffset, includeToday: includeToday)
+    }
 
     private var filteredWeightEntries: [WeightEntry] {
-        weightStore.entries(in: dateRange)
+        weightStore.entries(in: timestampRange)
     }
 
     private var filteredBodyFatEntries: [BodyFatEntry] {
-        bodyFatStore.entries(in: dateRange)
+        bodyFatStore.entries(in: timestampRange)
     }
 
     private var workoutCalorieSessions: [StrengthWorkoutSession] {
@@ -4164,8 +4220,13 @@ struct ProgressTabView: View {
         ProgressMetric.available(
             bodyFatAvailable: showsBodyFatSection,
             workoutBurnAvailable: !workoutCalorieSessions.isEmpty,
-            importedWorkoutsAvailable: !importedHealthWorkouts.isEmpty
+            importedWorkoutsAvailable: !importedHealthWorkouts.isEmpty,
+            stepsAvailable: healthKitEnabled
         )
+    }
+
+    private var stepsTaskKey: String {
+        "\(progressMetric == .steps)|\(healthKitEnabled)|\(timeRange.rawValue)|\(periodOffset)|\(stepsRefreshEpoch)"
     }
 
     /// Show the Body Fat section to anyone who has either logged a reading,
@@ -4192,7 +4253,7 @@ struct ProgressTabView: View {
                     ScrollView {
                         VStack(spacing: 18) {
                     // Segmented Picker
-                    Picker("Time Range", selection: $timeRange) {
+                    Picker("Time Range", selection: timeRangeSelection) {
                         ForEach(TimeRange.allCases, id: \.self) { range in
                             Text(range.title).tag(range)
                         }
@@ -4200,6 +4261,16 @@ struct ProgressTabView: View {
                     .pickerStyle(.segmented)
                     .tint(AppColors.calorie)
                     .padding(.horizontal)
+
+                    if timeRange.supportsPeriodNavigation {
+                        ProgressPeriodNavigator(
+                            label: TimeRange.periodLabel(for: dateRange),
+                            canGoForward: periodOffset > 0,
+                            onPrevious: { periodOffset += 1 },
+                            onNext: { periodOffset = max(0, periodOffset - 1) }
+                        )
+                        .padding(.horizontal)
+                    }
 
                     ProgressMetricSelector(
                         metrics: availableProgressMetrics,
@@ -4237,6 +4308,8 @@ struct ProgressTabView: View {
                                     dateRange: dateRange
                                 )
                             }
+                        case .steps:
+                            StepsChartSection(days: stepDays, dateRange: dateRange)
                         }
                     }
                     .padding(.horizontal)
@@ -4270,8 +4343,18 @@ struct ProgressTabView: View {
                                     onTap: { showImportedHealthWorkoutHistory = true }
                                 )
                             }
+                        case .steps:
+                            EmptyView()
                         }
                     }
+                    .padding(.horizontal)
+
+                    ProgressIncludeTodayToggle(
+                        isOn: $includeToday,
+                        rangeLabel: includeToday || !timeRange.supportsPeriodNavigation
+                            ? nil
+                            : TimeRange.periodLabel(for: nutritionDateRange)
+                    )
                     .padding(.horizontal)
 
                     // Calorie / macro / nutrient stats load asynchronously so the
@@ -4336,12 +4419,42 @@ struct ProgressTabView: View {
                 let stats = ProgressFoodRangeStats.compute(
                     entries: foodStore.entries,
                     dayCount: timeRange.days,
+                    endDay: nutritionDateRange.upperBound,
                     profile: userProfile,
                     optionalGoals: .current
                 )
                 guard !Task.isCancelled else { return }
                 foodRangeStats = stats
                 isLoadingFoodRangeStats = false
+            }
+            .task(id: stepsTaskKey) {
+                // Steps come from Apple Health on demand, only while the Steps
+                // metric is showing; range / period changes cancel a stale read,
+                // and returning to the app re-reads the window on screen.
+                guard progressMetric == .steps, healthKitEnabled else {
+                    stepDays = nil
+                    stepDaysWindow = nil
+                    return
+                }
+                let window = dateRange
+                // A new window shows the spinner; a foreground refresh of the same
+                // window keeps its bars until the fresh totals arrive.
+                if stepDaysWindow != window { stepDays = nil }
+                let days = await healthKitManager.fetchDailySteps(from: window.lowerBound, through: window.upperBound)
+                guard !Task.isCancelled else { return }
+                stepDays = days
+                stepDaysWindow = window
+            }
+            .onChange(of: scenePhase) { _, phase in
+                switch phase {
+                case .background:
+                    wasInBackground = true
+                case .active where wasInBackground:
+                    wasInBackground = false
+                    stepsRefreshEpoch += 1
+                default:
+                    break
+                }
             }
             .onChange(of: availableProgressMetrics, initial: true) { _, metrics in
                 if !metrics.contains(progressMetric) {
@@ -4653,6 +4766,7 @@ struct ProfileView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(WaterQuickAddPresets.key) private var waterQuickAddPresetsRaw = ""
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
 
@@ -5337,6 +5451,24 @@ struct ProfileView: View {
                         }
                     }
 
+                    NavigationLink {
+                        TabBarSettingsView()
+                    } label: {
+                        Label {
+                            HStack {
+                                Text("Tab Bar")
+                                Spacer()
+                                Text("Customize")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        } icon: {
+                            Image(systemName: "dock.rectangle")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .accessibilityIdentifier("settings.tabBar")
+
                 }
                 .listRowBackground(AppColors.appCard)
                 }
@@ -5419,6 +5551,27 @@ struct ProfileView: View {
                         .onChange(of: waterUnitRaw) { _, _ in
                             WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
                         }
+
+                        NavigationLink {
+                            WaterQuickAddSettingsView(unit: waterUnit)
+                        } label: {
+                            Label {
+                                HStack {
+                                    Text("Quick Add Amounts")
+                                    Spacer()
+                                    Text(WaterQuickAddPresets.summary(
+                                        WaterQuickAddPresets.decode(waterQuickAddPresetsRaw),
+                                        unit: waterUnit
+                                    ))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                }
+                            } icon: {
+                                Image(systemName: "drop.circle")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .accessibilityIdentifier("settings.water.quickAdd")
                     }
 
                     HStack {
