@@ -463,6 +463,26 @@
     <string name="coach_reset_confirm">リセット</string>
     <string name="coach_no_profile_error">プロフィールがまだありません。先にオンボーディングを完了してください。</string>
     <string name="coach_chat_failed">チャットに失敗しました</string>
+    <string name="coach_proposal_custom_title">新しい自作の種目</string>
+    <string name="coach_proposal_add_title">ワークアウトに追加</string>
+    <string name="coach_proposal_add">追加</string>
+    <string name="coach_proposal_dismiss">見送る</string>
+    <string name="coach_proposal_added">追加済み</string>
+    <string name="coach_proposal_dismissed">見送りました</string>
+    <string name="coach_proposal_category">カテゴリ: %1$s</string>
+    <string name="coach_proposal_equipment">器具: %1$s</string>
+    <string name="coach_proposal_primary_muscles">メインの筋肉: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">サブの筋肉: %1$s</string>
+    <string name="coach_proposal_date">日付: %1$s</string>
+    <string name="coach_proposal_sets">セット数: %1$d</string>
+    <string name="coach_proposal_reps">回数: %1$d</string>
+    <string name="coach_proposal_duration">時間: %1$d分</string>
+    <string name="coach_proposal_exercise_missing">この種目はもうライブラリにありません。</string>
+    <string name="coach_proposal_save_failed">この変更を保存できませんでした。もう一度お試しください。</string>
+    <string name="coach_proposal_add_custom_description">%1$sを種目ライブラリに追加</string>
+    <string name="coach_proposal_add_to_day_description">%1$sをワークアウト日記に追加</string>
+    <string name="coach_proposal_dismiss_description">%1$sの提案を見送る</string>
+    <string name="coach_proposal_name_taken">この名前の種目はすでにライブラリにあります。</string>
 
     <string name="coach_chip_predict_30_days">30日後の予想体重は?</string>
     <string name="coach_chip_lose_faster">安全に早く痩せるには?</string>

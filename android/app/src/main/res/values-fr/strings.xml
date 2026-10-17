@@ -465,6 +465,26 @@
     <string name="coach_reset_confirm">Réinitialiser</string>
     <string name="coach_no_profile_error">Aucun profil pour le moment. Terminez d\'abord l\'intégration.</string>
     <string name="coach_chat_failed">Échec de la conversation</string>
+    <string name="coach_proposal_custom_title">Nouvel exercice personnalisé</string>
+    <string name="coach_proposal_add_title">Ajouter à l’entraînement</string>
+    <string name="coach_proposal_add">Ajouter</string>
+    <string name="coach_proposal_dismiss">Ignorer</string>
+    <string name="coach_proposal_added">Ajouté</string>
+    <string name="coach_proposal_dismissed">Ignoré</string>
+    <string name="coach_proposal_category">Catégorie : %1$s</string>
+    <string name="coach_proposal_equipment">Équipement : %1$s</string>
+    <string name="coach_proposal_primary_muscles">Muscles principaux : %1$s</string>
+    <string name="coach_proposal_secondary_muscles">Muscles secondaires : %1$s</string>
+    <string name="coach_proposal_date">Date : %1$s</string>
+    <string name="coach_proposal_sets">Séries : %1$d</string>
+    <string name="coach_proposal_reps">Répétitions : %1$d</string>
+    <string name="coach_proposal_duration">Durée : %1$d min</string>
+    <string name="coach_proposal_exercise_missing">Cet exercice n’est plus dans ta bibliothèque.</string>
+    <string name="coach_proposal_save_failed">Impossible d’enregistrer cette modification. Réessaie.</string>
+    <string name="coach_proposal_add_custom_description">Ajouter %1$s à ta bibliothèque d’exercices</string>
+    <string name="coach_proposal_add_to_day_description">Ajouter %1$s à votre journal d’entraînement</string>
+    <string name="coach_proposal_dismiss_description">Ignorer la suggestion pour %1$s</string>
+    <string name="coach_proposal_name_taken">Un exercice portant ce nom est déjà dans ta bibliothèque.</string>
 
     <string name="coach_chip_predict_30_days">Quel est mon poids prévu dans 30 jours ?</string>
     <string name="coach_chip_lose_faster">Comment perdre du poids plus vite en toute sécurité ?</string>

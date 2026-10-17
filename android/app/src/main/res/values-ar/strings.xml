@@ -472,6 +472,26 @@
     <string name="coach_reset_confirm">إعادة تعيين</string>
     <string name="coach_no_profile_error">لا يوجد ملف شخصي بعد. أكمل عملية الإعداد أولًا.</string>
     <string name="coach_chat_failed">فشلت المحادثة</string>
+    <string name="coach_proposal_custom_title">تمرين مخصص جديد</string>
+    <string name="coach_proposal_add_title">إضافة إلى التمرين</string>
+    <string name="coach_proposal_add">إضافة</string>
+    <string name="coach_proposal_dismiss">تجاهل</string>
+    <string name="coach_proposal_added">تمت الإضافة</string>
+    <string name="coach_proposal_dismissed">تم التجاهل</string>
+    <string name="coach_proposal_category">الفئة: %1$s</string>
+    <string name="coach_proposal_equipment">المعدات: %1$s</string>
+    <string name="coach_proposal_primary_muscles">العضلات الأساسية: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">العضلات الثانوية: %1$s</string>
+    <string name="coach_proposal_date">التاريخ: %1$s</string>
+    <string name="coach_proposal_sets">المجموعات: %1$d</string>
+    <string name="coach_proposal_reps">التكرارات: %1$d</string>
+    <string name="coach_proposal_duration">المدة: %1$d دقيقة</string>
+    <string name="coach_proposal_exercise_missing">لم يعد هذا التمرين في مكتبتك.</string>
+    <string name="coach_proposal_save_failed">تعذّر حفظ هذا التغيير. حاول مرة أخرى.</string>
+    <string name="coach_proposal_add_custom_description">إضافة %1$s إلى مكتبة تمارينك</string>
+    <string name="coach_proposal_add_to_day_description">إضافة %1$s إلى سجل تمارينك</string>
+    <string name="coach_proposal_dismiss_description">تجاهل اقتراح %1$s</string>
+    <string name="coach_proposal_name_taken">يوجد تمرين بهذا الاسم في مكتبتك بالفعل.</string>
 
     <string name="coach_chip_predict_30_days">ما هو وزني المتوقع خلال 30 يومًا؟</string>
     <string name="coach_chip_lose_faster">كيف أخسر الوزن بشكل أسرع وآمن؟</string>

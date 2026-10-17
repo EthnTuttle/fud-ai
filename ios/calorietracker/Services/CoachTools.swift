@@ -26,6 +26,9 @@ struct CoachTools {
     var workoutAccessEnabled = false
     /// Built-in catalog plus the user's custom exercises, for the read-only library search.
     var exerciseLibrary: [ExerciseLibraryItem] = []
+    /// Set only by Coach chat, which shows each proposal as a card the user must confirm.
+    /// Without it the proposal tools are not offered.
+    var proposals: CoachExerciseProposalCollector? = nil
 
     static let nutritionToolNames: [String] = [
         "get_data_summary",
@@ -45,10 +48,18 @@ struct CoachTools {
         "search_exercise_library",
     ]
 
+    /// Workout changes Coach can only propose. Each call returns a proposal id and the chat shows
+    /// a card; nothing is written until the user taps Add.
+    static let proposalToolNames: [String] = [
+        "propose_custom_exercise",
+        "propose_add_exercise_to_day",
+    ]
+
     /// The provider schemas are built from this instance value, preventing any
     /// workout tool from being disclosed when the user has the diary disabled.
     var availableToolNames: [String] {
-        Self.nutritionToolNames + (workoutAccessEnabled ? Self.workoutToolNames : [])
+        guard workoutAccessEnabled else { return Self.nutritionToolNames }
+        return Self.nutritionToolNames + Self.workoutToolNames + (proposals == nil ? [] : Self.proposalToolNames)
     }
 
     /// Timer-era builds could store several completed sessions for one diary
@@ -86,12 +97,26 @@ struct CoachTools {
         "get_training_summary": "Summarize workouts between two dates: calculated calorie burn plus sessions, saved exercise duration, sets, reps, volume, best load, and average RPE by exercise. Timed cardio does not require reps or sets.",
         "get_exercise_lift_history": "Fetch per-exercise lift history from the local workout diary: dated sessions with logged weight × reps sets, the most recent session, and best load in kg. Use for questions like \"what did I bench last?\" or trends for one lift. Optional catalog_id narrows matching; otherwise exercise name is used.",
         "search_exercise_library": "Search the exercise library (built-in catalog plus the user's own custom exercises) by name or keywords. Returns matching exercises with catalog_id, name, category, equipment, primary and secondary muscles, and is_custom. Optional muscle and equipment filters narrow the results. When the user shares a photo of a gym machine or exercise, identify it first, then search with its likely names. Read-only: it cannot add, edit, or create exercises.",
+        "propose_custom_exercise": "Propose creating a custom exercise in the user's exercise library, for example from a photo of a gym machine that search_exercise_library did not find. This does NOT save anything: the user sees a card with the details and must tap Add to create it, or Dismiss. Search the library first and propose only exercises that are not already there, using the library's category, equipment and muscle names. Returns a proposal_id. Afterwards tell the user to review the card; never say the exercise was created.",
+        "propose_add_exercise_to_day": "Propose adding one library exercise to the user's workout diary on a date (default today). Use a catalog_id from search_exercise_library, built-in or custom. Optional sets, reps and duration_minutes prefill the entry; reps and duration record performed work, so a future date takes sets only. This does NOT save anything: the user sees a card and must tap Add, or Dismiss. A custom exercise proposed with propose_custom_exercise can be added only after the user has added it and it shows up in search_exercise_library. Returns a proposal_id. Afterwards tell the user to review the card; never say it was added.",
     ]
 
-    /// The bundled catalog's muscle and equipment names, which custom exercises pick from too.
-    /// The library-search schema lists them so the model filters with words the library uses.
-    static let libraryMuscleNames = "abdominals, abductors, adductors, biceps, calves, chest, forearms, glutes, hamstrings, lats, lower back, middle back, neck, quadriceps, shoulders, traps, triceps"
-    static let libraryEquipmentNames = "bands, barbell, body only, cable, dumbbell, e-z curl bar, exercise ball, foam roll, kettlebells, machine, medicine ball, other"
+    /// The bundled catalog's muscle, equipment and category names, which custom exercises pick
+    /// from too. The schemas list them so the model uses the words the library uses.
+    static let libraryMuscles = [
+        "abdominals", "abductors", "adductors", "biceps", "calves", "chest", "forearms", "glutes", "hamstrings",
+        "lats", "lower back", "middle back", "neck", "quadriceps", "shoulders", "traps", "triceps",
+    ]
+    static let libraryEquipment = [
+        "bands", "barbell", "body only", "cable", "dumbbell", "e-z curl bar", "exercise ball", "foam roll",
+        "kettlebells", "machine", "medicine ball", "other",
+    ]
+    static let libraryCategories = [
+        "cardio", "olympic weightlifting", "plyometrics", "powerlifting", "strength", "stretching", "strongman",
+    ]
+    static let libraryMuscleNames = libraryMuscles.joined(separator: ", ")
+    static let libraryEquipmentNames = libraryEquipment.joined(separator: ", ")
+    static let libraryCategoryNames = libraryCategories.joined(separator: ", ")
 
     /// One schema source is translated to each provider's wrapper by
     /// ChatService, so no-argument workout tools never accidentally inherit a
@@ -135,6 +160,41 @@ struct CoachTools {
                 "required": ["query"],
             ]
         }
+        if toolName == "propose_custom_exercise" {
+            return [
+                "type": "object",
+                "properties": [
+                    "name": ["type": "string", "description": "Exercise name, e.g. Hammer Strength Iso-Lateral Chest Press"],
+                    "category": ["type": "string", "description": "Optional category (default strength): \(libraryCategoryNames)"],
+                    "equipment": ["type": "string", "description": "Optional equipment: \(libraryEquipmentNames)"],
+                    "primary_muscles": [
+                        "type": "array",
+                        "items": ["type": "string"],
+                        "description": "One or more muscles the exercise mainly works: \(libraryMuscleNames)",
+                    ],
+                    "secondary_muscles": [
+                        "type": "array",
+                        "items": ["type": "string"],
+                        "description": "Optional muscles it also works, from the same list",
+                    ],
+                    "instructions": ["type": "string", "description": "Optional short how-to steps, one per line"],
+                ],
+                "required": ["name", "primary_muscles"],
+            ]
+        }
+        if toolName == "propose_add_exercise_to_day" {
+            return [
+                "type": "object",
+                "properties": [
+                    "catalog_id": ["type": "string", "description": "catalog_id of the exercise from search_exercise_library (built-in or custom)"],
+                    "date": ["type": "string", "description": "Optional ISO date yyyy-MM-dd within a year of today (defaults to today)"],
+                    "sets": ["type": "integer", "description": "Optional number of sets, 1–12"],
+                    "reps": ["type": "integer", "description": "Optional reps for every set, 1–999; today or earlier only"],
+                    "duration_minutes": ["type": "integer", "description": "Optional minutes of timed work such as cardio, 1–1440; today or earlier only"],
+                ],
+                "required": ["catalog_id"],
+            ]
+        }
         return [
             "type": "object",
             "properties": [
@@ -152,7 +212,7 @@ struct CoachTools {
     /// return a JSON error so the LLM can correct course rather than silently
     /// hallucinate; callers should always pass through whatever this returns.
     func execute(name: String, arguments: [String: Any]) -> String {
-        if Self.workoutToolNames.contains(name), !workoutAccessEnabled {
+        if Self.workoutToolNames.contains(name) || Self.proposalToolNames.contains(name), !workoutAccessEnabled {
             return jsonError("Workout access is disabled.")
         }
         switch name {
@@ -180,6 +240,21 @@ struct CoachTools {
             return getExerciseLiftHistory(arguments: arguments)
         case "search_exercise_library":
             return searchExerciseLibrary(arguments: arguments)
+        case "propose_custom_exercise", "propose_add_exercise_to_day":
+            guard let proposals else { return jsonError("Proposals are only available in Coach chat.") }
+            do {
+                let proposal = name == "propose_custom_exercise"
+                    ? try customExerciseProposal(arguments: arguments)
+                    : try addToDayProposal(arguments: arguments)
+                guard let stored = proposals.add(proposal) else {
+                    return jsonError("This reply already has \(CoachExerciseProposalCollector.maxProposals) proposals. Ask the user to review them first.")
+                }
+                return proposalResult(stored)
+            } catch let error as ProposalArgumentError {
+                return jsonError(error.message)
+            } catch {
+                return jsonError("Could not read the proposal.")
+            }
         default:
             return jsonError("Unknown tool: \(name). Available tools: \(availableToolNames.joined(separator: ", "))")
         }
@@ -598,6 +673,218 @@ struct CoachTools {
             if excluded > 0 { payload["excluded_by_filters"] = excluded }
         }
         return jsonString(payload)
+    }
+
+    // MARK: - Proposals
+
+    private struct ProposalArgumentError: Error {
+        let message: String
+    }
+
+    /// Validates a custom exercise against the library's own vocabulary. The new exercise's id
+    /// is chosen here so confirming the card can never create it twice.
+    private func customExerciseProposal(arguments: [String: Any]) throws -> CoachExerciseProposal {
+        let name = Self.proposalText(arguments["name"])
+        guard !name.isEmpty else { throw ProposalArgumentError(message: "name is required.") }
+        guard name.count <= 80 else { throw ProposalArgumentError(message: "name must be at most 80 characters.") }
+        if let existing = exerciseLibrary.first(where: {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(name) == .orderedSame
+        }) {
+            throw ProposalArgumentError(
+                message: "\"\(existing.name)\" is already in the exercise library (catalog_id \(existing.id)). Use propose_add_exercise_to_day with that catalog_id instead."
+            )
+        }
+        let category = try Self.libraryChoice(
+            arguments["category"], in: Self.libraryCategories, field: "category", names: Self.libraryCategoryNames
+        ) ?? "Strength"
+        let equipment = try Self.libraryChoice(
+            arguments["equipment"], in: Self.libraryEquipment, field: "equipment", names: Self.libraryEquipmentNames
+        )
+        let primary = try Self.libraryMuscleList(arguments["primary_muscles"], field: "primary_muscles")
+        guard !primary.isEmpty else {
+            throw ProposalArgumentError(message: "primary_muscles needs at least one of: \(Self.libraryMuscleNames).")
+        }
+        let secondary = try Self.libraryMuscleList(arguments["secondary_muscles"], field: "secondary_muscles")
+            .filter { !primary.contains($0) }
+        let instructions = Self.proposalLines(arguments["instructions"])
+        guard instructions.joined(separator: "\n").count <= 1_500 else {
+            throw ProposalArgumentError(message: "instructions must be at most 1500 characters.")
+        }
+        return CoachExerciseProposal(
+            id: UUID().uuidString,
+            kind: .customExercise,
+            name: name,
+            itemID: UserExercise.newID(),
+            category: category,
+            equipment: equipment,
+            primaryMuscles: primary,
+            secondaryMuscles: secondary,
+            instructions: instructions
+        )
+    }
+
+    /// Validates an exercise for one diary day. The entry's id is chosen here so confirming the
+    /// card can never append it twice.
+    private func addToDayProposal(arguments: [String: Any]) throws -> CoachExerciseProposal {
+        let catalogID = Self.proposalText(arguments["catalog_id"])
+        guard !catalogID.isEmpty else { throw ProposalArgumentError(message: "catalog_id is required.") }
+        guard let item = exerciseLibrary.first(where: { $0.id == catalogID }) else {
+            throw ProposalArgumentError(
+                message: "Unknown catalog_id \"\(catalogID)\". Call search_exercise_library and use a catalog_id from its results."
+            )
+        }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let dateText = Self.proposalText(arguments["date"])
+        var day = today
+        if !dateText.isEmpty {
+            guard let parsed = Self.parseDate(dateText) else {
+                throw ProposalArgumentError(message: "date must be an ISO date yyyy-MM-dd.")
+            }
+            day = calendar.startOfDay(for: parsed)
+        }
+        guard abs(calendar.dateComponents([.day], from: today, to: day).day ?? 0) <= 365 else {
+            throw ProposalArgumentError(message: "date must be within one year of today.")
+        }
+        let sets = try Self.wholeNumber(arguments["sets"], field: "sets", range: 1...12)
+        let reps = try Self.wholeNumber(arguments["reps"], field: "reps", range: 1...999)
+        let minutes = try Self.wholeNumber(arguments["duration_minutes"], field: "duration_minutes", range: 1...1_440)
+        if day > today, reps != nil || minutes != nil {
+            throw ProposalArgumentError(
+                message: "reps and duration_minutes record performed work, so they can only be used for today or an earlier date. For a future date, propose sets only."
+            )
+        }
+        if item.category.caseInsensitiveCompare("cardio") == .orderedSame, sets != nil || reps != nil {
+            throw ProposalArgumentError(message: "\(item.name) is cardio: use duration_minutes instead of sets or reps.")
+        }
+        return CoachExerciseProposal(
+            id: UUID().uuidString,
+            kind: .addToDay,
+            name: item.name,
+            itemID: item.id,
+            category: Self.libraryMetadata(item.category),
+            equipment: Self.libraryMetadata(item.rawEquipment),
+            primaryMuscles: item.primaryMuscles,
+            dateKey: CoachExerciseProposal.dateKey(for: day),
+            sets: sets,
+            reps: reps,
+            durationMinutes: minutes,
+            entryID: UUID()
+        )
+    }
+
+    private func proposalResult(_ proposal: CoachExerciseProposal) -> String {
+        var details: [String: Any] = [
+            "type": proposal.kind.rawValue,
+            "name": proposal.name,
+        ]
+        switch proposal.kind {
+        case .customExercise:
+            details["category"] = proposal.category ?? NSNull()
+            details["equipment"] = proposal.equipment ?? NSNull()
+            details["primary_muscles"] = proposal.primaryMuscles
+            details["secondary_muscles"] = proposal.secondaryMuscles
+            if !proposal.instructions.isEmpty { details["instructions"] = proposal.instructions }
+        case .addToDay:
+            details["catalog_id"] = proposal.itemID
+            details["date"] = proposal.dateKey ?? NSNull()
+            if let sets = proposal.sets { details["sets"] = sets }
+            if let reps = proposal.reps { details["reps"] = reps }
+            if let minutes = proposal.durationMinutes { details["duration_minutes"] = minutes }
+            let diaryKey = proposal.diaryDateKey()
+            let alreadyThere = workoutPlans.contains { plan in
+                plan.dateKey == diaryKey && plan.exercises.contains { $0.itemID == proposal.itemID }
+            }
+            if alreadyThere { details["already_in_diary_that_day"] = true }
+        }
+        return jsonString([
+            "proposal_id": proposal.id,
+            "status": "pending_user_confirmation",
+            "saved": false,
+            "proposal": details,
+            "note": "Nothing was saved. The user sees this proposal as a card under your reply with Add and Dismiss buttons, and it is saved only if they tap Add. Ask them to review the card; never say it was added or created.",
+        ])
+    }
+
+    private static func proposalText(_ value: Any?) -> String {
+        (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    /// Lines from a string (one step per line) or an array of strings.
+    private static func proposalLines(_ value: Any?) -> [String] {
+        let raw: [String]
+        if let text = value as? String {
+            raw = text.components(separatedBy: .newlines)
+        } else if let values = value as? [Any] {
+            raw = values.compactMap { $0 as? String }
+        } else {
+            raw = []
+        }
+        return raw.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
+
+    /// One library word ("body only", "olympic weightlifting"), case-insensitive, in the title
+    /// case the library shows. Nil when the argument is absent.
+    private static func libraryChoice(_ value: Any?, in values: [String], field: String, names: String) throws -> String? {
+        let text = proposalText(value)
+        guard !text.isEmpty else { return nil }
+        guard let match = values.first(where: { $0 == text.lowercased() }) else {
+            throw ProposalArgumentError(message: "\(field) must be one of: \(names).")
+        }
+        return libraryTitle(match)
+    }
+
+    /// Muscles from an array (or a comma-separated string), each one of the library's muscles.
+    private static func libraryMuscleList(_ value: Any?, field: String) throws -> [String] {
+        let raw: [String]
+        if let text = value as? String {
+            raw = text.components(separatedBy: ",")
+        } else if let values = value as? [Any] {
+            raw = values.compactMap { $0 as? String }
+        } else {
+            raw = []
+        }
+        var muscles: [String] = []
+        for entry in raw {
+            let key = entry.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !key.isEmpty else { continue }
+            guard let match = libraryMuscles.first(where: { $0 == key }) else {
+                throw ProposalArgumentError(message: "Unknown muscle \"\(entry)\" in \(field). Use: \(libraryMuscleNames).")
+            }
+            let title = libraryTitle(match)
+            if !muscles.contains(title) { muscles.append(title) }
+        }
+        return muscles
+    }
+
+    /// Matches how ExerciseLibraryItem titles catalog metadata ("middle back" → "Middle Back").
+    private static func libraryTitle(_ value: String) -> String {
+        value.split(separator: " ")
+            .map { word in
+                word.split(separator: "-", omittingEmptySubsequences: false)
+                    .map { $0.prefix(1).uppercased() + $0.dropFirst() }
+                    .joined(separator: "-")
+            }
+            .joined(separator: " ")
+    }
+
+    /// A whole number within `range`, from a JSON number or numeric string. Nil when absent.
+    private static func wholeNumber(_ value: Any?, field: String, range: ClosedRange<Int>) throws -> Int? {
+        guard let value, !(value is NSNull) else { return nil }
+        var number: Double?
+        if let text = value as? String {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty { return nil }
+            number = Double(trimmed)
+        } else if let numeric = value as? NSNumber, CFGetTypeID(numeric) != CFBooleanGetTypeID() {
+            number = numeric.doubleValue
+        }
+        guard let number, number.isFinite, number == number.rounded(),
+              number >= Double(range.lowerBound), number <= Double(range.upperBound)
+        else {
+            throw ProposalArgumentError(message: "\(field) must be a whole number from \(range.lowerBound) to \(range.upperBound).")
+        }
+        return Int(number)
     }
 
     /// Ranks library items for the coach search: whole-name matches first, then items whose

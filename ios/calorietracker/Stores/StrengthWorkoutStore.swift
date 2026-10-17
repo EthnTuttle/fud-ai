@@ -256,6 +256,18 @@ final class StrengthWorkoutStore {
         }
     }
 
+    /// Appends a prepared diary entry (a confirmed Coach proposal). The entry's id makes a
+    /// repeated call a no-op. Returns false when the diary could not be saved.
+    @discardableResult
+    func addPlannedExercise(_ exercise: StrengthPlannedExercise, on date: Date) -> Bool {
+        guard !isPersistenceBlocked else { return false }
+        if exercises(for: date).contains(where: { $0.id == exercise.id }) { return true }
+        return updatePlan(for: date) { plan in
+            guard !plan.exercises.contains(where: { $0.id == exercise.id }) else { return }
+            plan.exercises.append(exercise)
+        }
+    }
+
     func removeExercise(_ exerciseID: UUID, on date: Date) {
         guard !isPersistenceBlocked else { return }
         let removedPaths = exercises(for: date).first(where: { $0.id == exerciseID })?.imagePaths ?? []

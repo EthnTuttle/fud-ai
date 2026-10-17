@@ -146,6 +146,13 @@ class WorkoutRepository(
         }
     }
 
+    /** Appends a prepared diary entry (a confirmed Coach proposal); its id makes a repeat a no-op. */
+    suspend fun addPlannedExercise(exercise: PlannedExercise, dateKey: String) {
+        updatePlan(WorkoutDate.requireKey(dateKey)) { plan ->
+            if (plan.exercises.any { it.id == exercise.id }) plan else plan.copy(exercises = plan.exercises + exercise)
+        }
+    }
+
     suspend fun saveUserExercise(
         draft: com.apoorvdarshan.calorietracker.models.UserExerciseDraft,
         imageStore: com.apoorvdarshan.calorietracker.services.FoodImageStore,
