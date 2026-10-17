@@ -379,6 +379,15 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         }
     }
 
+    /// True for the models that run on this iPhone (Apple Intelligence and the
+    /// downloaded Gemma). Ollama is a server the user runs elsewhere.
+    var runsOnDevice: Bool {
+        switch apiFormat {
+        case .onDevice, .liteRTLocal: true
+        case .gemini, .openaiCompatible, .anthropic: false
+        }
+    }
+
     /// Short name used in “Paste X API key” hints (not the full picker label).
     var apiKeyBrandName: String {
         switch self {

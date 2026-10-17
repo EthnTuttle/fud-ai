@@ -209,10 +209,13 @@ struct OnDeviceFoodService {
         return buildFoodAnalysis(from: response.content)
     }
 
+    /// - Parameter labelText: the nutrition label section Vision read from the
+    ///   photos (#486), added after the user's note.
     static func analyzeImages(
         images: [UIImage],
         description: String? = nil,
-        progressiveMeal: Bool = false
+        progressiveMeal: Bool = false,
+        labelText: String? = nil
     ) async throws -> GeminiService.FoodAnalysis {
         try OnDeviceAIService.requireAvailable()
         guard !images.isEmpty else {
@@ -222,7 +225,8 @@ struct OnDeviceFoodService {
             return try await analyzeImagesOnIOS27(
                 images: images,
                 description: description,
-                progressiveMeal: progressiveMeal
+                progressiveMeal: progressiveMeal,
+                labelText: labelText
             )
         }
         throw OnDeviceAIError.unavailable("Food photo analysis requires iOS 27 or later.")
@@ -250,7 +254,8 @@ struct OnDeviceFoodService {
     private static func analyzeImagesOnIOS27(
         images: [UIImage],
         description: String?,
-        progressiveMeal: Bool
+        progressiveMeal: Bool,
+        labelText: String?
     ) async throws -> GeminiService.FoodAnalysis {
         let progressiveInstructions: String
         if progressiveMeal {
@@ -281,9 +286,10 @@ struct OnDeviceFoodService {
         )
 
         let response = try await session.respond(generating: FoodResult.self) {
-            """
-            Analyze the attached meal photo(s) and return accurate nutrition data for the entire meal shown.\(noteSection)
-            """
+            NutritionLabelText.prompt(
+                "Analyze the attached meal photo(s) and return accurate nutrition data for the entire meal shown.\(noteSection)",
+                adding: labelText
+            )
             for (index, image) in images.enumerated() {
                 if let cgImage = image.cgImage {
                     Attachment(cgImage)
