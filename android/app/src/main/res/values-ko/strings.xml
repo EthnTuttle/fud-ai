@@ -508,6 +508,11 @@
     <string name="settings_goal_weight">목표 체중</string>
     <string name="settings_calories">칼로리</string>
     <string name="settings_recalculate_goals">목표 다시 계산</string>
+    <string name="settings_estimated_maintenance">예상 유지 칼로리</string>
+    <string name="settings_maintenance_deficit_format">칼로리 적자: %1$,d kcal/일</string>
+    <string name="settings_maintenance_surplus_format">칼로리 잉여: %1$,d kcal/일</string>
+    <string name="settings_maintenance_close">목표가 유지 칼로리에 가깝습니다</string>
+    <string name="settings_estimated_maintenance_info">예상 유지 칼로리는 평소 하루에 소모하는 칼로리입니다. 프로필의 BMR(기초대사량)에 활동 수준을 곱해 계산합니다. 이보다 적게 먹으면 체중 감량을 위한 칼로리 적자, 많이 먹으면 체중 증가를 위한 칼로리 잉여가 됩니다. 표시되는 적자 또는 잉여는 칼로리 목표에서 이 추정치를 뺀 값입니다. 공식에 따른 추정치이므로 실제 소모량과 다를 수 있으며, 목표 재계산은 기록한 음식, 체중 추세 또는 측정된 에너지 소모를 바탕으로 목표를 정할 수도 있습니다. 이는 의학적 조언이 아닙니다.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · 자동</string>
     <string name="settings_macro_pinned_a11y">고정됨</string>
@@ -542,6 +547,22 @@
     <string name="settings_health_history_access">이전 체중 기록</string>
     <string name="settings_clear_food_log">음식 기록 지우기</string>
     <string name="settings_delete_all_data">모든 데이터 삭제</string>
+    <string name="storage_title">저장 공간</string>
+    <string name="storage_saved_photos">저장된 사진</string>
+    <string name="storage_on_device_models">기기 내 모델</string>
+    <string name="storage_cache">캐시</string>
+    <string name="storage_compress_photos">사진 압축</string>
+    <string name="storage_clear_cache">캐시 지우기</string>
+    <string name="storage_footer">사진 압축은 2048px보다 큰 사진의 크기를 영구적으로 줄입니다. 캐시 지우기는 썸네일과 다운로드한 운동 이미지를 삭제하며, 필요할 때 다시 생성됩니다. 기기 내 모델은 해당 AI 또는 음성 설정에서 삭제하세요.</string>
+    <string name="storage_compress_confirm_title">사진을 압축할까요?</string>
+    <string name="storage_compress_confirm_message">긴 변이 2048픽셀보다 큰 사진은 2048픽셀로 영구적으로 축소되어 JPEG로 저장됩니다. 더 작은 사진은 변경되지 않습니다. 이 작업은 취소할 수 없습니다.</string>
+    <string name="storage_compress_action">압축</string>
+    <string name="storage_compressing_progress">사진 압축 중… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">사진 압축 완료</string>
+    <string name="storage_compress_freed">%1$s 확보됨.</string>
+    <string name="storage_compress_nothing">압축할 사진이 없습니다.</string>
+    <string name="storage_compress_unreadable">일부 사진은 읽을 수 없어 변경하지 않았습니다.</string>
+    <string name="storage_compress_failed">일부 사진은 압축할 수 없어 변경하지 않았습니다. 기기에 여유 공간이 있는지 확인한 후 다시 시도하세요.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">음식 기록을 지울까요?</string>

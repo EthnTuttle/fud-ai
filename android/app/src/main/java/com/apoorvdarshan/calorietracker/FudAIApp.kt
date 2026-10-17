@@ -20,6 +20,8 @@ import com.apoorvdarshan.calorietracker.backup.CloudBackupCoordinator
 import com.apoorvdarshan.calorietracker.data.WeeklyChallengeRepository
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.services.NotificationService
+import com.apoorvdarshan.calorietracker.services.StorageMaintenance
+import com.apoorvdarshan.calorietracker.services.WorkoutFrameStore
 import com.apoorvdarshan.calorietracker.services.WidgetSnapshotWriter
 import com.apoorvdarshan.calorietracker.services.AdaptiveGoalResult
 import com.apoorvdarshan.calorietracker.services.DailyHealthEnergyEvidence
@@ -345,6 +347,14 @@ class AppContainer(app: FudAIApp) {
         app, prefs, imageStore, keyStore,
         pruneUnusedPhotos = { foodRepository.pruneOrphanedImages() },
     )
+    val storageMaintenance by lazy {
+        StorageMaintenance(
+            photos = imageStore,
+            workoutFrameCacheBytes = { WorkoutFrameStore.get(appContext).cacheBytes() },
+            clearWorkoutFrameCache = { WorkoutFrameStore.get(appContext).clearCache() },
+            modelBytes = localModels::storedBytes
+        )
+    }
 
     val localGemma = LocalGemmaRuntime(app, localModels)
     val localWhisper = LocalWhisperRuntime(app, localModels)

@@ -252,6 +252,10 @@ class WorkoutFrameStore private constructor(
         }
     }
 
+    /** Disk space used by downloaded frames (Settings → Storage). */
+    fun cacheBytes(): Long =
+        cacheDirectory.listFiles()?.filter { it.isFile }?.sumOf { it.length() } ?: 0L
+
     /** Deletes every cached frame (Settings → storage management, tests). */
     fun clearCache() {
         verifiedFiles.clear()

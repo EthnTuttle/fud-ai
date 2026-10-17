@@ -273,6 +273,28 @@ struct CloudBackupArchiveTests {
         }
     }
 
+    @Test func compressPhotosReplacesNothingWhileARestoreMovesPhotosIn() throws {
+        try withTemporaryDirectory { dir in
+            let store = FoodImageStore(baseURL: dir.appendingPathComponent("app", isDirectory: true))
+            let originals = ["a.jpg": Data([1, 2]), "b.jpg": Data([3])]
+            let zip = dir.appendingPathComponent("backup.zip")
+            try CloudBackupArchive.pack(to: zip, values: sampleValues, photos: try writePhotos(originals, in: dir), exportedAt: exportedAt, appVersion: appVersion)
+            let folder = try #require(store.photoFolderURL)
+
+            var duringRestore = StoredPhotoCompressor.Result()
+            try CloudBackupService.restorePhotos(from: CloudBackupArchive.Reader(url: zip), into: store) {
+                duringRestore = StoredPhotoCompressor.compressPhotos(in: folder)
+            }
+
+            // Both photos were reached and left alone; outside a restore they are examined.
+            #expect(duringRestore == StoredPhotoCompressor.Result(failedCount: 2))
+            #expect(!StoredPhotoCompressor.isRestoring)
+            #expect(StoredPhotoCompressor.compressPhotos(in: folder) == StoredPhotoCompressor.Result(unreadableCount: 2))
+            #expect(store.load(filename: "a.jpg") == Data([1, 2]))
+            #expect(store.load(filename: "b.jpg") == Data([3]))
+        }
+    }
+
     @Test func anArchiveReadFailureLeavesThePhotosAndValuesUntouched() throws {
         try withTemporaryDirectory { dir in
             let store = FoodImageStore(baseURL: dir.appendingPathComponent("app", isDirectory: true))
