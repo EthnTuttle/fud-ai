@@ -13,6 +13,8 @@ final class StrengthWorkoutStore {
         var customActivities: [StrengthPlannedExercise]?
         /// User-created strength exercises (device-local templates).
         var userExercises: [StrengthPlannedExercise]?
+        /// Saved routines. Optional so diaries saved before routines still decode.
+        var routines: [StrengthWorkoutRoutine]?
     }
 
     static let defaultStorageKey = "fudai.workouts.diary.state.v1"
@@ -23,6 +25,7 @@ final class StrengthWorkoutStore {
     private(set) var preferences = StrengthWorkoutPreferences()
     private(set) var customActivities: [StrengthPlannedExercise] = []
     private(set) var userExercises: [StrengthPlannedExercise] = []
+    private(set) var routines: [StrengthWorkoutRoutine] = []
 
     private var cachedExerciseLibrary: ExerciseLibraryService?
     private var exerciseLibraryFingerprint: Int = 0
@@ -399,6 +402,61 @@ final class StrengthWorkoutStore {
         }
     }
 
+    /// Routines in name order, for the routine list.
+    var sortedRoutines: [StrengthWorkoutRoutine] {
+        routines.sorted {
+            let order = $0.name.localizedStandardCompare($1.name)
+            return order == .orderedSame ? $0.createdAt < $1.createdAt : order == .orderedAscending
+        }
+    }
+
+    /// Saves the day's exercise list, with its planned sets, reps and loads, as
+    /// a named routine. Returns nil for an empty day or name, or when the diary
+    /// could not be saved.
+    @discardableResult
+    func saveRoutine(named name: String, from date: Date, now: Date = .now) -> StrengthWorkoutRoutine? {
+        guard !isPersistenceBlocked else { return nil }
+        let trimmedName = StrengthWorkoutRoutinePlanner.sanitizedName(name)
+        let templates = StrengthWorkoutRoutinePlanner.template(from: exercises(for: date))
+        guard !trimmedName.isEmpty, !templates.isEmpty else { return nil }
+        let routine = StrengthWorkoutRoutine(name: trimmedName, exercises: templates, createdAt: now)
+        guard commit({ routines.append(routine) }) else { return nil }
+        return routine
+    }
+
+    @discardableResult
+    func renameRoutine(_ id: UUID, to name: String) -> Bool {
+        let trimmedName = StrengthWorkoutRoutinePlanner.sanitizedName(name)
+        guard !trimmedName.isEmpty, routines.contains(where: { $0.id == id }) else { return false }
+        return commit {
+            guard let index = routines.firstIndex(where: { $0.id == id }) else { return }
+            routines[index].name = trimmedName
+        }
+    }
+
+    func deleteRoutine(_ id: UUID) {
+        guard !isPersistenceBlocked else { return }
+        let removedPaths = routines.first(where: { $0.id == id })?.exercises.flatMap(\.imagePaths) ?? []
+        guard commit({ routines.removeAll { $0.id == id } }) else { return }
+        removedPaths
+            .filter { !referencesUserExerciseImage($0) }
+            .forEach { FoodImageStore.shared.delete(filename: $0) }
+    }
+
+    /// Starts the selected day from a routine: its exercises are appended, and
+    /// entries already on the day keep every logged set (see
+    /// `StrengthWorkoutRoutinePlanner.merged`). Returns false when nothing was saved.
+    @discardableResult
+    func applyRoutine(_ id: UUID, to date: Date) -> Bool {
+        guard !isPersistenceBlocked,
+              let routine = routines.first(where: { $0.id == id }),
+              !routine.exercises.isEmpty
+        else { return false }
+        return updatePlan(for: date) { plan in
+            plan.exercises = StrengthWorkoutRoutinePlanner.merged(day: plan.exercises, routine: routine.exercises)
+        }
+    }
+
     func copyPlan(from sourceDate: Date, to targetDate: Date, includeSetDetails: Bool = false) {
         let source = exercises(for: sourceDate)
         guard !source.isEmpty else { return }
@@ -661,6 +719,10 @@ final class StrengthWorkoutStore {
             exercise.imagePaths.forEach { FoodImageStore.shared.delete(filename: $0) }
         }
         userExercises = []
+        routines.forEach { routine in
+            routine.exercises.flatMap(\.imagePaths).forEach { FoodImageStore.shared.delete(filename: $0) }
+        }
+        routines = []
         preferences = StrengthWorkoutPreferences()
     }
 
@@ -757,6 +819,9 @@ final class StrengthWorkoutStore {
     private func referencesUserExerciseImage(_ filename: String) -> Bool {
         if userExercises.contains(where: { $0.imagePaths.contains(filename) }) { return true }
         if customActivities.contains(where: { $0.imagePaths.contains(filename) }) { return true }
+        if routines.contains(where: { routine in
+            routine.exercises.contains { $0.imagePaths.contains(filename) }
+        }) { return true }
         return dayPlans.values.contains { plan in
             plan.exercises.contains { $0.imagePaths.contains(filename) }
         }
@@ -824,7 +889,8 @@ final class StrengthWorkoutStore {
             savedExerciseIDs: savedExerciseIDs,
             preferences: preferences,
             customActivities: customActivities,
-            userExercises: userExercises
+            userExercises: userExercises,
+            routines: routines
         )
     }
 
@@ -834,6 +900,7 @@ final class StrengthWorkoutStore {
         savedExerciseIDs = state.savedExerciseIDs
         customActivities = state.customActivities ?? []
         userExercises = state.userExercises ?? []
+        routines = state.routines ?? []
         preferences = state.preferences
     }
 

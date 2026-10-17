@@ -6751,6 +6751,7 @@ struct ProfileView: View {
                         waterStore.clear()
                         fastingStore.clear()
                         strengthWorkoutStore.clearAll()
+                        WorkoutRestTimerController.shared.skip()
                         importedHealthWorkoutStore.clearAll()
                         FoodImageStore.shared.deleteAll()
                         notificationManager.cancelAllNotifications()

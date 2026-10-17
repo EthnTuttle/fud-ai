@@ -45,6 +45,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
@@ -180,6 +181,10 @@ internal fun WorkoutDiaryScreen(
     var workoutVoiceVisible by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var workoutTranscript by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     var copySheetVisible by remember { mutableStateOf(false) }
+    var routinesSheetVisible by remember { mutableStateOf(false) }
+    var saveRoutineVisible by remember { mutableStateOf(false) }
+    val restTimer by container.workoutRestTimer.timer.collectAsState()
+    val restAvailable = state.isRestAvailable()
     var historyRequest by remember { mutableStateOf<WorkoutExerciseHistoryRequest?>(null) }
     var addMenuExpanded by remember { mutableStateOf(false) }
     var outdoorActivitySheet by remember { mutableStateOf<OutdoorActivityKind?>(null) }
@@ -254,7 +259,8 @@ internal fun WorkoutDiaryScreen(
             modifier = Modifier.fillMaxSize().imePadding().padding(bottom = 8.dp),
             contentPadding = PaddingValues(
                 start = 16.dp,
-                top = 64.dp,
+                // Room for the pinned rest countdown while it runs.
+                top = if (restTimer != null) 136.dp else 64.dp,
                 end = 16.dp
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -386,6 +392,10 @@ internal fun WorkoutDiaryScreen(
                             onWeight = { setId, value -> viewModel.updateWeight(exercise.id, setId, value) },
                             onReps = { setId, value -> viewModel.updateReps(exercise.id, setId, value) },
                             onRpe = { setId, value -> viewModel.updateRpe(exercise.id, setId, value) },
+                            restingSetId = restTimer?.takeIf { it.exerciseId == exercise.id }?.setId,
+                            onStartRest = if (restAvailable) {
+                                { setId -> viewModel.startRest(exercise.id, setId) }
+                            } else null,
                             onTimerAction = { viewModel.updateTimer(exercise.id, it) },
                             onEffort = { viewModel.setTimerIntensity(exercise.id, it) }
                         )
@@ -396,6 +406,24 @@ internal fun WorkoutDiaryScreen(
             // Real scrollable space lets the final set move clear of the IME.
             item(key = "workout-extra-space") {
                 Spacer(Modifier.height(BottomNavScrollPadding + 100.dp))
+            }
+        }
+
+        // Pinned at the top so it stays visible above the keyboard while the next set is typed.
+        restTimer?.let { timer ->
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .padding(top = 60.dp)
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+            ) {
+                WorkoutRestTimerBar(
+                    timer = timer,
+                    onExtend = viewModel::extendRest,
+                    onSkip = viewModel::skipRest
+                )
             }
         }
 
@@ -477,6 +505,24 @@ internal fun WorkoutDiaryScreen(
                             copySheetVisible = true
                         }
                     )
+                    SheetGlassDropdownMenuItem(
+                        label = stringResource(R.string.workout_routine_start),
+                        leadingIcon = Icons.AutoMirrored.Outlined.ListAlt,
+                        onClick = {
+                            addMenuExpanded = false
+                            routinesSheetVisible = true
+                        }
+                    )
+                    if (state.exercises.isNotEmpty()) {
+                        SheetGlassDropdownMenuItem(
+                            label = stringResource(R.string.workout_routine_save),
+                            leadingIcon = Icons.Filled.Save,
+                            onClick = {
+                                addMenuExpanded = false
+                                saveRoutineVisible = true
+                            }
+                        )
+                    }
                     SheetGlassDropdownMenuItem(
                         label = "Saved",
                         leadingIcon = Icons.Filled.Bookmark,
@@ -600,6 +646,31 @@ internal fun WorkoutDiaryScreen(
                 copySheetVisible = false
             },
             onDismiss = { copySheetVisible = false }
+        )
+    }
+
+    if (routinesSheetVisible) {
+        WorkoutRoutinesSheet(
+            routines = state.routines,
+            onApply = { routine ->
+                viewModel.applyRoutine(routine.id)
+                routinesSheetVisible = false
+            },
+            onRename = { routine, name -> viewModel.renameRoutine(routine.id, name) },
+            onDelete = { routine -> viewModel.deleteRoutine(routine.id) },
+            onDismiss = { routinesSheetVisible = false }
+        )
+    }
+
+    if (saveRoutineVisible) {
+        WorkoutRoutineNameDialog(
+            title = stringResource(R.string.workout_routine_save_title),
+            message = stringResource(R.string.workout_routine_save_message),
+            onSave = { name ->
+                viewModel.saveRoutine(name)
+                saveRoutineVisible = false
+            },
+            onDismiss = { saveRoutineVisible = false }
         )
     }
 
@@ -1159,7 +1230,11 @@ private fun WorkoutExerciseCard(
     onReps: (UUID, String) -> Unit,
     onRpe: (UUID, String) -> Unit,
     onTimerAction: (ExerciseTimerAction) -> Unit,
-    onEffort: (WorkoutIntensity) -> Unit
+    onEffort: (WorkoutIntensity) -> Unit,
+    /** The set whose rest is counting down, when it belongs to this exercise. */
+    restingSetId: UUID? = null,
+    /** Null when rest is unavailable (rest timer off, or not today's log). */
+    onStartRest: ((UUID) -> Unit)? = null
 ) {
     FudGlassSurface(
         modifier = modifier.fillMaxWidth(),
@@ -1318,7 +1393,9 @@ private fun WorkoutExerciseCard(
                             rpeScale = set.rpeScale ?: rpeScale,
                             onWeight = { onWeight(set.id, it) },
                             onReps = { onReps(set.id, it) },
-                            onRpe = { onRpe(set.id, it) }
+                            onRpe = { onRpe(set.id, it) },
+                            isResting = restingSetId == set.id,
+                            onStartRest = onStartRest?.let { start -> { start(set.id) } }
                         )
                     }
                     if (index < exercise.sets.lastIndex) {
@@ -1472,7 +1549,9 @@ internal fun WorkoutSetRow(
     rpeScale: WorkoutRpeScale,
     onWeight: (String) -> Unit,
     onReps: (String) -> Unit,
-    onRpe: (String) -> Unit
+    onRpe: (String) -> Unit,
+    isResting: Boolean = false,
+    onStartRest: (() -> Unit)? = null
 ) {
     val focusManager = LocalFocusManager.current
     Row(
@@ -1521,6 +1600,9 @@ internal fun WorkoutSetRow(
             imeAction = ImeAction.Done,
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
+        if (onStartRest != null) {
+            WorkoutRestSetButton(setNumber = index + 1, isResting = isResting, onClick = onStartRest)
+        }
     }
 }
 

@@ -191,7 +191,9 @@ data class WorkoutPreferences(
     val customSplit: String = "",
     val equipment: Set<String> = emptySet(),
     val rpeScale: WorkoutRpeScale = WorkoutRpeScale.STRENGTH,
-    val strength: WorkoutStrengthNumbers = WorkoutStrengthNumbers()
+    val strength: WorkoutStrengthNumbers = WorkoutStrengthNumbers(),
+    /** Rest countdown after a logged set, in seconds (0 = off). Older diaries use the default. */
+    val restTimerSeconds: Int = WorkoutRestTimerSetting.DEFAULT_SECONDS
 ) {
     /** Keeps legacy fields decodable while enforcing the final selectable settings. */
     fun sanitized(): WorkoutPreferences = copy(
@@ -199,6 +201,7 @@ data class WorkoutPreferences(
         frequencyDays = frequencyDays.coerceIn(1, 7),
         split = if (split == WorkoutSplit.CUSTOM) WorkoutSplit.FULL_BODY else split,
         customSplit = "",
+        restTimerSeconds = WorkoutRestTimerSetting.sanitized(restTimerSeconds),
         strength = WorkoutStrengthNumbers(
             benchPressKg = validLoad(strength.benchPressKg),
             squatKg = validLoad(strength.squatKg),
@@ -440,7 +443,9 @@ data class WorkoutPersistedState(
      * until a subsequent owned-record read proves the sample is no longer visible. */
     val pendingHealthDeleteIds: Set<String> = emptySet(),
     /** Failed/deferred health writes can be retried without losing local calculations. */
-    val pendingHealthUpsertIds: Set<String> = emptySet()
+    val pendingHealthUpsertIds: Set<String> = emptySet(),
+    /** Saved routines; diaries written before routines decode with none. */
+    val routines: List<WorkoutRoutine> = emptyList()
 ) {
     fun sanitized(): WorkoutPersistedState = if (version != CurrentVersion) {
         WorkoutPersistedState()

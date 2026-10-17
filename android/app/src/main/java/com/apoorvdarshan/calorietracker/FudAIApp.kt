@@ -23,12 +23,16 @@ import com.apoorvdarshan.calorietracker.services.NotificationService
 import com.apoorvdarshan.calorietracker.services.StorageMaintenance
 import com.apoorvdarshan.calorietracker.services.WorkoutFrameStore
 import com.apoorvdarshan.calorietracker.services.WidgetSnapshotWriter
+import com.apoorvdarshan.calorietracker.services.WorkoutRestAlarms
+import com.apoorvdarshan.calorietracker.services.WorkoutRestTimerController
+import com.apoorvdarshan.calorietracker.services.SharedPreferencesWorkoutRestTimerStore
 import com.apoorvdarshan.calorietracker.services.AdaptiveGoalResult
 import com.apoorvdarshan.calorietracker.services.DailyHealthEnergyEvidence
 import com.apoorvdarshan.calorietracker.services.GoalEvidence
 import com.apoorvdarshan.calorietracker.services.GoalEvidenceBuilder
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.CurrentMealSchedule
+import com.apoorvdarshan.calorietracker.models.WorkoutRestTimer
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.services.ai.ChatService
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
@@ -342,6 +346,17 @@ class AppContainer(app: FudAIApp) {
     val waterRepository = WaterRepository(prefs)
     val fastingRepository = FastingRepository(prefs)
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
+    /** The rest countdown after a logged set; main-thread scoped so the UI and its end agree. */
+    val workoutRestTimer = WorkoutRestTimerController(
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+        alarms = object : WorkoutRestAlarms {
+            override fun schedule(timer: WorkoutRestTimer) =
+                notifications.scheduleWorkoutRest(timer.endsAt.toEpochMilli(), timer.exerciseName)
+
+            override fun cancel() = notifications.cancelWorkoutRest()
+        },
+        store = SharedPreferencesWorkoutRestTimerStore(app)
+    )
     val weeklyChallengeRepository = WeeklyChallengeRepository(app, keyStore)
     val cloudBackup = CloudBackupCoordinator(
         app, prefs, imageStore, keyStore,

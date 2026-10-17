@@ -87,6 +87,8 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        // A rest that ends while the app is visible is announced in-app, not by notification.
+        (application as FudAIApp).container.workoutRestTimer.setAppInForeground(true)
         if (!(application as FudAIApp).backgroundServicesEnabled) return
         lifecycleScope.launch {
             // Adaptive Goals auto-runs the full goal calculation about once a week (Energy Burn,
@@ -107,6 +109,7 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        (application as FudAIApp).container.workoutRestTimer.setAppInForeground(false)
         if (!(application as FudAIApp).backgroundServicesEnabled) return
         lifecycleScope.launch {
             runCatching { (application as FudAIApp).container.cloudBackup.autoBackupIfNeeded() }
