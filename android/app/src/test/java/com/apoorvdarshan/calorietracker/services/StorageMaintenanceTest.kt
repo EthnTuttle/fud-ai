@@ -102,6 +102,50 @@ class StorageMaintenanceTest {
     }
 
     @Test
+    fun compressionReplacesNothingWhileARestoreIsStagingOrMovingPhotosIn() {
+        val original = "not an image".toByteArray()
+        File(photoDir, "meal.jpg").writeBytes(original)
+
+        photos.startStaging()
+        // Skipped before it is even decoded, and reported so the user can run it again.
+        assertEquals(
+            FoodImageStore.PhotoCompressionResult(compressedCount = 0, unreadableCount = 0, bytesSaved = 0, failedCount = 1),
+            photos.compressExistingPhotos()
+        )
+        assertArrayEquals(original, File(photoDir, "meal.jpg").readBytes())
+        photos.discardStaged()
+
+        // Once the restore ends the photo is examined again (here it does not decode).
+        assertEquals(
+            FoodImageStore.PhotoCompressionResult(compressedCount = 0, unreadableCount = 1, bytesSaved = 0),
+            photos.compressExistingPhotos()
+        )
+        assertArrayEquals(original, File(photoDir, "meal.jpg").readBytes())
+    }
+
+    @Test
+    fun compressionOnlyExaminesPlainPhotoNamesDirectlyInsideThePhotoFolder() {
+        val bytes = "not an image".toByteArray()
+        File(photoDir, "meal.jpg").writeBytes(bytes)
+        File(photoDir, ".hidden.jpg").writeBytes(bytes)
+        File(photoDir, "notes.txt").writeBytes(bytes)
+        File(photoDir, "nested").mkdirs()
+        File(photoDir, "nested/inner.jpg").writeBytes(bytes)
+        val outside = File(root, "outside.jpg").apply { writeBytes(bytes) }
+        Files.createSymbolicLink(File(photoDir, "link.jpg").toPath(), outside.toPath())
+        val progress = mutableListOf<Pair<Int, Int>>()
+
+        val result = photos.compressExistingPhotos { done, total -> progress += done to total }
+
+        assertEquals(listOf(1 to 1), progress)
+        assertEquals(1, result.unreadableCount)
+        for (file in listOf("meal.jpg", ".hidden.jpg", "notes.txt", "nested/inner.jpg")) {
+            assertArrayEquals(file, bytes, File(photoDir, file).readBytes())
+        }
+        assertArrayEquals(bytes, outside.readBytes())
+    }
+
+    @Test
     fun anInterruptedCompressionIsReportedAsFailedNotAsNothingToDo() {
         val storage = maintenance(compress = { onProgress ->
             onProgress(1, 3)

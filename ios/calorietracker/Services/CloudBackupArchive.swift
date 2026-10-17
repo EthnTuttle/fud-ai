@@ -29,13 +29,38 @@ enum CloudBackupPolicy {
         return true
     }
 
-    static func safePhotoName(_ name: String) -> String? {
-        let base = (name as NSString).lastPathComponent
-        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-"))
-        guard base.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
-        let ext = (base as NSString).pathExtension.lowercased()
-        guard ["jpg", "jpeg", "png", "webp"].contains(ext) else { return nil }
-        return base
+    /// Longest photo file name a backup carries; real ones are a UUID and an extension.
+    nonisolated static let maxPhotoNameLength = 128
+
+    nonisolated private static let photoNameCharacters = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-"
+    )
+
+    /// `name` if it is a plain photo file name, else nil: ASCII letters, digits,
+    /// ".", "_" and "-" only, a photo extension, at most `maxPhotoNameLength`
+    /// characters, no leading dot and no "..". A name with a directory part,
+    /// relative or absolute, is rejected rather than shortened. Nonisolated so
+    /// Compress Photos can apply the same rule off the main actor.
+    nonisolated static func safePhotoName(_ name: String) -> String? {
+        guard !name.isEmpty,
+              name.utf8.count <= maxPhotoNameLength,
+              !name.hasPrefix("."),
+              !name.contains(".."),
+              name.unicodeScalars.allSatisfy({ photoNameCharacters.contains($0) })
+        else { return nil }
+        let ext = (name as NSString).pathExtension.lowercased()
+        guard ["jpg", "jpeg", "png", "webp"].contains(ext),
+              (name as NSString).lastPathComponent == name
+        else { return nil }
+        return name
+    }
+
+    /// The file name a restore writes for archive entry `entryName`, or nil if
+    /// the entry must be skipped. Only `photos/<plain photo name>` qualifies,
+    /// so an entry name can never point a restore outside the photo folder.
+    static func restorablePhotoName(_ entryName: String) -> String? {
+        guard entryName.hasPrefix(photosDirectory) else { return nil }
+        return safePhotoName(String(entryName.dropFirst(photosDirectory.count)))
     }
 }
 
@@ -78,8 +103,20 @@ struct CloudBackupValue: Codable {
     static func stringArray(_ v: [String]) -> CloudBackupValue { CloudBackupValue(t: "ss", ss: v) }
 }
 
+/// A photo on disk. Only its size is read up front; its bytes are loaded one
+/// photo at a time while the archive is written.
+struct CloudBackupPhotoFile {
+    var url: URL
+    var size: Int
+}
+
 enum CloudBackupArchive {
     static func contentHash(values: [String: CloudBackupValue], photos: [String: Data]) -> String {
+        contentHash(values: values, photoSizes: photos.mapValues(\.count))
+    }
+
+    /// Photos count by name and byte size only, so the hash never needs photo bytes.
+    static func contentHash(values: [String: CloudBackupValue], photoSizes: [String: Int]) -> String {
         var canonical = ""
         for key in values.keys.sorted() {
             guard let value = values[key] else { continue }
@@ -94,54 +131,80 @@ enum CloudBackupArchive {
             }
             canonical += "\n"
         }
-        for name in photos.keys.sorted() {
-            canonical += "photo:\(name):\(photos[name]?.count ?? 0)\n"
+        for name in photoSizes.keys.sorted() {
+            canonical += "photo:\(name):\(photoSizes[name] ?? 0)\n"
         }
         return sha256(Data(canonical.utf8))
     }
 
+    /// Writes the backup zip to `destination`: backup.json, then photos/<name>
+    /// sorted by name, loading one photo at a time so large photo libraries
+    /// never sit in memory together.
     static func pack(
+        to destination: URL,
         values: [String: CloudBackupValue],
-        photos: [String: Data],
+        photos: [String: CloudBackupPhotoFile],
         exportedAt: String,
         appVersion: String
-    ) throws -> Data {
+    ) throws {
         let filtered = values.filter { CloudBackupPolicy.include($0.key) && !CloudBackupPolicy.excludedKeys.contains($0.key) }
-        let safePhotos = Dictionary(uniqueKeysWithValues: photos.compactMap { name, data in
-            CloudBackupPolicy.safePhotoName(name).map { ($0, data) }
-        })
+        let safePhotos = Dictionary(photos.compactMap { name, file in
+            CloudBackupPolicy.safePhotoName(name).map { ($0, file) }
+        }, uniquingKeysWith: { first, _ in first })
         let document = CloudBackupDocument(
             format: CloudBackupPolicy.format,
             formatVersion: CloudBackupPolicy.version,
             exportedAt: exportedAt,
             appVersion: appVersion,
             platform: "ios",
-            contentSha256: contentHash(values: filtered, photos: safePhotos),
+            contentSha256: contentHash(values: filtered, photoSizes: safePhotos.mapValues(\.size)),
             payload: CloudBackupPayload(values: filtered)
         )
         let payload = try JSONEncoder().encode(document)
-        var files: [(String, Data)] = [(CloudBackupPolicy.payloadName, payload)]
-        for (name, data) in safePhotos.sorted(by: { $0.key < $1.key }) {
-            files.append((CloudBackupPolicy.photosDirectory + name, data))
-        }
-        return CloudBackupZip.pack(files: files)
-    }
-
-    static func unpack(_ data: Data) throws -> (CloudBackupDocument, [String: Data]) {
-        let files = try CloudBackupZip.unpack(data)
-        guard let payload = files[CloudBackupPolicy.payloadName] else {
-            throw CloudBackupError.missingPayload
-        }
-        let document = try JSONDecoder().decode(CloudBackupDocument.self, from: payload)
-        guard document.format == CloudBackupPolicy.format else { throw CloudBackupError.invalidFormat }
-        guard document.formatVersion <= CloudBackupPolicy.version else { throw CloudBackupError.needsNewerApp }
-        var photos: [String: Data] = [:]
-        for (name, bytes) in files where name.hasPrefix(CloudBackupPolicy.photosDirectory) {
-            if let safe = CloudBackupPolicy.safePhotoName(name) {
-                photos[safe] = bytes
+        var zip = try CloudBackupZip.Writer(url: destination)
+        defer { zip.close() }
+        try zip.add(name: CloudBackupPolicy.payloadName, data: payload)
+        for (name, file) in safePhotos.sorted(by: { $0.key < $1.key }) {
+            try autoreleasepool {
+                // A snapshotted photo that can no longer be read fails the backup.
+                // The hash already lists it, so a backup saved without it would
+                // count as unchanged and never be retried.
+                let data = try Data(contentsOf: file.url)
+                try zip.add(name: CloudBackupPolicy.photosDirectory + name, data: data)
             }
         }
-        return (document, photos)
+        try zip.finish()
+    }
+
+    /// Reads a backup archive from disk. backup.json is validated up front;
+    /// photos are loaded one at a time by `forEachPhoto`.
+    final class Reader {
+        let document: CloudBackupDocument
+        private let zip: CloudBackupZip.Reader
+
+        init(url: URL) throws {
+            zip = try CloudBackupZip.Reader(url: url)
+            guard let payload = try zip.data(named: CloudBackupPolicy.payloadName) else {
+                throw CloudBackupError.missingPayload
+            }
+            document = try JSONDecoder().decode(CloudBackupDocument.self, from: payload)
+            guard document.format == CloudBackupPolicy.format else { throw CloudBackupError.invalidFormat }
+            guard document.formatVersion <= CloudBackupPolicy.version else { throw CloudBackupError.needsNewerApp }
+        }
+
+        /// Hands each restorable photo to `body` under its plain file name;
+        /// entries `CloudBackupPolicy.restorablePhotoName` rejects are skipped.
+        func forEachPhoto(_ body: (_ name: String, _ data: Data) throws -> Void) throws {
+            for name in zip.names {
+                guard let safe = CloudBackupPolicy.restorablePhotoName(name) else { continue }
+                // Drain per photo: a long restore loop on the main thread otherwise
+                // keeps every photo's autoreleased buffers alive until it ends.
+                try autoreleasepool {
+                    guard let data = try zip.data(named: name) else { return }
+                    try body(safe, data)
+                }
+            }
+        }
     }
 
     static func sha256(_ data: Data) -> String {
@@ -167,13 +230,31 @@ enum CloudBackupError: LocalizedError, Equatable {
 }
 
 /// Uncompressed ZIP (store method) so we don't need a third-party zip library.
+/// Entries stream to and from a file one at a time instead of building the
+/// whole archive in memory; the bytes on disk match the original layout.
 enum CloudBackupZip {
-    static func pack(files: [(String, Data)]) -> Data {
-        var locals = Data()
-        var central = Data()
-        var offset: UInt32 = 0
-        for (name, data) in files {
+    struct Writer {
+        private let handle: FileHandle
+        private var central = Data()
+        private var offset = 0
+        private var count = 0
+
+        init(url: URL) throws {
+            guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            handle = try FileHandle(forWritingTo: url)
+        }
+
+        mutating func add(name: String, data: Data) throws {
             let nameData = Data(name.utf8)
+            let localCount = 30 + nameData.count + data.count
+            // No ZIP64 records in this format: fail instead of overflowing its
+            // 16-bit entry count or 32-bit sizes and offsets.
+            guard count < Int(UInt16.max),
+                  nameData.count <= Int(UInt16.max),
+                  offset + localCount <= Int(UInt32.max)
+            else { throw CocoaError(.fileWriteUnknown) }
             let crc = crc32(data)
             var local = Data()
             local.append(contentsOf: u32(0x04034b50))
@@ -188,8 +269,8 @@ enum CloudBackupZip {
             local.append(contentsOf: u16(UInt16(nameData.count)))
             local.append(contentsOf: u16(0))
             local.append(nameData)
-            local.append(data)
-            locals.append(local)
+            try handle.write(contentsOf: local)
+            try handle.write(contentsOf: data)
 
             var dir = Data()
             dir.append(contentsOf: u32(0x02014b50))
@@ -208,46 +289,87 @@ enum CloudBackupZip {
             dir.append(contentsOf: u16(0))
             dir.append(contentsOf: u16(0))
             dir.append(contentsOf: u32(0))
-            dir.append(contentsOf: u32(offset))
+            dir.append(contentsOf: u32(UInt32(offset)))
             dir.append(nameData)
             central.append(dir)
-            offset += UInt32(local.count)
+            offset += localCount
+            count += 1
         }
-        var end = Data()
-        end.append(contentsOf: u32(0x06054b50))
-        end.append(contentsOf: u16(0))
-        end.append(contentsOf: u16(0))
-        end.append(contentsOf: u16(UInt16(files.count)))
-        end.append(contentsOf: u16(UInt16(files.count)))
-        end.append(contentsOf: u32(UInt32(central.count)))
-        end.append(contentsOf: u32(offset))
-        end.append(contentsOf: u16(0))
-        var out = Data()
-        out.append(locals)
-        out.append(central)
-        out.append(end)
-        return out
+
+        /// Writes the central directory and end record. `close()` still has to run.
+        func finish() throws {
+            guard central.count <= Int(UInt32.max) else { throw CocoaError(.fileWriteUnknown) }
+            var end = Data()
+            end.append(contentsOf: u32(0x06054b50))
+            end.append(contentsOf: u16(0))
+            end.append(contentsOf: u16(0))
+            end.append(contentsOf: u16(UInt16(count)))
+            end.append(contentsOf: u16(UInt16(count)))
+            end.append(contentsOf: u32(UInt32(central.count)))
+            end.append(contentsOf: u32(UInt32(offset)))
+            end.append(contentsOf: u16(0))
+            try handle.write(contentsOf: central)
+            try handle.write(contentsOf: end)
+        }
+
+        func close() {
+            try? handle.close()
+        }
     }
 
-    static func unpack(_ data: Data) throws -> [String: Data] {
-        var result: [String: Data] = [:]
-        var i = 0
-        while i + 30 <= data.count {
-            let sig = readU32(data, i)
-            if sig == 0x02014b50 || sig == 0x06054b50 { break }
-            guard sig == 0x04034b50 else { break }
-            let nameLen = Int(readU16(data, i + 26))
-            let extraLen = Int(readU16(data, i + 28))
-            let compact = Int(readU32(data, i + 18))
-            let nameStart = i + 30
-            let nameEnd = nameStart + nameLen
-            guard nameEnd + extraLen + compact <= data.count else { break }
-            let name = String(data: data.subdata(in: nameStart..<nameEnd), encoding: .utf8) ?? ""
-            let dataStart = nameEnd + extraLen
-            result[name] = data.subdata(in: dataStart..<(dataStart + compact))
-            i = dataStart + compact
+    /// Scans local headers the way the original in-memory unpack did, keeping
+    /// only offsets; `data(named:)` then reads one entry at a time.
+    final class Reader {
+        private struct Entry {
+            var offset: Int
+            var count: Int
         }
-        return result
+
+        private let handle: FileHandle
+        private var entries: [String: Entry] = [:]
+        /// Entry names in archive order, each listed once (a later duplicate wins, as before).
+        private(set) var names: [String] = []
+
+        init(url: URL) throws {
+            handle = try FileHandle(forReadingFrom: url)
+            let size = Int(try handle.seekToEnd())
+            var i = 0
+            while i + 30 <= size {
+                let header = try read(at: i, count: 30)
+                guard header.count == 30 else { break }
+                let sig = readU32(header, 0)
+                if sig == 0x02014b50 || sig == 0x06054b50 { break }
+                guard sig == 0x04034b50 else { break }
+                let nameLen = Int(readU16(header, 26))
+                let extraLen = Int(readU16(header, 28))
+                let compact = Int(readU32(header, 18))
+                let nameStart = i + 30
+                let nameEnd = nameStart + nameLen
+                guard nameEnd + extraLen + compact <= size else { break }
+                let name = String(data: try read(at: nameStart, count: nameLen), encoding: .utf8) ?? ""
+                let dataStart = nameEnd + extraLen
+                if entries[name] == nil { names.append(name) }
+                entries[name] = Entry(offset: dataStart, count: compact)
+                i = dataStart + compact
+            }
+        }
+
+        deinit {
+            try? handle.close()
+        }
+
+        func data(named name: String) throws -> Data? {
+            guard let entry = entries[name] else { return nil }
+            let data = try read(at: entry.offset, count: entry.count)
+            guard data.count == entry.count else { throw CocoaError(.fileReadCorruptFile) }
+            return data
+        }
+
+        private func read(at offset: Int, count: Int) throws -> Data {
+            guard count > 0 else { return Data() }
+            try handle.seek(toOffset: UInt64(offset))
+            return try handle.read(upToCount: count) ?? Data()
+        }
     }
 
     private static func u16(_ v: UInt16) -> [UInt8] {

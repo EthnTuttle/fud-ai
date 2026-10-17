@@ -232,6 +232,35 @@ class FoodImageDecoderTest {
         }
     }
 
+    @Test fun stagedRestoresStayIdenticalAndCompressionWaitsUntilTheRestoreEnds() {
+        val root = File(context.cacheDir, "storage-test-${UUID.randomUUID()}").apply { mkdirs() }
+        try {
+            val store = FoodImageStore.forTests(root)
+            val large = largeJpeg(width = 3_000, height = 1_800, orientation = 1)
+            store.file("existing.jpg").writeBytes(large)
+            val waiting = FoodImageStore.PhotoCompressionResult(0, 0, 0L, failedCount = 1)
+
+            store.startStaging()
+            assertTrue(store.stagePhoto("restored.jpg", java.io.ByteArrayInputStream(large)))
+            // Nothing is replaced while the restore is staging or moving photos in.
+            assertEquals(waiting, store.compressExistingPhotos())
+            store.beginRestore()
+            store.commitStaged()
+            assertEquals(waiting.copy(failedCount = 2), store.compressExistingPhotos())
+            store.endRestore()
+            store.discardStaged()
+
+            // Restored photos are moved in byte-identical, never downscaled.
+            assertArrayEquals(large, store.loadBytes("existing.jpg"))
+            assertArrayEquals(large, store.loadBytes("restored.jpg"))
+
+            // Once the restore has ended, a confirmed run compresses both.
+            assertEquals(2, store.compressExistingPhotos().compressedCount)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
     @Test fun photosWhoseDownscaledCopyIsNotSmallerKeepTheirBytes() {
         val root = File(context.cacheDir, "storage-test-${UUID.randomUUID()}").apply { mkdirs() }
         try {

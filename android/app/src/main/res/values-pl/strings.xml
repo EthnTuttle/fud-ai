@@ -732,6 +732,7 @@
     <string name="whats_new_v30_adaptive">Cele adaptacyjne i Spalanie energii wyszły z fazy eksperymentalnej i są domyślnie włączone przy nowych instalacjach.</string>
     <string name="whats_new_v30_widgets">Przebudowa widżetów: styl prędkościomierza na ekranie głównym, rysowany w rzeczywistym rozmiarze widżetu.</string>
     <string name="whats_new_v30_restore">Przeinstalowałeś lub zmieniłeś telefon? Dziennik jedzenia, waga i tkanka tłuszczowa przywracają się automatycznie z Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">Za mało wolnego miejsca, aby przywrócić tę kopię zapasową. Zwolnij trochę miejsca i spróbuj ponownie.</string>
     <string name="settings_fasting_tracking">Śledzenie postu</string>
     <string name="settings_fasting_goal">Domyślny cel postu</string>
     <string name="settings_fasting_goal_value">%1$d godzin</string>

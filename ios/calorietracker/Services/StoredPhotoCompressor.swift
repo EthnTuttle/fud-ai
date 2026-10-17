@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 /// background right after they are stored; existing ones only when the user confirms Compress
 /// Photos in Settings. Backup restores, migrated legacy photos and images already within the
 /// cap keep their original bytes, and so does any photo whose re-encoded copy isn't smaller.
+/// Nothing is replaced while a backup restore is staging or moving photos in.
 nonisolated enum StoredPhotoCompressor {
     /// Longest side kept for stored photos (matches `FoodImageStore.viewerMaxDimension`).
     static let maxPixelSize = 2048
@@ -18,7 +19,8 @@ nonisolated enum StoredPhotoCompressor {
         var compressedCount = 0
         var unreadableCount = 0
         /// Photos left as they were because staging or replacing the smaller copy failed
-        /// (for example when the device is out of space).
+        /// (for example when the device is out of space), or because a backup restore was
+        /// replacing photos at the time.
         var failedCount = 0
         var bytesSaved: Int64 = 0
     }
@@ -31,10 +33,28 @@ nonisolated enum StoredPhotoCompressor {
     /// of the older bytes. Held only around single file operations.
     private static let photoFileLock = NSLock()
 
+    /// Backup restores between `beginRestore` and `endRestore`. Guarded by `photoFileLock`, so
+    /// the compressor checks it in the same step as its swap.
+    nonisolated(unsafe) private static var restoresRunning = 0
+
     static func withPhotoFileLock<T>(_ body: () throws -> T) rethrows -> T {
         photoFileLock.lock()
         defer { photoFileLock.unlock() }
         return try body()
+    }
+
+    /// Brackets a backup restore, from staging its photos to deleting the ones it lacks. In
+    /// between, no photo is replaced by a compressed copy.
+    static func beginRestore() {
+        withPhotoFileLock { restoresRunning += 1 }
+    }
+
+    static func endRestore() {
+        withPhotoFileLock { restoresRunning -= 1 }
+    }
+
+    static var isRestoring: Bool {
+        withPhotoFileLock { restoresRunning > 0 }
     }
 
     /// Queues `url` (a photo `FoodImageStore` just wrote) to be capped at `maxPixelSize` with the
@@ -67,7 +87,8 @@ nonisolated enum StoredPhotoCompressor {
     /// replacement directory and swapped in only when it is smaller and the original is
     /// unchanged; files that can't be decoded, or whose copy couldn't be written, are left as
     /// they are and counted. Filenames never change, and thumbnails stay valid because both
-    /// versions decode upright.
+    /// versions decode upright. Only plain photo names directly inside `folder` (no symbolic
+    /// links) are touched, and photos reached while a backup restore runs count as failed.
     static func compressPhotos(
         in folder: URL,
         maxPixelSize: Int = maxPixelSize,
@@ -78,6 +99,7 @@ nonisolated enum StoredPhotoCompressor {
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles]
         )) ?? [])
+            .compactMap { FoodImageStore.photoURL(named: $0.lastPathComponent, inside: folder) }
             .filter { (try? $0.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
 
@@ -115,6 +137,7 @@ nonisolated enum StoredPhotoCompressor {
     }
 
     private static func compressPhoto(at url: URL, maxPixelSize: Int) -> Outcome {
+        guard !isRestoring else { return .failed }
         let fileManager = FileManager.default
         guard let before = signature(of: url) else { return .unchanged }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
@@ -138,6 +161,8 @@ nonisolated enum StoredPhotoCompressor {
             let staged = staging.appendingPathComponent(url.lastPathComponent)
             try data.write(to: staged)
             return try withPhotoFileLock { () throws -> Outcome in
+                // A restore that started while this photo was encoded owns the folder until it ends.
+                guard restoresRunning == 0 else { return .failed }
                 // Skip if the photo was deleted, restored or rewritten while it was being encoded.
                 guard signature(of: url) == before else { return .unchanged }
                 _ = try fileManager.replaceItemAt(url, withItemAt: staged)

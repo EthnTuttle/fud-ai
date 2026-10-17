@@ -33,16 +33,70 @@ struct StoredPhotoCompressorTests {
         let small = try jpegData(width: 1_200, height: 900)
         let largeName = try #require(FoodImageStore.shared.store(data: large, for: UUID()))
         let smallName = try #require(FoodImageStore.shared.store(data: small, for: UUID()))
+        defer { [largeName, smallName].forEach { FoodImageStore.shared.delete(filename: $0) } }
+        // A restore stages the backup's bytes and moves them into the photo folder as they are.
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let restoreStore = FoodImageStore(baseURL: base)
         let restoredName = "\(UUID().uuidString).jpg"
-        #expect(FoodImageStore.shared.restore(data: large, filename: restoredName) == restoredName)
-        defer { [largeName, smallName, restoredName].forEach { FoodImageStore.shared.delete(filename: $0) } }
+        let staging = try restoreStore.makeRestoreStaging()
+        defer { staging.discard() }
+        try restoreStore.stage(large, filename: restoredName, in: staging)
+        try restoreStore.moveInStagedPhotos(staging)
         // The cap is applied off the main actor right after the save.
         StoredPhotoCompressor.newPhotoQueue.sync {}
 
         let stored = try imageInfo(try #require(FoodImageStore.shared.load(filename: largeName)))
         #expect(max(stored.width, stored.height) <= StoredPhotoCompressor.maxPixelSize)
         #expect(FoodImageStore.shared.load(filename: smallName) == small)
-        #expect(FoodImageStore.shared.load(filename: restoredName) == large)
+        #expect(restoreStore.load(filename: restoredName) == large)
+    }
+
+    @Test func compressionReplacesNothingWhileABackupRestoreRuns() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let large = try jpegData(width: 3_000, height: 2_000)
+        try large.write(to: folder.appendingPathComponent("meal.jpg"))
+
+        StoredPhotoCompressor.beginRestore()
+        let duringRestore = StoredPhotoCompressor.compressPhotos(in: folder)
+        StoredPhotoCompressor.endRestore()
+
+        // Reported as failed so the user can run it again once the restore is done.
+        #expect(duringRestore == StoredPhotoCompressor.Result(failedCount: 1))
+        #expect(try Data(contentsOf: folder.appendingPathComponent("meal.jpg")) == large)
+        #expect(!StoredPhotoCompressor.isRestoring)
+        #expect(StoredPhotoCompressor.compressPhotos(in: folder).compressedCount == 1)
+    }
+
+    @Test func compressionOnlyTouchesPlainPhotoNamesDirectlyInsideTheFolder() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        let folder = base.appendingPathComponent("photos", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent("nested"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let large = try jpegData(width: 3_000, height: 2_000)
+        try large.write(to: folder.appendingPathComponent("meal.jpg"))
+        try large.write(to: folder.appendingPathComponent("notes.txt"))
+        try large.write(to: folder.appendingPathComponent("nested/inner.jpg"))
+        let outside = base.appendingPathComponent("outside.jpg")
+        try large.write(to: outside)
+        try FileManager.default.createSymbolicLink(at: folder.appendingPathComponent("link.jpg"), withDestinationURL: outside)
+        var progress: [[Int]] = []
+
+        let result = StoredPhotoCompressor.compressPhotos(in: folder) { done, total in progress.append([done, total]) }
+
+        #expect(result.compressedCount == 1)
+        #expect(progress == [[1, 1]])
+        #expect(try Data(contentsOf: folder.appendingPathComponent("meal.jpg")).count < large.count)
+        #expect(try Data(contentsOf: folder.appendingPathComponent("notes.txt")) == large)
+        #expect(try Data(contentsOf: folder.appendingPathComponent("nested/inner.jpg")) == large)
+        #expect(try Data(contentsOf: outside) == large)
+        let link = try FileManager.default.attributesOfItem(atPath: folder.appendingPathComponent("link.jpg").path)
+        #expect(link[.type] as? FileAttributeType == .typeSymbolicLink)
     }
 
     @Test func photosWhoseDownscaledCopyIsNotSmallerKeepTheirBytes() throws {

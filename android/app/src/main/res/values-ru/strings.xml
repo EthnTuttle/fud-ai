@@ -732,6 +732,7 @@
     <string name="whats_new_v30_adaptive">«Адаптивные цели» и «Расход энергии» вышли из экспериментального статуса и включены по умолчанию для новых установок.</string>
     <string name="whats_new_v30_widgets">Новые виджеты: стиль спидометра с главного экрана, отрисованный в реальном размере каждого виджета.</string>
     <string name="whats_new_v30_restore">Переустановили приложение или сменили телефон? Дневник питания, вес и процент жира теперь автоматически восстанавливаются из Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">Недостаточно свободного места, чтобы восстановить эту резервную копию. Освободите место и повторите попытку.</string>
     <string name="action_info">Инфо</string>
     <string name="action_what_if">А что если?</string>
     <string name="speech_provider_gemini">Gemini Audio</string>
