@@ -178,12 +178,19 @@ class PreferencesStore(
         key: Preferences.Key<String>,
         serializer: KSerializer<T>,
         transform: (List<T>) -> List<T>
+    ): List<T> = updateJsonListReading(key, serializer) { _, current -> transform(current) }
+
+    /** [updateJsonList] whose transform can also read other keys from the same transaction. */
+    private suspend fun <T> updateJsonListReading(
+        key: Preferences.Key<String>,
+        serializer: KSerializer<T>,
+        transform: (Preferences, List<T>) -> List<T>
     ): List<T> {
         var result: List<T> = emptyList()
         ds.edit { prefs ->
             val decoded = decodeList(prefs[key], serializer, key.name)
             preserveIfUnreadable(prefs, key, decoded)
-            result = transform(decoded.itemsOrEmpty)
+            result = transform(prefs, decoded.itemsOrEmpty)
             prefs[key] = json.encodeToString(ListSerializer(serializer), result)
         }
         return result
@@ -1352,21 +1359,28 @@ class PreferencesStore(
     suspend fun updateWeightEntries(transform: (List<WeightEntry>) -> List<WeightEntry>): List<WeightEntry> =
         updateJsonList(Keys.WEIGHT_ENTRIES, WeightEntry.serializer(), transform)
 
-    /// Ids of weight entries the user deleted, oldest first. Kept after deletion (and in
-    /// cloud backups) so a Health Connect re-import never resurrects them — another app's
-    /// record survives our delete. Comma-joined UUIDs, like [pendingNutritionHealthWrites].
-    val deletedWeightEntryIds: Flow<List<String>> = deletedIdsFlow(Keys.DELETED_WEIGHT_ENTRY_IDS)
-    suspend fun addDeletedWeightEntryId(id: String, limit: Int) =
-        addDeletedId(Keys.DELETED_WEIGHT_ENTRY_IDS, id, limit)
+    /// Remembers the id of a weight entry the user deleted, oldest first. Kept after
+    /// deletion (and in cloud backups) so a Health Connect re-import never resurrects it —
+    /// another app's record survives our delete. Comma-joined UUIDs, like
+    /// [pendingNutritionHealthWrites]. Never trimmed: each id is one deletion made by hand,
+    /// and dropping one would let that reading come back.
+    suspend fun addDeletedWeightEntryId(id: String) = addDeletedId(Keys.DELETED_WEIGHT_ENTRY_IDS, id)
 
-    private fun deletedIdsFlow(key: Preferences.Key<String>): Flow<List<String>> = ds.data.map {
-        it[key]?.split(",")?.filter { s -> s.isNotBlank() } ?: emptyList()
+    /// [updateWeightEntries] with the deleted weight ids read in the same transaction. A
+    /// deletion records its id before removing the entry, so one that lands while an
+    /// import is in flight is either seen here or removes the entry after this write.
+    suspend fun updateWeightEntriesSkippingDeleted(
+        transform: (entries: List<WeightEntry>, deletedIds: Set<String>) -> List<WeightEntry>
+    ): List<WeightEntry> = updateJsonListReading(Keys.WEIGHT_ENTRIES, WeightEntry.serializer()) { prefs, current ->
+        transform(current, parseIdList(prefs[Keys.DELETED_WEIGHT_ENTRY_IDS]).toSet())
     }
 
-    private suspend fun addDeletedId(key: Preferences.Key<String>, id: String, limit: Int) {
+    private fun parseIdList(raw: String?): List<String> =
+        raw?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+
+    private suspend fun addDeletedId(key: Preferences.Key<String>, id: String) {
         ds.edit { prefs ->
-            val current = prefs[key]?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
-            prefs[key] = (current - id + id).takeLast(limit).joinToString(",")
+            prefs[key] = (parseIdList(prefs[key]) - id + id).joinToString(",")
         }
     }
 
@@ -1380,10 +1394,15 @@ class PreferencesStore(
     suspend fun updateBodyFatEntries(transform: (List<BodyFatEntry>) -> List<BodyFatEntry>): List<BodyFatEntry> =
         updateJsonList(Keys.BODY_FAT_ENTRIES, BodyFatEntry.serializer(), transform)
 
-    /// Same as [deletedWeightEntryIds], for body-fat readings another app wrote.
-    val deletedBodyFatEntryIds: Flow<List<String>> = deletedIdsFlow(Keys.DELETED_BODY_FAT_ENTRY_IDS)
-    suspend fun addDeletedBodyFatEntryId(id: String, limit: Int) =
-        addDeletedId(Keys.DELETED_BODY_FAT_ENTRY_IDS, id, limit)
+    /// Same as [addDeletedWeightEntryId], for body-fat readings another app wrote.
+    suspend fun addDeletedBodyFatEntryId(id: String) = addDeletedId(Keys.DELETED_BODY_FAT_ENTRY_IDS, id)
+
+    /// Same as [updateWeightEntriesSkippingDeleted], for body-fat readings.
+    suspend fun updateBodyFatEntriesSkippingDeleted(
+        transform: (entries: List<BodyFatEntry>, deletedIds: Set<String>) -> List<BodyFatEntry>
+    ): List<BodyFatEntry> = updateJsonListReading(Keys.BODY_FAT_ENTRIES, BodyFatEntry.serializer()) { prefs, current ->
+        transform(current, parseIdList(prefs[Keys.DELETED_BODY_FAT_ENTRY_IDS]).toSet())
+    }
 
     // -- Body measurement (circumference) entries --------------------------
     val bodyMeasurements: Flow<List<BodyMeasurement>> = jsonListFlow(Keys.BODY_MEASUREMENTS, BodyMeasurement.serializer())

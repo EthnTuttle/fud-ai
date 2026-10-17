@@ -49,7 +49,7 @@ class BodyFatRepository(
     suspend fun deleteEntry(id: UUID) {
         // Remember the deletion first, like WeightRepository.deleteEntry: a Health Connect
         // re-import would otherwise bring back a reading another app wrote.
-        prefs.addDeletedBodyFatEntryId(id.toString(), MAX_DELETED_BODY_FAT_IDS)
+        prefs.addDeletedBodyFatEntryId(id.toString())
         prefs.updateBodyFatEntries { current -> current.filter { it.id != id } }
         syncProfileBodyFatToLatest()
         // Delete the HC record even when sync is off (iOS parity, best-effort) —
@@ -95,9 +95,9 @@ class BodyFatRepository(
                 )
             }
         if (incoming.isEmpty()) return
-        val deletedIds = prefs.deletedBodyFatEntryIds.first().toSet()
         var changed = false
-        prefs.updateBodyFatEntries { current ->
+        // Same transaction as the merge, like WeightRepository.importExternalWeights.
+        prefs.updateBodyFatEntriesSkippingDeleted { current, deletedIds ->
             val merged = mergeExternalBodyFats(current, incoming, deletedIds)
             changed = merged != null
             merged ?: current
@@ -133,10 +133,6 @@ class BodyFatRepository(
     private suspend fun shouldSyncHealth(): Boolean {
         val manager = health ?: return false
         return prefs.healthConnectEnabled.first() && manager.hasBodyFatWrite()
-    }
-
-    companion object {
-        const val MAX_DELETED_BODY_FAT_IDS = 1000
     }
 }
 

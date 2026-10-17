@@ -67,7 +67,7 @@ class WeightRepository(
         // Remember the deletion first: a Health Connect re-import (expired changes token,
         // cloud restore, newly granted history) would otherwise bring back a weigh-in
         // another app wrote, since only our own record is deleted below.
-        prefs.addDeletedWeightEntryId(id.toString(), MAX_DELETED_WEIGHT_IDS)
+        prefs.addDeletedWeightEntryId(id.toString())
         prefs.updateWeightEntries { current -> current.filter { it.id != id } }
         syncProfileWeightToLatest()
         // Delete the HC record even when sync is off (iOS parity, best-effort) —
@@ -121,9 +121,10 @@ class WeightRepository(
                 )
             }
         if (incoming.isEmpty()) return
-        val deletedIds = prefs.deletedWeightEntryIds.first().toSet()
         var changed = false
-        prefs.updateWeightEntries { current ->
+        // Deleted ids are read inside the merge's transaction: a snapshot taken before it
+        // could miss a deletion that lands in between and add the reading back.
+        prefs.updateWeightEntriesSkippingDeleted { current, deletedIds ->
             val merged = mergeExternalWeights(current, incoming, deletedIds)
             changed = merged != null
             merged ?: current
@@ -147,10 +148,6 @@ class WeightRepository(
     private suspend fun shouldSyncHealth(): Boolean {
         val manager = health ?: return false
         return prefs.healthConnectEnabled.first() && manager.hasWeightWrite()
-    }
-
-    companion object {
-        const val MAX_DELETED_WEIGHT_IDS = 1000
     }
 }
 
