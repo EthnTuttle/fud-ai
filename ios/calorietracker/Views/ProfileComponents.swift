@@ -1164,6 +1164,7 @@ struct NotificationSettingsSections: View {
                             applyMealReminders()
                             applyWaterReminder()
                             applyFastingGoalNotification()
+                            WorkoutRestTimerController.shared.rescheduleNotification()
                             await notificationManager.scheduleProductHuntLaunchReminderIfNeeded()
                         }
                     }

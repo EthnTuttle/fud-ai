@@ -1373,6 +1373,12 @@ class PreferencesStore(
                 ?.flatMap { it.imagePaths }
                 ?.filter { com.apoorvdarshan.calorietracker.models.UserExercise.isUserPhotoFilename(it) }
                 ?.forEach { add(it) }
+            // A routine keeps its exercises' photos after the exercise itself is deleted.
+            workoutState?.routines
+                ?.flatMap { it.exercises }
+                ?.flatMap { it.imagePaths }
+                ?.filter { com.apoorvdarshan.calorietracker.models.UserExercise.isUserPhotoFilename(it) }
+                ?.forEach { add(it) }
         }
     }
 

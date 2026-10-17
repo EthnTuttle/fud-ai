@@ -36,6 +36,24 @@ struct WorkoutLoggingSettingsSection: View {
             )
 
             rpeScaleGuide
+
+            WorkoutPreferenceMenuRow(
+                title: String(localized: "Rest Timer"),
+                systemImage: "hourglass",
+                selection: Binding(
+                    get: { draft.restSeconds },
+                    set: { draft.restTimerSeconds = $0 }
+                ),
+                options: WorkoutRestTimerSetting.options,
+                label: WorkoutRestTimerSetting.label(for:)
+            )
+
+            Text("Counts down after you log a set today. With notifications on, Fud AI alerts you when rest ends in the background.")
+                .font(.system(.footnote, design: .rounded))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.leading, 32)
+                .padding(.vertical, 4)
         } header: {
             Text("Workout")
         } footer: {

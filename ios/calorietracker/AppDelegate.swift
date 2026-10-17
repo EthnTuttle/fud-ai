@@ -10,6 +10,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        // Brings back a rest that was counting down when the app last closed, so
+        // it ends with its haptic even if the workout log is never opened.
+        _ = WorkoutRestTimerController.shared
         QuickActionSettings.registerApplicationShortcuts()
         WatchSnapshotSync.shared.activate()
         return true
@@ -38,7 +41,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     }
 
     /// Show the update banner even when the app is in the foreground; leave the scheduled reminders
-    /// to their default (no foreground interruption) so this changes nothing for them.
+    /// to their default (no foreground interruption) so this changes nothing for them. A rest
+    /// notification shows only when the app did not already mark that rest's end with a haptic.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
@@ -46,6 +50,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         if notification.request.identifier == NotificationManager.appUpdateNotificationID
             || notification.request.identifier == NotificationManager.productHuntLaunchNotificationID {
             return [.banner, .sound, .list]
+        }
+        if notification.request.identifier == WorkoutRestTimerController.notificationID {
+            let userInfo = notification.request.content.userInfo
+            return WorkoutRestTimerController.shared.presentsNotificationInForeground(userInfo: userInfo)
+                ? [.banner, .sound, .list]
+                : []
         }
         return []
     }

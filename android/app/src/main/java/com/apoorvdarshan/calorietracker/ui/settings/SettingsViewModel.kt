@@ -101,6 +101,8 @@ data class SettingsUiState(
     val mealSchedule: MealSchedule = MealSchedule.Default,
     val workoutSplit: WorkoutSplit = WorkoutSplit.FULL_BODY,
     val workoutRpeScale: WorkoutRpeScale = WorkoutRpeScale.STRENGTH,
+    /** Rest countdown after a logged set, in seconds; 0 = off. */
+    val workoutRestTimerSeconds: Int = com.apoorvdarshan.calorietracker.models.WorkoutRestTimerSetting.DEFAULT_SECONDS,
     val userContext: String = "",
     val fallbackEnabled: Boolean = false,
     val fallbackProvider: AIProvider = AIProvider.GEMINI,
@@ -173,7 +175,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             container.workoutRepository.preferences.collect { preferences ->
                 _ui.value = _ui.value.copy(
                     workoutSplit = preferences.split,
-                    workoutRpeScale = preferences.rpeScale
+                    workoutRpeScale = preferences.rpeScale,
+                    workoutRestTimerSeconds = preferences.restTimerSeconds
                 )
             }
         }
@@ -367,6 +370,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 hiddenTabs = if (hiddenTabsCollected) menuOnScreen.hiddenTabs else hiddenTabs,
                 workoutSplit = workoutPreferences.split,
                 workoutRpeScale = workoutPreferences.rpeScale,
+                workoutRestTimerSeconds = workoutPreferences.restTimerSeconds,
                 localModelStates = container.localModels.states.value,
                 goalsNeedRecalc = needsRecalc(profile)
             )
@@ -471,6 +475,12 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun selectWorkoutRpeScale(scale: WorkoutRpeScale) {
         viewModelScope.launch {
             container.workoutRepository.updatePreferences { it.copy(rpeScale = scale) }
+        }
+    }
+
+    fun selectWorkoutRestTimer(seconds: Int) {
+        viewModelScope.launch {
+            container.workoutRepository.updatePreferences { it.copy(restTimerSeconds = seconds) }
         }
     }
 
@@ -1413,6 +1423,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
     fun deleteAllData(onComplete: () -> Unit = {}) {
         viewModelScope.launch {
             val challengeDeleted = container.weeklyChallengeRepository.prepareForDeleteEverything()
+            // Stops the countdown and clears its saved state and alarm, which live outside DataStore.
+            container.workoutRestTimer.skip()
             container.prefs.clearAll()
             container.keyStore.clearAll(preserveWeeklyChallengeToken = !challengeDeleted)
             container.imageStore.clearAll()

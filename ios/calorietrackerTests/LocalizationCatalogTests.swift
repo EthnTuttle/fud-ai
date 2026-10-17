@@ -25,6 +25,7 @@ struct LocalizationCatalogTests {
         "Body Fat Check-In", "Log today's body fat % to track your composition trend.",
         "Update Available", "Fud AI %@ is ready. Tap to update.",
         "Fud AI is live on Product Hunt 🚀", "We just launched! Tap to vote and help more people find Fud AI.",
+        "Rest Complete", "Time for your next set of %@.",
     ]
 
     /// Every LocalizedError message localized for #507, with its format arguments.
@@ -80,7 +81,37 @@ struct LocalizationCatalogTests {
         "+%lld days logged vs previous week",
     ]
 
+    /// Every rest timer and routine string in the workout log and settings (#433).
+    static let restTimerAndRoutineKeys = [
+        "Rest Timer", "Off",
+        "Counts down after you log a set today. With notifications on, Fud AI alerts you when rest ends in the background.",
+        "Rest", "+15s", "Add 15 seconds", "Skip", "Skip rest", "Start rest after set %lld",
+        "Start from routine", "Save as routine", "Save Routine", "Routine name",
+        "Saves this day's exercises with their planned sets, reps and weights.",
+        "Routines", "No Routines Yet", "Log a workout, then choose Save as routine from the + menu.",
+        "Adds the routine's exercises to the selected day. Sets you already logged stay as they are.",
+        "Rename", "Rename Routine", "Delete Routine?", "Workouts you already logged are kept.",
+    ]
+
     // MARK: - Compiled bundles
+
+    @Test func restTimerAndRoutinesAreTranslatedInEveryLanguage() throws {
+        let missing = "\u{0}missing"
+        for language in Self.appLanguages {
+            let bundle = try Self.languageBundle(language, in: .main)
+            for key in Self.restTimerAndRoutineKeys + ["Rest Complete", "Time for your next set of %@."] {
+                let translation = bundle.localizedString(forKey: key, value: missing, table: nil)
+                #expect(translation != missing, "\(language) is missing \(key)")
+                guard translation != missing else { continue }
+                #expect(
+                    Self.formatArguments(translation) == Self.formatArguments(key),
+                    "\(language) \(translation) does not match the arguments of \(key)"
+                )
+            }
+            let body = bundle.localizedString(forKey: "Time for your next set of %@.", value: nil, table: nil)
+            #expect(String(format: body, "Bench Press").contains("Bench Press"), "\(language): \(body)")
+        }
+    }
 
     @Test func weeklyRecapIsTranslatedInEveryLanguage() throws {
         for language in Self.appLanguages {

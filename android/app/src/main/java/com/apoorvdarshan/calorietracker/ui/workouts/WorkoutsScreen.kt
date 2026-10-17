@@ -137,7 +137,8 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
             currentBodyWeightKg = bodyWeightKg,
             weightUnit = weightUnit,
             profileGender = profile?.gender ?: com.apoorvdarshan.calorietracker.models.Gender.MALE,
-            imageStore = container.imageStore
+            imageStore = container.imageStore,
+            restTimer = container.workoutRestTimer
         )
     }
 
