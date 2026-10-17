@@ -225,6 +225,7 @@ private fun MyProgressContent(container: AppContainer) {
         initial = OptionalNutrientGoals.Default
     )
     val includeToday by container.prefs.progressIncludeToday.collectAsState(initial = true)
+    val weekStartsOnMonday by container.prefs.weekStartsOnMonday.collectAsState(initial = true)
     val workoutDayPlans by container.workoutRepository.dayPlans.collectAsState(initial = emptyMap())
     // null until DataStore answers, so a restored Steps selection isn't reset early.
     val healthConnectEnabled by container.prefs.healthConnectEnabled.collectAsState(initial = null)
@@ -392,6 +393,7 @@ private fun MyProgressContent(container: AppContainer) {
                         calorieGoal = profile.effectiveCalories,
                         proteinGoal = profile.effectiveProtein,
                         useMetric = weightMetric,
+                        firstDayOfWeek = WeeklyRecapCalculator.firstDayOfWeek(weekStartsOnMonday),
                         today = recapToday
                     )
                 }

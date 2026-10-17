@@ -8,13 +8,15 @@ struct WeeklyRecapCard: View {
     @Environment(ProfileStore.self) private var profileStore
     @Environment(StrengthWorkoutStore.self) private var strengthWorkoutStore
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
+    @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = true
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     /// Weeks stepped back from the most recent completed one; session-only.
     @State private var weekOffset = 0
 
     private var recap: WeeklyRecap {
-        let calendar = Calendar.current
+        // Weeks follow Settings > Week Starts On, like the Home and Workouts week strips.
+        let calendar = WeeklyRecap.calendar(weekStartsOnMonday: weekStartsOnMonday)
         let now = Date.now
         // Both compared weeks: the one before the recapped week through its last day.
         let comparedStart = WeeklyRecap.weekStart(offset: weekOffset + 1, now: now, calendar: calendar)

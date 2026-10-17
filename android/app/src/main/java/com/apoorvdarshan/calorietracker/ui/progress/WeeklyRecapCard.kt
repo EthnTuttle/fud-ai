@@ -56,10 +56,9 @@ import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.text.NumberFormat
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.temporal.WeekFields
-import java.util.Locale
 
 /**
  * Recap of the most recent completed week at the top of Progress (#431), compared
@@ -75,12 +74,13 @@ internal fun WeeklyRecapCard(
     calorieGoal: Int,
     proteinGoal: Int,
     useMetric: Boolean,
+    /** From Settings > Week starts on, like the Home and Workouts week strips. */
+    firstDayOfWeek: DayOfWeek,
     /** Re-read on each return to the app, so a week that ended meanwhile rolls over. */
     today: LocalDate
 ) {
     // Weeks stepped back from the most recent completed one; session-only.
     var weekOffset by rememberSaveable { mutableIntStateOf(0) }
-    val firstDayOfWeek = remember { WeekFields.of(Locale.getDefault()).firstDayOfWeek }
     val recap = remember(foods, weights, burnSessions, dayPlans, calorieGoal, proteinGoal, weekOffset, today, firstDayOfWeek) {
         // Both compared weeks: the one before the recapped week through its last day.
         val comparedStart = WeeklyRecapCalculator.weekStart(today, weekOffset + 1, firstDayOfWeek)

@@ -60,9 +60,18 @@ struct WeeklyRecap: Equatable {
 
     var days: ClosedRange<Date> { weekStart...weekEnd }
 
+    /// `base` with weeks starting on the app's "Week Starts On" setting
+    /// (Monday by default) instead of the region's first weekday.
+    static func calendar(weekStartsOnMonday: Bool, base: Calendar = .current) -> Calendar {
+        var calendar = base
+        calendar.firstWeekday = weekStartsOnMonday ? 2 : 1 // 2 = Monday, 1 = Sunday
+        return calendar
+    }
+
     /// Start of the recapped week. Offset 0 is the most recent completed week
     /// (the one before the week containing `now`), 1 the week before that.
-    /// Weeks begin on the calendar's first weekday, which follows the user's region.
+    /// Weeks begin on the calendar's first weekday; the card passes one built by
+    /// `calendar(weekStartsOnMonday:)`.
     static func weekStart(offset: Int, now: Date = .now, calendar: Calendar = .current) -> Date {
         let today = calendar.startOfDay(for: now)
         let thisWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today

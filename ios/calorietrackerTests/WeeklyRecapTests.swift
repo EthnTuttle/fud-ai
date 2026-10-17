@@ -21,6 +21,40 @@ struct WeeklyRecapTests {
         #expect(WeeklyRecap.weekStart(offset: 0, now: saturday, calendar: sunday) == sundayBefore)
     }
 
+    @Test func weeksFollowTheWeekStartsOnSettingInsteadOfTheRegion() throws {
+        let saturday = try date(2026, 10, 17, hour: 15)
+        let mondayBefore = try date(2026, 10, 5)
+        let sundayBefore = try date(2026, 10, 4)
+        let saturdayBefore = try date(2026, 10, 10)
+
+        // A US-style calendar starts weeks on Sunday; the default Monday setting wins.
+        let usRegion = calendar(firstWeekday: 1)
+        let mondayFirst = WeeklyRecap.calendar(weekStartsOnMonday: true, base: usRegion)
+        #expect(mondayFirst.firstWeekday == 2)
+        #expect(WeeklyRecap.weekStart(offset: 0, now: saturday, calendar: mondayFirst) == mondayBefore)
+
+        // A Monday-first region with the setting on Sunday gets Sunday weeks.
+        let germanRegion = calendar(firstWeekday: 2)
+        let sundayFirst = WeeklyRecap.calendar(weekStartsOnMonday: false, base: germanRegion)
+        #expect(sundayFirst.firstWeekday == 1)
+        #expect(WeeklyRecap.weekStart(offset: 0, now: saturday, calendar: sundayFirst) == sundayBefore)
+        // Only the first weekday changes; days still resolve in the base time zone.
+        #expect(sundayFirst.timeZone == germanRegion.timeZone)
+
+        let recap = WeeklyRecap.compute(
+            now: saturday,
+            calendar: sundayFirst,
+            foods: [food(2_000, protein: 0, at: sundayBefore)],
+            workouts: [],
+            weights: [],
+            calorieGoal: 2_000,
+            proteinGoal: 0
+        )
+        #expect(recap.weekStart == sundayBefore)
+        #expect(recap.weekEnd == saturdayBefore)
+        #expect(recap.current.loggedDays == 1)
+    }
+
     @Test func theCurrentWeekIsNeverRecappedBeforeItEnds() throws {
         let monday = calendar(firstWeekday: 2)
         let lastWeek = try date(2026, 10, 5)

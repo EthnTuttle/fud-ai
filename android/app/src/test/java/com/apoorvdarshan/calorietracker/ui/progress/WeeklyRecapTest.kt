@@ -27,12 +27,44 @@ class WeeklyRecapTest {
     // Week boundaries
 
     @Test
-    fun recapsTheLastCompletedWeekFromTheLocalesFirstDay() {
+    fun recapsTheLastCompletedWeekFromTheFirstDayOfWeek() {
         // Saturday, October 17, 2026.
         val saturday = LocalDate.parse("2026-10-17")
         assertEquals(LocalDate.parse("2026-10-05"), WeeklyRecapCalculator.weekStart(saturday, 0, DayOfWeek.MONDAY))
         assertEquals(LocalDate.parse("2026-09-28"), WeeklyRecapCalculator.weekStart(saturday, 1, DayOfWeek.MONDAY))
         assertEquals(LocalDate.parse("2026-10-04"), WeeklyRecapCalculator.weekStart(saturday, 0, DayOfWeek.SUNDAY))
+    }
+
+    @Test
+    fun weeksFollowTheWeekStartsOnSettingInsteadOfTheLocale() {
+        // Whatever the locale's first day, the setting picks it (Monday by default).
+        assertEquals(DayOfWeek.MONDAY, WeeklyRecapCalculator.firstDayOfWeek(weekStartsOnMonday = true))
+        assertEquals(DayOfWeek.SUNDAY, WeeklyRecapCalculator.firstDayOfWeek(weekStartsOnMonday = false))
+
+        // A Sunday meal belongs to the recapped week only when weeks start on Sunday.
+        val foods = listOf(food(2_000, protein = 150.0, at = "2026-10-04T12:00"))
+        fun recap(weekStartsOnMonday: Boolean) = WeeklyRecapCalculator.compute(
+            foods = foods,
+            workouts = emptyList(),
+            weights = emptyList(),
+            calorieGoal = 2_000,
+            proteinGoal = 150,
+            today = LocalDate.parse("2026-10-17"),
+            offset = 0,
+            firstDayOfWeek = WeeklyRecapCalculator.firstDayOfWeek(weekStartsOnMonday),
+            zone = zone
+        )
+
+        val mondayFirst = recap(weekStartsOnMonday = true)
+        assertEquals(LocalDate.parse("2026-10-05"), mondayFirst.weekStart)
+        assertEquals(LocalDate.parse("2026-10-11"), mondayFirst.weekEnd)
+        assertEquals(0, mondayFirst.current.loggedDays)
+        assertEquals(1, mondayFirst.previous.loggedDays)
+
+        val sundayFirst = recap(weekStartsOnMonday = false)
+        assertEquals(LocalDate.parse("2026-10-04"), sundayFirst.weekStart)
+        assertEquals(LocalDate.parse("2026-10-10"), sundayFirst.weekEnd)
+        assertEquals(1, sundayFirst.current.loggedDays)
     }
 
     @Test

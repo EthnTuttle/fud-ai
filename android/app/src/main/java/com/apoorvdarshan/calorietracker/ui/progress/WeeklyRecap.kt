@@ -71,9 +71,14 @@ internal object WeeklyRecapCalculator {
     const val MINIMUM_DAYS_FOR_AVERAGE_HIGHLIGHT = 3
     const val MAXIMUM_HIGHLIGHTS = 3
 
+    /** The first day of a recap week for the app's Week starts on setting (Monday by
+     *  default), not the locale's, matching iOS WeeklyRecap.calendar(weekStartsOnMonday:). */
+    fun firstDayOfWeek(weekStartsOnMonday: Boolean): DayOfWeek =
+        if (weekStartsOnMonday) DayOfWeek.MONDAY else DayOfWeek.SUNDAY
+
     /** Start of the recapped week. Offset 0 is the most recent completed week (the one
      *  before the week containing [today]), 1 the week before that. Weeks begin on
-     *  [firstDayOfWeek], the locale's first day (WeekFields). */
+     *  [firstDayOfWeek] (see [firstDayOfWeek] for the setting). */
     fun weekStart(today: LocalDate, offset: Int, firstDayOfWeek: DayOfWeek): LocalDate =
         today.with(TemporalAdjusters.previousOrSame(firstDayOfWeek))
             .minusWeeks(offset.coerceAtLeast(0) + 1L)
