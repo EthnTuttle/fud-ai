@@ -33,7 +33,7 @@ class CloudBackupRestoreTest {
         })
         val committed = CompletableDeferred<CloudBackupDocument>()
         val restore = launch(Dispatchers.IO) {
-            CloudBackupRestore.apply(archive, store) { document ->
+            CloudBackupRestore.apply(archive, store) { document, _ ->
                 // Like a DataStore edit: suspends, so it throws if the caller was cancelled.
                 withContext(Dispatchers.Default) { committed.complete(document) }
             }
@@ -55,7 +55,7 @@ class CloudBackupRestoreTest {
         var committed = false
         val restore = launch(Dispatchers.IO) {
             cancel()
-            CloudBackupRestore.apply(archive, store) { committed = true }
+            CloudBackupRestore.apply(archive, store) { _, _ -> committed = true }
         }
         restore.join()
 
@@ -69,10 +69,55 @@ class CloudBackupRestoreTest {
     fun corruptArchiveFailsBeforeAnythingIsCleared() = runBlocking {
         val corrupt = temp.newFile("corrupt.zip").apply { writeBytes(byteArrayOf(1, 2, 3)) }
         val store = FakePhotoStore()
-        val error = runCatching { CloudBackupRestore.apply(corrupt, store) { } }.exceptionOrNull()
+        val error = runCatching { CloudBackupRestore.apply(corrupt, store) { _, _ -> } }.exceptionOrNull()
 
         assertTrue(error != null)
         assertFalse(store.cleared)
+    }
+
+    @Test
+    fun notEnoughStorageFailsBeforeAnythingIsCleared() = runBlocking {
+        val photo = ByteArray(4096) { it.toByte() }
+        val archive = archiveWith("a.jpg" to photo)
+        val needed = CloudBackupRestore.requiredBytes(CloudBackupArchive.inspect(archive))
+        val store = FakePhotoStore(freeBytes = needed - 1)
+        var committed = false
+        val error = runCatching {
+            CloudBackupRestore.apply(archive, store) { _, _ -> committed = true }
+        }.exceptionOrNull()
+
+        assertTrue(error is CloudBackupNoSpaceException)
+        assertFalse(store.cleared)
+        assertTrue(store.restored.isEmpty())
+        assertFalse(committed)
+    }
+
+    @Test
+    fun exactlyEnoughStorageRestores() = runBlocking {
+        val archive = archiveWith("a.jpg" to ByteArray(4096))
+        val needed = CloudBackupRestore.requiredBytes(CloudBackupArchive.inspect(archive))
+        val store = FakePhotoStore(freeBytes = needed)
+        var complete: Boolean? = null
+        CloudBackupRestore.apply(archive, store) { _, photosComplete -> complete = photosComplete }
+
+        assertEquals(true, complete)
+        assertEquals(listOf("a.jpg"), store.restored.keys.toList())
+    }
+
+    @Test
+    fun aPhotoThatFailsToWriteIsReportedAfterTheValuesAreRestored() = runBlocking {
+        val archive = archiveWith("a.jpg" to byteArrayOf(1), "b.jpg" to byteArrayOf(2), "c.jpg" to byteArrayOf(3))
+        val store = FakePhotoStore(failing = setOf("b.jpg"))
+        var complete: Boolean? = null
+        val error = runCatching {
+            CloudBackupRestore.apply(archive, store) { _, photosComplete -> complete = photosComplete }
+        }.exceptionOrNull()
+
+        // The values still land so the diary matches the photos that did, and the
+        // caller learns the restore is incomplete instead of reporting success.
+        assertEquals(false, complete)
+        assertTrue(error is CloudBackupIncompleteException)
+        assertEquals(listOf("a.jpg", "c.jpg"), store.restored.keys.toList())
     }
 
     private fun archiveWith(vararg photos: Pair<String, ByteArray>): File {
@@ -90,10 +135,14 @@ class CloudBackupRestoreTest {
     }
 
     private class FakePhotoStore(
+        private val freeBytes: Long = Long.MAX_VALUE,
+        private val failing: Set<String> = emptySet(),
         private val onRestore: () -> Unit = {},
     ) : CloudBackupPhotoStore {
         var cleared = false
         val restored = linkedMapOf<String, ByteArray>()
+
+        override fun bytesFreeAfterClear(): Long = freeBytes
 
         override fun clearAll() {
             cleared = true
@@ -101,6 +150,7 @@ class CloudBackupRestoreTest {
 
         override fun restoreStream(filename: String, input: InputStream): Boolean {
             onRestore()
+            if (filename in failing) return false
             restored[filename] = input.readBytes()
             return true
         }

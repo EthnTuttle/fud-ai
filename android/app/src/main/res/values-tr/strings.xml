@@ -1024,6 +1024,7 @@
     <string name="cloud_backup_switch_account">Google hesabını değiştir</string>
     <string name="cloud_backup_turn_on">Aç</string>
     <string name="cloud_backup_sign_in_failed">Google oturum açma açılamadı.</string>
+    <string name="cloud_backup_restore_no_space">Bu yedeği geri yüklemek için yeterli boş depolama alanı yok. Biraz yer açıp tekrar deneyin.</string>
     <string name="export_diary_title">Yiyecek Günlüğünü Dışa Aktar</string>
     <string name="import_diary_title">Yiyecek Günlüğünü İçe Aktar</string>
     <string name="import_entries">Yiyecek kayıtları</string>

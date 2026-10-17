@@ -124,15 +124,31 @@ class FoodImageStore private constructor(
         true
     }.getOrDefault(false)
 
-    /** Like [restoreBytes], but copies from [input] so a restore never holds the whole photo. */
-    override fun restoreStream(filename: String, input: InputStream): Boolean = runCatching {
+    /**
+     * Like [restoreBytes], but copies from [input] so a restore never holds the whole photo.
+     * The copy goes to a temp file first, so a failed write (a full disk) leaves no cut-off photo.
+     */
+    override fun restoreStream(filename: String, input: InputStream): Boolean {
         val file = File(dir, filename)
-        FileOutputStream(file).use { input.copyTo(it) }
-        runCatching {
-            FoodImageDecoder.decode(file, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
+        val temp = File(dir, "$filename.${UUID.randomUUID()}.tmp")
+        return runCatching {
+            FileOutputStream(temp).use { input.copyTo(it) }
+            check(temp.renameTo(file)) { "Could not move restored photo into place" }
+            runCatching {
+                FoodImageDecoder.decode(file, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
+            }
+            true
+        }.getOrElse {
+            temp.delete()
+            false
         }
-        true
-    }.getOrDefault(false)
+    }
+
+    override fun bytesFreeAfterClear(): Long =
+        filesRoot.usableSpace + bytesIn(dir) + bytesIn(thumbnailDir)
+
+    private fun bytesIn(folder: File): Long =
+        folder.listFiles()?.sumOf { if (it.isFile) it.length() else 0L } ?: 0L
 
     /** Stores a custom exercise photo under a fresh filename (never overwrites diary snapshots). */
     fun storeExercisePhoto(bytes: ByteArray): String? = runCatching {

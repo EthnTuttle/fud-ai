@@ -32,8 +32,12 @@ data class CloudBackupUi(
  * Text for the backup error dialog. VM errors such as OutOfMemoryError (#484)
  * and blank messages mean nothing to users, so they get [fallback] instead.
  */
-fun cloudBackupErrorMessage(failure: Throwable, fallback: String): String =
-    failure.message?.takeIf { failure !is Error && it.isNotBlank() } ?: fallback
+fun cloudBackupErrorMessage(failure: Throwable, fallback: String, noSpace: String): String =
+    if (failure is CloudBackupNoSpaceException) {
+        noSpace
+    } else {
+        failure.message?.takeIf { failure !is Error && it.isNotBlank() } ?: fallback
+    }
 
 class CloudBackupCoordinator(
     private val context: Context,
@@ -95,7 +99,10 @@ class CloudBackupCoordinator(
     suspend fun enableAfterAuth(restoreIfPresent: Boolean): Result<Unit> = mutex.withLock {
         runCatching {
             busy(true)
-            prefs.setCloudBackupEnabled(true)
+            // A restore turns backup on only when it succeeds. If it failed with
+            // backup already on, the next auto-backup would replace the Drive
+            // copy with this phone's data.
+            if (!restoreIfPresent) prefs.setCloudBackupEnabled(true)
             val token = requireToken()
             val fileId = prefs.cloudBackupFileId.first() ?: drive.findBackupFileId(token)
             if (fileId != null && restoreIfPresent) {
@@ -213,17 +220,20 @@ class CloudBackupCoordinator(
 
     private suspend fun applyArchive(zip: File, fileId: String) {
         val email = prefs.cloudBackupAccountEmail.first()
-        CloudBackupRestore.apply(zip, images) { document ->
+        CloudBackupRestore.apply(zip, images) { document, photosComplete ->
             prefs.restoreCloudBackupValues(document.payload.values)
             // Device-specific Health Connect tokens must not transfer. Mark food
             // restore done so Health Connect skips a second import of the same IDs.
             prefs.clearHealthChangesToken()
             prefs.setHealthFoodRestoreDone(true)
-            prefs.setCloudBackupEnabled(true)
+            // With photos missing, the next backup would replace the complete
+            // copy in Drive, so backup stays off until the user turns it on again.
+            prefs.setCloudBackupEnabled(photosComplete)
             prefs.setCloudBackupAccountEmail(email)
             prefs.setCloudBackupFileId(fileId)
             prefs.setCloudBackupLastHash(document.content_sha256)
             prefs.setCloudBackupLastAt(document.exported_at)
+            refresh()
         }
     }
 

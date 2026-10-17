@@ -91,6 +91,14 @@ class CloudBackupPhoto(
     }
 }
 
+/** A validated archive's document, plus the sizes a restore will write to disk. */
+class CloudBackupContents(
+    val document: CloudBackupDocument,
+    val payloadBytes: Long,
+    val photoCount: Int,
+    val photoBytes: Long,
+)
+
 object CloudBackupArchive {
     private const val TEMP_PREFIX = "fudai-backup-"
 
@@ -169,20 +177,35 @@ object CloudBackupArchive {
         }
     }
 
+    /** Reads and validates backup.json; see [inspect]. */
+    fun readDocument(archive: File): CloudBackupDocument = inspect(archive).document
+
     /**
-     * Reads and validates backup.json. Every entry is read to the end so a
-     * corrupt archive fails its CRC check here, before local data is replaced.
+     * Reads and validates backup.json and measures the photos [forEachPhoto]
+     * will write. Every entry is read to the end so a corrupt archive fails
+     * its CRC check here, before local data is replaced.
      */
-    fun readDocument(archive: File): CloudBackupDocument {
+    fun inspect(archive: File): CloudBackupContents {
         var payload: ByteArray? = null
+        var photoCount = 0
+        var photoBytes = 0L
         ZipInputStream(archive.inputStream().buffered()).use { zip ->
             val skip = ByteArray(DEFAULT_BUFFER_SIZE)
             while (true) {
                 val entry = zip.nextEntry ?: break
                 if (entry.name == CloudBackupPolicy.PAYLOAD_NAME) {
                     payload = zip.readBytes()
-                } else {
-                    while (zip.read(skip) >= 0) continue
+                    continue
+                }
+                var size = 0L
+                while (true) {
+                    val read = zip.read(skip)
+                    if (read < 0) break
+                    size += read
+                }
+                if (restorablePhotoName(entry.name) != null) {
+                    photoCount++
+                    photoBytes += size
                 }
             }
         }
@@ -192,7 +215,7 @@ object CloudBackupArchive {
         require(document.format_version <= CloudBackupPolicy.VERSION) {
             "This backup needs a newer Fud AI"
         }
-        return document
+        return CloudBackupContents(document, raw.size.toLong(), photoCount, photoBytes)
     }
 
     /** Hands each restorable photo to [restore] one at a time. [restore] must not close the stream. */
@@ -203,12 +226,14 @@ object CloudBackupArchive {
             }
             while (true) {
                 val entry = zip.nextEntry ?: break
-                if (!entry.name.startsWith(CloudBackupPolicy.PHOTOS_DIR)) continue
-                val name = CloudBackupPolicy.safePhotoName(entry.name) ?: continue
+                val name = restorablePhotoName(entry.name) ?: continue
                 restore(name, entryStream)
             }
         }
     }
+
+    private fun restorablePhotoName(entryName: String): String? =
+        if (entryName.startsWith(CloudBackupPolicy.PHOTOS_DIR)) CloudBackupPolicy.safePhotoName(entryName) else null
 
     /** Runs [block] with a new archive file in [dir] and always deletes it afterwards. */
     inline fun <T> withTempArchive(dir: File, block: (File) -> T): T {

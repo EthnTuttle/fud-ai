@@ -233,6 +233,40 @@ class CloudBackupArchiveTest {
         assertTrue(unrelated.exists())
     }
 
+    @Test
+    fun inspectMeasuresThePhotosARestoreWillWrite() {
+        val packed = packToFile(
+            sampleValues(),
+            listOf(memoryPhoto("a.jpg", ByteArray(100)), memoryPhoto("b.png", ByteArray(50))),
+        )
+        val contents = CloudBackupArchive.inspect(packed)
+        val payload = ZipInputStream(packed.inputStream()).use { zip ->
+            assertEquals(CloudBackupPolicy.PAYLOAD_NAME, zip.nextEntry!!.name)
+            zip.readBytes()
+        }
+        assertEquals(2, contents.photoCount)
+        assertEquals(150L, contents.photoBytes)
+        assertEquals(payload.size.toLong(), contents.payloadBytes)
+        assertEquals(CloudBackupArchive.readDocument(packed), contents.document)
+
+        // Entries forEachPhoto skips are not counted.
+        val mixed = temp.newFile("mixed.zip")
+        ZipOutputStream(mixed.outputStream()).use { zip ->
+            zip.putNextEntry(ZipEntry(CloudBackupPolicy.PAYLOAD_NAME))
+            zip.write(payload)
+            zip.closeEntry()
+            for ((name, size) in listOf("photos/c.jpg" to 30, "photos/notes.txt" to 40, "other/d.jpg" to 50)) {
+                zip.putNextEntry(ZipEntry(name))
+                zip.write(ByteArray(size))
+                zip.closeEntry()
+            }
+        }
+        val mixedContents = CloudBackupArchive.inspect(mixed)
+        assertEquals(1, mixedContents.photoCount)
+        assertEquals(30L, mixedContents.photoBytes)
+        assertEquals(listOf("c.jpg"), readPhotos(mixed).keys.toList())
+    }
+
     private fun packToFile(values: Map<String, CloudBackupValue>, photos: List<CloudBackupPhoto>): File =
         temp.newFile().also { file ->
             CloudBackupArchive.pack(
