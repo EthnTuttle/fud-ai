@@ -140,7 +140,7 @@ struct ProgressPeriodNavigator: View {
 
 extension ClosedRange where Bound == Date {
     /// True when `date` falls on a calendar day this range covers. The
-    /// `TimeRange.dateRange()` bounds are day starts, so timestamped readings
+    /// `TimeRange.dayRange()` bounds are day starts, so timestamped readings
     /// must be compared by day — a plain `contains` excludes everything logged
     /// after midnight on the last day (today).
     func containsDay(of date: Date, calendar: Calendar = .current) -> Bool {

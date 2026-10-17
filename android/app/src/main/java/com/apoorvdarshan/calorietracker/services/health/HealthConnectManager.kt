@@ -39,7 +39,6 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.roundToInt
-import kotlinx.coroutines.CancellationException
 
 /**
  * Single boundary for Health Connect I/O. Port of iOS HealthKitManager.

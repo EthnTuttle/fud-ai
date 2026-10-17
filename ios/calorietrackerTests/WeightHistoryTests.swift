@@ -269,7 +269,7 @@ struct WeightHistoryTests {
                 WeightEntry(date: today, weightKg: 80),
             ])
 
-            let week = store.entries(in: TimeRange.week.dateRange())
+            let week = store.entries(in: TimeRange.week.dayRange())
             #expect(week.map(\.weightKg) == [81, 80])
         }
     }
@@ -284,7 +284,7 @@ struct WeightHistoryTests {
                 WeightEntry(date: twoYearsAgo, weightKg: 95),
             ])
 
-            let all = store.entries(in: TimeRange.allTime.dateRange())
+            let all = store.entries(in: TimeRange.allTime.dayRange())
             #expect(all.map(\.weightKg) == [95, 80])
         }
     }
