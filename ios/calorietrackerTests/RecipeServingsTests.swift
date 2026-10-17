@@ -97,6 +97,42 @@ struct RecipeServingsTests {
         #expect(2 * servingOption.gramsPerUnit / decoded.reviewServingReference == 2)
     }
 
+    @Test func aLoggedServingOfASplitRecipeIsNeverOfferedTheSplitAgain() throws {
+        let split = RecipeServings.split(options: [], totalGrams: 2000, servings: 5)
+        let logged = FoodEntry(
+            name: "Chili",
+            calories: 500,
+            protein: 30,
+            carbs: 40,
+            fat: 20,
+            source: .manual,
+            servingSizeGrams: split.servingSizeGrams,
+            servingUnitOptions: split.options,
+            selectedServingUnit: "serving",
+            selectedServingQuantity: 1,
+            ingredients: [
+                MealIngredient(name: "Beans", grams: 250, calories: 300, protein: 20, carbs: 35, fat: 2),
+                MealIngredient(name: "Beef", grams: 150, calories: 200, protein: 10, carbs: 5, fat: 18)
+            ]
+        )
+        let decoded = try JSONDecoder().decode(FoodEntry.self, from: JSONEncoder().encode(logged))
+
+        // The 400 g portion still has a breakdown and a known mass, but it is not the recipe:
+        // "2 servings" would log 200 g instead of half the 2,000 g pot.
+        #expect(RecipeServings.isAvailable(
+            ingredientCount: decoded.ingredients.count,
+            totalGrams: decoded.reviewServingReference,
+            servingSizeIsKnown: decoded.hasKnownServingSize
+        ))
+        #expect(RecipeServings.isLoggedPortion(options: decoded.servingUnitOptions))
+        #expect(RecipeServings.isLoggedPortion(options: decoded.reviewAnalysis.servingUnitOptions))
+        #expect(RecipeServings.isLoggedPortion(options: [ServingUnitOption(unit: "Serving", gramsPerUnit: 250)]))
+
+        // A whole meal logged in grams or other units can still be split.
+        #expect(!RecipeServings.isLoggedPortion(options: []))
+        #expect(!RecipeServings.isLoggedPortion(options: [ServingUnitOption(unit: "cup", gramsPerUnit: 240)]))
+    }
+
     private let chili = [
         MealIngredient(name: "Beans", grams: 1000, calories: 1100, protein: 70, carbs: 200, fat: 5),
         MealIngredient(name: "Beef", grams: 800, calories: 2000, protein: 200, carbs: 0, fat: 130),

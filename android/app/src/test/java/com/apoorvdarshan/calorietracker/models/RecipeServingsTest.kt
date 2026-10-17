@@ -106,6 +106,39 @@ class RecipeServingsTest {
         assertEquals(2.0, 2 * servingOption.gramsPerUnit / decoded.reviewServingReference, 0.0)
     }
 
+    @Test
+    fun aLoggedServingOfASplitRecipeIsNeverOfferedTheSplitAgain() {
+        val split = RecipeServings.split(emptyList(), totalGrams = 2000.0, servings = 5)
+        val logged = FoodEntry(
+            name = "Chili",
+            calories = 500,
+            protein = 30.0,
+            carbs = 40.0,
+            fat = 20.0,
+            source = FoodSource.MANUAL,
+            servingSizeGrams = split.servingGrams,
+            servingUnitOptions = split.options,
+            selectedServingUnit = "serving",
+            selectedServingQuantity = 1.0,
+            ingredients = listOf(
+                MealIngredient("Beans", 250.0, 300, 20.0, 35.0, 2.0),
+                MealIngredient("Beef", 150.0, 200, 10.0, 5.0, 18.0)
+            )
+        )
+        val json = Json { ignoreUnknownKeys = true }
+        val decoded = json.decodeFromString(FoodEntry.serializer(), json.encodeToString(FoodEntry.serializer(), logged))
+
+        // The 400 g portion still has a breakdown and a known mass, but it is not the recipe:
+        // "2 servings" would log 200 g instead of half the 2,000 g pot.
+        assertTrue(RecipeServings.isAvailable(decoded.ingredients.size, decoded.reviewServingReference, decoded.hasKnownServingSize))
+        assertTrue(RecipeServings.isLoggedPortion(decoded.servingUnitOptions))
+        assertTrue(RecipeServings.isLoggedPortion(listOf(ServingUnitOption(unit = "Serving", gramsPerUnit = 250.0))))
+
+        // A whole meal logged in grams or other units can still be split.
+        assertFalse(RecipeServings.isLoggedPortion(emptyList()))
+        assertFalse(RecipeServings.isLoggedPortion(listOf(ServingUnitOption(unit = "cup", gramsPerUnit = 240.0))))
+    }
+
     private val chili = listOf(
         MealIngredient("Beans", 1000.0, 1100, 70.0, 200.0, 5.0),
         MealIngredient("Beef", 800.0, 2000, 200.0, 0.0, 130.0),

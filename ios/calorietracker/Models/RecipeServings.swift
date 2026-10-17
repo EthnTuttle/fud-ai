@@ -36,6 +36,14 @@ enum RecipeServings {
         servingSizeIsKnown && ingredientCount >= 2 && totalGrams.isFinite && totalGrams > 0
     }
 
+    /// A logged entry that already has a "serving" unit holds a portion, not
+    /// the whole recipe. The recipe's servings count is not saved with it, so
+    /// splitting it again would divide that portion instead of the recipe. The
+    /// edit sheet and a re-log of a logged entry hide the control for it.
+    static func isLoggedPortion(options: [ServingUnitOption]) -> Bool {
+        options.contains { $0.normalizedUnit == unit }
+    }
+
     /// Replaces any existing "serving" unit with `totalGrams / servings` and
     /// selects one serving. The new unit goes first so it survives the
     /// four-option cap when the logged entry is reopened.

@@ -23,6 +23,9 @@ struct FoodResultView: View {
     /// True when a barcode Open Food Facts could not use was prefilled from the
     /// user's own earlier nutrition-label scan (#485).
     let usesSavedBarcodeLabel: Bool
+    /// False when the review re-logs an entry that already holds one portion of
+    /// a split recipe, so that portion is never split again (#458).
+    let allowsRecipeServings: Bool
 
     @State private var baseServingSizeGrams: Double
     @State private var servingUnitOptions: [ServingUnitOption]
@@ -137,6 +140,7 @@ struct FoodResultView: View {
         progressiveMeal: Bool = false,
         productMetadata: FoodProductMetadata? = nil,
         usesSavedBarcodeLabel: Bool = false,
+        allowsRecipeServings: Bool = true,
         servingSizeGrams: Double = 100,
         sugar: Double? = nil,
         addedSugar: Double? = nil,
@@ -205,6 +209,7 @@ struct FoodResultView: View {
         self.progressiveMeal = progressiveMeal
         self.productMetadata = productMetadata
         self.usesSavedBarcodeLabel = usesSavedBarcodeLabel
+        self.allowsRecipeServings = allowsRecipeServings
         self._baseServingSizeGrams = State(initialValue: servingSizeGrams)
         self._servingUnitOptions = State(initialValue: normalizedServingUnitOptions)
         self._servingSizeIsKnown = State(initialValue: servingSizeIsKnown)
@@ -410,11 +415,13 @@ struct FoodResultView: View {
 
     /// Shown only for a real ingredient breakdown with a known total mass (#458).
     private var recipeServingsBinding: Binding<Int>? {
-        guard RecipeServings.isAvailable(
-            ingredientCount: editableIngredients.count,
-            totalGrams: baseServingSizeGrams,
-            servingSizeIsKnown: servingSizeIsKnown
-        ) else { return nil }
+        guard allowsRecipeServings,
+              RecipeServings.isAvailable(
+                  ingredientCount: editableIngredients.count,
+                  totalGrams: baseServingSizeGrams,
+                  servingSizeIsKnown: servingSizeIsKnown
+              )
+        else { return nil }
         return Binding(get: { recipeServings }, set: applyRecipeServings)
     }
 

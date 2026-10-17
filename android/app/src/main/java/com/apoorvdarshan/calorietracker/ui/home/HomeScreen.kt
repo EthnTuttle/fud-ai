@@ -1133,6 +1133,7 @@ CalorieHero(
                 ?: if (ui.pendingImageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
             initialTimestamp = initialTimestamp,
             usesSavedBarcodeLabel = ui.pendingUsesSavedBarcodeLabel,
+            allowsRecipeServings = !ui.pendingReviewIsLoggedPortion,
             onWhatIfSuggestion = vm::suggestMealWhatIf,
             onSave = { name, grams, servingSizeIsKnown, scale, mealType, selectedServingUnit, selectedServingQuantity, editedAnalysis, timestamp ->
                 vm.saveAnalysis(

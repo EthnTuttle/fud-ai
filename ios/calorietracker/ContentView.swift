@@ -1134,6 +1134,9 @@ struct HomeView: View {
     @State private var currentFoodSource: FoodSource = .snapFood
     /// The review shows a barcode's saved nutrition label (#485).
     @State private var currentFoodResultUsesSavedLabel = false
+    /// The review re-logs an entry that already holds one portion of a split
+    /// recipe, so it hides "Servings in recipe" (#458).
+    @State private var currentFoodResultIsLoggedPortion = false
     @State private var showNutritionDetail = false
     @State private var showCustomWaterLog = false
     @State private var showFastingStart = false
@@ -2014,6 +2017,7 @@ private var dailyStepsTaskKey: String {
                             progressiveMeal: result.progressiveMeal,
                             productMetadata: result.productMetadata,
                             usesSavedBarcodeLabel: currentFoodResultUsesSavedLabel,
+                            allowsRecipeServings: !currentFoodResultIsLoggedPortion,
                             servingSizeGrams: result.servingSizeGrams,
                             sugar: result.sugar,
                             addedSugar: result.addedSugar,
@@ -2084,6 +2088,7 @@ private var dailyStepsTaskKey: String {
                         currentFoodSource = entry.source
                         currentFoodResult = entry.reviewAnalysis
                         currentFoodResultUsesSavedLabel = false
+                        currentFoodResultIsLoggedPortion = RecipeServings.isLoggedPortion(options: entry.servingUnitOptions)
                         foodLogPhase = .result
                         activeSheet = .foodResult
                     }
@@ -2517,6 +2522,7 @@ private var dailyStepsTaskKey: String {
     private func presentFoodLogLoading(_ phase: FoodLogPhase) {
         currentFoodResult = nil
         currentFoodResultUsesSavedLabel = false
+        currentFoodResultIsLoggedPortion = false
         foodLogPhase = phase
         switch phase {
         case .analyzing:
@@ -2531,9 +2537,14 @@ private var dailyStepsTaskKey: String {
     }
 
     @MainActor
-    private func presentFoodResult(_ result: GeminiService.FoodAnalysis, usesSavedBarcodeLabel: Bool = false) {
+    private func presentFoodResult(
+        _ result: GeminiService.FoodAnalysis,
+        usesSavedBarcodeLabel: Bool = false,
+        isLoggedPortion: Bool = false
+    ) {
         currentFoodResult = result
         currentFoodResultUsesSavedLabel = usesSavedBarcodeLabel
+        currentFoodResultIsLoggedPortion = isLoggedPortion
         foodLogPhase = .result
         activeSheet = .foodResult
     }
@@ -2589,7 +2600,11 @@ private var dailyStepsTaskKey: String {
                     retryRequest = nil
                     currentEmoji = savedLabel.emoji
                     currentFoodSource = .nutritionLabel
-                    presentFoodResult(savedLabel.reviewAnalysis, usesSavedBarcodeLabel: true)
+                    presentFoodResult(
+                        savedLabel.reviewAnalysis,
+                        usesSavedBarcodeLabel: true,
+                        isLoggedPortion: RecipeServings.isLoggedPortion(options: savedLabel.servingUnitOptions)
+                    )
                     return
                 }
                 presentBarcodeLookupError(error, barcode: trimmedBarcode)

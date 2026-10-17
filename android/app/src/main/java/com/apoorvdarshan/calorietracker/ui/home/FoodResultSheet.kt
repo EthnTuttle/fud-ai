@@ -111,6 +111,8 @@ fun FoodResultSheet(
     isSubmitting: Boolean = false,
     /** True when a barcode Open Food Facts could not use was prefilled from a saved label (#485). */
     usesSavedBarcodeLabel: Boolean = false,
+    /** False when the review re-logs an entry that already holds one portion of a split recipe (#458). */
+    allowsRecipeServings: Boolean = true,
     container: com.apoorvdarshan.calorietracker.AppContainer,
     analyzeIngredientText: suspend (String) -> FoodAnalysis,
     lookupIngredientBarcode: suspend (String) -> FoodAnalysis,
@@ -704,7 +706,8 @@ fun FoodResultSheet(
                         )
                     },
                     recipeServings = recipeServings.takeIf {
-                        RecipeServings.isAvailable(editableIngredients.size, baseServingGrams, servingSizeIsKnown)
+                        allowsRecipeServings &&
+                            RecipeServings.isAvailable(editableIngredients.size, baseServingGrams, servingSizeIsKnown)
                     },
                     onRecipeServingsChange = { applyRecipeServings(it) }
                 )

@@ -285,12 +285,16 @@ struct EditFoodEntryView: View {
     }
 
     /// Shown only for a real ingredient breakdown with a known total mass (#458).
+    /// An entry logged as one serving of a split recipe holds only that portion,
+    /// so it never offers the split again.
     private var recipeServingsBinding: Binding<Int>? {
-        guard RecipeServings.isAvailable(
-            ingredientCount: baseIngredients.count,
-            totalGrams: baseServingSizeGrams,
-            servingSizeIsKnown: servingSizeIsKnown
-        ) else { return nil }
+        guard !RecipeServings.isLoggedPortion(options: entry.servingUnitOptions),
+              RecipeServings.isAvailable(
+                  ingredientCount: baseIngredients.count,
+                  totalGrams: baseServingSizeGrams,
+                  servingSizeIsKnown: servingSizeIsKnown
+              )
+        else { return nil }
         return Binding(get: { recipeServings }, set: applyRecipeServings)
     }
 

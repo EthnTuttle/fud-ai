@@ -608,8 +608,11 @@ fun EditFoodEntrySheet(
                             }
                         )
                     },
+                    // An entry logged as one serving of a split recipe holds only that
+                    // portion, so it never offers the split again.
                     recipeServings = recipeServings.takeIf {
-                        RecipeServings.isAvailable(currentBaseEntry.ingredients.size, baseServing, servingSizeIsKnown)
+                        !RecipeServings.isLoggedPortion(entry.servingUnitOptions) &&
+                            RecipeServings.isAvailable(currentBaseEntry.ingredients.size, baseServing, servingSizeIsKnown)
                     },
                     onRecipeServingsChange = { applyRecipeServings(it) }
                 )

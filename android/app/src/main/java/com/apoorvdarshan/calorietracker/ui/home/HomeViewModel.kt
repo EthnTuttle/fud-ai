@@ -9,6 +9,7 @@ import com.apoorvdarshan.calorietracker.models.BarcodeLabelMemory
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
 import com.apoorvdarshan.calorietracker.models.LabelScanBarcodeHandoff
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.AddMenuConfig
 import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
@@ -124,6 +125,16 @@ data class HomeUiState(
         get() = listOfNotNull(pendingDraftImageFilename) + pendingDraftAdditionalImageFilenames
     val pendingUsesSavedBarcodeLabel: Boolean
         get() = pendingAnalysis != null && pendingAnalysis === savedLabelAnalysis
+    /**
+     * The review re-logs a logged entry (Saved Meals or a saved barcode label) that
+     * already holds one portion of a split recipe, so it hides "Servings in recipe" (#458).
+     */
+    val pendingReviewIsLoggedPortion: Boolean
+        get() = when {
+            pendingReviewSource != null -> RecipeServings.isLoggedPortion(pendingReviewSource.servingUnitOptions)
+            pendingUsesSavedBarcodeLabel -> RecipeServings.isLoggedPortion(pendingAnalysis?.servingUnitOptions.orEmpty())
+            else -> false
+        }
     val activeFast: FastingSession? get() = fastingSessions.lastOrNull { it.isActive }
     fun isFavorite(entry: FoodEntry): Boolean = entry.favoriteKey in favoriteKeys
 }
