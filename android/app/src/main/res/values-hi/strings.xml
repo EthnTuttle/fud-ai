@@ -722,6 +722,7 @@
     <string name="whats_new_v30_adaptive">Adaptive Goals और Energy Burn अब प्रयोगात्मक नहीं हैं और नए इंस्टॉल पर डिफ़ॉल्ट रूप से चालू हैं।</string>
     <string name="whats_new_v30_widgets">विजेट नए रूप में: होम का स्पीडोमीटर स्टाइल, हर विजेट के असली आकार में।</string>
     <string name="whats_new_v30_restore">दोबारा इंस्टॉल किया या फ़ोन बदला? आपका फ़ूड लॉग, वज़न और बॉडी फ़ैट अब Health Connect से अपने आप बहाल हो जाते हैं।</string>
+    <string name="cloud_backup_restore_no_space">इस बैकअप को रीस्टोर करने के लिए पर्याप्त खाली स्टोरेज नहीं है। थोड़ी जगह खाली करें और फिर से कोशिश करें।</string>
     <string name="settings_fasting_tracking">उपवास ट्रैकिंग</string>
     <string name="settings_fasting_goal">डिफ़ॉल्ट उपवास लक्ष्य</string>
     <string name="settings_fasting_goal_value">%1$d घंटे</string>

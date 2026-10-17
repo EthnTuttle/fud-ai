@@ -723,6 +723,7 @@
     <string name="whats_new_v30_adaptive">Objetivos adaptativos y Quema de energía dejan de ser experimentales y vienen activados por defecto en instalaciones nuevas.</string>
     <string name="whats_new_v30_widgets">Rediseño de widgets: el estilo velocímetro de Inicio, dibujado al tamaño real de cada widget.</string>
     <string name="whats_new_v30_restore">¿Reinstalaste o cambiaste de teléfono? Tu registro de comidas, peso y grasa corporal ahora se restauran automáticamente desde Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">No hay suficiente almacenamiento libre para restaurar esta copia de seguridad. Libera espacio e inténtalo de nuevo.</string>
     <string name="settings_fasting_tracking">Seguimiento del ayuno</string>
     <string name="settings_fasting_goal">Objetivo de ayuno predeterminado</string>
     <string name="settings_fasting_goal_value">%1$d horas</string>
