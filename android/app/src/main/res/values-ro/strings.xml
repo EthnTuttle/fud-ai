@@ -543,6 +543,7 @@
     <string name="settings_clear_key">Șterge cheia</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Cântăriri mai vechi</string>
     <string name="settings_clear_food_log">Șterge jurnalul alimentar</string>
     <string name="settings_delete_all_data">Șterge toate datele</string>
 
@@ -805,4 +806,5 @@
     <string name="settings_save_photos_to_gallery">Salvează în Fotografii</string>
     <string name="settings_save_photos_to_gallery_subtitle">Salvează și fotografiile meselor în galerie la înregistrare</string>
     <string name="settings_other_nutrients_note">Separat de obiectivele de calorii, proteine, carbohidrați și grăsimi.</string>
+    <string name="label_date">Data</string>
 </resources>

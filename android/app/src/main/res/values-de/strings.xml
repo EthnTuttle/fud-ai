@@ -540,6 +540,7 @@
     <string name="settings_clear_key">Schlüssel löschen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Ältere Gewichtseinträge</string>
     <string name="settings_clear_food_log">Ernährungstagebuch löschen</string>
     <string name="settings_delete_all_data">Alle Daten löschen</string>
 
@@ -801,4 +802,5 @@
     <string name="settings_save_photos_to_gallery">In Fotos speichern</string>
     <string name="settings_save_photos_to_gallery_subtitle">Mahlzeitfotos beim Protokollieren auch in deiner Galerie speichern</string>
     <string name="settings_other_nutrients_note">Getrennt von den Zielen für Kalorien, Protein, Kohlenhydrate und Fett.</string>
+    <string name="label_date">Datum</string>
 </resources>

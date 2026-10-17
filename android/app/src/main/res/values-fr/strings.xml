@@ -541,6 +541,7 @@
     <string name="settings_clear_key">Effacer la clé</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesées plus anciennes</string>
     <string name="settings_clear_food_log">Effacer le journal alimentaire</string>
     <string name="settings_delete_all_data">Supprimer toutes les données</string>
 
@@ -802,4 +803,5 @@
     <string name="settings_save_photos_to_gallery">Enregistrer dans Photos</string>
     <string name="settings_save_photos_to_gallery_subtitle">Enregistrer aussi les photos de repas dans votre galerie lors de la saisie</string>
     <string name="settings_other_nutrients_note">Distinct des objectifs de calories, protéines, glucides et lipides.</string>
+    <string name="label_date">Date</string>
 </resources>

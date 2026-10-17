@@ -1193,7 +1193,7 @@ private fun HealthConnectStep(container: AppContainer, enabled: Boolean, onToggl
                         ))
                 )
                 .clickable(enabled = available) {
-                    hcLauncher.launch(container.health.permissions)
+                    hcLauncher.launch(container.health.connectPermissions)
                 },
             contentAlignment = Alignment.Center
         ) {

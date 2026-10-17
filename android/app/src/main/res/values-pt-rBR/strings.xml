@@ -541,6 +541,7 @@
     <string name="settings_clear_key">Limpar chave</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesagens anteriores</string>
     <string name="settings_clear_food_log">Limpar diário alimentar</string>
     <string name="settings_delete_all_data">Apagar todos os dados</string>
 
@@ -802,4 +803,5 @@
     <string name="settings_save_photos_to_gallery">Salvar em Fotos</string>
     <string name="settings_save_photos_to_gallery_subtitle">Também salvar fotos de refeições na galeria ao registrar</string>
     <string name="settings_other_nutrients_note">Separado das metas de calorias, proteínas, carboidratos e gorduras.</string>
+    <string name="label_date">Data</string>
 </resources>
