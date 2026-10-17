@@ -232,7 +232,8 @@ internal enum class HealthReadSync {
     /** Only history access is new, and the token was seeded by a build that did not
      *  remember deletions. Its backfill already imported everything readable then, and
      *  importing that window again would bring back readings deleted before deletions
-     *  were remembered, so only records older than that window are imported. */
+     *  were remembered, so only records older than that window are imported (see
+     *  [healthHistoryImportCutoff]). */
     OLDER_HISTORY_ONLY
 }
 
@@ -252,6 +253,19 @@ internal fun healthReadSync(hasToken: Boolean, seededTypes: Set<String>, desired
  *  older than this were never readable before history access. */
 internal fun healthRecordsHiddenWithoutHistoryBefore(firstInstall: Instant): Instant =
     firstInstall.minus(Duration.ofDays(30))
+
+/**
+ * Where [HealthReadSync.OLDER_HISTORY_ONLY] stops importing: records older than this.
+ *
+ * The earlier backfill imported every other-app reading it could read, so the oldest one
+ * the history still holds ([heldExternalReadingTimes], weight and body fat together)
+ * marks where its window began, however long after install the first grant came. Newer
+ * readings the history lacks were readable then, so the user deleted them and they stay
+ * out. With none held, the window began no earlier than 30 days before install
+ * ([healthRecordsHiddenWithoutHistoryBefore]). Null when neither is known.
+ */
+internal fun healthHistoryImportCutoff(heldExternalReadingTimes: List<Instant>, firstInstall: Instant?): Instant? =
+    heldExternalReadingTimes.minOrNull() ?: firstInstall?.let(::healthRecordsHiddenWithoutHistoryBefore)
 
 /** Token labels after [HealthReadSync.OLDER_HISTORY_ONLY] imported the older records. */
 internal fun healthReadTypesWithHistory(seededTypes: Set<String>): Set<String> =
@@ -429,7 +443,9 @@ class AppContainer(app: FudAIApp) {
             val seededTypes = prefs.healthChangesTokenTypes.first()
             when (healthReadSync(prefs.healthChangesToken.first() != null, seededTypes, desiredTypes)) {
                 HealthReadSync.FULL_BACKFILL -> prefs.clearHealthChangesToken()
-                HealthReadSync.OLDER_HISTORY_ONLY -> importHealthHistoryOlderThanToken(caps, seededTypes)
+                // A failed read retries on the next sync. The token waits too: readings it
+                // would import in between could move the import's cutoff.
+                HealthReadSync.OLDER_HISTORY_ONLY -> if (!importHealthHistoryOlderThanToken(caps, seededTypes)) return
                 HealthReadSync.CHANGES -> Unit
             }
 
@@ -440,12 +456,18 @@ class AppContainer(app: FudAIApp) {
                 // still caps other apps' records at 30 days before the first grant.
                 val now = Instant.now()
                 val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
+                var readEverything = true
                 if (caps.weightRead) {
-                    weightRepository.importExternalWeights(health.readWeights(from, now))
+                    val weights = health.readWeights(from, now)
+                    if (weights != null) weightRepository.importExternalWeights(weights) else readEverything = false
                 }
                 if (caps.bodyFatRead) {
-                    bodyFatRepository.importExternalBodyFats(health.readBodyFats(from, now))
+                    val bodyFats = health.readBodyFats(from, now)
+                    if (bodyFats != null) bodyFatRepository.importExternalBodyFats(bodyFats) else readEverything = false
                 }
+                // A token seeded now would never deliver what a failed read missed; leave it
+                // unset so the next sync runs the backfill again (imports are deduped).
+                if (!readEverything) return
                 // Seed a token covering only the types we can actually read.
                 val recordTypes = buildSet {
                     if (caps.weightRead) add(androidx.health.connect.client.records.WeightRecord::class)
@@ -477,18 +499,27 @@ class AppContainer(app: FudAIApp) {
     }
 
     /** [HealthReadSync.OLDER_HISTORY_ONLY]: imports the weigh-ins and body-fat readings
-     *  that history access newly unlocked, then marks the token as covering history. */
-    private suspend fun importHealthHistoryOlderThanToken(caps: HealthCapabilities, seededTypes: Set<String>) {
+     *  that history access newly unlocked, then marks the token as covering history.
+     *  Returns false when a read failed: nothing is imported or marked then, so the next
+     *  sync retries with the same cutoff. */
+    private suspend fun importHealthHistoryOlderThanToken(caps: HealthCapabilities, seededTypes: Set<String>): Boolean {
+        val now = Instant.now()
+        val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
+        // The whole window, not just the older part: the readings the history already
+        // holds are what place the cutoff.
+        val weights = if (caps.weightRead) health.readWeights(from, now) ?: return false else emptyList()
+        val bodyFats = if (caps.bodyFatRead) health.readBodyFats(from, now) ?: return false else emptyList()
         val firstInstall = runCatching {
             Instant.ofEpochMilli(appContext.packageManager.getPackageInfo(appContext.packageName, 0).firstInstallTime)
-        }.getOrNull() ?: return
-        val from = Instant.now().minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
-        val to = healthRecordsHiddenWithoutHistoryBefore(firstInstall)
-        if (to.isAfter(from)) {
-            if (caps.weightRead) weightRepository.importExternalWeights(health.readWeights(from, to))
-            if (caps.bodyFatRead) bodyFatRepository.importExternalBodyFats(health.readBodyFats(from, to))
-        }
+        }.getOrNull()
+        val cutoff = healthHistoryImportCutoff(
+            weightRepository.heldExternalReadingTimes(weights) + bodyFatRepository.heldExternalReadingTimes(bodyFats),
+            firstInstall
+        ) ?: return true // No safe cutoff yet; try again next sync without holding up the token.
+        weightRepository.importExternalWeights(weights.filter { it.time.isBefore(cutoff) })
+        bodyFatRepository.importExternalBodyFats(bodyFats.filter { it.time.isBefore(cutoff) })
         prefs.setHealthChangesTokenTypes(healthReadTypesWithHistory(seededTypes))
+        return true
     }
 
     /** One privacy-safe evidence snapshot shared by manual Recalculate and Adaptive Goals. Health

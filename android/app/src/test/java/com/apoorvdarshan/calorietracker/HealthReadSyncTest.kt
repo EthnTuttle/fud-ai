@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker
 import com.apoorvdarshan.calorietracker.services.health.HealthCapabilities
 import com.apoorvdarshan.calorietracker.ui.progress.TimeRange
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Instant
@@ -53,6 +54,21 @@ class HealthReadSyncTest {
         // Only records nothing could read before history access: older than 30 days before install.
         val installed = Instant.parse("2026-03-01T10:00:00Z")
         assertEquals(Instant.parse("2026-01-30T10:00:00Z"), healthRecordsHiddenWithoutHistoryBefore(installed))
+    }
+
+    @Test
+    fun olderHistoryImportReachesTheReadingsHiddenBetweenInstallAndFirstGrant() {
+        // Installed in January, connected in March: that backfill read from 30 days before
+        // March, so the readings it imported (and the history still holds) begin in February.
+        // Everything older is imported, including December to February, not just what
+        // predates 30 days before install.
+        val installed = Instant.parse("2026-01-10T10:00:00Z")
+        val held = listOf(Instant.parse("2026-03-01T07:00:00Z"), Instant.parse("2026-02-08T07:00:00Z"))
+
+        assertEquals(Instant.parse("2026-02-08T07:00:00Z"), healthHistoryImportCutoff(held, installed))
+        // Nothing held from another app: the window began no earlier than 30 days before install.
+        assertEquals(Instant.parse("2025-12-11T10:00:00Z"), healthHistoryImportCutoff(emptyList(), installed))
+        assertNull(healthHistoryImportCutoff(emptyList(), firstInstall = null))
     }
 
     @Test

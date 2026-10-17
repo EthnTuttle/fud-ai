@@ -133,6 +133,16 @@ class WeightRepository(
         syncProfileWeightToLatest()
     }
 
+    /** Times of the readings in [external] that another app wrote and the history already
+     *  holds, matched by the id [importExternalWeights] gives them. */
+    suspend fun heldExternalReadingTimes(external: List<ExternalWeight>): List<Instant> {
+        val manager = health ?: return emptyList()
+        val held = prefs.weightEntries.first().mapTo(HashSet()) { it.id }
+        return external
+            .filter { !manager.isOwnRecord(it.clientRecordId) && externalId(it.clientRecordId, it.recordId, it.time) in held }
+            .map { it.time }
+    }
+
     /** Stable id for an external record: prefer the source's clientRecordId, then the
      *  Health Connect record id, then the timestamp. Crucially the VALUE is never part of
      *  the seed, so an in-place correction (same record, new weight) upserts in place

@@ -106,6 +106,15 @@ class BodyFatRepository(
         syncProfileBodyFatToLatest()
     }
 
+    /** Same as [WeightRepository.heldExternalReadingTimes], for body-fat readings. */
+    suspend fun heldExternalReadingTimes(external: List<ExternalBodyFat>): List<Instant> {
+        val manager = health ?: return emptyList()
+        val held = prefs.bodyFatEntries.first().mapTo(HashSet()) { it.id }
+        return external
+            .filter { !manager.isOwnRecord(it.clientRecordId) && externalId(it.clientRecordId, it.recordId, it.time) in held }
+            .map { it.time }
+    }
+
     /** Stable id for an external record: prefer the source's clientRecordId, then the
      *  Health Connect record id, then the timestamp. The VALUE is never part of the seed,
      *  so an in-place correction upserts in place instead of duplicating. */

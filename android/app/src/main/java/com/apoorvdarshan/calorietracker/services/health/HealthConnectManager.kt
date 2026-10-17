@@ -35,6 +35,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.roundToInt
 
 /**
@@ -355,35 +356,29 @@ class HealthConnectManager(
         }
     }
 
-    suspend fun readWeights(from: Instant, to: Instant): List<ExternalWeight> {
-        val c = client ?: return emptyList()
-        val out = mutableListOf<ExternalWeight>()
-        var pageToken: String? = null
+    /** Every weigh-in in [from, to), or null when Health Connect is unavailable or a page
+     *  read failed, so a caller never takes a partial read for the whole history. */
+    suspend fun readWeights(from: Instant, to: Instant): List<ExternalWeight>? {
+        val c = client ?: return null
         // readRecords returns one page (default 1000); follow pageToken so a large
         // history isn't silently truncated to the first page.
-        do {
-            val response = runCatching {
-                c.readRecords(
-                    ReadRecordsRequest(
-                        recordType = WeightRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to),
-                        pageToken = pageToken
-                    )
+        return readAllPages { pageToken ->
+            val response = c.readRecords(
+                ReadRecordsRequest(
+                    recordType = WeightRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    pageToken = pageToken
                 )
-            }.getOrNull() ?: break
-            response.records.forEach {
-                out.add(
-                    ExternalWeight(
-                        time = it.time,
-                        weightKg = it.weight.inKilograms,
-                        clientRecordId = it.metadata.clientRecordId,
-                        recordId = it.metadata.id
-                    )
+            )
+            response.records.map {
+                ExternalWeight(
+                    time = it.time,
+                    weightKg = it.weight.inKilograms,
+                    clientRecordId = it.metadata.clientRecordId,
+                    recordId = it.metadata.id
                 )
-            }
-            pageToken = response.pageToken
-        } while (pageToken != null)
-        return out
+            } to response.pageToken
+        }
     }
 
     // -- Body fat ---------------------------------------------------------
@@ -414,34 +409,27 @@ class HealthConnectManager(
         }
     }
 
-    suspend fun readBodyFats(from: Instant, to: Instant): List<ExternalBodyFat> {
-        val c = client ?: return emptyList()
-        val out = mutableListOf<ExternalBodyFat>()
-        var pageToken: String? = null
-        do {
-            val response = runCatching {
-                c.readRecords(
-                    ReadRecordsRequest(
-                        recordType = BodyFatRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to),
-                        pageToken = pageToken
-                    )
+    /** Every body-fat reading in [from, to), or null like [readWeights]. */
+    suspend fun readBodyFats(from: Instant, to: Instant): List<ExternalBodyFat>? {
+        val c = client ?: return null
+        return readAllPages { pageToken ->
+            val response = c.readRecords(
+                ReadRecordsRequest(
+                    recordType = BodyFatRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    pageToken = pageToken
                 )
-            }.getOrNull() ?: break
-            response.records.forEach {
-                out.add(
-                    ExternalBodyFat(
-                        time = it.time,
-                        // Convert HC's 0–100 back to our 0–1 fraction convention.
-                        bodyFatFraction = it.percentage.value / 100.0,
-                        clientRecordId = it.metadata.clientRecordId,
-                        recordId = it.metadata.id
-                    )
+            )
+            response.records.map {
+                ExternalBodyFat(
+                    time = it.time,
+                    // Convert HC's 0–100 back to our 0–1 fraction convention.
+                    bodyFatFraction = it.percentage.value / 100.0,
+                    clientRecordId = it.metadata.clientRecordId,
+                    recordId = it.metadata.id
                 )
-            }
-            pageToken = response.pageToken
-        } while (pageToken != null)
-        return out
+            } to response.pageToken
+        }
     }
 
     // -- Nutrition --------------------------------------------------------
@@ -954,6 +942,26 @@ class HealthConnectManager(
          *  v6 = added StepsRecord read permission (daily steps on Home). */
         const val CURRENT_TYPES_VERSION = 6
     }
+}
+
+/** Follows a paged Health Connect read through every page. Null as soon as one page fails
+ *  (rate limit, binder error), so the caller can retry later instead of treating the
+ *  pages read so far as the complete history. */
+internal suspend fun <T> readAllPages(readPage: suspend (pageToken: String?) -> Pair<List<T>, String?>): List<T>? {
+    val out = mutableListOf<T>()
+    var pageToken: String? = null
+    do {
+        val (records, next) = try {
+            readPage(pageToken)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return null
+        }
+        out += records
+        pageToken = next
+    } while (pageToken != null)
+    return out
 }
 
 internal fun externalActiveCalories(allActive: Double, ownActive: Double): Double =
