@@ -828,6 +828,7 @@
     <string name="storage_compress_freed">Звільнено %1$s.</string>
     <string name="storage_compress_nothing">Немає фото, які потрібно стиснути.</string>
     <string name="storage_compress_unreadable">Деякі фото не вдалося прочитати, тому їх не змінено.</string>
+    <string name="storage_compress_failed">Деякі фото не вдалося стиснути, тому їх не змінено. Переконайтеся, що на пристрої є вільне місце, і спробуйте ще раз.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистити журнал їжі?</string>

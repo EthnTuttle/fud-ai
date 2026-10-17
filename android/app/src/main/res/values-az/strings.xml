@@ -562,6 +562,7 @@
     <string name="storage_compress_freed">%1$s boşaldıldı.</string>
     <string name="storage_compress_nothing">Sıxışdırılmalı şəkil yoxdur.</string>
     <string name="storage_compress_unreadable">Bəzi şəkillər oxuna bilmədi və dəyişdirilmədi.</string>
+    <string name="storage_compress_failed">Bəzi şəkilləri sıxışdırmaq mümkün olmadı və onlar dəyişdirilmədi. Cihazınızda boş yer olduğundan əmin olun, sonra yenidən cəhd edin.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Yemək qeydləri təmizlənsin?</string>

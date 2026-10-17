@@ -836,6 +836,7 @@
     <string name="storage_compress_freed">Freed %1$s.</string>
     <string name="storage_compress_nothing">No photos needed compressing.</string>
     <string name="storage_compress_unreadable">Some photos couldn’t be read and were left unchanged.</string>
+    <string name="storage_compress_failed">Some photos couldn’t be compressed and were left unchanged. Make sure your device has free space, then try again.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Clear food log?</string>

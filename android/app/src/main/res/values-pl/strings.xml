@@ -568,6 +568,7 @@
     <string name="storage_compress_freed">Zwolniono %1$s.</string>
     <string name="storage_compress_nothing">Żadne zdjęcia nie wymagały kompresji.</string>
     <string name="storage_compress_unreadable">Niektórych zdjęć nie udało się odczytać i pozostały bez zmian.</string>
+    <string name="storage_compress_failed">Niektórych zdjęć nie udało się skompresować i pozostały bez zmian. Upewnij się, że na urządzeniu jest wolne miejsce, i spróbuj ponownie.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Wyczyścić dziennik jedzenia?</string>

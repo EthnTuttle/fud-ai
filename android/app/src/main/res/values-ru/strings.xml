@@ -568,6 +568,7 @@
     <string name="storage_compress_freed">Освобождено %1$s.</string>
     <string name="storage_compress_nothing">Нет фото, которые нужно сжать.</string>
     <string name="storage_compress_unreadable">Некоторые фото не удалось прочитать, они остались без изменений.</string>
+    <string name="storage_compress_failed">Некоторые фото не удалось сжать, они остались без изменений. Убедитесь, что на устройстве есть свободное место, и попробуйте снова.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистить дневник питания?</string>

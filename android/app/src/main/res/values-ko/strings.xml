@@ -561,6 +561,7 @@
     <string name="storage_compress_freed">%1$s 확보됨.</string>
     <string name="storage_compress_nothing">압축할 사진이 없습니다.</string>
     <string name="storage_compress_unreadable">일부 사진은 읽을 수 없어 변경하지 않았습니다.</string>
+    <string name="storage_compress_failed">일부 사진은 압축할 수 없어 변경하지 않았습니다. 기기에 여유 공간이 있는지 확인한 후 다시 시도하세요.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">음식 기록을 지울까요?</string>

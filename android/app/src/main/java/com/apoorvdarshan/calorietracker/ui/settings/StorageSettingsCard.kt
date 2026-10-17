@@ -108,16 +108,20 @@ internal fun StorageSettingsCard(storage: StorageMaintenance) {
     }
 
     state.compressionResult?.let { result ->
-        val summary = if (result.compressedCount > 0) {
-            stringResource(R.string.storage_compress_freed, size(result.bytesSaved))
-        } else {
-            stringResource(R.string.storage_compress_nothing)
+        // "Photos Compressed" only when a photo actually got smaller; otherwise the action name,
+        // with a message that says why nothing (or not everything) changed.
+        val title = if (result.compressedCount > 0) R.string.storage_compress_done_title else R.string.storage_compress_photos
+        val summary = when {
+            result.compressedCount > 0 -> stringResource(R.string.storage_compress_freed, size(result.bytesSaved))
+            result.unreadableCount == 0 && result.failedCount == 0 -> stringResource(R.string.storage_compress_nothing)
+            else -> null
         }
         val unreadable = if (result.unreadableCount > 0) stringResource(R.string.storage_compress_unreadable) else null
+        val failed = if (result.failedCount > 0) stringResource(R.string.storage_compress_failed) else null
         FudGlassDialog(onDismissRequest = storage::dismissCompressionResult) {
-            Text(stringResource(R.string.storage_compress_done_title), fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(title), fontSize = 21.sp, fontWeight = FontWeight.Bold)
             Text(
-                listOfNotNull(summary, unreadable).joinToString(" "),
+                listOfNotNull(summary, unreadable, failed).joinToString(" "),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
             )
             FudGlassDialogActions(

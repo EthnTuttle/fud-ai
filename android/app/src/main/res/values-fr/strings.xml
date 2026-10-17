@@ -563,6 +563,7 @@
     <string name="storage_compress_freed">%1$s libérés.</string>
     <string name="storage_compress_nothing">Aucune photo n’avait besoin d’être compressée.</string>
     <string name="storage_compress_unreadable">Certaines photos n’ont pas pu être lues et n’ont pas été modifiées.</string>
+    <string name="storage_compress_failed">Certaines photos n’ont pas pu être compressées et n’ont pas été modifiées. Assurez-vous que votre appareil dispose d’espace libre, puis réessayez.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Effacer le journal alimentaire ?</string>

@@ -85,10 +85,11 @@ final class StorageMaintenance {
     }
 
     /// Deletes thumbnails and downloaded workout frames; both are rebuilt on demand.
+    /// Neither deletion runs on the main actor.
     func clearCache() async {
         guard !isBusy else { return }
         isClearingCache = true
-        FoodImageStore.shared.clearThumbnailCache()
+        await FoodImageStore.shared.clearThumbnailCache()
         await WorkoutFrameStore.shared.clearCache()
         isClearingCache = false
         await refresh()
@@ -164,27 +165,35 @@ struct StorageSettingsSection: View {
         } message: {
             Text("Photos larger than 2048 pixels on their longest side will be permanently resized to 2048 pixels and saved as JPEG. Smaller photos stay unchanged. This can’t be undone.")
         }
-        .alert("Photos Compressed", isPresented: Binding(
+        .alert(compressionTitle, isPresented: Binding(
             get: { storage.compressionResult != nil },
             set: { if !$0 { storage.compressionResult = nil } }
         )) {
             Button("OK", role: .cancel) { }
         } message: {
-            Text(compressionMessage)
+            Text(storage.compressionResult.map { Self.compressionMessage(for: $0) } ?? "")
         }
     }
 
-    private var compressionMessage: String {
-        guard let result = storage.compressionResult else { return "" }
+    /// "Photos Compressed" only when a photo actually got smaller; otherwise the neutral action name.
+    private var compressionTitle: Text {
+        (storage.compressionResult?.compressedCount ?? 0) > 0 ? Text("Photos Compressed") : Text("Compress Photos")
+    }
+
+    /// Says what happened: space freed, nothing to do, or which photos were left unchanged and why.
+    static func compressionMessage(for result: StoredPhotoCompressor.Result) -> String {
         var parts: [String] = []
         if result.compressedCount > 0 {
-            let freed = Self.formatted(result.bytesSaved)
+            let freed = formatted(result.bytesSaved)
             parts.append(String(localized: "Freed \(freed)."))
-        } else {
+        } else if result.unreadableCount == 0, result.failedCount == 0 {
             parts.append(String(localized: "No photos needed compressing."))
         }
         if result.unreadableCount > 0 {
             parts.append(String(localized: "Some photos couldn’t be read and were left unchanged."))
+        }
+        if result.failedCount > 0 {
+            parts.append(String(localized: "Some photos couldn’t be compressed and were left unchanged. Make sure your device has free space, then try again."))
         }
         return parts.joined(separator: " ")
     }

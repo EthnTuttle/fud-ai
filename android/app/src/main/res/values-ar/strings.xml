@@ -574,6 +574,7 @@
     <string name="storage_compress_freed">تم تحرير %1$s.</string>
     <string name="storage_compress_nothing">لا توجد صور تحتاج إلى ضغط.</string>
     <string name="storage_compress_unreadable">تعذّرت قراءة بعض الصور وتُركت دون تغيير.</string>
+    <string name="storage_compress_failed">تعذّر ضغط بعض الصور وتُركت دون تغيير. تأكد من توفر مساحة فارغة على جهازك، ثم حاول مرة أخرى.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">مسح سجل الطعام؟</string>

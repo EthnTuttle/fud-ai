@@ -213,6 +213,7 @@ class FoodImageDecoderTest {
 
             assertEquals(1, result.compressedCount)
             assertEquals(1, result.unreadableCount)
+            assertEquals(0, result.failedCount)
             assertEquals(large.size.toLong() - File(photos, "large.jpg").length(), result.bytesSaved)
             assertEquals(listOf(1 to 3, 2 to 3, 3 to 3), progress)
             assertEquals(setOf("large.jpg", "small.jpg", "broken.jpg"), photos.list()!!.toSet())
@@ -228,6 +229,46 @@ class FoodImageDecoderTest {
             assertEquals(0, store.compressExistingPhotos().compressedCount)
         } finally {
             root.deleteRecursively()
+        }
+    }
+
+    @Test fun photosWhoseDownscaledCopyIsNotSmallerKeepTheirBytes() {
+        val root = File(context.cacheDir, "storage-test-${UUID.randomUUID()}").apply { mkdirs() }
+        try {
+            val store = FoodImageStore.forTests(root)
+            // A heavily compressed mosaic: the 2048 px re-encode at quality 80 is several times larger.
+            val mosaic = mosaicJpeg(width = 3_000, height = 2_000)
+            val reencoded = FoodImageStore.downscaledForStorage(mosaic)!!
+            assertTrue(reencoded.size > mosaic.size)
+
+            val stored = store.storeBytes(mosaic, UUID.randomUUID())!!
+            assertArrayEquals(mosaic, store.loadBytes(stored))
+
+            val result = store.compressExistingPhotos()
+            assertEquals(FoodImageStore.PhotoCompressionResult(0, 0, 0L, failedCount = 0), result)
+            assertArrayEquals(mosaic, store.loadBytes(stored))
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    /** 16 px tiles of pseudo-random colors, encoded at the lowest JPEG quality. */
+    private fun mosaicJpeg(width: Int, height: Int): ByteArray {
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        val paint = android.graphics.Paint()
+        val random = java.util.Random(42)
+        for (y in 0 until height step 16) for (x in 0 until width step 16) {
+            paint.color = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256))
+            canvas.drawRect(x.toFloat(), y.toFloat(), x + 16f, y + 16f, paint)
+        }
+        return try {
+            java.io.ByteArrayOutputStream().use { out ->
+                assertTrue(bitmap.compress(Bitmap.CompressFormat.JPEG, 0, out))
+                out.toByteArray()
+            }
+        } finally {
+            bitmap.recycle()
         }
     }
 

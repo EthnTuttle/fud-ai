@@ -36,11 +36,70 @@ struct StoredPhotoCompressorTests {
         let restoredName = "\(UUID().uuidString).jpg"
         #expect(FoodImageStore.shared.restore(data: large, filename: restoredName) == restoredName)
         defer { [largeName, smallName, restoredName].forEach { FoodImageStore.shared.delete(filename: $0) } }
+        // The cap is applied off the main actor right after the save.
+        StoredPhotoCompressor.newPhotoQueue.sync {}
 
         let stored = try imageInfo(try #require(FoodImageStore.shared.load(filename: largeName)))
         #expect(max(stored.width, stored.height) <= StoredPhotoCompressor.maxPixelSize)
         #expect(FoodImageStore.shared.load(filename: smallName) == small)
         #expect(FoodImageStore.shared.load(filename: restoredName) == large)
+    }
+
+    @Test func photosWhoseDownscaledCopyIsNotSmallerKeepTheirBytes() throws {
+        // A heavily compressed mosaic: the 2048 px re-encode at quality 0.8 is several times larger.
+        let photo = try mosaicJPEGData(width: 3_000, height: 2_000)
+        let reencoded = try #require(StoredPhotoCompressor.downscaledJPEGData(photo))
+        try #require(reencoded.count > photo.count)
+
+        let name = try #require(FoodImageStore.shared.store(data: photo, for: UUID()))
+        defer { FoodImageStore.shared.delete(filename: name) }
+        StoredPhotoCompressor.newPhotoQueue.sync {}
+        #expect(FoodImageStore.shared.load(filename: name) == photo)
+
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try photo.write(to: folder.appendingPathComponent("mosaic.jpg"))
+
+        #expect(StoredPhotoCompressor.compressPhotos(in: folder) == StoredPhotoCompressor.Result())
+        #expect(try Data(contentsOf: folder.appendingPathComponent("mosaic.jpg")) == photo)
+    }
+
+    @Test func legacyInlinePhotosMoveToDiskWithTheirBytesUnchanged() throws {
+        let suite = "StoredPhotoCompressorTests.Legacy.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let photo = try jpegData(width: 3_000, height: 2_000)
+        let entry = FoodEntry(
+            name: "Legacy meal", calories: 500, protein: 20, carbs: 60, fat: 15,
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000),
+            source: .snapFood, mealType: .dinner
+        )
+        // Rows from builds before FoodImageStore carried the JPEG inline as base64.
+        var row = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(entry)) as? [String: Any])
+        row["imageData"] = photo.base64EncodedString()
+        defaults.set(try JSONSerialization.data(withJSONObject: [row]), forKey: FoodStore.storageKey)
+
+        let store = FoodStore(observesExternalChanges: false, defaults: defaults)
+        let filename = try #require(store.entries.first?.imageFilename)
+        defer { FoodImageStore.shared.delete(filename: filename) }
+        StoredPhotoCompressor.newPhotoQueue.sync {}
+
+        #expect(FoodImageStore.shared.load(filename: filename) == photo)
+    }
+
+    @Test func compressionMessageReportsFailuresInsteadOfNothingToDo() {
+        let nothingToDo = String(localized: "No photos needed compressing.")
+        let unreadable = String(localized: "Some photos couldn’t be read and were left unchanged.")
+        let failed = String(localized: "Some photos couldn’t be compressed and were left unchanged. Make sure your device has free space, then try again.")
+
+        #expect(StorageSettingsSection.compressionMessage(for: .init()) == nothingToDo)
+        #expect(StorageSettingsSection.compressionMessage(for: .init(unreadableCount: 1)) == unreadable)
+        #expect(StorageSettingsSection.compressionMessage(for: .init(failedCount: 2)) == failed)
+        let partial = StorageSettingsSection.compressionMessage(for: .init(compressedCount: 3, failedCount: 1, bytesSaved: 4_000_000))
+        #expect(partial.hasSuffix(failed))
+        #expect(!partial.contains(nothingToDo))
     }
 
     @Test func compressingExistingPhotosKeepsNamesAndSkipsSmallOrUnreadableFiles() throws {
@@ -61,6 +120,7 @@ struct StoredPhotoCompressorTests {
         let compressed = try Data(contentsOf: folder.appendingPathComponent("a-large.jpg"))
         #expect(result.compressedCount == 1)
         #expect(result.unreadableCount == 1)
+        #expect(result.failedCount == 0)
         #expect(result.bytesSaved == Int64(large.count - compressed.count))
         #expect(progress == [[1, 3], [2, 3], [3, 3]])
         #expect(try Set(FileManager.default.contentsOfDirectory(atPath: folder.path)) == ["a-large.jpg", "b-small.jpg", "c-broken.jpg"])
@@ -75,14 +135,14 @@ struct StoredPhotoCompressorTests {
         #expect(StoredPhotoCompressor.compressPhotos(in: folder).compressedCount == 0)
     }
 
-    @Test func clearingTheThumbnailCacheNeverTouchesPhotos() throws {
+    @Test func clearingTheThumbnailCacheNeverTouchesPhotos() async throws {
         let photo = try jpegData(width: 600, height: 400)
         let name = try #require(FoodImageStore.shared.store(data: photo, for: UUID()))
         defer { FoodImageStore.shared.delete(filename: name) }
         let thumbnailFolder = try #require(FoodImageStore.shared.thumbnailCacheFolderURL)
         #expect(FileManager.default.fileExists(atPath: thumbnailFolder.appendingPathComponent(name).path))
 
-        FoodImageStore.shared.clearThumbnailCache()
+        await FoodImageStore.shared.clearThumbnailCache()
 
         #expect(!FileManager.default.fileExists(atPath: thumbnailFolder.appendingPathComponent(name).path))
         #expect(FoodImageStore.shared.load(filename: name) == photo)
@@ -126,6 +186,36 @@ struct StoredPhotoCompressorTests {
             kCGImageDestinationLossyCompressionQuality: 1.0,
             kCGImagePropertyOrientation: orientation.rawValue
         ] as CFDictionary)
+        try #require(CGImageDestinationFinalize(destination))
+        return output as Data
+    }
+
+    /// 16 px tiles of pseudo-random colors, encoded at the lowest JPEG quality.
+    private func mosaicJPEGData(width: Int, height: Int) throws -> Data {
+        let context = try #require(CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ))
+        var seed: UInt64 = 0x9E37_79B9_7F4A_7C15
+        func nextComponent() -> CGFloat {
+            seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+            return CGFloat((seed >> 33) & 0xFF) / 255
+        }
+        for y in stride(from: 0, to: height, by: 16) {
+            for x in stride(from: 0, to: width, by: 16) {
+                context.setFillColor(red: nextComponent(), green: nextComponent(), blue: nextComponent(), alpha: 1)
+                context.fill(CGRect(x: x, y: y, width: 16, height: 16))
+            }
+        }
+        let image = try #require(context.makeImage())
+        let output = NSMutableData()
+        let destination = try #require(CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.0] as CFDictionary)
         try #require(CGImageDestinationFinalize(destination))
         return output as Data
     }

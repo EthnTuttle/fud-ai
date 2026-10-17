@@ -5,9 +5,10 @@ import UniformTypeIdentifiers
 /// Keeps stored meal and exercise photos at the size the app can actually show.
 ///
 /// The full-screen viewer never decodes more than `FoodImageStore.viewerMaxDimension`, so
-/// pixels beyond it only cost storage and backup space. New photos are downscaled as they are
-/// stored; existing ones only when the user confirms Compress Photos in Settings. Backup
-/// restores and images already within the cap keep their original bytes.
+/// pixels beyond it only cost storage and backup space. New photos are downscaled in the
+/// background right after they are stored; existing ones only when the user confirms Compress
+/// Photos in Settings. Backup restores, migrated legacy photos and images already within the
+/// cap keep their original bytes, and so does any photo whose re-encoded copy isn't smaller.
 nonisolated enum StoredPhotoCompressor {
     /// Longest side kept for stored photos (matches `FoodImageStore.viewerMaxDimension`).
     static let maxPixelSize = 2048
@@ -16,7 +17,32 @@ nonisolated enum StoredPhotoCompressor {
     struct Result: Equatable, Sendable {
         var compressedCount = 0
         var unreadableCount = 0
+        /// Photos left as they were because staging or replacing the smaller copy failed
+        /// (for example when the device is out of space).
+        var failedCount = 0
         var bytesSaved: Int64 = 0
+    }
+
+    /// Serial queue that downscales newly stored photos off the main actor.
+    static let newPhotoQueue = DispatchQueue(label: "com.apoorvdarshan.calorietracker.new-photo-downscale", qos: .utility)
+
+    /// Serializes photo writes and deletes with the compressor's last unchanged-file check and
+    /// swap, so a photo saved, restored or deleted mid-compression is never replaced by a copy
+    /// of the older bytes. Held only around single file operations.
+    private static let photoFileLock = NSLock()
+
+    static func withPhotoFileLock<T>(_ body: () throws -> T) rethrows -> T {
+        photoFileLock.lock()
+        defer { photoFileLock.unlock() }
+        return try body()
+    }
+
+    /// Queues `url` (a photo `FoodImageStore` just wrote) to be capped at `maxPixelSize` with the
+    /// same swap rules as Compress Photos, so the caller never waits for the decode and encode.
+    static func downscaleNewPhotoInBackground(at url: URL, maxPixelSize: Int = maxPixelSize) {
+        newPhotoQueue.async {
+            _ = autoreleasepool { compressPhoto(at: url, maxPixelSize: maxPixelSize) }
+        }
     }
 
     /// An upright JPEG capped at `maxPixelSize` on the longest side, or nil when the image is
@@ -39,8 +65,9 @@ nonisolated enum StoredPhotoCompressor {
     /// Downscales photos in `folder` that exceed `maxPixelSize`, one file at a time inside an
     /// autorelease pool so only one bounded image is in memory. Each result is staged in a
     /// replacement directory and swapped in only when it is smaller and the original is
-    /// unchanged; files that can't be decoded are left as they are. Filenames never change,
-    /// and thumbnails stay valid because both versions decode upright.
+    /// unchanged; files that can't be decoded, or whose copy couldn't be written, are left as
+    /// they are and counted. Filenames never change, and thumbnails stay valid because both
+    /// versions decode upright.
     static func compressPhotos(
         in folder: URL,
         maxPixelSize: Int = maxPixelSize,
@@ -65,6 +92,8 @@ nonisolated enum StoredPhotoCompressor {
                 break
             case .unreadable:
                 result.unreadableCount += 1
+            case .failed:
+                result.failedCount += 1
             }
             progress(index + 1, files.count)
         }
@@ -77,6 +106,7 @@ nonisolated enum StoredPhotoCompressor {
         case compressed(Int64)
         case unchanged
         case unreadable
+        case failed
     }
 
     private struct FileSignature: Equatable {
@@ -92,7 +122,9 @@ nonisolated enum StoredPhotoCompressor {
             return .unreadable
         }
         guard longest > maxPixelSize else { return .unchanged }
-        guard let data = downscaledJPEGData(from: source, maxPixelSize: maxPixelSize) else { return .unreadable }
+        guard let image = downscaledImage(from: source, maxPixelSize: maxPixelSize) else { return .unreadable }
+        guard let data = jpegData(from: image) else { return .failed }
+        // A copy that isn't smaller (an already heavily compressed photo) is never swapped in.
         guard Int64(data.count) < before.size else { return .unchanged }
 
         do {
@@ -105,17 +137,26 @@ nonisolated enum StoredPhotoCompressor {
             defer { try? fileManager.removeItem(at: staging) }
             let staged = staging.appendingPathComponent(url.lastPathComponent)
             try data.write(to: staged)
-            // Skip if the photo was deleted, restored or rewritten while it was being encoded.
-            guard signature(of: url) == before else { return .unchanged }
-            _ = try fileManager.replaceItemAt(url, withItemAt: staged)
-            return .compressed(before.size - Int64(data.count))
+            return try withPhotoFileLock { () throws -> Outcome in
+                // Skip if the photo was deleted, restored or rewritten while it was being encoded.
+                guard signature(of: url) == before else { return .unchanged }
+                _ = try fileManager.replaceItemAt(url, withItemAt: staged)
+                return .compressed(before.size - Int64(data.count))
+            }
         } catch {
-            return .unchanged
+            return .failed
         }
     }
 
     private static func downscaledJPEGData(from source: CGImageSource, maxPixelSize: Int) -> Data? {
-        guard let longest = longestSide(of: source), longest > maxPixelSize else { return nil }
+        guard let longest = longestSide(of: source), longest > maxPixelSize,
+              let image = downscaledImage(from: source, maxPixelSize: maxPixelSize) else {
+            return nil
+        }
+        return jpegData(from: image)
+    }
+
+    private static func downscaledImage(from source: CGImageSource, maxPixelSize: Int) -> CGImage? {
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
@@ -123,7 +164,10 @@ nonisolated enum StoredPhotoCompressor {
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceShouldCacheImmediately: true
         ]
-        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
+    private static func jpegData(from image: CGImage) -> Data? {
         let output = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(
             output,

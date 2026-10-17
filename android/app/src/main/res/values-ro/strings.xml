@@ -565,6 +565,7 @@
     <string name="storage_compress_freed">S-au eliberat %1$s.</string>
     <string name="storage_compress_nothing">Nicio fotografie nu a necesitat comprimare.</string>
     <string name="storage_compress_unreadable">Unele fotografii nu au putut fi citite și au rămas neschimbate.</string>
+    <string name="storage_compress_failed">Unele fotografii nu au putut fi comprimate și au rămas neschimbate. Asigură-te că dispozitivul are spațiu liber, apoi încearcă din nou.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Ștergi jurnalul alimentar?</string>

@@ -20369,6 +20369,118 @@
         }
       }
     },
+    "Some photos couldn’t be compressed and were left unchanged. Make sure your device has free space, then try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر ضغط بعض الصور وتُركت دون تغيير. تأكد من توفر مساحة فارغة على جهازك، ثم حاول مرة أخرى."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bəzi şəkilləri sıxışdırmaq mümkün olmadı və onlar dəyişdirilmədi. Cihazınızda boş yer olduğundan əmin olun, sonra yenidən cəhd edin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Některé fotky nebylo možné zkomprimovat a zůstaly beze změny. Ujisti se, že má zařízení volné místo, a zkus to znovu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Fotos konnten nicht komprimiert werden und blieben unverändert. Stelle sicher, dass auf deinem Gerät Speicherplatz frei ist, und versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algunas fotos no se pudieron comprimir y se dejaron sin cambios. Asegúrate de que tu dispositivo tenga espacio libre y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Certaines photos n’ont pas pu être compressées et n’ont pas été modifiées. Assurez-vous que votre appareil dispose d’espace libre, puis réessayez."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कुछ फ़ोटो कंप्रेस नहीं की जा सकीं और उन्हें बिना बदले छोड़ दिया गया। पक्का करें कि आपके डिवाइस में खाली जगह है, फिर दोबारा कोशिश करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alcune foto non possono essere compresse e sono rimaste invariate. Assicurati che il dispositivo abbia spazio libero, poi riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一部の写真は圧縮できなかったため、変更されていません。デバイスに空き容量があることを確認してから、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부 사진은 압축할 수 없어 변경하지 않았습니다. 기기에 여유 공간이 있는지 확인한 후 다시 시도하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sommige foto’s konden niet worden gecomprimeerd en zijn ongewijzigd gelaten. Zorg dat je apparaat vrije ruimte heeft en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niektórych zdjęć nie udało się skompresować i pozostały bez zmian. Upewnij się, że na urządzeniu jest wolne miejsce, i spróbuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algumas fotos não puderam ser comprimidas e foram mantidas sem alterações. Verifique se o dispositivo tem espaço livre e tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unele fotografii nu au putut fi comprimate și au rămas neschimbate. Asigură-te că dispozitivul are spațiu liber, apoi încearcă din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Некоторые фото не удалось сжать, они остались без изменений. Убедитесь, что на устройстве есть свободное место, и попробуйте снова."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazı fotoğraflar sıkıştırılamadı ve değiştirilmeden bırakıldı. Cihazınızda boş alan olduğundan emin olun ve yeniden deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Деякі фото не вдалося стиснути, тому їх не змінено. Переконайтеся, що на пристрої є вільне місце, і спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分照片无法压缩，已保持不变。请确保设备有可用空间，然后重试。"
+          }
+        }
+      }
+    },
     "Delete Everything": {
       "localizations": {
         "ar": {

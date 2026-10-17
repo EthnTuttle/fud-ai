@@ -9,6 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.util.UUID
 
@@ -34,15 +35,17 @@ class StorageMaintenanceTest {
     }
 
     private fun maintenance(
-        frameBytes: Long = 0L,
+        frameBytes: () -> Long = { 0L },
         onClearFrames: () -> Unit = {},
-        modelBytes: Long = 0L
+        modelBytes: Long = 0L,
+        compress: ((onProgress: (Int, Int) -> Unit) -> FoodImageStore.PhotoCompressionResult)? = null
     ) = StorageMaintenance(
         photos = photos,
-        workoutFrameCacheBytes = { frameBytes },
+        workoutFrameCacheBytes = frameBytes,
         clearWorkoutFrameCache = onClearFrames,
         modelBytes = { modelBytes },
-        dispatcher = Dispatchers.Unconfined
+        dispatcher = Dispatchers.Unconfined,
+        compressExistingPhotos = compress ?: photos::compressExistingPhotos
     )
 
     @Test
@@ -53,10 +56,13 @@ class StorageMaintenanceTest {
 
         assertEquals(FoodImageStore.PhotoStorageUsage(photoCount = 2, photoBytes = 500, thumbnailBytes = 40), photos.storageUsage())
 
-        val storage = maintenance(frameBytes = 1_000, modelBytes = 5_000)
+        var frameMeasurements = 0
+        val storage = maintenance(frameBytes = { frameMeasurements++; 1_000 }, modelBytes = 5_000)
         storage.refresh()
 
         assertEquals(StorageMaintenance.Usage(photoBytes = 500, cacheBytes = 1_040, modelBytes = 5_000), storage.ui.value.usage)
+        // The disk walk runs once, before the state update rather than inside it.
+        assertEquals(1, frameMeasurements)
     }
 
     @Test
@@ -93,6 +99,34 @@ class StorageMaintenanceTest {
 
         storage.dismissCompressionResult()
         assertEquals(null, storage.ui.value.compressionResult)
+    }
+
+    @Test
+    fun anInterruptedCompressionIsReportedAsFailedNotAsNothingToDo() {
+        val storage = maintenance(compress = { onProgress ->
+            onProgress(1, 3)
+            throw IOException("No space left on device")
+        })
+        storage.compressPhotos()
+
+        val state = storage.ui.value
+        assertEquals(
+            FoodImageStore.PhotoCompressionResult(compressedCount = 0, unreadableCount = 0, bytesSaved = 0, failedCount = 2),
+            state.compressionResult
+        )
+        assertFalse(state.compressing)
+        assertTrue(state.usage != null)
+    }
+
+    @Test
+    fun aDownscaledCopyIsKeptOnlyWhenItIsSmaller() {
+        val original = ByteArray(100) { 1 }
+        val smaller = ByteArray(60) { 2 }
+
+        assertArrayEquals(smaller, FoodImageStore.smallerOrOriginal(original, smaller))
+        assertArrayEquals(original, FoodImageStore.smallerOrOriginal(original, ByteArray(100) { 3 }))
+        assertArrayEquals(original, FoodImageStore.smallerOrOriginal(original, ByteArray(140) { 3 }))
+        assertArrayEquals(original, FoodImageStore.smallerOrOriginal(original, null))
     }
 
     @Test

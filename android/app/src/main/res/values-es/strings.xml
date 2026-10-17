@@ -563,6 +563,7 @@
     <string name="storage_compress_freed">Se liberaron %1$s.</string>
     <string name="storage_compress_nothing">Ninguna foto necesitaba compresión.</string>
     <string name="storage_compress_unreadable">Algunas fotos no se pudieron leer y se dejaron sin cambios.</string>
+    <string name="storage_compress_failed">Algunas fotos no se pudieron comprimir y se dejaron sin cambios. Asegúrate de que tu dispositivo tenga espacio libre y vuelve a intentarlo.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">¿Borrar diario de comidas?</string>

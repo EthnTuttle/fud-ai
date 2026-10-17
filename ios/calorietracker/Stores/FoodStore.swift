@@ -719,11 +719,12 @@ class FoodStore {
         // JPEG bytes in the JSON blob. Offload any such rows to disk, stamp
         // the filename, and rewrite the UserDefaults blob — shrinking it from
         // multi-MB to ~a few KB so the 4 MiB cap stops silently swallowing
-        // adds/deletes. Idempotent: runs only on entries that need it.
+        // adds/deletes. Idempotent: runs only on entries that need it. The
+        // bytes move unchanged; only a confirmed Compress Photos re-encodes them.
         var migrated = false
         for i in entries.indices {
             if entries[i].imageFilename == nil, let data = entries[i].imageData {
-                if let filename = FoodImageStore.shared.store(data: data, for: entries[i].id) {
+                if let filename = FoodImageStore.shared.storeLegacyInlinePhoto(data: data, for: entries[i].id) {
                     entries[i].imageFilename = filename
                     migrated = true
                 }

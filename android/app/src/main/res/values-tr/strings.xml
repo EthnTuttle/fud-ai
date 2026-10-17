@@ -826,6 +826,7 @@
     <string name="storage_compress_freed">%1$s boşaltıldı.</string>
     <string name="storage_compress_nothing">Sıkıştırılması gereken fotoğraf yok.</string>
     <string name="storage_compress_unreadable">Bazı fotoğraflar okunamadı ve değiştirilmeden bırakıldı.</string>
+    <string name="storage_compress_failed">Bazı fotoğraflar sıkıştırılamadı ve değiştirilmeden bırakıldı. Cihazınızda boş alan olduğundan emin olun ve yeniden deneyin.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Yiyecek günlüğü temizlensin mi?</string>

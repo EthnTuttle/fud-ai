@@ -21,7 +21,9 @@ class StorageMaintenance(
     private val workoutFrameCacheBytes: () -> Long,
     private val clearWorkoutFrameCache: () -> Unit,
     private val modelBytes: () -> Long,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val compressExistingPhotos: (onProgress: (done: Int, total: Int) -> Unit) -> FoodImageStore.PhotoCompressionResult =
+        photos::compressExistingPhotos
 ) {
     data class Usage(
         val photoBytes: Long,
@@ -46,18 +48,32 @@ class StorageMaintenance(
     val ui: StateFlow<UiState> = _ui.asStateFlow()
 
     fun refresh() {
-        scope.launch { _ui.update { it.copy(usage = measure()) } }
+        scope.launch {
+            // Measure first: update's lambda can re-run on contention, and the disk walk must not.
+            val usage = measure()
+            _ui.update { it.copy(usage = usage) }
+        }
     }
 
     /** Downscales existing photos over the stored-size cap. Call only after the user confirms. */
     fun compressPhotos() {
         if (!begin { it.copy(compressing = true, compressedSoFar = 0, compressionTotal = 0, compressionResult = null) }) return
         scope.launch {
-            val result = runCatching {
-                photos.compressExistingPhotos { done, total ->
+            val result = try {
+                compressExistingPhotos { done, total ->
                     _ui.update { it.copy(compressedSoFar = done, compressionTotal = total) }
                 }
-            }.getOrElse { FoodImageStore.PhotoCompressionResult(0, 0, 0L) }
+            } catch (e: Throwable) {
+                // Per-photo errors are counted inside the run, so this is an unexpected stop:
+                // report the photos it never reached as failed rather than as nothing to do.
+                val progress = _ui.value
+                FoodImageStore.PhotoCompressionResult(
+                    compressedCount = 0,
+                    unreadableCount = 0,
+                    bytesSaved = 0L,
+                    failedCount = (progress.compressionTotal - progress.compressedSoFar).coerceAtLeast(1)
+                )
+            }
             val usage = measure()
             _ui.update { it.copy(compressing = false, compressionResult = result, usage = usage) }
         }

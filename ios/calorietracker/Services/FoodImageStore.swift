@@ -76,16 +76,31 @@ struct FoodImageStore {
         store(data: data, filename: "\(id.uuidString)-\(index).jpg")
     }
 
-    /// New photos over `StoredPhotoCompressor.maxPixelSize` are stored as an upright JPEG at that
-    /// size (the viewer never decodes more); smaller or undecodable images keep their bytes.
+    /// Moves a photo that an older build kept inline in the diary JSON to disk with its bytes
+    /// unchanged: existing photos are only ever re-encoded by a confirmed Compress Photos.
+    @discardableResult
+    func storeLegacyInlinePhoto(data: Data, for id: UUID) -> String? {
+        store(data: data, filename: "\(id.uuidString).jpg", downscalingLargePhotos: false)
+    }
+
+    /// Writes the bytes as given and returns at once. New photos over
+    /// `StoredPhotoCompressor.maxPixelSize` are then capped to an upright JPEG at that size (the
+    /// viewer never decodes more) on a background queue, and only when that copy is smaller;
+    /// smaller or undecodable images keep their bytes.
     private func store(data: Data, filename: String, downscalingLargePhotos: Bool = true) -> String? {
         guard let folderURL else { return nil }
         let url = folderURL.appendingPathComponent(filename)
-        let bytes = downscalingLargePhotos ? (StoredPhotoCompressor.downscaledJPEGData(data) ?? data) : data
         do {
-            try bytes.write(to: url, options: .atomic)
+            try StoredPhotoCompressor.withPhotoFileLock {
+                try data.write(to: url, options: .atomic)
+            }
             if let thumbnail = decodeImage(at: url, maxPixelSize: Self.thumbnailMaxDimension) {
                 writeThumbnail(thumbnail, filename: filename)
+            }
+            if downscalingLargePhotos,
+               let longest = StoredPhotoCompressor.longestSide(of: data),
+               longest > StoredPhotoCompressor.maxPixelSize {
+                StoredPhotoCompressor.downscaleNewPhotoInBackground(at: url)
             }
             return filename
         } catch {
@@ -112,10 +127,13 @@ struct FoodImageStore {
     var thumbnailCacheFolderURL: URL? { thumbnailFolderURL }
 
     /// Deletes cached thumbnails only; `loadThumbnail` rebuilds them from the photos on demand.
-    func clearThumbnailCache() {
-        if let thumbFolderURL = thumbnailFolderURL {
+    /// The folder can hold thousands of files, so it is removed off the main actor.
+    func clearThumbnailCache() async {
+        thumbnailCache.removeAllObjects()
+        guard let thumbFolderURL = thumbnailFolderURL else { return }
+        await Task.detached(priority: .userInitiated) {
             try? FileManager.default.removeItem(at: thumbFolderURL)
-        }
+        }.value
         thumbnailCache.removeAllObjects()
     }
 
@@ -175,7 +193,9 @@ struct FoodImageStore {
     func delete(filename: String) {
         guard let folderURL else { return }
         let url = folderURL.appendingPathComponent(filename)
-        try? FileManager.default.removeItem(at: url)
+        StoredPhotoCompressor.withPhotoFileLock {
+            _ = try? FileManager.default.removeItem(at: url)
+        }
         if let thumbFolderURL = thumbnailFolderURL {
             let thumbURL = thumbFolderURL.appendingPathComponent(filename)
             try? FileManager.default.removeItem(at: thumbURL)
@@ -186,7 +206,9 @@ struct FoodImageStore {
     /// Wipes the entire image folder (used by Delete All Data).
     func deleteAll() {
         guard let folderURL else { return }
-        try? FileManager.default.removeItem(at: folderURL)
+        StoredPhotoCompressor.withPhotoFileLock {
+            _ = try? FileManager.default.removeItem(at: folderURL)
+        }
         if let thumbFolderURL = thumbnailFolderURL {
             try? FileManager.default.removeItem(at: thumbFolderURL)
         }

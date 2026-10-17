@@ -563,6 +563,7 @@
     <string name="storage_compress_freed">Liberati %1$s.</string>
     <string name="storage_compress_nothing">Nessuna foto da comprimere.</string>
     <string name="storage_compress_unreadable">Alcune foto non possono essere lette e sono rimaste invariate.</string>
+    <string name="storage_compress_failed">Alcune foto non possono essere compresse e sono rimaste invariate. Assicurati che il dispositivo abbia spazio libero, poi riprova.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Cancellare il registro del cibo?</string>

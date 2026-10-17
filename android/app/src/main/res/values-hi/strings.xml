@@ -562,6 +562,7 @@
     <string name="storage_compress_freed">%1$s खाली हुआ।</string>
     <string name="storage_compress_nothing">किसी फ़ोटो को कंप्रेस करने की ज़रूरत नहीं थी।</string>
     <string name="storage_compress_unreadable">कुछ फ़ोटो पढ़ी नहीं जा सकीं और उन्हें बिना बदले छोड़ दिया गया।</string>
+    <string name="storage_compress_failed">कुछ फ़ोटो कंप्रेस नहीं की जा सकीं और उन्हें बिना बदले छोड़ दिया गया। पक्का करें कि आपके डिवाइस में खाली जगह है, फिर दोबारा कोशिश करें।</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">खाद्य लॉग साफ़ करें?</string>

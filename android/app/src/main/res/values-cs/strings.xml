@@ -584,6 +584,7 @@
     <string name="storage_compress_freed">Uvolněno %1$s.</string>
     <string name="storage_compress_nothing">Žádné fotky nebylo třeba komprimovat.</string>
     <string name="storage_compress_unreadable">Některé fotky nebylo možné načíst a zůstaly beze změny.</string>
+    <string name="storage_compress_failed">Některé fotky nebylo možné zkomprimovat a zůstaly beze změny. Ujisti se, že má zařízení volné místo, a zkus to znovu.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Vymazat deník jídel?</string>
