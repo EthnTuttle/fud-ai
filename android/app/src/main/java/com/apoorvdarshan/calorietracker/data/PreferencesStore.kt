@@ -1352,6 +1352,20 @@ class PreferencesStore(
     suspend fun updateWeightEntries(transform: (List<WeightEntry>) -> List<WeightEntry>): List<WeightEntry> =
         updateJsonList(Keys.WEIGHT_ENTRIES, WeightEntry.serializer(), transform)
 
+    /// Ids of weight entries the user deleted, oldest first. Kept after deletion (and in
+    /// cloud backups) so a Health Connect re-import never resurrects them — another app's
+    /// record survives our delete. Comma-joined UUIDs, like [pendingNutritionHealthWrites].
+    val deletedWeightEntryIds: Flow<List<String>> = ds.data.map {
+        it[Keys.DELETED_WEIGHT_ENTRY_IDS]?.split(",")?.filter { s -> s.isNotBlank() } ?: emptyList()
+    }
+    suspend fun addDeletedWeightEntryId(id: String, limit: Int) {
+        ds.edit { prefs ->
+            val current = prefs[Keys.DELETED_WEIGHT_ENTRY_IDS]
+                ?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+            prefs[Keys.DELETED_WEIGHT_ENTRY_IDS] = (current - id + id).takeLast(limit).joinToString(",")
+        }
+    }
+
     // -- Body fat entries --------------------------------------------------
     val bodyFatEntries: Flow<List<BodyFatEntry>> = jsonListFlow(Keys.BODY_FAT_ENTRIES, BodyFatEntry.serializer())
 
@@ -1484,6 +1498,7 @@ class PreferencesStore(
         val HEALTH_CHANGES_TOKEN_TYPES = stringPreferencesKey("healthChangesTokenTypes")
         val HEALTH_FOOD_RESTORE_DONE = booleanPreferencesKey("healthFoodRestoreDone")
         val PENDING_NUTRITION_HEALTH_WRITES = stringPreferencesKey("pendingNutritionHealthWrites")
+        val DELETED_WEIGHT_ENTRY_IDS = stringPreferencesKey("deletedWeightEntryIds")
         val CLOUD_BACKUP_ENABLED = booleanPreferencesKey("cloudBackupEnabled")
         val CLOUD_BACKUP_LAST_AT = stringPreferencesKey("cloudBackupLastAt")
         val CLOUD_BACKUP_LAST_HASH = stringPreferencesKey("cloudBackupLastHash")
