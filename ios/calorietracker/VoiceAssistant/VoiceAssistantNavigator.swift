@@ -86,8 +86,8 @@ extension ProfileSettingsCategory {
         switch voiceAssistantSection {
         case "profile": self = .personalInfo
         case "goals": self = .goalsNutrition
-        case "reminders": self = .trackingReminders
-        case "notifications": self = .notifications
+        // Tracking and notifications share one page (#432); "reminders" still opens it.
+        case "reminders", "notifications": self = .trackingNotifications
         case "ai_providers": self = .aiProviders
         case "speech": self = .speechToText
         case "appearance": self = .appPreferences
@@ -105,8 +105,7 @@ extension ProfileSettingsCategory {
         switch self {
         case .personalInfo: "profile"
         case .goalsNutrition: "goals"
-        case .trackingReminders: "reminders"
-        case .notifications: "notifications"
+        case .trackingNotifications: "notifications"
         case .aiProviders, .aiAccess: "ai_providers"
         case .speechToText: "speech"
         case .appPreferences: "appearance"
