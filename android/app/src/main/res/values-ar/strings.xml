@@ -744,6 +744,8 @@
     <string name="workout_exercise_take_photo">التقاط صورة</string>
     <string name="workout_exercise_camera_denied_title">يلزم السماح بالوصول إلى الكاميرا</string>
     <string name="workout_exercise_camera_denied_message">اسمح لـ Fud AI باستخدام الكاميرا في إعدادات النظام لالتقاط صور التمارين.</string>
+    <string name="workout_exercise_ai_fill">التعبئة بالذكاء الاصطناعي</string>
+    <string name="workout_exercise_ai_fill_hint">ترسل ميزة «التعبئة بالذكاء الاصطناعي» هذه الصورة إلى مزوّد الذكاء الاصطناعي لديك. راجع التفاصيل المقترحة قبل الحفظ.</string>
     <string name="progress_steps_stat_total">الإجمالي</string>
     <string name="progress_steps_stat_average">المتوسط</string>
     <string name="progress_steps_stat_best_day">أفضل يوم</string>

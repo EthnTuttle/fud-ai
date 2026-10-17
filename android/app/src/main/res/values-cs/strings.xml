@@ -770,6 +770,8 @@
     <string name="workout_exercise_take_photo">Pořídit fotku</string>
     <string name="workout_exercise_camera_denied_title">Je potřeba přístup k fotoaparátu</string>
     <string name="workout_exercise_camera_denied_message">Chcete-li fotit cviky, povolte aplikaci Fud AI přístup k fotoaparátu v nastavení systému.</string>
+    <string name="workout_exercise_ai_fill">Vyplnit pomocí AI</string>
+    <string name="workout_exercise_ai_fill_hint">Funkce Vyplnit pomocí AI odešle tuto fotku vašemu poskytovateli AI. Před uložením navržené údaje zkontrolujte.</string>
     <string name="filter_all_count">Vše %d</string>
     <string name="hide_details">Skrýt detaily</string>
     <string name="instructions">Provedení</string>

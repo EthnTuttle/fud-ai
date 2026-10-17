@@ -727,6 +727,8 @@
     <string name="workout_exercise_take_photo">写真を撮る</string>
     <string name="workout_exercise_camera_denied_title">カメラへのアクセスが必要です</string>
     <string name="workout_exercise_camera_denied_message">種目の写真を撮るには、システム設定でFud AIによるカメラの使用を許可してください。</string>
+    <string name="workout_exercise_ai_fill">AIで入力</string>
+    <string name="workout_exercise_ai_fill_hint">「AIで入力」はこの写真をご利用のAIプロバイダに送信します。保存する前に、提案された内容を確認してください。</string>
     <string name="progress_steps_stat_total">合計</string>
     <string name="progress_steps_stat_average">平均</string>
     <string name="progress_steps_stat_best_day">最高の日</string>

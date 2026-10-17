@@ -865,6 +865,8 @@
     <string name="workout_exercise_take_photo">Сделать снимок</string>
     <string name="workout_exercise_camera_denied_title">Нужен доступ к камере</string>
     <string name="workout_exercise_camera_denied_message">Чтобы фотографировать упражнения, разрешите Fud AI использовать камеру в системных настройках.</string>
+    <string name="workout_exercise_ai_fill">Заполнить с помощью ИИ</string>
+    <string name="workout_exercise_ai_fill_hint">Функция «Заполнить с помощью ИИ» отправляет это фото вашему провайдеру ИИ. Проверьте предложенные данные перед сохранением.</string>
     <string name="filter_all">Все</string>
     <string name="filter_all_count">Все %d</string>
     <string name="hide_details">Скрыть детали</string>
