@@ -472,6 +472,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorilər</string>
+    <string name="progress_include_today">Bu günü daxil et</string>
+    <string name="progress_include_today_caption">Kalori qrafiki və qidalanma ortalamaları</string>
     <string name="progress_avg_format">Orta: %1$,d kcal</string>
     <string name="progress_no_food">Hələ yemək qeyd edilməyib</string>
 

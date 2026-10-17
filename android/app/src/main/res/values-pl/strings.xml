@@ -478,6 +478,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorie</string>
+    <string name="progress_include_today">Uwzględnij dzisiaj</string>
+    <string name="progress_include_today_caption">Wykres kalorii i średnie wartości odżywcze</string>
     <string name="progress_avg_format">Śr.: %1$,d kcal</string>
     <string name="progress_no_food">Brak zapisanych posiłków</string>
 

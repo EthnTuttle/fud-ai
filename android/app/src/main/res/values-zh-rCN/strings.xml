@@ -471,6 +471,8 @@
     </plurals>
 
     <string name="progress_calories_section">卡路里</string>
+    <string name="progress_include_today">包含今天</string>
+    <string name="progress_include_today_caption">卡路里图表和营养平均值</string>
     <string name="progress_avg_format">平均：%1$,d kcal</string>
     <string name="progress_no_food">尚未记录食物</string>
 

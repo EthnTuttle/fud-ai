@@ -478,6 +478,8 @@
     </plurals>
 
     <string name="progress_calories_section">Калории</string>
+    <string name="progress_include_today">Учитывать сегодня</string>
+    <string name="progress_include_today_caption">График калорий и средние значения питания</string>
     <string name="progress_avg_format">Сред.: %1$,d ккал</string>
     <string name="progress_no_food">Пока нет записей о еде</string>
 

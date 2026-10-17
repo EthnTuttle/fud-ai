@@ -472,6 +472,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorien</string>
+    <string name="progress_include_today">Heute einbeziehen</string>
+    <string name="progress_include_today_caption">Kaloriendiagramm und Nährwert-Durchschnitte</string>
     <string name="progress_avg_format">Ø: %1$,d kcal</string>
     <string name="progress_no_food">Noch kein Essen erfasst</string>
 

@@ -471,6 +471,8 @@
     </plurals>
 
     <string name="progress_calories_section">칼로리</string>
+    <string name="progress_include_today">오늘 포함</string>
+    <string name="progress_include_today_caption">칼로리 차트와 영양 평균</string>
     <string name="progress_avg_format">평균: %1$,d kcal</string>
     <string name="progress_no_food">아직 기록된 음식이 없어요</string>
 

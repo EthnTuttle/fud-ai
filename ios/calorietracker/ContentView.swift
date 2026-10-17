@@ -4089,6 +4089,8 @@ struct ProgressTabView: View {
     @Environment(StrengthWorkoutStore.self) private var strengthWorkoutStore
     @Environment(ImportedHealthWorkoutStore.self) private var importedHealthWorkoutStore
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
+    /// Off ends the calorie chart and nutrition averages yesterday (#514).
+    @AppStorage("progressIncludeToday") private var includeToday = true
     @State private var timeRange: TimeRange = .week
     /// Whole windows stepped back from the current one; session-only, reset
     /// whenever the range changes.
@@ -4109,7 +4111,7 @@ struct ProgressTabView: View {
 
     private var foodRangeStatsTaskKey: String {
         let latest = foodStore.entries.first?.id.uuidString ?? "none"
-        return "\(timeRange.rawValue)|\(periodOffset)|\(foodStore.entries.count)|\(latest)"
+        return "\(timeRange.rawValue)|\(periodOffset)|\(includeToday)|\(foodStore.entries.count)|\(latest)"
     }
 
     /// Switching ranges always lands on the current window, in the same
@@ -4129,6 +4131,11 @@ struct ProgressTabView: View {
 
     /// Selected window through the last instant of its final day (for timestamped readings).
     private var timestampRange: ClosedRange<Date> { timeRange.timestampRange(offset: periodOffset) }
+
+    /// Window for the calorie chart and nutrition averages.
+    private var nutritionDateRange: ClosedRange<Date> {
+        timeRange.nutritionDayRange(offset: periodOffset, includeToday: includeToday)
+    }
 
     private var filteredWeightEntries: [WeightEntry] {
         weightStore.entries(in: timestampRange)
@@ -4276,6 +4283,14 @@ struct ProgressTabView: View {
                     }
                     .padding(.horizontal)
 
+                    ProgressIncludeTodayToggle(
+                        isOn: $includeToday,
+                        rangeLabel: includeToday || !timeRange.supportsPeriodNavigation
+                            ? nil
+                            : TimeRange.periodLabel(for: nutritionDateRange)
+                    )
+                    .padding(.horizontal)
+
                     // Calorie / macro / nutrient stats load asynchronously so the
                     // range picker stays instant and interruptible mid-load.
                     if isLoadingFoodRangeStats && foodRangeStats == nil {
@@ -4338,7 +4353,7 @@ struct ProgressTabView: View {
                 let stats = ProgressFoodRangeStats.compute(
                     entries: foodStore.entries,
                     dayCount: timeRange.days,
-                    endDay: dateRange.upperBound,
+                    endDay: nutritionDateRange.upperBound,
                     profile: userProfile,
                     optionalGoals: .current
                 )

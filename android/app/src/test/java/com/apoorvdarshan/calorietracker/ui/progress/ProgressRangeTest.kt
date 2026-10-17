@@ -79,6 +79,49 @@ class ProgressRangeTest {
     }
 
     @Test
+    fun nutritionWindowEndsYesterdayWhenTodayIsExcluded() {
+        assertEquals(
+            LocalDate.parse("2026-10-11") to today,
+            TimeRange.WEEK.nutritionDateRange(today, offset = 0, includeToday = true)
+        )
+        assertEquals(
+            LocalDate.parse("2026-10-10") to LocalDate.parse("2026-10-16"),
+            TimeRange.WEEK.nutritionDateRange(today, offset = 0, includeToday = false)
+        )
+        assertEquals(
+            LocalDate.parse("2026-10-03") to LocalDate.parse("2026-10-09"),
+            TimeRange.WEEK.nutritionDateRange(today, offset = 1, includeToday = false)
+        )
+    }
+
+    @Test
+    fun excludingTodayKeepsAPartialDayOutOfTheAverages() {
+        val foods = listOf(
+            food(calories = 2_000, protein = 120.0, at = "2026-10-15T13:00"),
+            food(calories = 2_200, protein = 140.0, at = "2026-10-16T19:00"),
+            // Breakfast only so far today.
+            food(calories = 400, protein = 20.0, at = "2026-10-17T08:00")
+        )
+
+        fun stats(includeToday: Boolean) = computeProgressFoodRangeStats(
+            foods = foods,
+            dayCount = TimeRange.WEEK.days,
+            endDay = TimeRange.WEEK.nutritionDateRange(today, includeToday = includeToday).second,
+            zone = zone,
+            profile = null,
+            optionalGoals = OptionalNutrientGoals.Default
+        )
+
+        val withToday = stats(includeToday = true)
+        val withoutToday = stats(includeToday = false)
+
+        assertEquals(listOf(2_000, 2_200, 400), withToday.dailyCalories.map { it.second })
+        assertEquals(280.0 / 3, withToday.avgProtein, 0.0001)
+        assertEquals(listOf(2_000, 2_200), withoutToday.dailyCalories.map { it.second })
+        assertEquals(130.0, withoutToday.avgProtein, 0.0001)
+    }
+
+    @Test
     fun calorieBarHitTestPicksTheNearestBarAndClampsToTheEnds() {
         // Bars 20px wide with 4px gaps starting at x = 10: centres at 20, 44, 68.
         assertEquals(0, calorieBarIndexAt(x = 0f, startX = 10f, barWidth = 20f, gap = 4f, count = 3))

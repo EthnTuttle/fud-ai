@@ -436,6 +436,8 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorie</string>
+    <string name="progress_include_today">Zahrnout dnešek</string>
+    <string name="progress_include_today_caption">Graf kalorií a průměry živin</string>
     <string name="progress_avg_format">Průměr: %1$d kcal</string>
     <string name="progress_no_food">Zatím žádné zapsané jídlo</string>
 

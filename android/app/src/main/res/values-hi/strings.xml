@@ -472,6 +472,8 @@
     </plurals>
 
     <string name="progress_calories_section">कैलोरी</string>
+    <string name="progress_include_today">आज शामिल करें</string>
+    <string name="progress_include_today_caption">कैलोरी चार्ट और पोषण औसत</string>
     <string name="progress_avg_format">औसत: %1$,d kcal</string>
     <string name="progress_no_food">अभी तक कोई भोजन लॉग नहीं किया गया</string>
 

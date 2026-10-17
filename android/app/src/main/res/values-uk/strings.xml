@@ -573,6 +573,8 @@
     <string name="progress_workout_chart_description">Графік спалювання від тренувань з %1$s по %2$s. Усього %3$d кілокалорій; останнє значення %4$d кілокалорій.</string>
 
     <string name="progress_calories_section">Калорії</string>
+    <string name="progress_include_today">Враховувати сьогодні</string>
+    <string name="progress_include_today_caption">Графік калорій і середні показники харчування</string>
     <string name="progress_avg_format">Середнє: %1$d ккал</string>
     <string name="progress_no_food">Їжу ще не зареєстровано</string>
 

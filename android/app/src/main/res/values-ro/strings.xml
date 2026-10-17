@@ -475,6 +475,8 @@
     </plurals>
 
     <string name="progress_calories_section">Calorii</string>
+    <string name="progress_include_today">Include ziua de azi</string>
+    <string name="progress_include_today_caption">Graficul caloriilor și mediile nutriționale</string>
     <string name="progress_avg_format">Med.: %1$,d kcal</string>
     <string name="progress_no_food">Niciun aliment înregistrat încă</string>
 

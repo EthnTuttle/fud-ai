@@ -578,6 +578,8 @@
     <string name="progress_workout_chart_description">Workout burn chart from %1$s to %2$s. Total %3$d kilocalories; latest %4$d kilocalories.</string>
 
     <string name="progress_calories_section">Calories</string>
+    <string name="progress_include_today">Include today</string>
+    <string name="progress_include_today_caption">Calorie chart and nutrition averages</string>
     <string name="progress_avg_format">Avg: %1$,d kcal</string>
     <string name="progress_no_food">No food logged yet</string>
 

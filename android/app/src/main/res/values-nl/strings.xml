@@ -472,6 +472,8 @@
     </plurals>
 
     <string name="progress_calories_section">Calorieën</string>
+    <string name="progress_include_today">Vandaag meetellen</string>
+    <string name="progress_include_today_caption">Caloriegrafiek en voedingsgemiddelden</string>
     <string name="progress_avg_format">Gem.: %1$,d kcal</string>
     <string name="progress_no_food">Nog geen eten geregistreerd</string>
 

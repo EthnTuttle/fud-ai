@@ -473,6 +473,8 @@
     </plurals>
 
     <string name="progress_calories_section">Calories</string>
+    <string name="progress_include_today">Inclure aujourd’hui</string>
+    <string name="progress_include_today_caption">Graphique des calories et moyennes nutritionnelles</string>
     <string name="progress_avg_format">Moy. : %1$,d kcal</string>
     <string name="progress_no_food">Aucun aliment enregistré pour le moment</string>
 

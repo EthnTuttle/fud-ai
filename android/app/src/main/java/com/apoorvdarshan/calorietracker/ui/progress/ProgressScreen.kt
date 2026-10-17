@@ -34,6 +34,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -54,6 +55,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -169,6 +171,15 @@ enum class TimeRange(@StringRes val labelRes: Int, val days: Int) {
         return start to end
     }
 
+    /** The calorie / nutrition window. Excluding today ends it yesterday — and shifts
+     *  past periods by the same day so they stay contiguous — so a still-in-progress
+     *  log doesn't drag the averages down. */
+    fun nutritionDateRange(
+        today: LocalDate = LocalDate.now(),
+        offset: Int = 0,
+        includeToday: Boolean = true
+    ): Pair<LocalDate, LocalDate> = dateRange(if (includeToday) today else today.minusDays(1), offset)
+
     /** All has no earlier window to step back to. */
     val supportsPeriodNavigation: Boolean get() = this != ALL_TIME
 }
@@ -205,6 +216,8 @@ private fun MyProgressContent(container: AppContainer) {
     val optionalNutrientGoals by container.prefs.optionalNutrientGoals.collectAsState(
         initial = OptionalNutrientGoals.Default
     )
+    val includeToday by container.prefs.progressIncludeToday.collectAsState(initial = true)
+    val prefsScope = rememberCoroutineScope()
     val weightMetric = weightUnit == "kg"
 
     var range by rememberSaveable { mutableStateOf(TimeRange.WEEK) }
@@ -221,6 +234,8 @@ private fun MyProgressContent(container: AppContainer) {
 
     // Filter weights + body fats to range
     val (rangeStartDate, rangeEndDate) = range.dateRange(offset = periodOffset)
+    val (nutritionStartDate, nutritionEndDate) =
+        range.nutritionDateRange(offset = periodOffset, includeToday = includeToday)
     val zone = ZoneId.systemDefault()
     val rangeStart = rangeStartDate.atStartOfDay(zone).toInstant()
     val rangeEndExclusive = rangeEndDate.plusDays(1).atStartOfDay(zone).toInstant()
@@ -258,14 +273,14 @@ private fun MyProgressContent(container: AppContainer) {
     // cancels the previous LaunchedEffect so the picker stays interruptible.
     var foodRangeStats by remember { mutableStateOf<ProgressFoodRangeStats?>(null) }
     var isLoadingFoodRangeStats by remember { mutableStateOf(false) }
-    LaunchedEffect(foods, range, periodOffset, ui.profile, optionalNutrientGoals) {
+    LaunchedEffect(foods, range, periodOffset, includeToday, ui.profile, optionalNutrientGoals) {
         isLoadingFoodRangeStats = true
         foodRangeStats = null
         val computed = withContext(Dispatchers.Default) {
             computeProgressFoodRangeStats(
                 foods = foods,
                 dayCount = range.days,
-                endDay = rangeEndDate,
+                endDay = nutritionEndDate,
                 zone = zone,
                 profile = ui.profile,
                 optionalGoals = optionalNutrientGoals
@@ -348,6 +363,16 @@ private fun MyProgressContent(container: AppContainer) {
                         WorkoutHistoryLink(reliableWorkoutBurnSessions.size) { showAllWorkouts = true }
                     }
                 }
+            }
+
+            item {
+                IncludeTodayToggle(
+                    checked = includeToday,
+                    // Spell out the shifted window while it differs from the label above.
+                    nutritionRange = if (includeToday || !range.supportsPeriodNavigation) null
+                        else nutritionStartDate to nutritionEndDate,
+                    onCheckedChange = { prefsScope.launch { container.prefs.setProgressIncludeToday(it) } }
+                )
             }
 
             // 5–7. Nutrition sections: show a loading card while computing so
@@ -666,6 +691,49 @@ private fun formatProgressPeriod(
         end.atTime(12, 0).atZone(zone).toInstant().toEpochMilli(),
         DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH or yearFlag
     )
+}
+
+/** Switch for leaving today's still-in-progress log out of the calorie chart and
+ *  nutrition averages. */
+@Composable
+private fun IncludeTodayToggle(
+    checked: Boolean,
+    nutritionRange: Pair<LocalDate, LocalDate>?,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val context = LocalContext.current
+    val scope = stringResource(R.string.progress_include_today_caption)
+    val caption = remember(scope, nutritionRange) {
+        nutritionRange?.let { (start, end) -> "$scope · ${formatProgressPeriod(context, start, end)}" } ?: scope
+    }
+    FudGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 14.dp,
+        padding = 0.dp
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    stringResource(R.string.progress_include_today),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    caption,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(checked = checked, onCheckedChange = null)
+        }
+    }
 }
 
 @Composable
