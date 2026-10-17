@@ -534,6 +534,11 @@
     <string name="settings_goal_weight">Greutate obiectiv</string>
     <string name="settings_calories">Calorii</string>
     <string name="settings_recalculate_goals">Recalculează obiectivele</string>
+    <string name="settings_estimated_maintenance">Menținere estimată</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/zi</string>
+    <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/zi</string>
+    <string name="settings_maintenance_close">Obiectivul este aproape de menținere</string>
+    <string name="settings_estimated_maintenance_info">Menținerea estimată reprezintă caloriile pe care le-ai arde într-o zi obișnuită: BMR-ul din profilul tău înmulțit cu nivelul de activitate. Dacă mănânci sub această valoare, ai un deficit pentru a slăbi; dacă mănânci peste, ai un surplus pentru a lua în greutate. Deficitul sau surplusul afișat este obiectivul tău caloric minus această estimare. Este o estimare pe bază de formulă, așa că arderea ta reală poate diferi, iar recalcularea obiectivelor îți poate stabili obiectivul pe baza alimentelor înregistrate, a tendinței greutății sau a energiei arse măsurate. Aceasta nu este o recomandare medicală.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Fixat</string>
@@ -566,8 +571,25 @@
     <string name="settings_clear_key">Șterge cheia</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Cântăriri mai vechi</string>
     <string name="settings_clear_food_log">Șterge jurnalul alimentar</string>
     <string name="settings_delete_all_data">Șterge toate datele</string>
+    <string name="storage_title">Spațiu de stocare</string>
+    <string name="storage_saved_photos">Fotografii salvate</string>
+    <string name="storage_on_device_models">Modele pe dispozitiv</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Comprimă fotografiile</string>
+    <string name="storage_clear_cache">Golește cache-ul</string>
+    <string name="storage_footer">Comprimă fotografiile redimensionează permanent fotografiile mai mari de 2048 px. Golește cache-ul elimină miniaturile și imaginile de exerciții descărcate, care sunt recreate când este nevoie. Șterge modelele de pe dispozitiv din setările lor de AI sau de vorbire.</string>
+    <string name="storage_compress_confirm_title">Comprimi fotografiile?</string>
+    <string name="storage_compress_confirm_message">Fotografiile a căror latură cea mai lungă depășește 2048 de pixeli vor fi redimensionate permanent la 2048 de pixeli și salvate ca JPEG. Fotografiile mai mici rămân neschimbate. Acțiunea nu poate fi anulată.</string>
+    <string name="storage_compress_action">Comprimă</string>
+    <string name="storage_compressing_progress">Se comprimă fotografiile… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotografii comprimate</string>
+    <string name="storage_compress_freed">S-au eliberat %1$s.</string>
+    <string name="storage_compress_nothing">Nicio fotografie nu a necesitat comprimare.</string>
+    <string name="storage_compress_unreadable">Unele fotografii nu au putut fi citite și au rămas neschimbate.</string>
+    <string name="storage_compress_failed">Unele fotografii nu au putut fi comprimate și au rămas neschimbate. Asigură-te că dispozitivul are spațiu liber, apoi încearcă din nou.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Ștergi jurnalul alimentar?</string>
@@ -828,4 +850,5 @@
     <string name="settings_save_photos_to_gallery">Salvează în Fotografii</string>
     <string name="settings_save_photos_to_gallery_subtitle">Salvează și fotografiile meselor în galerie la înregistrare</string>
     <string name="settings_other_nutrients_note">Separat de obiectivele de calorii, proteine, carbohidrați și grăsimi.</string>
+    <string name="label_date">Data</string>
 </resources>

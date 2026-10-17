@@ -4351,8 +4351,8 @@ struct ProgressTabView: View {
             .sheet(isPresented: $showLogWeight) {
                 LogWeightSheet(
                     currentWeightKg: weightStore.latestEntry?.weightKg ?? userProfile.weightKg
-                ) { weightKg in
-                    weightStore.addEntry(WeightEntry(weightKg: weightKg))
+                ) { weightKg, date in
+                    weightStore.addEntry(WeightEntry(date: date, weightKg: weightKg))
                 }
             }
             .sheet(isPresented: $showLogBodyFat) {
@@ -5128,6 +5128,8 @@ struct ProfileView: View {
                         macro: nil,
                         sheet: .editCalories
                     )
+
+                    MaintenanceEstimateRow(profile: profile)
 
                     lockableGoalRow(icon: "p.circle", label: "Protein", valueText: "\(profile.effectiveProtein)g", macro: .protein, sheet: .editProtein)
                     lockableGoalRow(icon: "c.circle", label: "Carbs", valueText: "\(profile.effectiveCarbs)g", macro: .carbs, sheet: .editCarbs)
@@ -6309,6 +6311,8 @@ struct ProfileView: View {
                     .buttonStyle(.plain)
                 }
                 .listRowBackground(AppColors.appCard)
+
+                StorageSettingsSection()
                 }
 
                 if let aboutCategory = settingsCategory?.aboutCategory {

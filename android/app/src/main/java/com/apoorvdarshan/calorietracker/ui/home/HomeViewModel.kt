@@ -704,8 +704,11 @@ viewModelScope.launch {
                 val filenames = when {
                     reviewSource != null -> reviewSource.allImageFilenames
                     pendingDraftImageFilenames.isNotEmpty() -> pendingDraftImageFilenames
-                    else -> imageBytesList.mapIndexedNotNull { index, bytes ->
-                        container.imageStore.storeBytes(bytes, if (index == 0) id else UUID.randomUUID())
+                    // Large photos are downscaled while stored, so keep that off the main thread.
+                    else -> withContext(Dispatchers.IO) {
+                        imageBytesList.mapIndexedNotNull { index, bytes ->
+                            container.imageStore.storeBytes(bytes, if (index == 0) id else UUID.randomUUID())
+                        }
                     }
                 }
                 fun s(v: Int) = (v * scale).roundToInt()

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "notes": "Voice assistant actions shared by iOS and Android. The live session declares these tools plus the existing Coach data tools (get_data_summary ... get_exercise_lift_history). Every tool here must have a handler on both platforms; an action a platform cannot do returns {\"ok\": false, \"error\": \"unsupported\"}. See README.md for effects, confirmation and result conventions.",
+  "notes": "Voice assistant actions shared by iOS and Android. The live session declares these tools plus the existing Coach data tools (get_data_summary ... search_exercise_library). Every tool here must have a handler on both platforms; an action a platform cannot do returns {\"ok\": false, \"error\": \"unsupported\"}. See README.md for effects, confirmation and result conventions.",
   "tools": [
     {
       "name": "get_app_state",

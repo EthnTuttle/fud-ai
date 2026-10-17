@@ -675,6 +675,11 @@
     <string name="settings_goal_weight">Цільова вага</string>
     <string name="settings_calories">Калорії</string>
     <string name="settings_recalculate_goals">Перерахувати цілі</string>
+    <string name="settings_estimated_maintenance">Орієнтовна норма підтримки</string>
+    <string name="settings_maintenance_deficit_format">Дефіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format">Профіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_close">Ціль близька до норми підтримки</string>
+    <string name="settings_estimated_maintenance_info">Орієнтовна норма підтримки — це калорії, які ви спалюєте у звичайний день: ваш BMR із профілю, помножений на рівень активності. Якщо їсти менше, виникає дефіцит для схуднення; якщо більше — профіцит для набору ваги. Показаний дефіцит або профіцит — це ваша ціль калорій мінус ця оцінка. Це розрахунок за формулою, тож реальні витрати можуть відрізнятися, а перерахунок цілей може встановити ціль на основі записаної їжі, динаміки ваги або виміряних витрат енергії. Це не медична порада.</string>
     <string name="settings_macro_pinned_format">%1$d г</string>
     <string name="settings_macro_auto_format">%1$d г · авто</string>
     <string name="settings_macro_pinned_a11y">Закріплено</string>
@@ -802,6 +807,7 @@
     <string name="settings_fallback_footer">Якщо основний постачальник не відповідає (перевантаження, ліміт запитів, помилка мережі), застосунок автоматично повторить спробу з цим резервним постачальником. Можна вибрати того ж постачальника, що й основний — просто вкажіть іншу модель.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Старіші записи ваги</string>
     <string name="settings_manage_health_access">Керувати доступом до Health Connect</string>
     <string name="settings_permissions">Дозволи</string>
     <string name="settings_energy_goals">Цілі спалювання енергії</string>
@@ -812,6 +818,22 @@
     <string name="settings_refresh_energy_goals">Оновити цілі спалювання енергії</string>
     <string name="settings_clear_food_log">Очистити журнал їжі</string>
     <string name="settings_delete_all_data">Видалити всі дані</string>
+    <string name="storage_title">Сховище</string>
+    <string name="storage_saved_photos">Збережені фото</string>
+    <string name="storage_on_device_models">Моделі на пристрої</string>
+    <string name="storage_cache">Кеш</string>
+    <string name="storage_compress_photos">Стиснути фото</string>
+    <string name="storage_clear_cache">Очистити кеш</string>
+    <string name="storage_footer">«Стиснути фото» назавжди зменшує фото, більші за 2048 пікселів. «Очистити кеш» видаляє мініатюри та завантажені зображення вправ — за потреби вони створюються знову. Моделі на пристрої видаляються в їхніх налаштуваннях ШІ або мовлення.</string>
+    <string name="storage_compress_confirm_title">Стиснути фото?</string>
+    <string name="storage_compress_confirm_message">Фото, у яких довша сторона перевищує 2048 пікселів, буде назавжди зменшено до 2048 пікселів і збережено у форматі JPEG. Менші фото не зміняться. Цю дію не можна скасувати.</string>
+    <string name="storage_compress_action">Стиснути</string>
+    <string name="storage_compressing_progress">Стиснення фото… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Фото стиснуто</string>
+    <string name="storage_compress_freed">Звільнено %1$s.</string>
+    <string name="storage_compress_nothing">Немає фото, які потрібно стиснути.</string>
+    <string name="storage_compress_unreadable">Деякі фото не вдалося прочитати, тому їх не змінено.</string>
+    <string name="storage_compress_failed">Деякі фото не вдалося стиснути, тому їх не змінено. Переконайтеся, що на пристрої є вільне місце, і спробуйте ще раз.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Очистити журнал їжі?</string>
