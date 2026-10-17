@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.services.ondevice
 
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
@@ -217,6 +218,36 @@ class ModelDownloaderTest {
 
         assertTrue(error is IllegalStateException)
         assertEquals(1, server.requestCount)
+    }
+
+    @Test fun localWriteFailureIsNotRetriedAsANetworkError() {
+        // A full disk fails every write the same way, so reconnecting would only repeat the request.
+        leavePartial(artifact.copyOf(split))
+        val before = server.requestCount
+        server.enqueue(rangeResponse(artifact, split))
+        server.enqueue(rangeResponse(artifact, split))
+        val downloader = ModelDownloader(client, retryDelaysMillis = longArrayOf(0, 0, 0)) { file ->
+            object : FileOutputStream(file, true) {
+                override fun write(b: ByteArray, off: Int, len: Int) {
+                    throw IOException("write failed: ENOSPC (No space left on device)")
+                }
+            }
+        }
+
+        val error = try {
+            runBlocking { downloader.download(descriptor(artifact), part, onCall = {}, onProgress = {}) }
+            null
+        } catch (failure: Throwable) {
+            failure
+        }
+
+        assertTrue(error is ModelStorageException)
+        assertTrue(error?.message.orEmpty().contains("ENOSPC"))
+        assertEquals("bytes=$split-", server.takeRequest().getHeader("Range"))
+        assertEquals(before + 1, server.requestCount)
+        // The bytes already written stay, so freeing space and tapping Download resumes them.
+        assertArrayEquals(artifact.copyOf(split), part.readBytes())
+        assertTrue(ModelDownloader.isResumable(part, descriptor(artifact)))
     }
 
     @Test fun cancellationDuringBackoffIsPrompt() = runBlocking {

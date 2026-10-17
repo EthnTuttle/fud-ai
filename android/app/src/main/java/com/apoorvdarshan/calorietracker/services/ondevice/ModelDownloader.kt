@@ -22,7 +22,8 @@ import okhttp3.Response
  */
 internal class ModelDownloader(
     client: OkHttpClient,
-    private val retryDelaysMillis: LongArray = DEFAULT_RETRY_DELAYS_MILLIS
+    private val retryDelaysMillis: LongArray = DEFAULT_RETRY_DELAYS_MILLIS,
+    private val openOutput: (File) -> FileOutputStream = { FileOutputStream(it, true) }
 ) {
     // The shared client caps a whole call at 75 s, which a multi-gigabyte body cannot meet.
     // Its read timeout still detects a stalled connection.
@@ -114,7 +115,7 @@ internal class ModelDownloader(
                 else -> error("Download failed (HTTP ${response.code}).")
             }
             var lastPublished = transfer.offset
-            FileOutputStream(part, true).use { output ->
+            openOutput(part).use { output ->
                 response.body.byteStream().use { input ->
                     val buffer = ByteArray(DEFAULT_BUFFER_SIZE * 4)
                     while (true) {
@@ -125,7 +126,7 @@ internal class ModelDownloader(
                             discardPartial(part)
                             error("The model download size did not match the published artifact.")
                         }
-                        output.write(buffer, 0, count)
+                        writeLocally { output.write(buffer, 0, count) }
                         transfer.digest.update(buffer, 0, count)
                         transfer.offset += count
                         if (transfer.offset - lastPublished >= PROGRESS_STEP_BYTES) {
@@ -134,10 +135,22 @@ internal class ModelDownloader(
                         }
                     }
                 }
-                output.fd.sync()
+                writeLocally { output.fd.sync() }
             }
             onProgress(transfer.offset)
             if (transfer.offset < expected) throw EOFException("The model download was incomplete.")
+        }
+    }
+
+    /**
+     * Only network failures are worth another attempt. A write that fails (for example because
+     * the disk is full) would fail the same way after every reconnect, so it ends the download.
+     */
+    private inline fun writeLocally(block: () -> Unit) {
+        try {
+            block()
+        } catch (error: IOException) {
+            throw ModelStorageException(error)
         }
     }
 
@@ -204,3 +217,6 @@ internal class ModelDownloader(
         }
     }
 }
+
+/** Writing the partial failed on this device; the bytes written before it stay for a resume. */
+internal class ModelStorageException(cause: IOException) : IllegalStateException(cause.message, cause)
