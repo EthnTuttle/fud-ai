@@ -62,7 +62,7 @@
     <string name="unit_ft">фути</string>
     <string name="unit_in">дюйми</string>
     <string name="unit_ft_in">фути / дюйми</string>
-    <string name="kcal_value_format">%1$d ккал</string>
+    <string name="kcal_value_format">%1$,d ккал</string>
     <string name="kj_value_format">%1$,d кДж</string>
     <string name="health_import_count_kj">Нових записів: %1$d · %2$d кДж</string>
     <string name="workout_text_estimate_kj">Орієнтовні витрати: %1$d кДж</string>
@@ -158,19 +158,19 @@
     <string name="ai_provider_custom">Власний (сумісний з OpenAI)</string>
 
     <!-- AI Provider API key placeholders -->
-    <string name="ai_key_placeholder_gemini">Paste Gemini API key</string>
-    <string name="ai_key_placeholder_openai">Paste OpenAI API key</string>
-    <string name="ai_key_placeholder_anthropic">Paste Claude API key</string>
-    <string name="ai_key_placeholder_xai">Paste Grok API key</string>
-    <string name="ai_key_placeholder_openrouter">Paste OpenRouter API key</string>
-    <string name="ai_key_placeholder_together">Paste Together AI API key</string>
-    <string name="ai_key_placeholder_groq">Paste Groq API key</string>
-    <string name="ai_key_placeholder_huggingface">Paste Hugging Face API key</string>
-    <string name="ai_key_placeholder_fireworks">Paste Fireworks API key</string>
-    <string name="ai_key_placeholder_deepinfra">Paste DeepInfra API key</string>
-    <string name="ai_key_placeholder_mistral">Paste Mistral API key</string>
-    <string name="ai_key_placeholder_deepseek">Paste DeepSeek API key</string>
-    <string name="ai_key_placeholder_cerebras">Paste Cerebras API key</string>
+    <string name="ai_key_placeholder_gemini">Вставте ключ API Gemini</string>
+    <string name="ai_key_placeholder_openai">Вставте ключ API OpenAI</string>
+    <string name="ai_key_placeholder_anthropic">Вставте ключ API Claude</string>
+    <string name="ai_key_placeholder_xai">Вставте ключ API Grok</string>
+    <string name="ai_key_placeholder_openrouter">Вставте ключ API OpenRouter</string>
+    <string name="ai_key_placeholder_together">Вставте ключ API Together AI</string>
+    <string name="ai_key_placeholder_groq">Вставте ключ API Groq</string>
+    <string name="ai_key_placeholder_huggingface">Вставте ключ API Hugging Face</string>
+    <string name="ai_key_placeholder_fireworks">Вставте ключ API Fireworks</string>
+    <string name="ai_key_placeholder_deepinfra">Вставте ключ API DeepInfra</string>
+    <string name="ai_key_placeholder_mistral">Вставте ключ API Mistral</string>
+    <string name="ai_key_placeholder_deepseek">Вставте ключ API DeepSeek</string>
+    <string name="ai_key_placeholder_cerebras">Вставте ключ API Cerebras</string>
     <string name="ai_key_placeholder_local">Ключ API не потрібен</string>
     <string name="ai_key_placeholder_ollama">Ключ не потрібен</string>
     <string name="ai_key_placeholder_custom">Ключ API (або будь-що, якщо кінцевій точці він не потрібен)</string>
@@ -187,9 +187,9 @@
 
     <string name="speech_key_placeholder_native">Не потрібен</string>
     <string name="speech_key_placeholder_local">Не потрібен</string>
-    <string name="speech_key_placeholder_gemini">Paste Gemini API key</string>
-    <string name="speech_key_placeholder_openai">Paste API key</string>
-    <string name="speech_key_placeholder_groq">Paste API key</string>
+    <string name="speech_key_placeholder_gemini">Вставте ключ API Gemini</string>
+    <string name="speech_key_placeholder_openai">Вставте ключ API</string>
+    <string name="speech_key_placeholder_groq">Вставте ключ API</string>
     <string name="speech_key_placeholder_mistral">Ваш ключ API Mistral</string>
     <string name="speech_key_placeholder_deepgram">Токен your-deepgram-key</string>
     <string name="speech_key_placeholder_assemblyai">Ваш ключ AssemblyAI</string>
@@ -336,6 +336,15 @@
     <string name="onboarding_provider_step_2">Обери провайдера та встав ключ нижче</string>
     <string name="onboarding_provider_step_3">Вставте свій ключ — готово</string>
     <string name="onboarding_provider_footer">Підтримується 13 провайдерів. Ваш ключ залишається на \nцьому пристрої в зашифрованому вигляді.</string>
+    <string name="onboarding_paste_api_key_helper">Вставте свій ключ API %1$s у поле вище. Текст підказки — не ключ.</string>
+    <string name="onboarding_missing_api_key_title">Вставте свій ключ API %1$s</string>
+    <string name="onboarding_missing_api_key_message">Щоб продовжити, потрібен справжній ключ у полі «Ключ API». Текст підказки — не ключ: вставте свій ключ %1$s.</string>
+    <string name="onboarding_ai_notice_analysis_title">ШІ-аналіз</string>
+    <string name="onboarding_ai_notice_analysis_body">Фото їжі, голосові розшифровки та введені страви надсилаються безпосередньо вибраному провайдеру ШІ.</string>
+    <string name="onboarding_ai_notice_local_title">Локальні дані</string>
+    <string name="onboarding_ai_notice_local_body">Ваш журнал харчування, історія ваги, історія відсотка жиру та ключі API (BYOK) залишаються на цьому пристрої.</string>
+    <string name="onboarding_ai_terms_checkbox">Я приймаю Умови використання та Політику конфіденційності, зокрема описану вище передачу даних провайдеру ШІ.</string>
+    <string name="onboarding_ai_terms_and">і</string>
 
     <string name="onboarding_building_calories">Калорії</string>
     <string name="onboarding_building_carbs">Вуглеводи</string>
@@ -381,6 +390,10 @@
     <string name="home_kcal_left_format">Залишилося %1$s</string>
     <string name="home_kj_left_format">Залишилося %1$s</string>
     <string name="home_kilojoules">Кілоджоулі</string>
+    <string name="home_macro_left_format">Залишилося %1$s</string>
+    <string name="home_macro_over_format">Перевищення: %1$s</string>
+    <string name="home_macro_no_goal">Без цілі</string>
+    <string name="home_macro_goal_reached">Ціль досягнуто</string>
     <string name="home_view_more">Переглянути більше</string>
     <string name="home_burn_deficit">%1$s спалено · дефіцит %2$s</string>
     <string name="home_burn_surplus">%1$s спалено · профіцит %2$s</string>
@@ -662,8 +675,8 @@
     <string name="progress_calories_section">Калорії</string>
     <string name="progress_include_today">Враховувати сьогодні</string>
     <string name="progress_include_today_caption">Графік калорій і середні показники харчування</string>
-    <string name="progress_avg_format">Середнє: %1$d ккал</string>
-    <string name="progress_avg_format_kj">Середнє: %1$d кДж</string>
+    <string name="progress_avg_format">Середнє: %1$,d ккал</string>
+    <string name="progress_avg_format_kj">Середнє: %1$,d кДж</string>
     <string name="progress_no_food">Їжу ще не зареєстровано</string>
 
     <string name="progress_macro_averages">Середні макроси</string>
@@ -779,6 +792,9 @@
     <string name="settings_appearance_system">Системний</string>
     <string name="settings_appearance_light">Світлий</string>
     <string name="settings_appearance_dark">Темний</string>
+    <string name="settings_app_language">Мова</string>
+    <string name="settings_app_language_system">Як у системі</string>
+    <string name="sheet_app_language">Мова</string>
     <string name="settings_theme_color">Колір теми</string>
     <string name="sheet_theme_color">Колір теми</string>
     <string name="sheet_theme_color_footer">Змінює основний колір застосунку, що використовується для вкладок, кнопок, піктограм, діаграм та кілець прогресу.</string>
@@ -1018,6 +1034,7 @@
     <string name="speech_language_japanese">Японська</string>
     <string name="speech_language_chinese">Китайська</string>
     <string name="speech_language_korean">Корейська</string>
+    <string name="speech_language_czech">Чеська</string>
 
     <!-- About -->
     <string name="about_update_checking">Перевірка оновлень</string>
@@ -1033,6 +1050,14 @@
     <string name="about_rate">Оцінити застосунок</string>
     <string name="about_share">Поділитися застосунком</string>
     <string name="about_open_source">Відкритий вихідний код (MIT)</string>
+    <string name="about_openssf_best_practices">OpenSSF Best Practices</string>
+    <string name="about_openssf_best_practices_desc">Passing · проєкт 14553</string>
+    <string name="about_openssf_scorecard">OpenSSF Scorecard</string>
+    <string name="about_openssf_scorecard_desc">Оцінка безпеки</string>
+    <string name="about_udyam">Зареєстровано в Udyam</string>
+    <string name="about_udyam_desc">UDYAM-DL-06-0225072 · Мікропідприємство</string>
+    <string name="about_ace">Сертифікат ACE</string>
+    <string name="about_ace_desc">Персональний тренер · акредитація NCCA</string>
     <string name="about_star_github">Поставити зірку на GitHub</string>
     <string name="about_vote_ph">Проголосувати на Product Hunt</string>
     <string name="about_report_issue">Повідомити про проблему на GitHub</string>
@@ -1154,6 +1179,8 @@
     <string name="cloud_backup_delete_message">Видаляє файл Fud AI з Google Drive. Цей телефон залишається без змін.</string>
     <string name="cloud_backup_last">Остання резервна копія: %1$s</string>
     <string name="cloud_backup_signed_in">Увійшли як %1$s</string>
+    <string name="cloud_backup_sign_out">Вийти</string>
+    <string name="cloud_backup_switch_account">Змінити обліковий запис Google</string>
     <string name="cloud_backup_turn_on">Увімкнути</string>
     <string name="cloud_backup_sign_in_failed">Не вдалося відкрити вхід через Google.</string>
     <string name="cloud_backup_restore_no_space">Недостатньо вільного місця, щоб відновити цю резервну копію. Звільніть місце й спробуйте ще раз.</string>
@@ -1171,6 +1198,7 @@
     <string name="export_action">Експортувати</string>
     <string name="settings_other_nutrients">Інші нутрієнти</string>
     <string name="settings_other_nutrient_goals">Цілі для інших нутрієнтів</string>
+    <string name="settings_other_nutrients_note">Окремо від цілей щодо калорій, білків, вуглеводів і жирів.</string>
     <string name="settings_reset_defaults">Скинути до стандартних</string>
     <string name="copy_from">Копіювати з</string>
     <string name="macro_protein_format">Білок: %1$s</string>
@@ -1359,6 +1387,16 @@
     <string name="unit_ml">мл</string>
     <string name="notif_update_title">Доступне оновлення</string>
     <string name="notif_update_text">Нова версія Fud AI готова. Торкніться, щоб оновити.</string>
+    <string name="notif_channel_announcements">Оголошення</string>
+    <string name="notif_channel_announcements_desc">Рідкісні разові новини від Fud AI, наприклад про запуск на Product Hunt.</string>
+    <string name="notif_product_hunt_title">Fud AI вже на Product Hunt 🚀</string>
+    <string name="notif_product_hunt_text">Ми щойно запустилися! Торкніться, щоб проголосувати й допомогти більшій кількості людей дізнатися про Fud AI.</string>
+    <string name="post_update_product_hunt_title">Fud AI вже на Product Hunt</string>
+    <string name="post_update_product_hunt_body">Ми щойно запустилися. Ваш голос допоможе більшій кількості людей знайти Fud AI.</string>
+    <string name="post_update_product_hunt_not_now">Не зараз</string>
+    <string name="post_update_meet_dev_title">Знайомтеся з розробником</string>
+    <string name="post_update_meet_dev_greeting">Привіт, я Апурв 👋</string>
+    <string name="post_update_meet_dev_body">Я розробляю Fud AI самостійно й відкрито. Заходьте привітатися, поділитися відгуком або просто стежте за проєктом — це справді допомагає.</string>
     <string name="settings_calc_intro">Ваші щоденні цілі щодо калорій та макросів встановлюються ШІ. Коли ви натискаєте «Перерахувати цілі» (або автоматично приблизно раз на тиждень, якщо ввімкнено «Адаптивні цілі»), Fud AI надсилає ваш профіль, наведені нижче еталонні рівняння, вашу нещодавно записану їжу та динаміку ваги вашому постачальнику ШІ. Він бере за основу ці перевірені наукою формули, а потім коригує їх відповідно до ваших реальних даних, щоб оцінити ваші справжні потреби для підтримки ваги та цілі.</string>
     <string name="settings_calc_sec_bmr">Базовий метаболізм (BMR)</string>
     <string name="settings_calc_sec_tdee">Щоденні витрати енергії (TDEE)</string>
@@ -1386,7 +1424,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Оцінки базуються на навчальних даних базової моделі ШІ (USDA FoodData Central, етикетки виробників, наукова література). Точність залежить від продукту, видимості розміру порції та моделі провайдера. Завжди звіряйтеся з етикетками продуктів, які часто записуєте.</string>
     <string name="settings_not_medical_title">Не є медичною порадою</string>
-    <string name="settings_not_medical_body">Fud AI — це інструмент для оцінювання, а не клінічний прилад. Прогностичні рівняння мають властиву їм похибку (зазвичай ±10%% для BMR). Проконсультуйтеся з лікарем або дієтологом перед значними змінами в дієті, особливо якщо ви маєте медичні протипоказання, вагітні, годуєте грудьми, вам не виповнилося 18 років або ви маєте розлади харчової поведінки.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI — це інструмент для оцінювання, а не клінічний прилад. Прогностичні рівняння мають властиву їм похибку (зазвичай ±10% для BMR). Проконсультуйтеся з лікарем або дієтологом перед значними змінами в дієті, особливо якщо ви маєте медичні протипоказання, вагітні, годуєте грудьми, вам не виповнилося 18 років або ви маєте розлади харчової поведінки.</string>
     <string name="settings_waist_cm_format">Талія %1$.0f см</string>
     <string name="settings_waist_in_format">Талія %1$.0f дюйм.</string>
     <string name="export_range_today">Сьогодні</string>
@@ -1435,6 +1473,7 @@
     <string name="settings_add_menu_reset">Скинути до стандартних</string>
     <string name="settings_add_menu_footer">Налаштуйте меню їжі кнопки «+» на головному екрані. Вода та голодування залишаються окремими, якщо увімкнено. Це не змінює швидкі дії значка додатка.</string>
     <string name="settings_add_menu_add_method">Додати спосіб</string>
+    <string name="settings_add_menu_restore_a11y">Відновити %1$s</string>
     <string name="settings_add_menu_group_name">Назва групи</string>
     <string name="settings_add_menu_new_group">Нова група</string>
     <string name="settings_tab_bar">Панель вкладок</string>

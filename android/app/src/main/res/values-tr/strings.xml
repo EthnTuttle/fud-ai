@@ -334,6 +334,15 @@
     <string name="onboarding_provider_step_2">Bir sağlayıcı seçin ve anahtarınızı aşağıya yapıştırın</string>
     <string name="onboarding_provider_step_3">Anahtarınızı yapıştırın — bu kadar</string>
     <string name="onboarding_provider_footer">13 sağlayıcı destekleniyor. Anahtarınız şifrelenmiş\nolarak bu cihazda kalır.</string>
+    <string name="onboarding_paste_api_key_helper">%1$s API anahtarınızı yukarıdaki alana yapıştırın. İpucu metni bir anahtar değildir.</string>
+    <string name="onboarding_missing_api_key_title">%1$s API anahtarınızı yapıştırın</string>
+    <string name="onboarding_missing_api_key_message">Devam etmek için API Anahtarı alanına gerçek bir anahtar girilmelidir. İpucu metni bir anahtar değildir; %1$s anahtarınızı yapıştırın.</string>
+    <string name="onboarding_ai_notice_analysis_title">Yapay zeka analizi</string>
+    <string name="onboarding_ai_notice_analysis_body">Yiyecek fotoğrafları, ses kayıtlarının metin dökümleri ve yazdığınız öğünler doğrudan seçtiğiniz yapay zeka sağlayıcısına gönderilir.</string>
+    <string name="onboarding_ai_notice_local_title">Yerel veriler</string>
+    <string name="onboarding_ai_notice_local_body">Yiyecek günlüğünüz, kilo geçmişiniz, vücut yağ oranı geçmişiniz ve kendi API anahtarlarınız (BYOK) bu cihazda kalır.</string>
+    <string name="onboarding_ai_terms_checkbox">Yukarıda açıklanan yapay zekâ sağlayıcılarıyla veri paylaşımı da dâhil olmak üzere Kullanım Koşulları’nı ve Gizlilik Politikası’nı kabul ediyorum.</string>
+    <string name="onboarding_ai_terms_and">ve</string>
 
     <string name="onboarding_building_calories">Kalori</string>
     <string name="onboarding_building_carbs">Karbonhidrat</string>
@@ -767,6 +776,9 @@
     <string name="settings_appearance_system">Sistem</string>
     <string name="settings_appearance_light">Açık</string>
     <string name="settings_appearance_dark">Koyu</string>
+    <string name="settings_app_language">Dil</string>
+    <string name="settings_app_language_system">Sistem varsayılanı</string>
+    <string name="sheet_app_language">Dil</string>
     <string name="settings_theme_color">Tema Rengi</string>
     <string name="sheet_theme_color">Tema Rengi</string>
     <string name="sheet_theme_color_footer">Sekmeler, düğmeler, simgeler, grafikler ve ilerleme halkaları için kullanılan ana uygulama rengini değiştirir.</string>
@@ -1033,7 +1045,9 @@
     <string name="about_star_github">GitHub\'da Yıldızla</string>
     <string name="about_vote_ph">Product Hunt\'ta Oy Ver</string>
     <string name="about_report_issue">Sorun Bildir</string>
+    <string name="about_report_issue_discord">Discord\'da Sorun Bildir</string>
     <string name="about_request_feature">Özellik Talep Et</string>
+    <string name="about_request_feature_discord">Discord\'da Özellik İste</string>
     <string name="about_contact">Bize Ulaşın</string>
     <string name="about_join_discord">Discord\'a Katıl</string>
     <string name="about_follow_x">X\'te Takip Et</string>
@@ -1355,6 +1369,9 @@
     <string name="notif_channel_announcements_desc">Fud AI\'dan Product Hunt lansmanı gibi zaman zaman gelen tek seferlik haberler.</string>
     <string name="notif_product_hunt_title">Fud AI, Product Hunt\'ta yayında 🚀</string>
     <string name="notif_product_hunt_text">Az önce yayınlandık! Oy vermek ve daha fazla kişinin Fud AI\'yı bulmasına yardım etmek için dokunun.</string>
+    <string name="post_update_product_hunt_title">Fud AI, Product Hunt\'ta yayında</string>
+    <string name="post_update_product_hunt_body">Yeni yayına çıktık. Bir oy, daha fazla kişinin Fud AI\'ı bulmasına yardımcı olur.</string>
+    <string name="post_update_product_hunt_not_now">Şimdi değil</string>
 
     <!-- One-time post-update prompts (existing users only) -->
     <string name="post_update_meet_dev_title">Geliştiriciyle tanışın</string>
@@ -1387,7 +1404,7 @@
     <string name="settings_calc_split_citation">Morton RW, ve ark. (2018). “Direnç antrenmanı kaynaklı kas kütlesi ve güç kazanımlarında protein takviyesinin etkisine dair sistematik derleme, meta-analiz ve meta-regresyon.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Tahminler, temel yapay zeka modelinin eğitim verilerine (USDA FoodData Central, üretici tabloları, bilimsel literatür) dayanır. Doğruluk, yiyeceğe, porsiyon boyutu görünürlüğüne ve sağlayıcı modeline göre değişir. Sık kaydettiğiniz yiyecekler için her zaman etiketleri kontrol edin.</string>
     <string name="settings_not_medical_title">Tıbbi tavsiye değildir</string>
-    <string name="settings_not_medical_body">Fud AI bir tahmin aracıdır, klinik bir cihaz değildir. Tahmin denklemleri doğal bir hataya sahiptir (BMR için genellikle ±%10). Önemli diyet değişikliklerinden önce — özellikle bir sağlık durumunuz varsa, hamile ya da emziriyorsanız, 18 yaşın altındaysanız veya bir yeme bozukluğunu yönetiyorsanız — kayıtlı bir diyetisyene, doktora veya spor hekimliği uzmanına danışın.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI bir tahmin aracıdır, klinik bir cihaz değildir. Tahmin denklemleri doğal bir hataya sahiptir (BMR için genellikle ±%10). Önemli diyet değişikliklerinden önce — özellikle bir sağlık durumunuz varsa, hamile ya da emziriyorsanız, 18 yaşın altındaysanız veya bir yeme bozukluğunu yönetiyorsanız — kayıtlı bir diyetisyene, doktora veya spor hekimliği uzmanına danışın.</string>
     <string name="settings_waist_cm_format">Bel %1$.0f cm</string>
     <string name="settings_waist_in_format">Bel %1$.0f in</string>
     <string name="export_range_today">Bugün</string>
@@ -1436,6 +1453,7 @@
     <string name="settings_add_menu_reset">Varsayılana Sıfırla</string>
     <string name="settings_add_menu_footer">Ana Sayfa + düğmesi yiyecek menüsünü özelleştirin. Su ve oruç etkinleştirildiğinde ayrı kalır. Bu, uygulama simgesi Hızlı İşlemlerini değiştirmez.</string>
     <string name="settings_add_menu_add_method">Yöntem Ekle</string>
+    <string name="settings_add_menu_restore_a11y">%1$s geri yükle</string>
     <string name="settings_add_menu_group_name">Grup Adı</string>
     <string name="settings_add_menu_new_group">Yeni Grup</string>
     <string name="settings_tab_bar">Sekme Çubuğu</string>
