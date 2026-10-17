@@ -78,8 +78,20 @@ struct SiriWeightParsingTests {
     @Test func aWeightWithoutAUnitUsesTheUnitSetting() throws {
         #expect(try SiriLoggingService.parseWeight("75", defaultUnit: .kg).unitName == "kilograms")
         #expect(try SiriLoggingService.parseWeight("165", defaultUnit: .lbs).unitName == "pounds")
+        #expect(try SiriLoggingService.parseWeight("my weight is 165", defaultUnit: .lbs).unitName == "pounds")
         // Turkish "kilo" also means weight: "kilom 165" is "my weight is 165", not 165 kg.
         #expect(try SiriLoggingService.parseWeight("kilom 165", defaultUnit: .lbs).unitName == "pounds")
+        #expect(try SiriLoggingService.parseWeight("kilomu 165 olarak kaydet", defaultUnit: .lbs).unitName == "pounds")
+    }
+
+    @Test func aUnitSaidBeforeTheNumberStillCounts() throws {
+        let kilograms = try SiriLoggingService.parseWeight("my weight in kilograms is 75", defaultUnit: .lbs)
+        #expect(kilograms.unitName == "kilograms")
+        #expect(kilograms.kg == 75)
+        #expect(try SiriLoggingService.parseWeight("in pounds 165", defaultUnit: .kg).unitName == "pounds")
+        #expect(try SiriLoggingService.parseWeight("kilos: 75", defaultUnit: .lbs).unitName == "kilograms")
+        // A unit after the number wins over one before it.
+        #expect(try SiriLoggingService.parseWeight("not in kilograms, 165 pounds", defaultUnit: .kg).unitName == "pounds")
     }
 
     @Test func unitWordsAreMatchedAsWordsNotInsideOtherWords() throws {

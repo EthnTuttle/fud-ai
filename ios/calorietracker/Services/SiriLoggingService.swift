@@ -120,14 +120,29 @@ enum SiriLoggingService {
         ("斤", .jin),
     ]
 
-    /// The unit named by the first unit word in `text`, if any.
-    private static func spokenUnit(in text: Substring) -> SpokenWeightUnit? {
-        for word in text.split(whereSeparator: { !$0.isLetter }) {
-            if let match = unitWordPrefixes.first(where: { word.hasPrefix($0.prefix) }) {
-                return match.unit
-            }
+    private static func unit(named word: Substring) -> SpokenWeightUnit? {
+        unitWordPrefixes.first(where: { word.hasPrefix($0.prefix) })?.unit
+    }
+
+    /// Turkish says "kilo" for body weight too, so before the number "kilom 80" (my
+    /// weight is 80) or "kilomu" names no unit. There a kilo- word counts only as
+    /// kilo, kilos, kilogram… or the Azerbaijani kiloqram….
+    private static func isWeightNoun(_ word: Substring) -> Bool {
+        word.hasPrefix("kilo")
+            && word != "kilo" && word != "kilos"
+            && !word.hasPrefix("kilogram") && !word.hasPrefix("kiloqram")
+    }
+
+    /// The unit of the weight at `number`: the first unit word after the number
+    /// ("75 kg", "75キロ"), or else the nearest one before it ("my weight in
+    /// kilograms is 75").
+    private static func spokenUnit(in text: String, around number: Range<String.Index>) -> SpokenWeightUnit? {
+        let after = text[number.upperBound...].split(whereSeparator: { !$0.isLetter })
+        if let found = after.lazy.compactMap({ unit(named: $0) }).first {
+            return found
         }
-        return nil
+        let before = text[..<number.lowerBound].split(whereSeparator: { !$0.isLetter })
+        return before.reversed().lazy.filter { !isWeightNoun($0) }.compactMap { unit(named: $0) }.first
     }
 
     /// Rewrites digits from any script (Arabic-Indic ٧٥, Devanagari ७५, full-width ７５)
@@ -161,9 +176,7 @@ enum SiriLoggingService {
             throw WeightInputError.missingNumber
         }
 
-        // Only a unit said after the number counts. In Turkish "kilo" also means
-        // weight, so "kilom 80" (my weight is 80) names no unit.
-        let unit = spokenUnit(in: normalized[numberRange.upperBound...])
+        let unit = spokenUnit(in: normalized, around: numberRange)
             ?? (defaultUnit == .kg ? .kilograms : .pounds)
 
         let kg: Double
