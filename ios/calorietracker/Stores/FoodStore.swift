@@ -634,9 +634,14 @@ class FoodStore {
             }
             entry.additionalImageFilenames = filenames
         }
-        let filenames = entry.allImageFilenames
-        if entry.imageFilename == nil { entry.imageFilename = filenames.first }
-        entry.additionalImageFilenames = filenames.filter { $0 != entry.imageFilename }
+        // Parent capture order identifies the completed progressive meal.
+        // Ingredient photos remain on their ingredients; flattening them here
+        // would make an ingredient image look like the final meal capture.
+        var seen = Set<String>()
+        let parentFilenames = ((entry.imageFilename.map { [$0] } ?? []) + entry.additionalImageFilenames)
+            .filter { seen.insert($0).inserted }
+        if entry.imageFilename == nil { entry.imageFilename = parentFilenames.first }
+        entry.additionalImageFilenames = parentFilenames.filter { $0 != entry.imageFilename }
     }
 
     /// Used by deleteEntry / replaceAllEntries to decide whether the on-disk

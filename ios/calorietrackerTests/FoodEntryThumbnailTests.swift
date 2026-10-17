@@ -31,6 +31,26 @@ struct FoodEntryThumbnailTests {
         #expect(entry.thumbnailPhotoCandidates.map(\.id) == [.filename("ingredient.jpg")])
     }
 
+    @Test func savingAndReloadingKeepsIngredientPhotosSeparateFromProgressiveCaptures() throws {
+        let suite = "FoodEntryThumbnailTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let first = try #require(FoodImageStore.shared.store(data: imageData(.red), for: UUID()))
+        let final = try #require(FoodImageStore.shared.store(data: imageData(.blue), for: UUID()))
+        let ingredient = try #require(FoodImageStore.shared.store(data: imageData(.green), for: UUID()))
+        defer { [first, final, ingredient].forEach { FoodImageStore.shared.delete(filename: $0) } }
+        var entry = meal(first: first, additional: [final])
+        entry.ingredients = [MealIngredient(name: "Rice", grams: 100, calories: 100, protein: 2, carbs: 20, fat: 1, imageFilename: ingredient)]
+        let store = FoodStore(observesExternalChanges: false, defaults: defaults)
+        store.replaceAllEntries([entry])
+        let saved = try #require(FoodStore(observesExternalChanges: false, defaults: defaults).entries.first)
+        #expect(saved.imageFilename == first)
+        #expect(saved.additionalImageFilenames == [final])
+        #expect(saved.ingredients.first?.imageFilename == ingredient)
+        #expect(saved.thumbnailPhotoCandidates.first?.id == .filename(final))
+        #expect(saved.allImageFilenames == [first, final, ingredient])
+    }
+
     @Test func compactedLegacyCacheCannotImpersonateAMissingFile() {
         var entry = meal(first: "first.jpg", additional: ["missing.jpg", "final.jpg"])
         entry.additionalImageData = [Data("final-photo-only".utf8)]
