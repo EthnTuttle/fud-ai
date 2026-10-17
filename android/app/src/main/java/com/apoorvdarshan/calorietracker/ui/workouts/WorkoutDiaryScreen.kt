@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,25 +48,31 @@ import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.key
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -101,7 +108,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -118,6 +127,8 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.PlannedExercise
 import com.apoorvdarshan.calorietracker.models.ExerciseTimerAction
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
+import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
+import com.apoorvdarshan.calorietracker.models.WorkoutBurnEstimator
 import com.apoorvdarshan.calorietracker.models.WorkoutSetInput
 import com.apoorvdarshan.calorietracker.models.PlannedSet
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -177,6 +188,16 @@ internal fun WorkoutDiaryScreen(
     val keyboard = LocalSoftwareKeyboardController.current
     val exerciseCardBounds = remember { mutableStateMapOf<UUID, androidx.compose.ui.geometry.Rect>() }
     var diaryRootOrigin by remember { mutableStateOf(Offset.Zero) }
+    // Reordering belongs to one day: changing days or dropping below two exercises
+    // ends it, so it never comes back on its own when the user returns or adds one.
+    var reorderDateKey by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedDateKey = state.selectedDate.toString()
+    val isReordering = retainedReorderDateKey(reorderDateKey, selectedDateKey, state.exercises.size) != null
+    LaunchedEffect(selectedDateKey, state.exercises.size > 1) {
+        reorderDateKey = retainedReorderDateKey(reorderDateKey, selectedDateKey, state.exercises.size)
+    }
+    val moveUpLabel = stringResource(R.string.workout_move_up)
+    val moveDownLabel = stringResource(R.string.workout_move_down)
 
     fun dismissKeyboard() {
         focusManager.clearFocus()
@@ -270,6 +291,13 @@ internal fun WorkoutDiaryScreen(
                 WorkoutDayHeader(
                     selectedDate = state.selectedDate,
                     workoutCount = state.exercises.size,
+                    isReordering = isReordering,
+                    onToggleReorder = if (state.exercises.size > 1) {
+                        {
+                            dismissKeyboard()
+                            reorderDateKey = if (isReordering) null else selectedDateKey
+                        }
+                    } else null,
                     modifier = Modifier
                         .workoutDaySwipe(
                             selectedDate = state.selectedDate,
@@ -297,17 +325,41 @@ internal fun WorkoutDiaryScreen(
                     )
                 }
             } else {
-                items(state.exercises, key = { it.id }) { exercise ->
+                itemsIndexed(state.exercises, key = { _, exercise -> exercise.id }) { index, exercise ->
+                    val canMoveUp = index > 0
+                    val canMoveDown = index < state.exercises.lastIndex
+                    val moveUp = { viewModel.moveExercise(exercise.id, -1) }
+                    val moveDown = { viewModel.moveExercise(exercise.id, 1) }
+                    // Placement-only animation keeps moved cards readable without fading edits.
+                    val itemModifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
+                    if (isReordering) {
+                        WorkoutReorderCard(
+                            exercise = exercise,
+                            visual = exerciseRepository.visualFor(exercise.asExerciseItem(), state.visualGender),
+                            position = index + 1,
+                            canMoveUp = canMoveUp,
+                            canMoveDown = canMoveDown,
+                            onMoveUp = moveUp,
+                            onMoveDown = moveDown,
+                            modifier = itemModifier
+                        )
+                        return@itemsIndexed
+                    }
                     val isSaved = exercise.itemId in state.savedExerciseIds
                     val toggleSaved = { viewModel.toggleSaved(exercise.itemId) }
                     val removeExercise = {
                         dismissKeyboard()
                         viewModel.removeExercise(exercise.id)
                     }
+                    // TalkBack users can reorder from the card itself, without entering Reorder.
+                    val moveActions = buildList {
+                        if (canMoveUp) add(CustomAccessibilityAction(moveUpLabel) { moveUp(); true })
+                        if (canMoveDown) add(CustomAccessibilityAction(moveDownLabel) { moveDown(); true })
+                    }
                     SwipeableWorkoutExerciseCard(
                         exerciseId = exercise.id,
                         isSaved = isSaved,
-                        modifier = Modifier.onGloballyPositioned { coordinates ->
+                        modifier = itemModifier.onGloballyPositioned { coordinates ->
                             exerciseCardBounds[exercise.id] = coordinates.boundsInRoot()
                         },
                         onToggleSaved = toggleSaved,
@@ -321,6 +373,7 @@ internal fun WorkoutDiaryScreen(
                             editingDate = state.selectedDate,
                             isSaved = isSaved,
                             lastTimeSummary = viewModel.lastExerciseLiftSummary(exercise.itemId, exercise.name),
+                            moveActions = moveActions,
                             onOpen = { viewModel.openDiaryExercise(exercise) },
                             onShowHistory = {
                                 historyRequest = WorkoutExerciseHistoryRequest(exercise.itemId, exercise.name)
@@ -331,7 +384,8 @@ internal fun WorkoutDiaryScreen(
                             onWeight = { setId, value -> viewModel.updateWeight(exercise.id, setId, value) },
                             onReps = { setId, value -> viewModel.updateReps(exercise.id, setId, value) },
                             onRpe = { setId, value -> viewModel.updateRpe(exercise.id, setId, value) },
-                            onTimerAction = { viewModel.updateTimer(exercise.id, it) }
+                            onTimerAction = { viewModel.updateTimer(exercise.id, it) },
+                            onEffort = { viewModel.setTimerIntensity(exercise.id, it) }
                         )
                     }
                 }
@@ -529,8 +583,8 @@ internal fun WorkoutDiaryScreen(
         OutdoorActivityDurationSheet(
             activity = activity,
             onDismiss = { outdoorActivitySheet = null },
-            onLog = { minutes ->
-                viewModel.logQuickOutdoorActivity(activity, minutes)
+            onLog = { minutes, intensity ->
+                viewModel.logQuickOutdoorActivity(activity, minutes, intensity)
             }
         )
     }
@@ -802,6 +856,8 @@ private fun MetricDivider() {
 private fun WorkoutDayHeader(
     selectedDate: LocalDate,
     workoutCount: Int,
+    isReordering: Boolean,
+    onToggleReorder: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -824,6 +880,131 @@ private fun WorkoutDayHeader(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold
+        )
+        if (onToggleReorder != null) {
+            Spacer(Modifier.width(10.dp))
+            // A labeled button rather than a hidden long-press drag keeps reordering discoverable.
+            Row(
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .clip(CircleShape)
+                    .background(AppColors.Calorie.copy(alpha = if (isReordering) 1f else 0.13f))
+                    .clickable(role = Role.Button, onClick = onToggleReorder)
+                    .padding(horizontal = 12.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                val tint = if (isReordering) Color.White else AppColors.Calorie
+                Icon(
+                    if (isReordering) Icons.Filled.Check else Icons.Filled.SwapVert,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = stringResource(if (isReordering) R.string.action_done else R.string.workout_reorder),
+                    color = tint,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+/** Compact card used while reordering: large, labeled arrows instead of a drag-only gesture. */
+@Composable
+private fun WorkoutReorderCard(
+    exercise: PlannedExercise,
+    visual: ExerciseVisual,
+    position: Int,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FudGlassSurface(
+        modifier = modifier.fillMaxWidth(),
+        cornerRadius = 24.dp,
+        padding = 0.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 14.dp, top = 10.dp, end = 10.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics(mergeDescendants = true) {},
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    position.toString(),
+                    color = AppColors.Calorie,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(26.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f))
+                ) {
+                    AnimatedExerciseImage(visual, Modifier.fillMaxSize(), animatesFrames = false)
+                }
+                Text(
+                    exercise.name,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            WorkoutMoveButton(
+                icon = Icons.Filled.KeyboardArrowUp,
+                description = stringResource(R.string.workout_move_up_named, exercise.name),
+                enabled = canMoveUp,
+                onClick = onMoveUp
+            )
+            WorkoutMoveButton(
+                icon = Icons.Filled.KeyboardArrowDown,
+                description = stringResource(R.string.workout_move_down_named, exercise.name),
+                enabled = canMoveDown,
+                onClick = onMoveDown
+            )
+        }
+    }
+}
+
+@Composable
+private fun WorkoutMoveButton(
+    icon: ImageVector,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .background(AppColors.Calorie.copy(alpha = if (enabled) 0.14f else 0.05f))
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = if (enabled) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+            modifier = Modifier.size(30.dp)
         )
     }
 }
@@ -966,6 +1147,7 @@ private fun WorkoutExerciseCard(
     editingDate: LocalDate,
     isSaved: Boolean,
     lastTimeSummary: String?,
+    moveActions: List<CustomAccessibilityAction>,
     onOpen: () -> Unit,
     onShowHistory: () -> Unit,
     onToggleSaved: () -> Unit,
@@ -974,7 +1156,8 @@ private fun WorkoutExerciseCard(
     onWeight: (UUID, String) -> Unit,
     onReps: (UUID, String) -> Unit,
     onRpe: (UUID, String) -> Unit,
-    onTimerAction: (ExerciseTimerAction) -> Unit
+    onTimerAction: (ExerciseTimerAction) -> Unit,
+    onEffort: (WorkoutIntensity) -> Unit
 ) {
     FudGlassSurface(
         modifier = modifier.fillMaxWidth(),
@@ -988,7 +1171,8 @@ private fun WorkoutExerciseCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onOpen),
+                    .clickable(onClick = onOpen)
+                    .semantics { customActions = moveActions },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -1094,8 +1278,14 @@ private fun WorkoutExerciseCard(
                         Icon(Icons.Filled.Add, contentDescription = "Add blank set", modifier = Modifier.size(18.dp))
                     }
                 } else {
-                    Text("Timed activity", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f), fontSize = 12.sp)
-                    Spacer(Modifier.weight(1f))
+                    // Cardio has no RPE fields, so effort is chosen directly (Moderate by default).
+                    // The weighted box lets a long translation ellipsize instead of squeezing the buttons.
+                    Box(Modifier.weight(1f)) {
+                        WorkoutEffortChip(
+                            effort = WorkoutBurnEstimator.timerIntensity(exercise, rpeScale),
+                            onSelect = onEffort
+                        )
+                    }
                 }
                 WorkoutExerciseTimer(exercise, onTimerAction)
                 IconButton(onClick = onToggleSaved, modifier = Modifier.size(36.dp)) {
@@ -1142,12 +1332,66 @@ private fun WorkoutExerciseCard(
     }
 }
 
+internal val WorkoutIntensity.labelRes: Int
+    get() = when (this) {
+        WorkoutIntensity.LIGHT -> R.string.workout_effort_light
+        WorkoutIntensity.MODERATE -> R.string.workout_effort_moderate
+        WorkoutIntensity.VIGOROUS -> R.string.workout_effort_vigorous
+    }
+
+@Composable
+private fun WorkoutEffortChip(
+    effort: WorkoutIntensity,
+    onSelect: (WorkoutIntensity) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val effortLabel = stringResource(effort.labelRes)
+    val chipLabel = stringResource(R.string.workout_effort_value, effortLabel)
+    Box {
+        Row(
+            modifier = Modifier
+                .minimumInteractiveComponentSize()
+                .clip(CircleShape)
+                .background(AppColors.Calorie.copy(alpha = 0.12f))
+                .clickable(role = Role.DropdownList) { expanded = true }
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                chipLabel,
+                color = AppColors.Calorie,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = AppColors.Calorie, modifier = Modifier.size(18.dp))
+        }
+        SheetGlassDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, menuWidth = 200.dp) {
+            WorkoutIntensity.entries.forEach { option ->
+                SheetGlassDropdownMenuItem(
+                    label = stringResource(option.labelRes),
+                    selected = option == effort,
+                    reserveSelectionSlot = true,
+                    onClick = {
+                        expanded = false
+                        if (option != effort) onSelect(option)
+                    }
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun WorkoutExerciseTimer(
     exercise: PlannedExercise,
     onAction: (ExerciseTimerAction) -> Unit
 ) {
-    val timer = exercise.timer
+    // Choosing an effort first stores an empty timer; it still reads as "Start timer".
+    val timer = exercise.timer?.takeIf { it.hasStarted }
     var now by remember { mutableStateOf(Instant.now()) }
     var menuExpanded by remember { mutableStateOf(false) }
     var pendingAction by remember { mutableStateOf<ExerciseTimerAction?>(null) }
@@ -1486,3 +1730,11 @@ internal fun selectedDateTitle(date: LocalDate, today: LocalDate = LocalDate.now
     today.minusDays(1) -> "Yesterday"
     else -> date.format(DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault()))
 }
+
+/**
+ * Reorder mode belongs to the day it was started on. It ends when another day is
+ * selected or fewer than two exercises remain, so returning to that day (or adding
+ * an exercise back) shows the normal cards instead of silently resuming it.
+ */
+internal fun retainedReorderDateKey(reorderDateKey: String?, selectedDateKey: String, exerciseCount: Int): String? =
+    reorderDateKey?.takeIf { it == selectedDateKey && exerciseCount > 1 }

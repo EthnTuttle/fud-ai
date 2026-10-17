@@ -1606,7 +1606,8 @@ final class VoiceAssistantToolExecutor {
             workoutPlans: Array(stores.workouts.dayPlans.values),
             workoutPreferences: stores.workouts.preferences,
             workoutPlanWeightUnit: currentWeightUnit,
-            workoutAccessEnabled: workoutDiaryEnabled
+            workoutAccessEnabled: workoutDiaryEnabled,
+            exerciseLibrary: workoutDiaryEnabled ? stores.workouts.exerciseLibrary.exercises : []
         )
         let output = LiveJSON.object(tools.execute(name: name, arguments: arguments)) ?? [:]
         if let error = output["error"] as? String {

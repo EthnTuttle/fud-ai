@@ -66,6 +66,15 @@ struct AllergenAnalysis: Equatable, Sendable {
         return AllergenAnalysis(assessment: .unableToAssess, matchedSensitivities: [], evidence: [])
     }
 
+    /// Whether `candidate` mentions any of `sensitivities`, with the same aliases
+    /// and plural handling as `evaluate`. Used to highlight ingredient label entries.
+    static func mentionsAny(of sensitivities: [String], in candidate: String) -> Bool {
+        sensitivities
+            .map(Self.normalize)
+            .filter { !$0.isEmpty }
+            .contains { Self.matches(sensitivity: $0, candidate: candidate) }
+    }
+
     private static func normalize(_ value: String) -> String {
         let folded = value.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX"))
         return folded

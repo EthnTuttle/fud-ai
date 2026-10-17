@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informations sur le produit</string>
+    <string name="product_barcode">Code-barres</string>
+    <string name="product_package">Emballage</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Groupe NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergènes</string>
+    <string name="product_may_contain">Peut contenir</string>
+    <string name="product_allergen_check">Vérification des allergènes</string>
+    <string name="product_labels">Labels</string>
+    <string name="product_categories">Catégories</string>
+    <string name="product_ingredient_label">Liste des ingrédients</string>
+    <string name="product_possible_allergen">Allergène possible : %1$s</string>
+    <string name="product_info_settings_show">Afficher les informations sur le produit</string>
+    <string name="product_info_settings_fields">Détails à afficher</string>
+    <string name="product_info_settings_footer">Affichées à la fin des écrans de vérification et de modification des aliments scannés par code-barres. La vérification des allergènes n\'est pas concernée et apparaît toujours lorsque vous avez défini des sensibilités aux allergènes.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protéines</string>
     <string name="macro_carbs">Glucides</string>
@@ -355,6 +373,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Détails de l\'aliment</string>
     <string name="sheet_serving">Portion</string>
+    <string name="recipe_servings_title">Portions de la recette</string>
+    <string name="recipe_servings_footer">Réglez-le après avoir ajouté tous les ingrédients. Fud AI divise la recette pour que vous enregistriez 1 portion, et les Repas enregistrés conservent cette taille de portion.</string>
+    <string name="cd_recipe_servings_fewer">Moins de portions</string>
+    <string name="cd_recipe_servings_more">Plus de portions</string>
     <string name="sheet_nutrition">Nutrition</string>
     <string name="sheet_meal">Repas</string>
     <string name="sheet_more_nutrition">Plus de nutrition</string>
@@ -514,6 +536,11 @@
     <string name="settings_goal_weight">Poids cible</string>
     <string name="settings_calories">Calories</string>
     <string name="settings_recalculate_goals">Recalculer les objectifs</string>
+    <string name="settings_estimated_maintenance">Maintien estimé</string>
+    <string name="settings_maintenance_deficit_format">Déficit : %1$,d kcal/jour</string>
+    <string name="settings_maintenance_surplus_format">Surplus : %1$,d kcal/jour</string>
+    <string name="settings_maintenance_close">L’objectif est proche du maintien</string>
+    <string name="settings_estimated_maintenance_info">Le maintien estimé correspond aux calories que vous brûleriez lors d’une journée type : votre métabolisme de base (BMR) issu de votre profil multiplié par votre niveau d’activité. Manger en dessous crée un déficit pour perdre du poids ; manger au-dessus crée un surplus pour en prendre. Le déficit ou le surplus affiché correspond à votre objectif calorique moins cette estimation. C’est une estimation par formule : votre dépense réelle peut différer, et le recalcul des objectifs peut fixer votre objectif à partir de vos repas enregistrés, de votre tendance de poids ou de votre dépense énergétique mesurée. Ceci n’est pas un avis médical.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Épinglé</string>
@@ -527,6 +554,7 @@
     <string name="settings_height_unit">Unité de taille</string>
     <string name="settings_weight_unit">Unité de poids</string>
     <string name="settings_week_starts">La semaine commence le</string>
+    <string name="settings_meal_times_customize">Personnaliser</string>
     <string name="settings_week_monday">Lundi</string>
     <string name="settings_week_sunday">Dimanche</string>
     <string name="settings_notifications">Notifications</string>
@@ -545,8 +573,25 @@
     <string name="settings_clear_key">Effacer la clé</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesées plus anciennes</string>
     <string name="settings_clear_food_log">Effacer le journal alimentaire</string>
     <string name="settings_delete_all_data">Supprimer toutes les données</string>
+    <string name="storage_title">Stockage</string>
+    <string name="storage_saved_photos">Photos enregistrées</string>
+    <string name="storage_on_device_models">Modèles sur l’appareil</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Compresser les photos</string>
+    <string name="storage_clear_cache">Vider le cache</string>
+    <string name="storage_footer">Compresser les photos redimensionne définitivement les photos de plus de 2048 px. Vider le cache supprime les miniatures et les images d’exercices téléchargées, qui sont recréées au besoin. Supprimez les modèles sur l’appareil depuis leurs réglages d’IA ou de reconnaissance vocale.</string>
+    <string name="storage_compress_confirm_title">Compresser les photos ?</string>
+    <string name="storage_compress_confirm_message">Les photos dont le plus grand côté dépasse 2048 pixels seront définitivement redimensionnées à 2048 pixels et enregistrées en JPEG. Les photos plus petites restent inchangées. Cette action est irréversible.</string>
+    <string name="storage_compress_action">Compresser</string>
+    <string name="storage_compressing_progress">Compression des photos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Photos compressées</string>
+    <string name="storage_compress_freed">%1$s libérés.</string>
+    <string name="storage_compress_nothing">Aucune photo n’avait besoin d’être compressée.</string>
+    <string name="storage_compress_unreadable">Certaines photos n’ont pas pu être lues et n’ont pas été modifiées.</string>
+    <string name="storage_compress_failed">Certaines photos n’ont pas pu être compressées et n’ont pas été modifiées. Assurez-vous que votre appareil dispose d’espace libre, puis réessayez.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Effacer le journal alimentaire ?</string>
@@ -815,4 +860,5 @@
     <string name="settings_save_photos_to_gallery">Enregistrer dans Photos</string>
     <string name="settings_save_photos_to_gallery_subtitle">Enregistrer aussi les photos de repas dans votre galerie lors de la saisie</string>
     <string name="settings_other_nutrients_note">Distinct des objectifs de calories, protéines, glucides et lipides.</string>
+    <string name="label_date">Date</string>
 </resources>

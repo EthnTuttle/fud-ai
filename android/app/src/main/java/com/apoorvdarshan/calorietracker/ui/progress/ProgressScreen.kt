@@ -134,6 +134,7 @@ import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
+import com.apoorvdarshan.calorietracker.ui.home.SheetDatePickerDialog
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavScrollPadding
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.time.Instant
@@ -534,8 +535,8 @@ private fun MyProgressContent(container: AppContainer) {
                 scope.launch { container.prefs.setWeightUnit(if (metric) "kg" else "lbs") }
             },
             onDismiss = { showAddDialog = false }
-        ) { kg ->
-            vm.addWeight(kg); showAddDialog = false
+        ) { kg, day ->
+            vm.addWeight(kg, day); showAddDialog = false
         }
     }
     if (showAddBodyFatDialog) {
@@ -2094,12 +2095,17 @@ private fun AddWeightDialog(
     initialKg: Double,
     onUnitChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
-    onSubmit: (Double) -> Unit
+    onSubmit: (kg: Double, day: LocalDate) -> Unit
 ) {
     // Wheel picker matches Settings → Goal Weight + the onboarding height/weight
     // step — split-decimal so users land on e.g. 72.4 without typing.
     var pickerKg by remember { mutableStateOf(initialKg) }
     var metric by remember { mutableStateOf(useMetric) }
+    // Older weigh-ins (another app, a notebook, progress photos) are logged on the day
+    // they happened instead of piling up on today.
+    var day by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val dayFormatter = remember { DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()) }
     FudGlassDialog(onDismissRequest = onDismiss) {
         Text(stringResource(R.string.progress_log_weight_title), fontSize = 21.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(10.dp))
@@ -2122,6 +2128,21 @@ private fun AddWeightDialog(
                 unit = stringResource(R.string.unit_lbs)
             )
         }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable { showDatePicker = true }
+                .padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.label_date), fontSize = 17.sp, modifier = Modifier.weight(1f))
+            Text(
+                day.format(dayFormatter),
+                fontSize = 17.sp,
+                color = AppColors.Calorie,
+                fontWeight = FontWeight.Medium
+            )
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             FudGlassTextButton(
                 text = stringResource(R.string.action_cancel),
@@ -2131,10 +2152,20 @@ private fun AddWeightDialog(
             Spacer(Modifier.width(8.dp))
             FudGlassPrimaryButton(
                 text = stringResource(R.string.action_save),
-                onClick = { onSubmit(pickerKg) },
+                onClick = { onSubmit(pickerKg, day) },
                 modifier = Modifier.width(132.dp)
             )
         }
+    }
+    if (showDatePicker) {
+        SheetDatePickerDialog(
+            initialDate = day,
+            onConfirm = { picked ->
+                day = minOf(picked, LocalDate.now())
+                showDatePicker = false
+            },
+            onDismiss = { showDatePicker = false }
+        )
     }
 }
 

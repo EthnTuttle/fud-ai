@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">製品情報</string>
+    <string name="product_barcode">バーコード</string>
+    <string name="product_package">内容量</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVAグループ</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">アレルゲン</string>
+    <string name="product_may_contain">含まれる可能性</string>
+    <string name="product_allergen_check">アレルゲンチェック</string>
+    <string name="product_labels">ラベル</string>
+    <string name="product_categories">カテゴリ</string>
+    <string name="product_ingredient_label">原材料表示</string>
+    <string name="product_possible_allergen">アレルゲンの可能性: %1$s</string>
+    <string name="product_info_settings_show">製品情報を表示</string>
+    <string name="product_info_settings_fields">表示する項目</string>
+    <string name="product_info_settings_footer">バーコードでスキャンした食品の確認画面と編集画面の最後に表示されます。アレルゲンチェックには影響せず、アレルゲン感受性を設定している場合は常に表示されます。</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">タンパク質</string>
     <string name="macro_carbs">炭水化物</string>
@@ -353,6 +371,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">食事の詳細</string>
     <string name="sheet_serving">分量</string>
+    <string name="recipe_servings_title">レシピの人数分</string>
+    <string name="recipe_servings_footer">すべての材料を追加してから設定してください。Fud AIがレシピを分けるので1人分だけを記録でき、保存した食事にもその分量が残ります。</string>
+    <string name="cd_recipe_servings_fewer">人数分を減らす</string>
+    <string name="cd_recipe_servings_more">人数分を増やす</string>
     <string name="sheet_nutrition">栄養</string>
     <string name="sheet_meal">食事</string>
     <string name="sheet_more_nutrition">その他の栄養</string>
@@ -512,6 +534,11 @@
     <string name="settings_goal_weight">目標体重</string>
     <string name="settings_calories">カロリー</string>
     <string name="settings_recalculate_goals">目標を再計算</string>
+    <string name="settings_estimated_maintenance">推定維持カロリー</string>
+    <string name="settings_maintenance_deficit_format">カロリー不足: %1$,d kcal/日</string>
+    <string name="settings_maintenance_surplus_format">カロリー余剰: %1$,d kcal/日</string>
+    <string name="settings_maintenance_close">目標は維持カロリーに近い値です</string>
+    <string name="settings_estimated_maintenance_info">推定維持カロリーは、普段の1日に消費するカロリーの目安です。プロフィールのBMR（基礎代謝）に活動レベルを掛けて算出します。これより少なく食べると減量のためのカロリー不足、多く食べると増量のためのカロリー余剰になります。表示される不足・余剰は、カロリー目標からこの推定値を引いたものです。計算式による推定のため実際の消費量とは異なる場合があり、目標の再計算では記録した食事、体重の傾向、または測定された消費エネルギーから目標が設定されることもあります。これは医療上のアドバイスではありません。</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · 自動</string>
     <string name="settings_macro_pinned_a11y">固定</string>
@@ -525,6 +552,7 @@
     <string name="settings_height_unit">身長の単位</string>
     <string name="settings_weight_unit">体重の単位</string>
     <string name="settings_week_starts">週の始まり</string>
+    <string name="settings_meal_times_customize">カスタマイズ</string>
     <string name="settings_week_monday">月曜日</string>
     <string name="settings_week_sunday">日曜日</string>
     <string name="settings_notifications">通知</string>
@@ -543,8 +571,25 @@
     <string name="settings_clear_key">キーを消去</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">過去の体重記録</string>
     <string name="settings_clear_food_log">食事ログを消去</string>
     <string name="settings_delete_all_data">すべてのデータを削除</string>
+    <string name="storage_title">ストレージ</string>
+    <string name="storage_saved_photos">保存済みの写真</string>
+    <string name="storage_on_device_models">デバイス上のモデル</string>
+    <string name="storage_cache">キャッシュ</string>
+    <string name="storage_compress_photos">写真を圧縮</string>
+    <string name="storage_clear_cache">キャッシュを消去</string>
+    <string name="storage_footer">「写真を圧縮」は2048 pxを超える写真を恒久的に縮小します。「キャッシュを消去」はサムネイルとダウンロード済みのワークアウト画像を削除します（必要に応じて再作成されます）。デバイス上のモデルは、それぞれのAIまたは音声の設定から削除してください。</string>
+    <string name="storage_compress_confirm_title">写真を圧縮しますか？</string>
+    <string name="storage_compress_confirm_message">長辺が2048ピクセルを超える写真は、2048ピクセルに恒久的に縮小され、JPEGとして保存されます。それより小さい写真は変更されません。この操作は元に戻せません。</string>
+    <string name="storage_compress_action">圧縮</string>
+    <string name="storage_compressing_progress">写真を圧縮中… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">写真を圧縮しました</string>
+    <string name="storage_compress_freed">%1$sを解放しました。</string>
+    <string name="storage_compress_nothing">圧縮が必要な写真はありませんでした。</string>
+    <string name="storage_compress_unreadable">一部の写真は読み込めなかったため、変更されていません。</string>
+    <string name="storage_compress_failed">一部の写真は圧縮できなかったため、変更されていません。デバイスに空き容量があることを確認してから、もう一度お試しください。</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">食事ログを消去しますか？</string>
@@ -813,4 +858,5 @@
     <string name="settings_save_photos_to_gallery">写真に保存</string>
     <string name="settings_save_photos_to_gallery_subtitle">記録時に食事写真をギャラリーにも保存</string>
     <string name="settings_other_nutrients_note">カロリー・タンパク質・炭水化物・脂質の目標とは別です。</string>
+    <string name="label_date">日付</string>
 </resources>

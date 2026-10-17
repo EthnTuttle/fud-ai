@@ -232,9 +232,10 @@ private struct WorkoutTextReview: View {
                     if !exercise.minutes.isEmpty {
                         Text("Effort (moderate if unspecified)").font(.caption)
                         Picker("Effort", selection: $exercise.intensity) {
-                            Text("Light").tag("light")
-                            Text("Moderate").tag("moderate")
-                            Text("Vigorous").tag("vigorous")
+                            // Effort-specific keys: the plain "Light" key is the appearance option.
+                            ForEach(StrengthWorkoutIntensity.allCases) { option in
+                                Text(option.localizedTitle).tag(option.rawValue)
+                            }
                         }.pickerStyle(.segmented)
                     }
                     if !exercise.sets.isEmpty {

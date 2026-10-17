@@ -572,12 +572,106 @@ struct StrengthWorkoutStoreTests {
         let item = WorkoutTestFixture.exercise(id: "Walking_Outdoor", name: "Walking", category: "cardio")
 
         store.logQuickCardio(item, minutes: 30, on: date)
+        store.logQuickCardio(item, minutes: 20, on: date, intensity: .light)
 
         let exercises = store.exercises(for: date)
-        #expect(exercises.count == 1)
+        #expect(exercises.count == 2)
         #expect(exercises[0].itemID == "Walking_Outdoor")
         #expect(exercises[0].timer?.savedDurationSeconds == 1_800)
         #expect(exercises[0].timer?.isSaved == true)
+        #expect(exercises[0].timer?.intensity == .moderate)
+        // The quick Walking/Running sheet passes the chosen effort.
+        #expect(exercises[1].timer?.intensity == .light)
+    }
+
+    @Test func movingExercisesReordersOneDayClampsAtEndsAndPersistsWithoutClearingTheBurn() throws {
+        let fixture = WorkoutTestFixture()
+        defer { fixture.cleanUp() }
+        let date = WorkoutTestFixture.date(2026, 9, 8)
+        let otherDay = WorkoutTestFixture.date(2026, 9, 9)
+        let store = fixture.makeStore()
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: date)
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "row", name: "Barbell Row"), on: date)
+        store.logQuickCardio(
+            WorkoutTestFixture.exercise(id: "Walking_Outdoor", name: "Walking", category: "cardio"),
+            minutes: 30,
+            on: date
+        )
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: otherDay)
+        let burn = try #require(store.upsertCalculatedWorkout(on: date, caloriesBurned: 120, weightUnit: .kg))
+        var deleted: [UUID] = []
+        store.onWorkoutBurnDeleted = { deleted.append($0) }
+        let ids = store.exercises(for: date).map(\.id)
+        let (bench, row, walk) = (ids[0], ids[1], ids[2])
+
+        store.moveExercise(walk, by: -1, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [bench, walk, row])
+        store.moveExercise(walk, by: -5, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [walk, bench, row])
+        // Past either end, by zero, or an unknown id: nothing changes.
+        store.moveExercise(walk, by: -1, on: date)
+        store.moveExercise(row, by: 1, on: date)
+        store.moveExercise(bench, by: 0, on: date)
+        store.moveExercise(UUID(), by: 1, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [walk, bench, row])
+
+        // The List.onMove adapter: drag the last row to the top; ignore invalid offsets.
+        store.moveExercises(fromOffsets: IndexSet(integer: 2), toOffset: 0, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [row, walk, bench])
+        store.moveExercises(fromOffsets: IndexSet(integer: 9), toOffset: 0, on: date)
+        store.moveExercises(fromOffsets: IndexSet(integer: 0), toOffset: 9, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [row, walk, bench])
+
+        let reloaded = fixture.makeStore()
+        #expect(reloaded.exercises(for: date).map(\.id) == [row, walk, bench])
+        #expect(reloaded.exercises(for: otherDay).count == 1)
+        #expect(reloaded.caloriesBurned(on: date) == burn.caloriesBurned)
+        #expect(deleted.isEmpty)
+
+        // New exercises still append after the user's order.
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "squat", name: "Squat"), on: date)
+        #expect(store.exercises(for: date).map(\.itemID) == ["row", "Walking_Outdoor", "bench", "squat"])
+    }
+
+    @Test func reorderModeEndsWhenTheDayChangesOrFewerThanTwoExercisesRemain() {
+        #expect(WorkoutLogReorderMode.retainedDateKey("2026-09-08", selectedDateKey: "2026-09-08", exerciseCount: 2) == "2026-09-08")
+        #expect(WorkoutLogReorderMode.retainedDateKey(nil, selectedDateKey: "2026-09-08", exerciseCount: 3) == nil)
+        // The cleared key is what the diary stores, so returning to the day does not resume it.
+        #expect(WorkoutLogReorderMode.retainedDateKey("2026-09-08", selectedDateKey: "2026-09-09", exerciseCount: 3) == nil)
+        #expect(WorkoutLogReorderMode.retainedDateKey("2026-09-08", selectedDateKey: "2026-09-08", exerciseCount: 1) == nil)
+    }
+
+    @Test func choosingCardioEffortReplacesHiddenSetRPEButKeepsStrengthRPE() throws {
+        let fixture = WorkoutTestFixture()
+        defer { fixture.cleanUp() }
+        let date = WorkoutTestFixture.date(2026, 9, 8)
+        let store = fixture.makeStore()
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "run", name: "Run", category: "cardio"), on: date)
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: date)
+        let cardio = store.exercises(for: date)[0]
+        let strength = store.exercises(for: date)[1]
+        // Cardio cards show no set fields, so this RPE (e.g. from a text log) is invisible there.
+        let cardioSet = try #require(cardio.sets.first)
+        let strengthSet = try #require(strength.sets.first)
+        store.updateSet(exerciseID: cardio.id, setID: cardioSet.id, on: date, rpe: "10")
+        store.updateSet(exerciseID: strength.id, setID: strengthSet.id, on: date, reps: "8", rpe: "10")
+        func effort(_ id: UUID) -> StrengthWorkoutIntensity? {
+            store.exercises(for: date).first { $0.id == id }.map {
+                StrengthWorkoutBurnEstimator.timerIntensity(for: $0, defaultRPEScale: .strength)
+            }
+        }
+        #expect(effort(cardio.id) == .vigorous)
+
+        // The chosen effort is what the card then shows and what the burn uses.
+        store.setTimerIntensity(.light, exerciseID: cardio.id, on: date)
+        let updatedCardio = try #require(store.exercises(for: date).first { $0.id == cardio.id })
+        #expect(updatedCardio.sets.allSatisfy { $0.rpe.isEmpty && $0.rpeScale == nil })
+        #expect(effort(cardio.id) == .light)
+
+        store.setTimerIntensity(.light, exerciseID: strength.id, on: date)
+        let updatedStrength = try #require(store.exercises(for: date).first { $0.id == strength.id })
+        #expect(updatedStrength.sets.first?.rpe == "10")
+        #expect(effort(strength.id) == .vigorous)
     }
 
     @Test func exerciseTimersPersistThroughReloadAndExcludePausedTime() throws {
@@ -667,7 +761,7 @@ struct StrengthWorkoutStoreTests {
             exercises: store.exercises(for: date), bodyWeightKg: 70,
             defaultWeightUnit: .kg, defaultRPEScale: .strength
         ))
-        #expect(estimate.calories == 34) // 2.8 MET × 70 kg × ten active minutes.
+        #expect(estimate.calories == 22) // (2.8 − 1 resting) MET × 70 kg × ten active minutes.
         #expect(estimate.performedSetCount == 0)
         #expect(estimate.repCount == 0)
         let first = try #require(store.upsertCalculatedWorkout(on: date, caloriesBurned: estimate.calories, weightUnit: .kg))
@@ -723,7 +817,7 @@ struct StrengthWorkoutStoreTests {
             ))
         }
         let timedOnly = try estimate([run])
-        #expect(timedOnly.calories == 104)
+        #expect(timedOnly.calories == 92) // (8.5 − 1) MET × 3.5 × 70 kg / 200 × 10 min.
         run.sets[0].reps = "100"
         run.sets[0].weight = "100"
         let timedWithReps = try estimate([run])
@@ -772,7 +866,72 @@ struct StrengthWorkoutStoreTests {
             exercises: [stretch], bodyWeightKg: 70,
             defaultWeightUnit: .kg, defaultRPEScale: .strength
         ))
-        #expect(estimate.calories == 28)
+        // One Compendium value (2.3 MET) at every effort: 1.3 net MET × 10 min.
+        #expect(estimate.calories == 16)
+    }
+
+    @Test func burnEstimatesAreNetActiveEnergyAboveRest() throws {
+        // Issue #509: 200 lb (90.7 kg) walking for 94 minutes.
+        func walkCalories(_ intensity: StrengthWorkoutIntensity) throws -> Int {
+            var walk = StrengthPlannedExercise(item: WorkoutTestFixture.exercise(
+                id: "Walking_Outdoor", name: "Walking", category: "cardio"
+            ))
+            walk.sets = []
+            walk.timer = StrengthExerciseTimer(accumulatedSeconds: 94 * 60, savedDurationSeconds: 94 * 60, intensity: intensity)
+            return try #require(StrengthWorkoutBurnEstimator.estimate(
+                exercises: [walk], bodyWeightKg: 90.7,
+                defaultWeightUnit: .lbs, defaultRPEScale: .strength
+            )).calories
+        }
+        // Gross walking METs 2.8 / 3.8 / 4.8 minus 1 resting MET.
+        #expect(try walkCalories(.light) == 269)
+        #expect(try walkCalories(.moderate) == 418)
+        #expect(try walkCalories(.vigorous) == 567)
+
+        // Rep-based strength is net too: 5.24 gross MET (default effort) − 1, over the 4-minute minimum.
+        var strength = StrengthPlannedExercise(item: WorkoutTestFixture.exercise(id: "curl", name: "Curl"))
+        strength.sets[0].reps = "10"
+        let strengthEstimate = try #require(StrengthWorkoutBurnEstimator.estimate(
+            exercises: [strength], bodyWeightKg: 70,
+            defaultWeightUnit: .kg, defaultRPEScale: .strength
+        ))
+        #expect(strengthEstimate.calories == 21)
+    }
+
+    @Test func choosingEffortBeforeStartingKeepsTheTimerIdleUntilStarted() throws {
+        let fixture = WorkoutTestFixture()
+        defer { fixture.cleanUp() }
+        let date = WorkoutTestFixture.date(2026, 9, 8)
+        let store = fixture.makeStore()
+        store.toggleExercise(
+            WorkoutTestFixture.exercise(id: "Walking_Treadmill", name: "Walking", category: "cardio"),
+            on: date
+        )
+        let exerciseID = store.exercises(for: date)[0].id
+
+        store.setTimerIntensity(.vigorous, exerciseID: exerciseID, on: date)
+        let idle = try #require(store.exercises(for: date)[0].timer)
+        #expect(!idle.hasStarted)
+        #expect(!idle.isSaved)
+
+        store.updateTimer(.start, exerciseID: exerciseID, on: date, now: date)
+        store.updateTimer(.stop, exerciseID: exerciseID, on: date, now: date.addingTimeInterval(600))
+        let saved = try #require(store.exercises(for: date)[0].timer)
+        #expect(saved.hasStarted)
+        #expect(saved.intensity == .vigorous)
+        let estimate = try #require(StrengthWorkoutBurnEstimator.estimate(
+            exercises: store.exercises(for: date), bodyWeightKg: 70,
+            defaultWeightUnit: .kg, defaultRPEScale: .strength
+        ))
+        #expect(estimate.calories == 47) // (4.8 − 1) MET × 3.5 × 70 kg / 200 × 10 min.
+    }
+
+    @Test func effortLabelsUseEffortSpecificCatalogKeys() {
+        let titles = StrengthWorkoutIntensity.allCases.map(\.localizedTitle)
+        // The catalog maps the disambiguated keys to plain labels ("Light", not
+        // "Light Effort") in every language, separately from the theme's "Light".
+        #expect(titles.allSatisfy { !$0.hasSuffix(" Effort") })
+        #expect(Set(titles).count == 3)
     }
 
     @Test func legacyExerciseJSONWithoutTimerOrCompletedDurationStillDecodes() throws {

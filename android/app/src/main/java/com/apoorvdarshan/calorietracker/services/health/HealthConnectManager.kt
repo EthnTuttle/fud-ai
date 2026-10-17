@@ -37,6 +37,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 
@@ -211,6 +212,7 @@ class HealthConnectManager(
     private val totalEnergyRead = HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class)
     private val stepsRead = HealthPermission.getReadPermission(StepsRecord::class)
     private val backgroundRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+    private val historyRead = HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY
 
     val permissions: Set<String> = setOf(
         weightRead, weightWrite, nutritionRead, nutritionWrite,
@@ -218,9 +220,18 @@ class HealthConnectManager(
         stepsRead
     )
 
+    /** What the connect flows request: [permissions] plus history access where supported.
+     *  Without history, Health Connect hides other apps' records older than 30 days before
+     *  Fud AI's first grant, so weigh-ins from a previous phone, a scale app, or entries
+     *  backfilled elsewhere never reached Progress (#519). Kept out of [permissions] so a
+     *  history-only grant doesn't count as "connected". */
+    val connectPermissions: Set<String>
+        get() = permissions + if (supportsNutritionHistory()) setOf(historyRead) else emptySet()
+
     /** Requested only when Daily Summary is enabled. Keeping it out of [permissions]
      *  avoids asking every Health Connect user for background access. */
-    val dailySummaryPermissions: Set<String> = permissions + backgroundRead
+    val dailySummaryPermissions: Set<String>
+        get() = connectPermissions + backgroundRead
 
     fun supportsNutritionHistory(): Boolean = runCatching {
         client?.features?.getFeatureStatus(HealthConnectFeatures.FEATURE_READ_HEALTH_DATA_HISTORY) ==
@@ -229,10 +240,14 @@ class HealthConnectManager(
 
     val nutritionImportPermissions: Set<String>
         get() = setOf(nutritionRead) + if (supportsNutritionHistory())
-            setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY) else emptySet()
+            setOf(historyRead) else emptySet()
 
     suspend fun hasNutritionHistory(): Boolean = supportsNutritionHistory() &&
-        HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted()
+        historyRead in granted()
+
+    /** History access is supported here but not granted (e.g. connected before it was asked). */
+    suspend fun isHistoryAccessMissing(): Boolean = supportsNutritionHistory() &&
+        historyRead !in granted()
 
     /** Whether reads may reach past ~30 days before Fud AI was first granted access.
      *  Only inspects an existing grant (the nutrition import is the one flow that asks
@@ -299,7 +314,8 @@ class HealthConnectManager(
             nutritionWrite = nutritionWrite in g,
             energyRead = activeEnergyRead in g && totalEnergyRead in g,
             activeEnergyWrite = activeEnergyWrite in g,
-            stepsRead = stepsRead in g
+            stepsRead = stepsRead in g,
+            historyRead = historyRead in g
         )
     }
 
@@ -382,35 +398,29 @@ class HealthConnectManager(
         }
     }
 
-    suspend fun readWeights(from: Instant, to: Instant): List<ExternalWeight> {
-        val c = client ?: return emptyList()
-        val out = mutableListOf<ExternalWeight>()
-        var pageToken: String? = null
+    /** Every weigh-in in [from, to), or null when Health Connect is unavailable or a page
+     *  read failed, so a caller never takes a partial read for the whole history. */
+    suspend fun readWeights(from: Instant, to: Instant): List<ExternalWeight>? {
+        val c = client ?: return null
         // readRecords returns one page (default 1000); follow pageToken so a large
         // history isn't silently truncated to the first page.
-        do {
-            val response = runCatching {
-                c.readRecords(
-                    ReadRecordsRequest(
-                        recordType = WeightRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to),
-                        pageToken = pageToken
-                    )
+        return readAllPages { pageToken ->
+            val response = c.readRecords(
+                ReadRecordsRequest(
+                    recordType = WeightRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    pageToken = pageToken
                 )
-            }.getOrNull() ?: break
-            response.records.forEach {
-                out.add(
-                    ExternalWeight(
-                        time = it.time,
-                        weightKg = it.weight.inKilograms,
-                        clientRecordId = it.metadata.clientRecordId,
-                        recordId = it.metadata.id
-                    )
+            )
+            response.records.map {
+                ExternalWeight(
+                    time = it.time,
+                    weightKg = it.weight.inKilograms,
+                    clientRecordId = it.metadata.clientRecordId,
+                    recordId = it.metadata.id
                 )
-            }
-            pageToken = response.pageToken
-        } while (pageToken != null)
-        return out
+            } to response.pageToken
+        }
     }
 
     // -- Body fat ---------------------------------------------------------
@@ -441,34 +451,27 @@ class HealthConnectManager(
         }
     }
 
-    suspend fun readBodyFats(from: Instant, to: Instant): List<ExternalBodyFat> {
-        val c = client ?: return emptyList()
-        val out = mutableListOf<ExternalBodyFat>()
-        var pageToken: String? = null
-        do {
-            val response = runCatching {
-                c.readRecords(
-                    ReadRecordsRequest(
-                        recordType = BodyFatRecord::class,
-                        timeRangeFilter = TimeRangeFilter.between(from, to),
-                        pageToken = pageToken
-                    )
+    /** Every body-fat reading in [from, to), or null like [readWeights]. */
+    suspend fun readBodyFats(from: Instant, to: Instant): List<ExternalBodyFat>? {
+        val c = client ?: return null
+        return readAllPages { pageToken ->
+            val response = c.readRecords(
+                ReadRecordsRequest(
+                    recordType = BodyFatRecord::class,
+                    timeRangeFilter = TimeRangeFilter.between(from, to),
+                    pageToken = pageToken
                 )
-            }.getOrNull() ?: break
-            response.records.forEach {
-                out.add(
-                    ExternalBodyFat(
-                        time = it.time,
-                        // Convert HC's 0–100 back to our 0–1 fraction convention.
-                        bodyFatFraction = it.percentage.value / 100.0,
-                        clientRecordId = it.metadata.clientRecordId,
-                        recordId = it.metadata.id
-                    )
+            )
+            response.records.map {
+                ExternalBodyFat(
+                    time = it.time,
+                    // Convert HC's 0–100 back to our 0–1 fraction convention.
+                    bodyFatFraction = it.percentage.value / 100.0,
+                    clientRecordId = it.metadata.clientRecordId,
+                    recordId = it.metadata.id
                 )
-            }
-            pageToken = response.pageToken
-        } while (pageToken != null)
-        return out
+            } to response.pageToken
+        }
     }
 
     // -- Nutrition --------------------------------------------------------
@@ -1012,6 +1015,26 @@ class HealthConnectManager(
     }
 }
 
+/** Follows a paged Health Connect read through every page. Null as soon as one page fails
+ *  (rate limit, binder error), so the caller can retry later instead of treating the
+ *  pages read so far as the complete history. */
+internal suspend fun <T> readAllPages(readPage: suspend (pageToken: String?) -> Pair<List<T>, String?>): List<T>? {
+    val out = mutableListOf<T>()
+    var pageToken: String? = null
+    do {
+        val (records, next) = try {
+            readPage(pageToken)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return null
+        }
+        out += records
+        pageToken = next
+    } while (pageToken != null)
+    return out
+}
+
 internal fun externalActiveCalories(allActive: Double, ownActive: Double): Double =
     maxOf(0.0, allActive - ownActive)
 
@@ -1038,7 +1061,9 @@ data class HealthCapabilities(
     val nutritionWrite: Boolean,
     val energyRead: Boolean,
     val activeEnergyWrite: Boolean,
-    val stepsRead: Boolean
+    val stepsRead: Boolean,
+    /** PERMISSION_READ_HEALTH_DATA_HISTORY: reads may go past the 30-day pre-grant window. */
+    val historyRead: Boolean = false
 )
 
 data class WorkoutBurnIdentity(

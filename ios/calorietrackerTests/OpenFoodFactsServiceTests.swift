@@ -18,6 +18,7 @@ struct OpenFoodFactsServiceTests {
                         "product_name": "Test Product",
                         "quantity": "250 g",
                         "ingredients_text": "Oats, milk",
+                        "ingredients_text_with_allergens": "Oats, <span class=\"allergen\">milk</span>",
                         "allergens_tags": ["en:milk"],
                         "traces_tags": ["en:nuts"],
                         "nutriscore_grade": "a",
@@ -51,7 +52,7 @@ struct OpenFoodFactsServiceTests {
         #expect(result.servingUnitOptions.map(\.unit) == ["serving", "package"])
         #expect(result.productMetadata?.barcode == "0012345678901")
         #expect(result.productMetadata?.packageQuantity == "250 g")
-        #expect(result.productMetadata?.ingredientsText == "Oats, milk")
+        #expect(result.productMetadata?.ingredientsText == "Oats, _milk_")
         #expect(result.productMetadata?.allergens == ["Milk"])
         #expect(result.productMetadata?.traces == ["Nuts"])
         #expect(result.productMetadata?.nutriScore == "A")

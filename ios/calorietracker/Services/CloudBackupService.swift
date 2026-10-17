@@ -112,12 +112,16 @@ final class CloudBackupService {
     /// they are in place. Every photo is read and staged first, so a failed
     /// read or write throws before any current photo or value changes and the
     /// diary never points at photos the restore removed. Runs without
-    /// suspending, so no other main-actor work sees a half-finished restore.
+    /// suspending, so no other main-actor work sees a half-finished restore;
+    /// Compress Photos, which runs off the main actor, replaces no photo
+    /// until it returns.
     static func restorePhotos(
         from archive: CloudBackupArchive.Reader,
         into store: FoodImageStore,
         applyValues: () -> Void
     ) throws {
+        StoredPhotoCompressor.beginRestore()
+        defer { StoredPhotoCompressor.endRestore() }
         let staging = try store.makeRestoreStaging()
         defer { staging.discard() }
         try archive.forEachPhoto { name, data in

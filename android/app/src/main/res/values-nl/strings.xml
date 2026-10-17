@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Productinformatie</string>
+    <string name="product_barcode">Barcode</string>
+    <string name="product_package">Verpakking</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA-groep</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergenen</string>
+    <string name="product_may_contain">Kan bevatten</string>
+    <string name="product_allergen_check">Allergenencontrole</string>
+    <string name="product_labels">Keurmerken</string>
+    <string name="product_categories">Categorieën</string>
+    <string name="product_ingredient_label">Ingrediëntenlijst</string>
+    <string name="product_possible_allergen">Mogelijk allergeen: %1$s</string>
+    <string name="product_info_settings_show">Productinformatie tonen</string>
+    <string name="product_info_settings_fields">Te tonen details</string>
+    <string name="product_info_settings_footer">Wordt onderaan de controle- en bewerkschermen getoond voor voedingsmiddelen die met een barcode zijn gescand. De allergenencontrole verandert niet en verschijnt altijd als je allergeengevoeligheden hebt ingesteld.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Eiwit</string>
     <string name="macro_carbs">Koolhydraten</string>
@@ -354,6 +372,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Voedingsdetails</string>
     <string name="sheet_serving">Portie</string>
+    <string name="recipe_servings_title">Porties in recept</string>
+    <string name="recipe_servings_footer">Stel dit in nadat je alle ingrediënten hebt toegevoegd. Fud AI verdeelt het recept zodat je 1 portie logt, en Opgeslagen maaltijden onthouden die portiegrootte.</string>
+    <string name="cd_recipe_servings_fewer">Minder porties</string>
+    <string name="cd_recipe_servings_more">Meer porties</string>
     <string name="sheet_nutrition">Voeding</string>
     <string name="sheet_meal">Maaltijd</string>
     <string name="sheet_more_nutrition">Meer voeding</string>
@@ -513,6 +535,11 @@
     <string name="settings_goal_weight">Streefgewicht</string>
     <string name="settings_calories">Calorieën</string>
     <string name="settings_recalculate_goals">Doelen opnieuw berekenen</string>
+    <string name="settings_estimated_maintenance">Geschatte onderhoudsbehoefte</string>
+    <string name="settings_maintenance_deficit_format">Tekort: %1$,d kcal/dag</string>
+    <string name="settings_maintenance_surplus_format">Overschot: %1$,d kcal/dag</string>
+    <string name="settings_maintenance_close">Doel ligt dicht bij onderhoud</string>
+    <string name="settings_estimated_maintenance_info">Geschatte onderhoudsbehoefte is het aantal calorieën dat je op een gemiddelde dag verbrandt: je BMR uit je profiel vermenigvuldigd met je activiteitsniveau. Eet je minder, dan heb je een tekort om af te vallen; eet je meer, dan heb je een overschot om aan te komen. Het getoonde tekort of overschot is je caloriedoel min deze schatting. Het is een schatting op basis van een formule, dus je werkelijke verbruik kan afwijken, en het herberekenen van doelen kan je doel in plaats daarvan baseren op je gelogde voeding, gewichtstrend of gemeten energieverbruik. Dit is geen medisch advies.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Vastgezet</string>
@@ -526,6 +553,7 @@
     <string name="settings_height_unit">Lengte-eenheid</string>
     <string name="settings_weight_unit">Gewichtseenheid</string>
     <string name="settings_week_starts">Week begint op</string>
+    <string name="settings_meal_times_customize">Aanpassen</string>
     <string name="settings_week_monday">Maandag</string>
     <string name="settings_week_sunday">Zondag</string>
     <string name="settings_notifications">Meldingen</string>
@@ -544,8 +572,25 @@
     <string name="settings_clear_key">Sleutel wissen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Oudere gewichtsmetingen</string>
     <string name="settings_clear_food_log">Voedingsdagboek wissen</string>
     <string name="settings_delete_all_data">Alle gegevens verwijderen</string>
+    <string name="storage_title">Opslag</string>
+    <string name="storage_saved_photos">Opgeslagen foto’s</string>
+    <string name="storage_on_device_models">Modellen op apparaat</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Foto’s comprimeren</string>
+    <string name="storage_clear_cache">Cache wissen</string>
+    <string name="storage_footer">Foto’s comprimeren verkleint foto’s groter dan 2048 px blijvend. Cache wissen verwijdert miniaturen en gedownloade oefenafbeeldingen; die worden opnieuw gemaakt wanneer nodig. Verwijder modellen op het apparaat via hun AI- of spraakinstellingen.</string>
+    <string name="storage_compress_confirm_title">Foto’s comprimeren?</string>
+    <string name="storage_compress_confirm_message">Foto’s waarvan de langste zijde groter is dan 2048 pixels worden blijvend verkleind tot 2048 pixels en als JPEG opgeslagen. Kleinere foto’s blijven ongewijzigd. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="storage_compress_action">Comprimeren</string>
+    <string name="storage_compressing_progress">Foto’s comprimeren… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Foto’s gecomprimeerd</string>
+    <string name="storage_compress_freed">%1$s vrijgemaakt.</string>
+    <string name="storage_compress_nothing">Er hoefden geen foto’s te worden gecomprimeerd.</string>
+    <string name="storage_compress_unreadable">Sommige foto’s konden niet worden gelezen en zijn ongewijzigd gelaten.</string>
+    <string name="storage_compress_failed">Sommige foto’s konden niet worden gecomprimeerd en zijn ongewijzigd gelaten. Zorg dat je apparaat vrije ruimte heeft en probeer het opnieuw.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Voedingsdagboek wissen?</string>
@@ -814,4 +859,5 @@
     <string name="settings_save_photos_to_gallery">Opslaan in Foto\u2019s</string>
     <string name="settings_save_photos_to_gallery_subtitle">Sla maaltijdfoto\u2019s ook op in je galerij bij het loggen</string>
     <string name="settings_other_nutrients_note">Los van de doelen voor calorieën, eiwitten, koolhydraten en vet.</string>
+    <string name="label_date">Datum</string>
 </resources>

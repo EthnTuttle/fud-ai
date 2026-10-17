@@ -46,6 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -74,6 +75,9 @@ import com.apoorvdarshan.calorietracker.services.MealShare
 import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
+import com.apoorvdarshan.calorietracker.models.ProductInfoField
+import com.apoorvdarshan.calorietracker.models.RecipeServingSplit
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
@@ -119,6 +123,8 @@ fun EditFoodEntrySheet(
         confirmValueChange = { it != SheetValue.Hidden }
     )
     var currentBaseEntry by remember(entry) { mutableStateOf(entry) }
+    val productInfoShown by container.prefs.productInfoShown.collectAsState(initial = false)
+    val productInfoHiddenFields by container.prefs.productInfoHiddenFields.collectAsState(initial = emptySet())
     // Stage removals separately so tapping × does not reset the other editor fields.
     var removedImageFilenames by remember(entry) { mutableStateOf(emptySet<String>()) }
     var previewPhotoIndex by remember { mutableStateOf<Int?>(null) }
@@ -131,30 +137,41 @@ fun EditFoodEntrySheet(
 
     val servingSizeIsKnown = currentBaseEntry.hasKnownServingSize
     val baseServing = currentBaseEntry.reviewServingReference
-    val servingUnitOptions = remember(currentBaseEntry.servingUnitOptions, baseServing, servingSizeIsKnown) {
+    val entryServingUnitOptions = remember(currentBaseEntry.servingUnitOptions, baseServing, servingSizeIsKnown) {
         if (servingSizeIsKnown) {
             ServingUnitOption.normalizedOptions(currentBaseEntry.servingUnitOptions, baseServing)
         } else {
             currentBaseEntry.reviewServingUnitOptions
         }
     }
+    // An ingredient edit made while a recipe split is active rebuilds the whole
+    // recipe; this seeds the serving state below so the split survives it (#458).
+    var keptRecipeSplit by remember(entry) { mutableStateOf<RecipeServingSplit?>(null) }
+    // The sheet can swap in a recipe "serving" unit (#458) without rebuilding the entry.
+    var servingUnitOptions by remember(currentBaseEntry, entryServingUnitOptions) {
+        mutableStateOf(keptRecipeSplit?.options ?: entryServingUnitOptions)
+    }
+    var recipeServings by remember(currentBaseEntry) { mutableStateOf(keptRecipeSplit?.servings ?: 1) }
     var name by remember(currentBaseEntry) { mutableStateOf(currentBaseEntry.name) }
     val initialServingUnit = if (servingSizeIsKnown && preferGramsByDefault) {
         ServingUnitOption.grams.unit
     } else {
         currentBaseEntry.reviewSelectedServingUnit
     }
-    var selectedServingUnitId by remember(currentBaseEntry, servingUnitOptions, preferGramsByDefault) {
-        mutableStateOf(ServingUnitOption.initialUnitId(initialServingUnit, servingUnitOptions))
-    }
-    var servingGrams by remember(currentBaseEntry, baseServing) { mutableStateOf(baseServing) }
-    var servingQuantityText by remember(currentBaseEntry, servingUnitOptions, preferGramsByDefault) {
+    var selectedServingUnitId by remember(currentBaseEntry, entryServingUnitOptions, preferGramsByDefault) {
         mutableStateOf(
-            ServingUnitOption.initialQuantityText(
+            keptRecipeSplit?.selectedUnitId
+                ?: ServingUnitOption.initialUnitId(initialServingUnit, entryServingUnitOptions)
+        )
+    }
+    var servingGrams by remember(currentBaseEntry, baseServing) { mutableStateOf(keptRecipeSplit?.servingGrams ?: baseServing) }
+    var servingQuantityText by remember(currentBaseEntry, entryServingUnitOptions, preferGramsByDefault) {
+        mutableStateOf(
+            keptRecipeSplit?.quantityText ?: ServingUnitOption.initialQuantityText(
                 totalGrams = baseServing,
                 selectedUnitId = selectedServingUnitId,
                 selectedQuantity = currentBaseEntry.reviewSelectedServingQuantity,
-                options = servingUnitOptions
+                options = entryServingUnitOptions
             )
         )
     }
@@ -191,7 +208,20 @@ fun EditFoodEntrySheet(
     fun scaledIngredients() = currentBaseEntry.withoutImages(removedImageFilenames)
         .ingredients.map { it.scaled(scale) }
     fun applyIngredientChanges(displayedIngredients: List<MealIngredient>) {
-        currentBaseEntry = currentBaseEntry.applyingIngredientChanges(displayedIngredients)
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        val keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients, scale, recipeServings, servingUnitOptions, selectedServingUnitId
+        )
+        keptRecipeSplit = keptSplit?.split
+        currentBaseEntry = currentBaseEntry.applyingIngredientChanges(keptSplit?.ingredients ?: displayedIngredients)
+    }
+    fun applyRecipeServings(servings: Int) {
+        val split = RecipeServings.split(servingUnitOptions, baseServing, servings)
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitId = split.selectedUnitId
+        servingGrams = split.servingGrams
+        servingQuantityText = split.quantityText
     }
 
     fun buildUpdated(): FoodEntry = currentBaseEntry.copy(
@@ -253,6 +283,7 @@ fun EditFoodEntrySheet(
             errorText = null
             try {
                 val newAnalysis = onReprocess(buildUpdated(), noteText)
+                keptRecipeSplit = null
                 currentBaseEntry = currentBaseEntry.copy(
                     name = newAnalysis.name,
                     calories = newAnalysis.calories,
@@ -498,18 +529,9 @@ fun EditFoodEntrySheet(
                 }
             }
 
-            currentBaseEntry.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
-                item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                item {
-                    FoodProductMetadataCard(
-                        metadata,
-                        currentBaseEntry.allergenAnalysis(profile?.allergenSensitivities.orEmpty())
-                    )
-                }
-            }
-            if (currentBaseEntry.productMetadata?.hasDisplayDetails != true &&
-                profile?.allergenSensitivities?.isNotEmpty() == true
-            ) {
+            // Allergen safety stays near the top for configured sensitivities;
+            // the longer product details sit at the end of the sheet (#426).
+            if (profile?.allergenSensitivities?.isNotEmpty() == true) {
                 item { SheetSectionHeader(stringResource(R.string.product_allergen_check)) }
                 item {
                     SheetPillCard {
@@ -585,7 +607,14 @@ fun EditFoodEntrySheet(
                                 )
                             }
                         )
-                    }
+                    },
+                    // An entry logged as one serving of a split recipe holds only that
+                    // portion, so it never offers the split again.
+                    recipeServings = recipeServings.takeIf {
+                        !RecipeServings.isLoggedPortion(entry.servingUnitOptions) &&
+                            RecipeServings.isAvailable(currentBaseEntry.ingredients.size, baseServing, servingSizeIsKnown)
+                    },
+                    onRecipeServingsChange = { applyRecipeServings(it) }
                 )
             }
 
@@ -706,6 +735,20 @@ fun EditFoodEntrySheet(
                         showTimePicker = true
                     }
                 )
+            }
+
+            currentBaseEntry.productMetadata?.let { metadata ->
+                val productInfoFields = ProductInfoField.visibleFields(metadata, productInfoShown, productInfoHiddenFields)
+                if (productInfoFields.isNotEmpty()) {
+                    item { SheetSectionHeader(stringResource(R.string.product_information)) }
+                    item {
+                        FoodProductMetadataCard(
+                            metadata,
+                            productInfoFields,
+                            profile?.allergenSensitivities.orEmpty()
+                        )
+                    }
+                }
             }
 
             item { SheetSectionHeader("Actions") }

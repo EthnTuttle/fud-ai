@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">معلومات المنتج</string>
+    <string name="product_barcode">الباركود</string>
+    <string name="product_package">العبوة</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">مجموعة NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">مسببات الحساسية</string>
+    <string name="product_may_contain">قد يحتوي على</string>
+    <string name="product_allergen_check">فحص مسببات الحساسية</string>
+    <string name="product_labels">الملصقات</string>
+    <string name="product_categories">الفئات</string>
+    <string name="product_ingredient_label">ملصق المكونات</string>
+    <string name="product_possible_allergen">مسبب حساسية محتمل: %1$s</string>
+    <string name="product_info_settings_show">إظهار معلومات المنتج</string>
+    <string name="product_info_settings_fields">التفاصيل المعروضة</string>
+    <string name="product_info_settings_footer">تظهر في نهاية شاشتي المراجعة والتعديل للأطعمة الممسوحة بالباركود. لا يتأثر فحص مسببات الحساسية، ويظهر دائمًا عند تعيين حساسيات تجاه مسببات الحساسية.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">البروتين</string>
     <string name="macro_carbs">الكربوهيدرات</string>
@@ -362,6 +380,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">تفاصيل الطعام</string>
     <string name="sheet_serving">الحصة</string>
+    <string name="recipe_servings_title">عدد حصص الوصفة</string>
+    <string name="recipe_servings_footer">اضبط هذا بعد إضافة كل المكونات. يقسّم Fud AI الوصفة لتسجّل حصة واحدة، وتحتفظ الوجبات المحفوظة بحجم تلك الحصة.</string>
+    <string name="cd_recipe_servings_fewer">حصص أقل</string>
+    <string name="cd_recipe_servings_more">حصص أكثر</string>
     <string name="sheet_nutrition">التغذية</string>
     <string name="sheet_meal">الوجبة</string>
     <string name="sheet_more_nutrition">مزيد من التغذية</string>
@@ -525,6 +547,11 @@
     <string name="settings_goal_weight">وزن الهدف</string>
     <string name="settings_calories">السعرات الحرارية</string>
     <string name="settings_recalculate_goals">إعادة حساب الأهداف</string>
+    <string name="settings_estimated_maintenance">سعرات الحفاظ المقدّرة</string>
+    <string name="settings_maintenance_deficit_format">العجز: %1$,d kcal/يوم</string>
+    <string name="settings_maintenance_surplus_format">الفائض: %1$,d kcal/يوم</string>
+    <string name="settings_maintenance_close">الهدف قريب من سعرات الحفاظ</string>
+    <string name="settings_estimated_maintenance_info">سعرات الحفاظ المقدّرة هي السعرات التي تحرقها في يوم عادي: معدل الأيض الأساسي (BMR) من ملفك الشخصي مضروبًا في مستوى نشاطك. تناول أقل منها يعني عجزًا لخسارة الوزن، وتناول أكثر منها يعني فائضًا لزيادته. العجز أو الفائض المعروض هو هدف السعرات لديك مطروحًا منه هذا التقدير. إنه تقدير بمعادلة، لذا قد يختلف حرقك الفعلي، وقد تحدد إعادة حساب الأهداف هدفك بدلًا من ذلك بناءً على الطعام المسجل أو اتجاه وزنك أو حرق الطاقة المقاس. هذه ليست نصيحة طبية.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · تلقائي</string>
     <string name="settings_macro_pinned_a11y">مثبّت</string>
@@ -538,6 +565,7 @@
     <string name="settings_height_unit">وحدة الطول</string>
     <string name="settings_weight_unit">وحدة الوزن</string>
     <string name="settings_week_starts">يبدأ الأسبوع يوم</string>
+    <string name="settings_meal_times_customize">تخصيص</string>
     <string name="settings_week_monday">الإثنين</string>
     <string name="settings_week_sunday">الأحد</string>
     <string name="settings_notifications">الإشعارات</string>
@@ -556,8 +584,25 @@
     <string name="settings_clear_key">مسح المفتاح</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">سجلات الوزن الأقدم</string>
     <string name="settings_clear_food_log">مسح سجل الطعام</string>
     <string name="settings_delete_all_data">حذف جميع البيانات</string>
+    <string name="storage_title">التخزين</string>
+    <string name="storage_saved_photos">الصور المحفوظة</string>
+    <string name="storage_on_device_models">النماذج على الجهاز</string>
+    <string name="storage_cache">ذاكرة التخزين المؤقت</string>
+    <string name="storage_compress_photos">ضغط الصور</string>
+    <string name="storage_clear_cache">مسح ذاكرة التخزين المؤقت</string>
+    <string name="storage_footer">يؤدي «ضغط الصور» إلى تصغير الصور الأكبر من 2048 بكسل بشكل دائم. يزيل «مسح ذاكرة التخزين المؤقت» الصور المصغّرة وصور التمارين التي تم تنزيلها، ويُعاد إنشاؤها عند الحاجة. احذف النماذج على الجهاز من إعدادات الذكاء الاصطناعي أو الكلام الخاصة بها.</string>
+    <string name="storage_compress_confirm_title">ضغط الصور؟</string>
+    <string name="storage_compress_confirm_message">سيتم تصغير الصور التي يزيد ضلعها الأطول عن 2048 بكسل إلى 2048 بكسل بشكل دائم وحفظها بتنسيق JPEG. تبقى الصور الأصغر دون تغيير. لا يمكن التراجع عن ذلك.</string>
+    <string name="storage_compress_action">ضغط</string>
+    <string name="storage_compressing_progress">جارٍ ضغط الصور… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">تم ضغط الصور</string>
+    <string name="storage_compress_freed">تم تحرير %1$s.</string>
+    <string name="storage_compress_nothing">لا توجد صور تحتاج إلى ضغط.</string>
+    <string name="storage_compress_unreadable">تعذّرت قراءة بعض الصور وتُركت دون تغيير.</string>
+    <string name="storage_compress_failed">تعذّر ضغط بعض الصور وتُركت دون تغيير. تأكد من توفر مساحة فارغة على جهازك، ثم حاول مرة أخرى.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">مسح سجل الطعام؟</string>
@@ -830,4 +875,5 @@
     <string name="settings_save_photos_to_gallery">حفظ في الصور</string>
     <string name="settings_save_photos_to_gallery_subtitle">احفظ أيضًا صور الوجبات في المعرض عند التسجيل</string>
     <string name="settings_other_nutrients_note">منفصل عن أهداف السعرات الحرارية والبروتين والكربوهيدرات والدهون.</string>
+    <string name="label_date">التاريخ</string>
 </resources>
