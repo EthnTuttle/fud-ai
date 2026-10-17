@@ -194,7 +194,11 @@ struct ChatView: View {
             ScrollView {
                 VStack(spacing: 14) {
                     ForEach(messages) { msg in
-                        MessageBubble(message: msg)
+                        MessageBubble(
+                            message: msg,
+                            onAddProposal: { addProposal($0, in: msg) },
+                            onDismissProposal: { chatStore.dismissExerciseProposal($0.id, in: msg.id) }
+                        )
                             .id(msg.id)
                     }
                     if isSending {
@@ -690,6 +694,8 @@ struct ChatView: View {
         isSending = true
         let historyForCall = chatStore.contextMessages().dropLast()  // exclude the user msg we just appended
 
+        let proposals = CoachExerciseProposalCollector()
+
         Task {
             defer { isSending = false }
             do {
@@ -709,9 +715,14 @@ struct ChatView: View {
                     workoutPlans: Array(strengthWorkoutStore.dayPlans.values),
                     workoutPreferences: strengthWorkoutStore.preferences,
                     workoutAccessEnabled: true,
-                    exerciseLibrary: strengthWorkoutStore.exerciseLibrary.exercises
+                    exerciseLibrary: strengthWorkoutStore.exerciseLibrary.exercises,
+                    proposals: proposals
                 )
-                chatStore.append(ChatMessage(role: .assistant, content: reply))
+                chatStore.append(ChatMessage(
+                    role: .assistant,
+                    content: reply,
+                    exerciseProposals: proposals.proposals.isEmpty ? nil : proposals.proposals
+                ))
             } catch {
                 if let quotaError = error as? HostedAIQuotaError {
                     switch quotaError {
@@ -726,6 +737,19 @@ struct ChatView: View {
                     errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 }
             }
+        }
+    }
+
+    /// The user confirmed a Coach proposal. ChatStore runs the write only while the card is
+    /// pending, so a second tap (or a card already added) never writes again.
+    private func addProposal(_ proposal: CoachExerciseProposal, in message: ChatMessage) {
+        do {
+            try chatStore.addExerciseProposal(proposal.id, in: message.id) { pending in
+                try CoachExerciseProposalApplier.apply(pending, to: strengthWorkoutStore)
+            }
+            errorMessage = nil
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
     }
 
@@ -893,6 +917,8 @@ private enum MarkdownMessageBlockCache {
 
 private struct MessageBubble: View {
     let message: ChatMessage
+    var onAddProposal: (CoachExerciseProposal) -> Void = { _ in }
+    var onDismissProposal: (CoachExerciseProposal) -> Void = { _ in }
 
     private var isUser: Bool { message.role == .user }
     private var bubbleShape: UnevenRoundedRectangle {
@@ -915,7 +941,20 @@ private struct MessageBubble: View {
                 Spacer(minLength: 48)
             }
 
-            bubble
+            if let proposals = message.exerciseProposals, !isUser, !proposals.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    bubble
+                    ForEach(proposals) { proposal in
+                        CoachProposalCard(
+                            proposal: proposal,
+                            onAdd: { onAddProposal(proposal) },
+                            onDismiss: { onDismissProposal(proposal) }
+                        )
+                    }
+                }
+            } else {
+                bubble
+            }
 
             if isUser {
                 // no trailing icon
@@ -1004,6 +1043,130 @@ private struct MessageBubble: View {
         )
         .blendMode(.plusLighter)
         .allowsHitTesting(false)
+    }
+}
+
+/// A workout change Coach proposed. Nothing is saved until the user taps Add; once resolved the
+/// card shows its outcome instead of the buttons.
+private struct CoachProposalCard: View {
+    let proposal: CoachExerciseProposal
+    let onAdd: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: proposal.kind == .customExercise ? "plus.square.on.square" : "calendar.badge.plus")
+                    .accessibilityHidden(true)
+                Group {
+                    if proposal.kind == .customExercise {
+                        Text("New custom exercise", comment: "Title of a Coach chat card proposing a new custom exercise for the user's library.")
+                    } else {
+                        Text("Add to workout", comment: "Title of a Coach chat card proposing to add an exercise to the user's workout diary.")
+                    }
+                }
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+            }
+            .foregroundStyle(AppColors.calorie)
+
+            Text(verbatim: proposal.name)
+                .font(.system(.headline, design: .rounded))
+
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(detailLines, id: \.self) { line in
+                    Text(verbatim: line)
+                }
+                if !proposal.instructions.isEmpty {
+                    Text(verbatim: proposal.instructions.joined(separator: "\n"))
+                        .lineLimit(4)
+                        .padding(.top, 2)
+                }
+            }
+            .font(.system(.footnote, design: .rounded))
+            .foregroundStyle(.secondary)
+
+            outcome
+                .padding(.top, 4)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(AppColors.calorie.opacity(0.045))
+        )
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(AppColors.calorie.opacity(0.18), lineWidth: 0.6)
+        )
+    }
+
+    @ViewBuilder private var outcome: some View {
+        switch proposal.status {
+        case .pending:
+            HStack(spacing: 10) {
+                Button(action: onAdd) {
+                    Text("Add").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(AppColors.calorie)
+
+                Button(action: onDismiss) {
+                    Text("Dismiss").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+            }
+            .controlSize(.large)
+            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+        case .added:
+            Label("Added", systemImage: "checkmark.circle.fill")
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.green)
+        case .dismissed:
+            Label {
+                Text("Dismissed", comment: "Outcome shown on a Coach chat card after the user dismissed the proposed workout change.")
+            } icon: {
+                Image(systemName: "xmark.circle")
+            }
+            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+            .foregroundStyle(.secondary)
+        }
+    }
+
+    private var detailLines: [String] {
+        var lines: [String] = []
+        switch proposal.kind {
+        case .customExercise:
+            if let category = proposal.category {
+                lines.append(String(localized: "Category: \(category)", comment: "Coach chat card detail; the argument is an exercise category such as Strength."))
+            }
+            if let equipment = proposal.equipment {
+                lines.append(String(localized: "Equipment: \(equipment)", comment: "Coach chat card detail; the argument is exercise equipment such as Machine."))
+            }
+            if !proposal.primaryMuscles.isEmpty {
+                let muscles = proposal.primaryMuscles.joined(separator: ", ")
+                lines.append(String(localized: "Primary muscles: \(muscles)", comment: "Coach chat card detail; the argument is a comma-separated list of muscles."))
+            }
+            if !proposal.secondaryMuscles.isEmpty {
+                let muscles = proposal.secondaryMuscles.joined(separator: ", ")
+                lines.append(String(localized: "Secondary muscles: \(muscles)", comment: "Coach chat card detail; the argument is a comma-separated list of muscles."))
+            }
+        case .addToDay:
+            if let dateKey = proposal.dateKey, let date = StrengthWorkoutStore.date(for: dateKey) {
+                let day = date.formatted(date: .abbreviated, time: .omitted)
+                lines.append(String(localized: "Date: \(day)", comment: "Coach chat card detail; the argument is the workout diary date."))
+            }
+            if let sets = proposal.sets {
+                lines.append(String(localized: "Sets: \(sets)", comment: "Coach chat card detail; the argument is the number of sets."))
+            }
+            if let reps = proposal.reps {
+                lines.append(String(localized: "Reps: \(reps)", comment: "Coach chat card detail; the argument is the reps in each set."))
+            }
+            if let minutes = proposal.durationMinutes {
+                lines.append(String(localized: "Duration: \(minutes) min", comment: "Coach chat card detail; the argument is a number of minutes."))
+            }
+        }
+        return lines
     }
 }
 
