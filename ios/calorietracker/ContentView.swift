@@ -3966,6 +3966,7 @@ struct FoodRow: View {
     let entry: FoodEntry
     @Environment(FoodStore.self) private var foodStore
     @State private var imagePreview: FullScreenImagePreview?
+    @State private var thumbnailPhotoID: FoodEntryPhoto.ID?
 
     private var servingText: String? {
         guard let grams = entry.servingSizeGrams else {
@@ -3989,20 +3990,20 @@ struct FoodRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Thumbnail — tap opens full-screen viewer without opening edit.
-            if entry.imageFilename != nil || entry.imageData != nil {
+            if !entry.thumbnailPhotoCandidates.isEmpty {
                 Button {
                     Task {
-                        let images = await FoodEntryPhotoLoader.viewerImages(for: entry)
-                        guard !images.isEmpty else { return }
+                        let preview = await FoodEntryPhotoLoader.viewerPreview(for: entry, matching: thumbnailPhotoID)
+                        guard let preview else { return }
                         await MainActor.run {
-                            imagePreview = FullScreenImagePreview(images: images)
+                            imagePreview = preview
                         }
                     }
                 } label: {
                     FoodEntryThumbnailView(
-                        filename: entry.imageFilename,
-                        legacyData: entry.imageData,
-                        additionalCount: entry.listThumbnailAdditionalPhotoCount
+                        photos: entry.thumbnailPhotoCandidates,
+                        additionalCount: entry.listThumbnailAdditionalPhotoCount,
+                        onPhotoLoaded: { thumbnailPhotoID = $0 }
                     )
                 }
                 .buttonStyle(.plain)

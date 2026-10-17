@@ -199,10 +199,9 @@ private struct SavedMealRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Thumbnail
-            if entry.imageFilename != nil || entry.imageData != nil {
+            if !entry.thumbnailPhotoCandidates.isEmpty {
                 FoodEntryThumbnailView(
-                    filename: entry.imageFilename,
-                    legacyData: entry.imageData,
+                    photos: entry.thumbnailPhotoCandidates,
                     additionalCount: entry.listThumbnailAdditionalPhotoCount,
                     showsAdditionalBadge: false
                 )

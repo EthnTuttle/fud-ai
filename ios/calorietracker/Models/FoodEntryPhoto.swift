@@ -1,8 +1,8 @@
 import Foundation
 
 /// A stable reference to a photo while an existing food log is being edited.
-struct FoodEntryPhoto: Identifiable {
-    enum ID: Hashable {
+struct FoodEntryPhoto: Identifiable, Equatable, Sendable {
+    enum ID: Hashable, Sendable {
         case filename(String)
         case primaryData
         case additionalData(Int)
@@ -13,6 +13,46 @@ struct FoodEntryPhoto: Identifiable {
 }
 
 extension FoodEntry {
+    /// Chronological references and aligned cached bytes, without reading files.
+    var photoSources: [FoodEntryPhoto] {
+        var photos: [FoodEntryPhoto] = []
+        var seen = Set<FoodEntryPhoto.ID>()
+        func append(_ id: FoodEntryPhoto.ID, data: Data? = nil) {
+            guard seen.insert(id).inserted else { return }
+            photos.append(FoodEntryPhoto(id: id, data: data))
+        }
+        if let imageFilename {
+            append(.filename(imageFilename), data: imageData)
+        } else if let imageData {
+            append(.primaryData, data: imageData)
+        }
+        for index in 0..<max(additionalImageData.count, additionalImageFilenames.count) {
+            let filename = additionalImageFilenames.indices.contains(index) ? additionalImageFilenames[index] : nil
+            // Older caches may have compacted out missing files. Only reuse
+            // filename-backed cached bytes when their indexes still align.
+            let cacheAligned = filename == nil || additionalImageData.count >= additionalImageFilenames.count
+            let data = cacheAligned && additionalImageData.indices.contains(index) ? additionalImageData[index] : nil
+            append(filename.map { .filename($0) } ?? .additionalData(index), data: data)
+        }
+        for filename in ingredients.flatMap(\.allImageFilenames) {
+            append(.filename(filename))
+        }
+        return photos
+    }
+
+    /// Prefer the completed progressive meal without reordering stored photos.
+    var thumbnailPhotoCandidates: [FoodEntryPhoto] {
+        let photos = photoSources
+        guard progressiveMeal else { return photos }
+        let additionalCount = max(additionalImageData.count, additionalImageFilenames.count)
+        guard additionalCount > 0 else { return photos }
+        let index = additionalCount - 1
+        let finalID: FoodEntryPhoto.ID = additionalImageFilenames.indices.contains(index)
+            ? .filename(additionalImageFilenames[index]) : .additionalData(index)
+        guard let final = photos.first(where: { $0.id == finalID }) else { return photos }
+        return [final] + photos.filter { $0.id != finalID }
+    }
+
     var editablePhotos: [FoodEntryPhoto] {
         var photos: [FoodEntryPhoto] = []
         var seen = Set<FoodEntryPhoto.ID>()
