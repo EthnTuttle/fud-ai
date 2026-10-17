@@ -70,23 +70,29 @@ class ChatService(
         exerciseLibrary: List<ExerciseItem> = emptyList(),
         proposals: CoachProposalCollector? = null
     ): String {
-        val baseSystemPrompt = buildSystemPrompt(
-            profile = profile,
-            weights = weights,
-            bodyFats = bodyFats,
-            measurements = measurements,
-            foods = foods,
-            fastingSessions = fastingSessions,
-            heightMetric = heightMetric,
-            weightMetric = weightMetric,
-            workoutSessions = workoutSessions,
-            workoutPlans = workoutPlans,
-            canProposeWorkoutChanges = proposals != null
-        )
         val userContext = prefs.userContext.first()
-        val systemPrompt = if (userContext.isNotBlank())
-            "$baseSystemPrompt\n\n## User-provided context\n$userContext"
-        else baseSystemPrompt
+        fun systemPromptFor(proposalCards: Boolean): String {
+            val baseSystemPrompt = buildSystemPrompt(
+                profile = profile,
+                weights = weights,
+                bodyFats = bodyFats,
+                measurements = measurements,
+                foods = foods,
+                fastingSessions = fastingSessions,
+                heightMetric = heightMetric,
+                weightMetric = weightMetric,
+                workoutSessions = workoutSessions,
+                workoutPlans = workoutPlans,
+                canProposeWorkoutChanges = proposalCards
+            )
+            return if (userContext.isNotBlank())
+                "$baseSystemPrompt\n\n## User-provided context\n$userContext"
+            else baseSystemPrompt
+        }
+        val systemPrompt = systemPromptFor(proposalCards = proposals != null)
+        // The on-device model answers without tools, so it is never told about proposal cards it
+        // cannot make (the reply would point the user at a card that never appears).
+        val toolFreeSystemPrompt = { if (proposals == null) systemPrompt else systemPromptFor(proposalCards = false) }
         val tools = CoachTools(
             weights = weights,
             bodyFats = bodyFats,
@@ -133,7 +139,7 @@ class ChatService(
             proposals?.reset()
             runProvider(
                 provider, model, baseUrl, apiKey, systemPrompt, history, newUserMessage,
-                tools, imageBytes, maxTokens, requestTimeoutSeconds
+                tools, imageBytes, maxTokens, requestTimeoutSeconds, toolFreeSystemPrompt
             )
         } catch (primaryError: Throwable) {
             if (primaryError is kotlinx.coroutines.CancellationException) throw primaryError
@@ -148,7 +154,7 @@ class ChatService(
             runProvider(
                 fallback.provider, fallback.model, fallback.baseUrl, fallback.apiKey,
                 systemPrompt, history, newUserMessage, tools, imageBytes, maxTokens,
-                requestTimeoutSeconds
+                requestTimeoutSeconds, toolFreeSystemPrompt
             )
         }
     }
@@ -164,7 +170,8 @@ class ChatService(
         tools: CoachTools,
         imageBytes: ByteArray?,
         maxTokens: Int,
-        requestTimeoutSeconds: Int
+        requestTimeoutSeconds: Int,
+        toolFreeSystemPrompt: () -> String
     ): String {
         if (provider == AIProvider.LOCAL_GEMMA) {
             val conversation = buildString {
@@ -179,7 +186,7 @@ class ChatService(
                 prompt = conversation,
                 images = imageBytes?.let(::listOf).orEmpty(),
                 maxOutputTokens = maxTokens,
-                systemInstruction = systemPrompt
+                systemInstruction = toolFreeSystemPrompt()
             ) ?: throw AiError.Api("The on-device Gemma runtime is unavailable.")
         }
         if (provider.requiresApiKey && apiKey.isNullOrEmpty()) throw AiError.NoApiKey

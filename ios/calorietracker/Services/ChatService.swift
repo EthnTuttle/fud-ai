@@ -91,20 +91,28 @@ struct ChatService {
             )
         }
 
-        let systemPrompt = buildSystemPrompt(
-            profile: profile,
-            weights: weights,
-            bodyFats: bodyFats,
-            measurements: measurements,
-            foods: foods,
-            fastingSessions: fastingSessions,
-            heightMetric: heightMetric,
-            weightMetric: weightMetric,
-            workoutSessions: workoutSessions,
-            workoutPlans: workoutPlans,
-            workoutAccessEnabled: workoutAccessEnabled,
-            canProposeWorkoutChanges: proposals != nil
-        )
+        func makeSystemPrompt(proposalCards: Bool) -> String {
+            buildSystemPrompt(
+                profile: profile,
+                weights: weights,
+                bodyFats: bodyFats,
+                measurements: measurements,
+                foods: foods,
+                fastingSessions: fastingSessions,
+                heightMetric: heightMetric,
+                weightMetric: weightMetric,
+                workoutSessions: workoutSessions,
+                workoutPlans: workoutPlans,
+                workoutAccessEnabled: workoutAccessEnabled,
+                canProposeWorkoutChanges: proposalCards
+            )
+        }
+        let systemPrompt = makeSystemPrompt(proposalCards: proposals != nil)
+        // On-device models answer without tools, so they are never told about proposal cards
+        // they cannot make (the reply would point the user at a card that never appears).
+        func toolFreeSystemPrompt() -> String {
+            proposals == nil ? systemPrompt : makeSystemPrompt(proposalCards: false)
+        }
         let tools = CoachTools(
             weights: weights,
             bodyFats: bodyFats,
@@ -135,7 +143,7 @@ struct ChatService {
             switch provider.apiFormat {
             case .onDevice:
                 return try await callOnDevice(
-                    systemPrompt: systemPrompt,
+                    systemPrompt: toolFreeSystemPrompt(),
                     history: history,
                     newUserMessage: newUserMessage,
                     imageData: imageData
@@ -148,7 +156,7 @@ struct ChatService {
                     )
                 }
                 let localInstructions = """
-                \(systemPrompt)
+                \(toolFreeSystemPrompt())
 
                 ON-DEVICE MODE
                 You cannot call data tools in this mode. Answer only from the profile, forecast, and data summary above. If the question requires unavailable detailed history, say that briefly instead of inventing facts.
