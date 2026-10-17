@@ -369,7 +369,8 @@ private struct RectangularCalorieView: View {
             // Header: just the name and today's eaten count, rendered large —
             // no flame icon, no goal (matches the label+eaten style of the grid).
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(snapshot.usesKilojoules ? "Kilojoules" : "Calories")
+                // Typed as keys: a ternary of plain literals infers String and skips translation.
+                Text(snapshot.usesKilojoules ? LocalizedStringKey("Kilojoules") : LocalizedStringKey("Calories"))
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)

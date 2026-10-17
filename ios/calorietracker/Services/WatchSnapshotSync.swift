@@ -156,6 +156,7 @@ final class WatchSnapshotSync: NSObject, WCSessionDelegate {
         let waterUnitRaw: String?
         let themeStartHex: UInt?
         let themeEndHex: UInt?
+        let energyUnitRaw: String?
 
         init(_ snapshot: WidgetSnapshot) {
             dayStart = snapshot.dayStart
@@ -174,6 +175,7 @@ final class WatchSnapshotSync: NSObject, WCSessionDelegate {
             waterUnitRaw = snapshot.waterUnitRaw
             themeStartHex = snapshot.themeStartHex
             themeEndHex = snapshot.themeEndHex
+            energyUnitRaw = snapshot.energyUnitRaw
         }
     }
 }
