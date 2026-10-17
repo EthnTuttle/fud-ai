@@ -646,7 +646,7 @@
     <string name="settings_section_goals">Цілі та харчування</string>
     <string name="settings_section_daily_targets">Щоденні цілі</string>
     <string name="settings_section_app">Налаштування застосунку</string>
-    <string name="settings_section_tracking_reminders">Відстеження та нагадування</string>
+    <string name="settings_section_tracking_notifications">Відстеження та сповіщення</string>
     <string name="settings_category_ai_providers">Провайдери ШІ та резервні варіанти</string>
     <string name="settings_section_ai_voice">ШІ та голос</string>
     <string name="settings_section_ai">Постачальник ШІ</string>

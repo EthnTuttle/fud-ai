@@ -529,7 +529,7 @@
     <string name="settings_section_goals">Ziele &amp; Ernährung</string>
     <string name="settings_section_daily_targets">Tägliche Ziele</string>
     <string name="settings_section_app">App-Einstellungen</string>
-    <string name="settings_section_tracking_reminders">Tracking &amp; Erinnerungen</string>
+    <string name="settings_section_tracking_notifications">Tracking &amp; Mitteilungen</string>
     <string name="settings_category_ai_providers">KI-Anbieter &amp; Ausweichoptionen</string>
     <string name="settings_section_workout">Training</string>
     <string name="settings_section_ai">KI-Anbieter</string>

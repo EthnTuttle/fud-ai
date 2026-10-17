@@ -979,7 +979,7 @@ final class VoiceAssistantToolExecutor {
             return Self.failure(.invalidArguments, "goal_hours must be between 1 and 168.")
         }
         guard appDefaults.bool(forKey: FastingSettings.enabledKey) else {
-            return Self.failure(.unsupported, "Fasting tracking is off. The user can turn it on in Settings → Tracking & Reminders.")
+            return Self.failure(.unsupported, "Fasting tracking is off. The user can turn it on in Settings → Tracking & Notifications.")
         }
         if let active = stores.fasting.activeSession {
             return Self.failure(.invalidArguments, "A fast is already running.", extra: ["started_at": isoTimestamp(active.startedAt)])

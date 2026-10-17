@@ -530,7 +530,7 @@
     <string name="settings_section_goals">Objetivos y nutrición</string>
     <string name="settings_section_daily_targets">Objetivos diarios</string>
     <string name="settings_section_app">Ajustes de la app</string>
-    <string name="settings_section_tracking_reminders">Seguimiento y recordatorios</string>
+    <string name="settings_section_tracking_notifications">Seguimiento y notificaciones</string>
     <string name="settings_category_ai_providers">Proveedores de IA y alternativas</string>
     <string name="settings_section_workout">Entrenamiento</string>
     <string name="settings_section_ai">Proveedor de IA</string>

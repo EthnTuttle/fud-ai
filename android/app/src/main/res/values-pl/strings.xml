@@ -537,7 +537,7 @@
     <string name="settings_section_goals">Cele i odżywianie</string>
     <string name="settings_section_daily_targets">Cele dzienne</string>
     <string name="settings_section_app">Ustawienia aplikacji</string>
-    <string name="settings_section_tracking_reminders">Śledzenie i przypomnienia</string>
+    <string name="settings_section_tracking_notifications">Śledzenie i powiadomienia</string>
     <string name="settings_category_ai_providers">Dostawcy AI i opcje awaryjne</string>
     <string name="settings_section_workout">Trening</string>
     <string name="settings_section_ai">Główne AI</string>
