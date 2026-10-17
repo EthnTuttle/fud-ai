@@ -18,7 +18,7 @@ struct GemmaArtifactDownloadOperationTests {
         try await operation.start(url: resolveURL)
 
         #expect(try Data(contentsOf: file) == artifact)
-        #expect(operation.receivedBytes == Int64(artifact.count - split))
+        #expect(operation.lastingProgressBytes == Int64(artifact.count - split))
         // The resume asks the pinned resolve URL again, never a signed CDN link an earlier
         // attempt was redirected to, which expires after an hour.
         let request = try #require(GemmaDownloadStubProtocol.requests.first)
@@ -39,7 +39,7 @@ struct GemmaArtifactDownloadOperationTests {
 
         // A body that stops short of the artifact is an interruption the retry loop resumes from.
         #expect(GemmaDownloadRetryState.isTransient(error))
-        #expect(first.receivedBytes == Int64(split))
+        #expect(first.lastingProgressBytes == Int64(split))
         #expect(try Data(contentsOf: file) == artifact.prefix(split))
 
         try await makeOperation(file).start(url: resolveURL)
@@ -66,6 +66,34 @@ struct GemmaArtifactDownloadOperationTests {
         try await makeOperation(file).start(url: resolveURL)
 
         #expect(try Data(contentsOf: file) == artifact)
+    }
+
+    @Test func restartsThatDropAtTheSamePointRunOutOfRetries() async throws {
+        // Each 200 reply ignores Range and drops where the partial already ended, so every attempt
+        // replaces the same bytes. None of them makes lasting progress, so the retries must end.
+        let file = try makeFile(containing: artifact.prefix(split))
+        defer { removeDirectory(of: file) }
+        let delays: [TimeInterval] = [0, 0, 0]
+        let attempts = delays.count + 1
+        stub(Array(
+            repeating: GemmaDownloadStubProtocol.Reply(status: 200, body: artifact.prefix(split)),
+            count: attempts
+        ))
+
+        var retry = GemmaDownloadRetryState(delays: delays)
+        var decisions: [GemmaDownloadRetryState.Decision] = []
+        for _ in 0..<attempts {
+            let operation = makeOperation(file)
+            let error = await failure { try await operation.start(url: resolveURL) }
+            #expect(operation.lastingProgressBytes == 0)
+            decisions.append(retry.recordFailure(error, lastingProgressBytes: operation.lastingProgressBytes))
+        }
+
+        let expected: [GemmaDownloadRetryState.Decision] =
+            delays.map { GemmaDownloadRetryState.Decision.retry(after: $0) } + [.fail]
+        #expect(decisions == expected)
+        #expect(GemmaDownloadStubProtocol.requests.count == attempts)
+        #expect(try Data(contentsOf: file) == artifact.prefix(split))
     }
 
     @Test func unexpectedContentRangeResetsThePartialForARetry() async throws {

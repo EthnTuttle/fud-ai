@@ -242,7 +242,10 @@ final class Gemma4LocalModelManager {
                 } catch {
                     activeDownload = nil
                     if Task.isCancelled || Self.isCancellation(error) { throw error }
-                    let decision = retry.recordFailure(error, receivedBytes: download.receivedBytes)
+                    let decision = retry.recordFailure(
+                        error,
+                        lastingProgressBytes: download.lastingProgressBytes
+                    )
                     guard case .retry(let delay) = decision else { throw error }
                     let wait = Task { try await Task.sleep(for: .seconds(delay)) }
                     retryWait = wait
@@ -663,7 +666,8 @@ final class Gemma4LocalModelManager {
 }
 
 /// Bounded retry bookkeeping for the Gemma download. Every attempt resumes after the bytes already
-/// on disk; only consecutive attempts that received nothing spend the retry budget.
+/// on disk; only consecutive attempts that left the partial no longer than they found it spend the
+/// retry budget. Each reset needs the partial to grow, so the retries always end.
 struct GemmaDownloadRetryState {
     enum Decision: Equatable {
         case retry(after: TimeInterval)
@@ -679,8 +683,10 @@ struct GemmaDownloadRetryState {
         self.delays = delays
     }
 
-    mutating func recordFailure(_ error: Error, receivedBytes: Int64) -> Decision {
-        if receivedBytes > 0 { consecutiveFailures = 0 }
+    /// `lastingProgressBytes` is how much longer the attempt left the partial. A restart from zero
+    /// that drops before passing the old length received bytes but made no progress.
+    mutating func recordFailure(_ error: Error, lastingProgressBytes: Int64) -> Decision {
+        if lastingProgressBytes > 0 { consecutiveFailures = 0 }
         guard Self.isTransient(error), consecutiveFailures < delays.count else { return .fail }
         let delay = delays[consecutiveFailures]
         consecutiveFailures += 1
@@ -752,7 +758,7 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDataDelegate, @u
     private var isCancelled = false
     private var fileLength: Int64 = 0
     private var reportedLength: Int64 = 0
-    private var newBytes: Int64 = 0
+    private var startLength: Int64 = 0
 
     init(
         fileURL: URL,
@@ -778,11 +784,12 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDataDelegate, @u
         return configuration
     }
 
-    /// Bytes this attempt appended, excluding those kept from earlier attempts.
-    var receivedBytes: Int64 {
+    /// How much longer this attempt left the partial than it found it. A server that ignores the
+    /// Range header replaces the partial, so an attempt can receive bytes and still end below zero.
+    var lastingProgressBytes: Int64 {
         lock.lock()
         defer { lock.unlock() }
-        return newBytes
+        return fileLength - startLength
     }
 
     /// Returns once `fileURL` holds `expectedByteCount` bytes. A transfer that ends early throws and
@@ -829,6 +836,7 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDataDelegate, @u
                 self.output = output
                 fileLength = keptLength
                 reportedLength = keptLength
+                startLength = keptLength
                 let cancelledBeforeStart = isCancelled
                 lock.unlock()
 
@@ -886,7 +894,6 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDataDelegate, @u
 
         lock.lock()
         fileLength = length
-        newBytes += Int64(data.count)
         let report = length - reportedLength >= Self.progressStepBytes || length == expectedByteCount
         if report { reportedLength = length }
         lock.unlock()

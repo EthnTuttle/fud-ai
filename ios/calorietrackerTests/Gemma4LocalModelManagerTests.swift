@@ -197,15 +197,25 @@ struct Gemma4LocalModelManagerTests {
         #expect(manager.hasStoredData)
     }
 
-    @Test func onlyAttemptsWithoutNewBytesSpendTheRetryBudget() {
+    @Test func onlyAttemptsWithoutLastingProgressSpendTheRetryBudget() {
         var retry = GemmaDownloadRetryState(delays: [1, 2])
         let timeout = URLError(.timedOut)
 
-        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .retry(after: 1))
-        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .retry(after: 2))
-        #expect(retry.recordFailure(timeout, receivedBytes: 512) == .retry(after: 1))
-        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .retry(after: 2))
-        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .fail)
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .retry(after: 1))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .retry(after: 2))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 512) == .retry(after: 1))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .retry(after: 2))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .fail)
+    }
+
+    @Test func restartThatEndsBelowTheOldPartialSpendsTheRetryBudget() {
+        // A server that ignores Range replaces the partial; dropping before the old length leaves
+        // less than the attempt started with, even though it received bytes.
+        var retry = GemmaDownloadRetryState(delays: [1])
+        let dropped = URLError(.networkConnectionLost)
+
+        #expect(retry.recordFailure(dropped, lastingProgressBytes: -4_096) == .retry(after: 1))
+        #expect(retry.recordFailure(dropped, lastingProgressBytes: -4_096) == .fail)
     }
 
     @Test func permanentFailuresAreNotRetried() {
@@ -213,13 +223,13 @@ struct Gemma4LocalModelManagerTests {
 
         #expect(retry.recordFailure(
             GemmaArtifactDownloadOperation.DownloadError.httpStatus(404),
-            receivedBytes: 0
+            lastingProgressBytes: 0
         ) == .fail)
         #expect(retry.recordFailure(
             GemmaArtifactDownloadOperation.DownloadError.httpStatus(403),
-            receivedBytes: 0
+            lastingProgressBytes: 0
         ) == .fail)
-        #expect(retry.recordFailure(URLError(.badURL), receivedBytes: 0) == .fail)
+        #expect(retry.recordFailure(URLError(.badURL), lastingProgressBytes: 0) == .fail)
     }
 
     @Test func transientClassificationCoversNetworkDropsAndServerErrors() {
