@@ -327,6 +327,48 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun moveExerciseReordersOneDayClampsAtEndsAndPersistsWithoutClearingTheBurn() = runBlocking {
+        val store = FakeWorkoutStateStore()
+        val repository = WorkoutRepository(store)
+        val date = LocalDate.of(2026, 9, 8)
+        val otherDay = date.plusDays(1)
+        repository.toggleExercise(exerciseItem(), date)
+        repository.toggleExercise(exerciseItem().copy(id = "row", name = "Barbell Row"), date)
+        repository.logQuickCardio(
+            exerciseItem().copy(id = "Walking_Outdoor", name = "Walking", category = "cardio"),
+            minutes = 30,
+            date = date
+        )
+        repository.toggleExercise(exerciseItem(), otherDay)
+        val burn = repository.calculateBurn(date, 70.0, WorkoutWeightUnit.KG)!!
+        val (bench, row, walk) = repository.planNow(date).exercises.map { it.id }
+
+        repository.moveExercise(walk, date, -1)
+        assertEquals(listOf(bench, walk, row), repository.planNow(date).exercises.map { it.id })
+        repository.moveExercise(walk, date, -5)
+        assertEquals(listOf(walk, bench, row), repository.planNow(date).exercises.map { it.id })
+
+        // Moving past either end, by zero, or an unknown id changes nothing and writes nothing.
+        val writes = store.writes
+        repository.moveExercise(walk, date, -1)
+        repository.moveExercise(row, date, 1)
+        repository.moveExercise(bench, date, 0)
+        repository.moveExercise(UUID.randomUUID(), date, 1)
+        assertEquals(writes, store.writes)
+
+        // Order is persisted and a reorder keeps the day's calculated burn.
+        assertEquals(listOf(walk, bench, row), WorkoutRepository(store).planNow(date).exercises.map { it.id })
+        assertEquals(burn, repository.snapshot().completedSessions.single())
+        assertEquals(1, repository.planNow(otherDay).exercises.size)
+
+        // New exercises still append after the user's order.
+        repository.toggleExercise(exerciseItem().copy(id = "squat", name = "Squat"), date)
+        val exercises = repository.planNow(date).exercises
+        assertEquals(listOf(walk, bench, row), exercises.take(3).map { it.id })
+        assertEquals("squat", exercises.last().itemId)
+    }
+
+    @Test
     fun savedTimerBurnUpsertsOneDailySnapshotWithDurationAndSurvivesHealthRestore() = runBlocking {
         val store = FakeWorkoutStateStore()
         val repository = WorkoutRepository(store)
@@ -469,8 +511,11 @@ class WorkoutRepositoryTest {
 private class FakeWorkoutStateStore(initial: WorkoutPersistedState = WorkoutPersistedState()) : WorkoutStateStore {
     private val mutable = MutableStateFlow(initial)
     override val workoutState: Flow<WorkoutPersistedState> = mutable
+    var writes = 0
+        private set
 
     override suspend fun setWorkoutState(state: WorkoutPersistedState) {
+        writes += 1
         mutable.value = state
     }
 

@@ -234,6 +234,21 @@ class WorkoutRepository(
         }
     }
 
+    suspend fun moveExercise(exerciseId: UUID, date: LocalDate, offset: Int) =
+        moveExercise(exerciseId, WorkoutDate.key(date), offset)
+
+    /** Moves one exercise within its day; the stored list order is the diary order. Clamped at both ends. */
+    suspend fun moveExercise(exerciseId: UUID, dateKey: String, offset: Int) {
+        if (offset == 0) return
+        updatePlan(WorkoutDate.requireKey(dateKey)) { plan ->
+            val from = plan.exercises.indexOfFirst { it.id == exerciseId }
+            if (from < 0) return@updatePlan plan
+            val to = (from + offset).coerceIn(0, plan.exercises.lastIndex)
+            if (to == from) return@updatePlan plan
+            plan.copy(exercises = plan.exercises.toMutableList().apply { add(to, removeAt(from)) })
+        }
+    }
+
     suspend fun setSetCount(count: Int, exerciseId: UUID, date: LocalDate) =
         setSetCount(count, exerciseId, WorkoutDate.key(date))
 

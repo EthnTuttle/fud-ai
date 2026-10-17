@@ -580,6 +580,55 @@ struct StrengthWorkoutStoreTests {
         #expect(exercises[0].timer?.isSaved == true)
     }
 
+    @Test func movingExercisesReordersOneDayClampsAtEndsAndPersistsWithoutClearingTheBurn() throws {
+        let fixture = WorkoutTestFixture()
+        defer { fixture.cleanUp() }
+        let date = WorkoutTestFixture.date(2026, 9, 8)
+        let otherDay = WorkoutTestFixture.date(2026, 9, 9)
+        let store = fixture.makeStore()
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: date)
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "row", name: "Barbell Row"), on: date)
+        store.logQuickCardio(
+            WorkoutTestFixture.exercise(id: "Walking_Outdoor", name: "Walking", category: "cardio"),
+            minutes: 30,
+            on: date
+        )
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: otherDay)
+        let burn = try #require(store.upsertCalculatedWorkout(on: date, caloriesBurned: 120, weightUnit: .kg))
+        var deleted: [UUID] = []
+        store.onWorkoutBurnDeleted = { deleted.append($0) }
+        let ids = store.exercises(for: date).map(\.id)
+        let (bench, row, walk) = (ids[0], ids[1], ids[2])
+
+        store.moveExercise(walk, by: -1, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [bench, walk, row])
+        store.moveExercise(walk, by: -5, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [walk, bench, row])
+        // Past either end, by zero, or an unknown id: nothing changes.
+        store.moveExercise(walk, by: -1, on: date)
+        store.moveExercise(row, by: 1, on: date)
+        store.moveExercise(bench, by: 0, on: date)
+        store.moveExercise(UUID(), by: 1, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [walk, bench, row])
+
+        // The List.onMove adapter: drag the last row to the top; ignore invalid offsets.
+        store.moveExercises(fromOffsets: IndexSet(integer: 2), toOffset: 0, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [row, walk, bench])
+        store.moveExercises(fromOffsets: IndexSet(integer: 9), toOffset: 0, on: date)
+        store.moveExercises(fromOffsets: IndexSet(integer: 0), toOffset: 9, on: date)
+        #expect(store.exercises(for: date).map(\.id) == [row, walk, bench])
+
+        let reloaded = fixture.makeStore()
+        #expect(reloaded.exercises(for: date).map(\.id) == [row, walk, bench])
+        #expect(reloaded.exercises(for: otherDay).count == 1)
+        #expect(reloaded.caloriesBurned(on: date) == burn.caloriesBurned)
+        #expect(deleted.isEmpty)
+
+        // New exercises still append after the user's order.
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "squat", name: "Squat"), on: date)
+        #expect(store.exercises(for: date).map(\.itemID) == ["row", "Walking_Outdoor", "bench", "squat"])
+    }
+
     @Test func exerciseTimersPersistThroughReloadAndExcludePausedTime() throws {
         let fixture = WorkoutTestFixture()
         defer { fixture.cleanUp() }

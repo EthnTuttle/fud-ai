@@ -267,6 +267,37 @@ final class StrengthWorkoutStore {
             .forEach { FoodImageStore.shared.delete(filename: $0) }
     }
 
+    /// Moves one exercise up (negative offset) or down within its day. The
+    /// stored array order is the diary order; moves clamp at both ends.
+    func moveExercise(_ exerciseID: UUID, by offset: Int, on date: Date) {
+        let current = exercises(for: date)
+        guard offset != 0,
+              let from = current.firstIndex(where: { $0.id == exerciseID })
+        else { return }
+        let to = min(max(from + offset, 0), current.count - 1)
+        guard to != from else { return }
+        updatePlan(for: date) { plan in
+            guard let index = plan.exercises.firstIndex(where: { $0.id == exerciseID }) else { return }
+            let exercise = plan.exercises.remove(at: index)
+            plan.exercises.insert(exercise, at: min(max(index + offset, 0), plan.exercises.count))
+        }
+    }
+
+    /// `List.onMove` adapter for drag reordering on the selected day.
+    func moveExercises(fromOffsets source: IndexSet, toOffset destination: Int, on date: Date) {
+        let current = exercises(for: date)
+        guard !source.isEmpty,
+              source.allSatisfy({ current.indices.contains($0) }),
+              (0...current.count).contains(destination)
+        else { return }
+        var reordered = current
+        reordered.move(fromOffsets: source, toOffset: destination)
+        guard reordered.map(\.id) != current.map(\.id) else { return }
+        updatePlan(for: date) { plan in
+            plan.exercises.move(fromOffsets: source, toOffset: destination)
+        }
+    }
+
     func setSetCount(_ count: Int, exerciseID: UUID, on date: Date) {
         updateExercise(exerciseID, on: date) { exercise in
             let target = min(max(count, 1), 12)
