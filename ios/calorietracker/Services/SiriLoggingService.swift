@@ -83,10 +83,76 @@ enum SiriLoggingService {
         return LoggedWeight(entry: entry, displayValue: displayValue, unitName: unitName)
     }
 
-    static func parseWeight(_ description: String) throws -> (kg: Double, displayValue: Double, unitName: String) {
-        let normalized = description
-            .lowercased()
+    /// A unit named in a spoken weight. `jin` is the Chinese 斤, half a kilogram.
+    enum SpokenWeightUnit: Equatable {
+        case kilograms
+        case pounds
+        case jin
+    }
+
+    /// Word beginnings that name a weight unit in the app's languages. A word matches
+    /// when it starts with one, so plurals and case endings match too (libras, funtów,
+    /// кілограмів, キログラム, 75 kil in Czech).
+    private static let unitWordPrefixes: [(prefix: String, unit: SpokenWeightUnit)] = [
+        // English, and Turkish "pound"
+        ("lb", .pounds), ("pound", .pounds),
+        // es/pt libra, cs libra/liber, tr libre, it libbra, fr/ro livre/livră
+        ("libr", .pounds), ("liber", .pounds), ("libbr", .pounds), ("livr", .pounds),
+        // de Pfund, nl pond, pl/az funt, ru/uk фунт
+        ("pfund", .pounds), ("pond", .pounds), ("funt", .pounds), ("фунт", .pounds),
+        // zh, ja, ko, ar, hi
+        ("磅", .pounds), ("ポンド", .pounds), ("파운드", .pounds),
+        ("رطل", .pounds), ("أرطال", .pounds), ("ارطال", .pounds), ("باوند", .pounds),
+        ("पाउंड", .pounds), ("पौंड", .pounds), ("पाउण्ड", .pounds),
+
+        // kg, and kilo/kilogram/kila/kil in the Latin-script languages; az kq
+        ("kg", .kilograms), ("kil", .kilograms), ("kq", .kilograms),
+        // it chilo/chili/chilogrammi
+        ("chilo", .kilograms), ("chili", .kilograms),
+        // ru/uk кг, кило/кил/кілограм
+        ("кг", .kilograms), ("кил", .kilograms), ("кіл", .kilograms),
+        // zh, ja, ko, ar, hi
+        ("公斤", .kilograms), ("千克", .kilograms), ("キロ", .kilograms), ("킬로", .kilograms), ("키로", .kilograms),
+        ("كيلو", .kilograms), ("كغ", .kilograms), ("كجم", .kilograms), ("كلغ", .kilograms),
+        ("किलो", .kilograms), ("किग्रा", .kilograms), ("केजी", .kilograms),
+
+        // zh 斤 (500 g), the everyday unit for body weight in China
+        ("斤", .jin),
+    ]
+
+    /// The unit named by the first unit word in `text`, if any.
+    private static func spokenUnit(in text: Substring) -> SpokenWeightUnit? {
+        for word in text.split(whereSeparator: { !$0.isLetter }) {
+            if let match = unitWordPrefixes.first(where: { word.hasPrefix($0.prefix) }) {
+                return match.unit
+            }
+        }
+        return nil
+    }
+
+    /// Rewrites digits from any script (Arabic-Indic ٧٥, Devanagari ७५, full-width ７５)
+    /// as ASCII digits, so the number regex finds them.
+    private static func asciiDigits(_ text: String) -> String {
+        var scalars = String.UnicodeScalarView()
+        for scalar in text.unicodeScalars {
+            if scalar.properties.numericType == .decimal, let digit = scalar.properties.numericValue {
+                scalars.append(contentsOf: String(Int(digit)).unicodeScalars)
+            } else {
+                scalars.append(scalar)
+            }
+        }
+        return String(scalars)
+    }
+
+    static func parseWeight(
+        _ description: String,
+        defaultUnit: WeightUnit = .current
+    ) throws -> (kg: Double, displayValue: Double, unitName: String) {
+        let normalized = asciiDigits(description)
+            .folding(options: [.caseInsensitive, .widthInsensitive], locale: nil)
             .replacingOccurrences(of: ",", with: ".")
+            // Arabic decimal separator
+            .replacingOccurrences(of: "٫", with: ".")
 
         guard let numberRange = normalized.range(
             of: #"[-+]?[0-9]*\.?[0-9]+"#,
@@ -95,25 +161,24 @@ enum SiriLoggingService {
             throw WeightInputError.missingNumber
         }
 
-        let usesMetric = WeightUnit.current == .kg
-        let unitIsPounds = normalized.contains("lb")
-            || normalized.contains("lbs")
-            || normalized.contains("pound")
-            || normalized.contains("pounds")
-            // Russian and Ukrainian Siri phrases say фунт/фунтов/фунтів.
-            || normalized.contains("фунт")
-        let unitIsKilograms = normalized.contains("kg")
-            || normalized.contains("kgs")
-            || normalized.contains("kilogram")
-            || normalized.contains("kilograms")
-            || normalized.contains("kilo")
-            || normalized.contains("kilos")
-            || normalized.contains("кг")
-            || normalized.contains("кило")
-            || normalized.contains("кіло")
+        // Only a unit said after the number counts. In Turkish "kilo" also means
+        // weight, so "kilom 80" (my weight is 80) names no unit.
+        let unit = spokenUnit(in: normalized[numberRange.upperBound...])
+            ?? (defaultUnit == .kg ? .kilograms : .pounds)
 
-        let usePounds = unitIsPounds || (!unitIsKilograms && !usesMetric)
-        let kg = usePounds ? value / 2.20462 : value
+        let kg: Double
+        let displayValue: Double
+        switch unit {
+        case .kilograms:
+            kg = value
+            displayValue = value
+        case .pounds:
+            kg = value / 2.20462
+            displayValue = value
+        case .jin:
+            kg = value / 2
+            displayValue = kg
+        }
 
         guard kg > 0, kg < 500 else {
             throw WeightInputError.invalidRange
@@ -121,8 +186,8 @@ enum SiriLoggingService {
 
         return (
             kg: kg,
-            displayValue: value,
-            unitName: usePounds ? "pounds" : "kilograms"
+            displayValue: displayValue,
+            unitName: unit == .pounds ? "pounds" : "kilograms"
         )
     }
 
