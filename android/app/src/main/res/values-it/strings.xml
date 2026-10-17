@@ -729,6 +729,8 @@
     <string name="workout_exercise_take_photo">Scatta foto</string>
     <string name="workout_exercise_camera_denied_title">È necessario l’accesso alla fotocamera</string>
     <string name="workout_exercise_camera_denied_message">Consenti a Fud AI di usare la fotocamera nelle impostazioni di sistema per scattare foto degli esercizi.</string>
+    <string name="workout_exercise_ai_fill">Compila con l’IA</string>
+    <string name="workout_exercise_ai_fill_hint">Compila con l’IA invia questa foto al tuo fornitore di IA. Controlla i dettagli suggeriti prima di salvare.</string>
     <string name="progress_steps_stat_total">Totale</string>
     <string name="progress_steps_stat_average">Media</string>
     <string name="progress_steps_stat_best_day">Giorno migliore</string>

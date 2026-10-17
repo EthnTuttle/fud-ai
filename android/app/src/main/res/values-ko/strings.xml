@@ -727,6 +727,8 @@
     <string name="workout_exercise_take_photo">사진 찍기</string>
     <string name="workout_exercise_camera_denied_title">카메라 접근 권한이 필요합니다</string>
     <string name="workout_exercise_camera_denied_message">운동 사진을 찍으려면 시스템 설정에서 Fud AI의 카메라 사용을 허용하세요.</string>
+    <string name="workout_exercise_ai_fill">AI로 채우기</string>
+    <string name="workout_exercise_ai_fill_hint">AI로 채우기는 이 사진을 사용 중인 AI 제공업체로 보냅니다. 저장하기 전에 제안된 내용을 확인하세요.</string>
     <string name="progress_steps_stat_total">합계</string>
     <string name="progress_steps_stat_average">평균</string>
     <string name="progress_steps_stat_best_day">최고 기록일</string>

@@ -727,6 +727,8 @@
     <string name="workout_exercise_take_photo">拍照</string>
     <string name="workout_exercise_camera_denied_title">需要相机权限</string>
     <string name="workout_exercise_camera_denied_message">请在系统设置中允许 Fud AI 使用相机，以便为动作拍照。</string>
+    <string name="workout_exercise_ai_fill">用 AI 填写</string>
+    <string name="workout_exercise_ai_fill_hint">“用 AI 填写”会将这张照片发送给你的 AI 服务提供商。保存前请检查建议的信息。</string>
     <string name="progress_steps_stat_total">总计</string>
     <string name="progress_steps_stat_average">平均</string>
     <string name="progress_steps_stat_best_day">最佳单日</string>

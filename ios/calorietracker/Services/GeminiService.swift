@@ -495,6 +495,18 @@ struct GeminiService {
         }
     }
 
+    /// Identifies the exercise in a custom-exercise photo. Metadata is limited to
+    /// `options`; the result only prefills the editor and is never saved here.
+    static func suggestUserExercise(
+        image: UIImage,
+        options: UserExerciseAIFill.Options
+    ) async throws -> UserExerciseAIFill.Suggestion {
+        try await runWithHostedQuota(.workoutAI) {
+            let text = try await callAI(prompt: UserExerciseAIFill.prompt(options: options), image: image)
+            return try UserExerciseAIFill.parse(text, options: options)
+        }
+    }
+
     static func suggestOptionalNutrientGoals(
         profile: UserProfile,
         currentGoals: OptionalNutrientGoals,
@@ -1370,7 +1382,7 @@ struct GeminiService {
 
     // MARK: - Parsing (unchanged)
 
-    private static func extractJSON(from text: String) -> String {
+    static func extractJSON(from text: String) -> String {
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let openFence = cleaned.range(of: "```json", options: .caseInsensitive)

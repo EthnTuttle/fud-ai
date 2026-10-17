@@ -738,6 +738,8 @@
     <string name="workout_exercise_take_photo">Zrób zdjęcie</string>
     <string name="workout_exercise_camera_denied_title">Potrzebny dostęp do aparatu</string>
     <string name="workout_exercise_camera_denied_message">Aby robić zdjęcia ćwiczeń, zezwól Fud AI na korzystanie z aparatu w ustawieniach systemowych.</string>
+    <string name="workout_exercise_ai_fill">Uzupełnij z AI</string>
+    <string name="workout_exercise_ai_fill_hint">Funkcja Uzupełnij z AI wysyła to zdjęcie do Twojego dostawcy AI. Przed zapisaniem sprawdź proponowane dane.</string>
     <string name="progress_steps_stat_total">Suma</string>
     <string name="progress_steps_stat_average">Średnia</string>
     <string name="progress_steps_stat_best_day">Najlepszy dzień</string>

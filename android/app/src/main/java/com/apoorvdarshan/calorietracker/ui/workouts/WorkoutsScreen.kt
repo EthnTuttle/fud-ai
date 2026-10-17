@@ -161,7 +161,8 @@ fun WorkoutsScreen(container: AppContainer, modifier: Modifier = Modifier) {
             if (deletedId != null && (deletedId == vm.openExerciseId || deletedId == openItem?.id)) {
                 vm.closeExerciseDetail()
             }
-        }
+        },
+        fillWithAi = container.foodAnalysis::suggestUserExercise
     )
 
     if (openItem != null) {
