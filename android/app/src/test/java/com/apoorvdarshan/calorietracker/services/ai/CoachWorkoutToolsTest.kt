@@ -1,5 +1,7 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
+import com.apoorvdarshan.calorietracker.data.ExerciseItem
+import com.apoorvdarshan.calorietracker.data.ExerciseRecord
 import com.apoorvdarshan.calorietracker.models.CompletedExercise
 import com.apoorvdarshan.calorietracker.models.CompletedSet
 import com.apoorvdarshan.calorietracker.models.ExerciseTimer
@@ -14,8 +16,11 @@ import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.models.WorkoutSplit
 import com.apoorvdarshan.calorietracker.models.WorkoutStrengthNumbers
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
+import com.apoorvdarshan.calorietracker.services.voice.RepoFiles
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.reflect.TypeToken
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -462,6 +467,232 @@ class CoachWorkoutToolsTest {
         assertFalse(squat.has("average_rpe"))
         assertNull(squat.get("rpe_scale"))
     }
+
+    @Test
+    fun exerciseLibrarySearchIsAWorkoutToolWithARequiredQuery() {
+        assertTrue("search_exercise_library" in CoachTools.WORKOUT_TOOL_NAMES)
+        assertTrue("search_exercise_library" in CoachTools.TOOL_NAMES)
+        val schema = CoachTools.parameterSchemaFor("search_exercise_library")
+        assertEquals(listOf("query"), schema["required"])
+        @Suppress("UNCHECKED_CAST")
+        val properties = schema["properties"] as Map<String, Any>
+        assertEquals(setOf("query", "muscle", "equipment", "limit"), properties.keys)
+        assertTrue(CoachTools.TOOL_DESCRIPTIONS.getValue("search_exercise_library").contains("Read-only"))
+    }
+
+    @Test
+    fun exerciseLibrarySearchRanksNameMatchesAndFlagsCustomExercises() {
+        val tools = libraryTools()
+        val payload = json(tools.execute("search_exercise_library", mapOf("query" to "chest press")))
+        val exercises = payload.getAsJsonArray("exercises").map { it.asJsonObject }
+
+        // Leg Press only shares "press", so it is left out once other exercises match both words.
+        assertEquals(
+            listOf("Hammer Strength Chest Press", "Leverage Chest Press", "Machine Bench Press"),
+            exercises.map { it["name"].asString }
+        )
+        assertEquals(3, payload["total_matches"].asInt)
+        assertEquals("user_exercise_hammer", exercises[0]["catalog_id"].asString)
+        assertTrue(exercises[0]["is_custom"].asBoolean)
+        assertFalse(exercises[1]["is_custom"].asBoolean)
+        assertEquals("Machine", exercises[1]["equipment"].asString)
+        assertEquals(listOf("Chest"), exercises[1].getAsJsonArray("primary_muscles").map { it.asString })
+
+        val chestOnly = json(
+            tools.execute("search_exercise_library", mapOf("query" to "press", "muscle" to "chest", "limit" to 1))
+        )
+        assertEquals(1, chestOnly["count"].asInt)
+        assertEquals(3, chestOnly["total_matches"].asInt)
+        assertEquals("chest", chestOnly["muscle"].asString)
+    }
+
+    @Test
+    fun exerciseLibrarySearchMatchesWordPrefixesAndFilters() {
+        val library = searchLibrary()
+        assertEquals("Leg Press", CoachTools.rankedLibraryMatches(library, "leg press").first().name)
+        assertEquals(
+            listOf("Seated Cable Rows"),
+            CoachTools.rankedLibraryMatches(library, "rows", equipment = "cable").map { it.name }
+        )
+        // "row" must not match "Narrow"; "quads" still finds the quadriceps squat via its muscles.
+        assertFalse(CoachTools.rankedLibraryMatches(library, "row").any { it.name == "Narrow Stance Squats" })
+        assertEquals(
+            listOf("Narrow Stance Squats"),
+            CoachTools.rankedLibraryMatches(library, "squats", muscle = "quads").map { it.name }
+        )
+        assertTrue(CoachTools.rankedLibraryMatches(library, "zercher").isEmpty())
+
+        val tools = libraryTools()
+        assertEquals("query is required.", json(tools.execute("search_exercise_library"))["error"].asString)
+        val empty = json(tools.execute("search_exercise_library", mapOf("query" to "zercher")))
+        assertEquals(0, empty["count"].asInt)
+        assertEquals(0, empty.getAsJsonArray("exercises").size())
+    }
+
+    @Test
+    fun exerciseLibrarySearchKeepsOnlyFullMatchesWhenThereAreAny() {
+        val library = listOf(
+            libraryItem("Incline_Dumbbell_Press", "Incline Dumbbell Press", "Dumbbell", listOf("Chest")),
+            libraryItem("Alternate_Incline_Dumbbell_Curl", "Alternate Incline Dumbbell Curl", "Dumbbell", listOf("Biceps"))
+        )
+        assertEquals(
+            listOf("Incline Dumbbell Press"),
+            CoachTools.rankedLibraryMatches(library, "incline press").map { it.name }
+        )
+        // No exercise matches every word, so the closest name matches are still offered.
+        assertEquals(
+            listOf("Incline Dumbbell Press", "Alternate Incline Dumbbell Curl"),
+            CoachTools.rankedLibraryMatches(library, "hammer strength incline press").map { it.name }
+        )
+    }
+
+    @Test
+    fun exerciseLibrarySearchFiltersBeforeKeepingOnlyFullNameMatches() {
+        val tools = CoachTools(
+            weights = emptyList(),
+            bodyFats = emptyList(),
+            foods = emptyList(),
+            exerciseLibrary = listOf(
+                libraryItem("Incline_Barbell_Bench_Press", "Incline Barbell Bench Press", "Barbell", listOf("Chest")),
+                libraryItem("Incline_Cable_Chest_Press", "Incline Cable Chest Press", "Cable", listOf("Chest"))
+            )
+        )
+        // The barbell press matches every query word, but the cable filter must still find the
+        // cable press instead of falling back to the unfiltered barbell result.
+        val result = json(
+            tools.execute("search_exercise_library", mapOf("query" to "incline bench press", "equipment" to "cable"))
+        )
+        assertEquals("Incline Cable Chest Press", result.getAsJsonArray("exercises")[0].asJsonObject["name"].asString)
+        assertEquals(1, result["total_matches"].asInt)
+        assertNull(result["filters_ignored"])
+        assertEquals(1, result["excluded_by_filters"].asInt)
+    }
+
+    @Test
+    fun exerciseLibrarySearchIgnoresOneAndTwoLetterWordsUnlessTheQueryIsThatShort() {
+        val library = listOf(
+            libraryItem("Barbell_Curl", "Barbell Curl", "Barbell", listOf("Biceps")),
+            libraryItem("Ab_Roller", "Ab Roller", "Other", listOf("Abdominals")),
+            libraryItem("EZ-Bar_Curl", "EZ-Bar Curl", "E-Z Curl Bar", listOf("Biceps"))
+        )
+        // "a" used to prefix-match "Ab" and pull the ab roller into a curl search.
+        assertEquals(
+            listOf("Barbell Curl", "EZ-Bar Curl"),
+            CoachTools.rankedLibraryMatches(library, "a curl").map { it.name }
+        )
+        assertEquals("EZ-Bar Curl", CoachTools.rankedLibraryMatches(library, "ez bar curl").first().name)
+        assertEquals(listOf("Ab Roller"), CoachTools.rankedLibraryMatches(library, "ab").map { it.name })
+    }
+
+    @Test
+    fun exerciseLibrarySearchMapsCommonFilterNamesAndReportsWhatFiltersRemoved() {
+        val library = searchLibrary()
+        assertEquals(listOf("Leg Press"), CoachTools.rankedLibraryMatches(library, "press", muscle = "legs").map { it.name })
+        // Cable stations are often called machines, so a "machine" filter keeps cable exercises.
+        assertEquals(
+            listOf("Seated Cable Rows"),
+            CoachTools.rankedLibraryMatches(library, "rows", equipment = "machine").map { it.name }
+        )
+
+        val tools = libraryTools()
+        val narrowed = json(tools.execute("search_exercise_library", mapOf("query" to "press", "muscle" to "pecs")))
+        assertEquals(3, narrowed["total_matches"].asInt)
+        assertEquals(1, narrowed["excluded_by_filters"].asInt)
+        assertNull(narrowed["filters_ignored"])
+
+        // A filter the library never uses must not hide every match and make Coach call it missing.
+        val ignored = json(
+            tools.execute("search_exercise_library", mapOf("query" to "leg press", "muscle" to "upper chest"))
+        )
+        assertEquals("Leg Press", ignored.getAsJsonArray("exercises")[0].asJsonObject["name"].asString)
+        assertEquals(1, ignored["total_matches"].asInt)
+        assertTrue(ignored["filters_ignored"].asBoolean)
+        assertTrue(ignored["note"].asString.isNotEmpty())
+        assertEquals("upper chest", ignored["muscle"].asString)
+        assertNull(ignored["excluded_by_filters"])
+
+        val none = json(tools.execute("search_exercise_library", mapOf("query" to "zercher", "muscle" to "abs")))
+        assertEquals(0, none["count"].asInt)
+        assertNull(none["filters_ignored"])
+    }
+
+    @Test
+    fun exerciseLibrarySearchFiltersFindBundledCatalogExercisesByCommonNames() {
+        val library = bundledCatalog()
+        assertTrue(library.size > 800)
+        fun names(query: String, muscle: String = "", equipment: String = "") =
+            CoachTools.rankedLibraryMatches(library, query, muscle, equipment).map { it.name }
+        // "abs" is not a prefix of "abdominals", so this filter used to drop all 93 ab exercises.
+        assertEquals("Ab Crunch Machine", names("ab crunch machine", muscle = "abs").first())
+        assertTrue("Ab Crunch Machine" in names("crunch", muscle = "core"))
+        assertTrue("Donkey Calf Raises" in names("calf raise", muscle = "calf"))
+        assertTrue(names("squat", muscle = "legs").isNotEmpty())
+        assertTrue(names("fly", muscle = "pecs").isNotEmpty())
+        assertTrue(names("raise", muscle = "delts").isNotEmpty())
+        assertEquals("Smith Machine Squat", names("smith machine squat", equipment = "smith machine").first())
+        assertEquals("Pushups", names("pushups", equipment = "bodyweight").first())
+        assertEquals("Pushups", names("pushups", equipment = "body weight").first())
+        assertTrue("EZ-Bar Curl" in names("curl", equipment = "ez bar"))
+        assertEquals("Band Pull Apart", names("pull apart", equipment = "resistance band").first())
+        assertTrue("Wide-Grip Lat Pulldown" in names("lat pulldown", equipment = "machine"))
+    }
+
+    @Test
+    fun exerciseLibrarySearchSchemaListsEveryCatalogMuscleAndEquipmentName() {
+        val library = bundledCatalog()
+        val muscles = library.flatMap { it.primaryMuscles + it.secondaryMuscles }.map { it.lowercase() }.toSet()
+        val equipment = library.map { it.equipment.lowercase() }.toSet() - "unspecified"
+        assertEquals(muscles, CoachTools.LIBRARY_MUSCLE_NAMES.split(", ").toSet())
+        assertEquals(equipment, CoachTools.LIBRARY_EQUIPMENT_NAMES.split(", ").toSet())
+
+        @Suppress("UNCHECKED_CAST")
+        val properties = CoachTools.parameterSchemaFor("search_exercise_library")["properties"] as Map<String, Map<String, Any>>
+        assertTrue((properties.getValue("muscle")["description"] as String).endsWith(CoachTools.LIBRARY_MUSCLE_NAMES))
+        assertTrue((properties.getValue("equipment")["description"] as String).endsWith(CoachTools.LIBRARY_EQUIPMENT_NAMES))
+    }
+
+    /** The catalog the app bundles (merged into Android assets from the iOS resources). */
+    private fun bundledCatalog(): List<ExerciseItem> {
+        val file = RepoFiles.find("../../ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json")
+        val records: List<ExerciseRecord> = Gson().fromJson(file.readText(), object : TypeToken<List<ExerciseRecord>>() {}.type)
+        return records.mapNotNull { ExerciseItem.from(it) }
+    }
+
+    private fun libraryTools() = CoachTools(
+        weights = emptyList(),
+        bodyFats = emptyList(),
+        foods = emptyList(),
+        exerciseLibrary = searchLibrary()
+    )
+
+    private fun searchLibrary(): List<ExerciseItem> = listOf(
+        libraryItem("Leverage_Chest_Press", "Leverage Chest Press", "Machine", listOf("Chest"), listOf("Shoulders", "Triceps")),
+        libraryItem("Machine_Bench_Press", "Machine Bench Press", "Machine", listOf("Chest"), listOf("Triceps")),
+        libraryItem("Leg_Press", "Leg Press", "Machine", listOf("Quadriceps")),
+        libraryItem("Seated_Cable_Rows", "Seated Cable Rows", "Cable", listOf("Middle Back")),
+        libraryItem("Narrow_Stance_Squats", "Narrow Stance Squats", "Barbell", listOf("Quadriceps")),
+        libraryItem("user_exercise_hammer", "Hammer Strength Chest Press", "Machine", listOf("Chest"))
+    )
+
+    private fun libraryItem(
+        id: String,
+        name: String,
+        equipment: String,
+        primaryMuscles: List<String>,
+        secondaryMuscles: List<String> = emptyList()
+    ) = ExerciseItem(
+        id = id,
+        name = name,
+        level = "Beginner",
+        imagePaths = emptyList(),
+        force = "Push",
+        mechanic = "Compound",
+        category = "Strength",
+        equipment = equipment,
+        primaryMuscles = primaryMuscles,
+        secondaryMuscles = secondaryMuscles,
+        instructions = emptyList()
+    )
 
     private fun tools(
         workoutSessions: List<WorkoutSession> = emptyList(),

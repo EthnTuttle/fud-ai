@@ -819,6 +819,54 @@ extension FoodEntry {
     }
 }
 
+extension FoodEntry {
+    /// A logged entry rebuilt as a review analysis, for re-logging a saved
+    /// meal or a remembered barcode label. A missing original mass stays one
+    /// logged serving instead of becoming a made-up 100 g.
+    var reviewAnalysis: GeminiService.FoodAnalysis {
+        GeminiService.FoodAnalysis(
+            name: name,
+            calories: calories,
+            protein: protein,
+            carbs: carbs,
+            fat: fat,
+            servingSizeGrams: reviewServingReference,
+            emoji: emoji,
+            sugar: sugar,
+            addedSugar: addedSugar,
+            fiber: fiber,
+            saturatedFat: saturatedFat,
+            monounsaturatedFat: monounsaturatedFat,
+            polyunsaturatedFat: polyunsaturatedFat,
+            cholesterol: cholesterol,
+            caffeine: caffeine,
+            supplementalNutrients: supplementalNutrients,
+            sodium: sodium,
+            potassium: potassium,
+            transFat: transFat,
+            calcium: calcium,
+            iron: iron,
+            magnesium: magnesium,
+            zinc: zinc,
+            vitaminA: vitaminA,
+            vitaminC: vitaminC,
+            vitaminD: vitaminD,
+            vitaminB12: vitaminB12,
+            vitaminE: vitaminE,
+            vitaminK: vitaminK,
+            folate: folate,
+            omega3: omega3,
+            servingUnitOptions: reviewServingUnitOptions,
+            selectedServingUnit: reviewSelectedServingUnit,
+            selectedServingQuantity: reviewSelectedServingQuantity,
+            servingSizeIsKnown: hasKnownServingSize,
+            progressiveMeal: progressiveMeal,
+            ingredients: ingredients,
+            productMetadata: productMetadata
+        )
+    }
+}
+
 enum CombinedMeal {
     nonisolated static func combinedName(for entries: [FoodEntry]) -> String {
         let names = entries.map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }

@@ -123,6 +123,9 @@ final class WhisperBaseModelManager {
         installedByteCount > 0 || fileManager.fileExists(atPath: rootDirectory.path)
     }
 
+    /// Folder holding the model and any partial download, for Settings › Storage to measure.
+    var storageDirectory: URL { rootDirectory }
+
     var downloadProgress: Double? {
         guard case .downloading(let progress) = state else { return nil }
         return progress

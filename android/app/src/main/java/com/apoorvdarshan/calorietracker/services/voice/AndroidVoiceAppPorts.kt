@@ -460,7 +460,12 @@ class AndroidVoiceAppPorts(
             workoutSessions = workouts.completedSessions,
             workoutPlans = workouts.dayPlans.values.toList(),
             workoutPreferences = workouts.preferences,
-            workoutPlanWeightUnit = workoutUnit()
+            workoutPlanWeightUnit = workoutUnit(),
+            exerciseLibrary = withContext(Dispatchers.IO) {
+                ExerciseRepository.get(container.appContext)
+                    .includingActivities(workouts.customActivities + workouts.userExercises)
+                    .exercises
+            }
         )
     }
 

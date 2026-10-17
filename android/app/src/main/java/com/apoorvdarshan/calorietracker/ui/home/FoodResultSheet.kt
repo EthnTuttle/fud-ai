@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +74,8 @@ import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
 import com.apoorvdarshan.calorietracker.models.MealMicronutrientSnapshot
+import com.apoorvdarshan.calorietracker.models.ProductInfoField
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
@@ -105,6 +109,10 @@ fun FoodResultSheet(
     source: FoodSource = FoodSource.TEXT_INPUT,
     initialTimestamp: Instant = Instant.now(),
     isSubmitting: Boolean = false,
+    /** True when a barcode Open Food Facts could not use was prefilled from a saved label (#485). */
+    usesSavedBarcodeLabel: Boolean = false,
+    /** False when the review re-logs an entry that already holds one portion of a split recipe (#458). */
+    allowsRecipeServings: Boolean = true,
     container: com.apoorvdarshan.calorietracker.AppContainer,
     analyzeIngredientText: suspend (String) -> FoodAnalysis,
     lookupIngredientBarcode: suspend (String) -> FoodAnalysis,
@@ -153,12 +161,12 @@ fun FoodResultSheet(
     } else {
         analysis.selectedServingUnit
     }
-    var selectedServingUnitId by rememberSaveable(analysis, servingUnitOptions, preferGramsByDefault) {
+    var selectedServingUnitId by rememberSaveable(analysis, preferGramsByDefault) {
         mutableStateOf(ServingUnitOption.initialUnitId(initialServingUnit, servingUnitOptions))
     }
     var baseServingGrams by rememberSaveable(analysis) { mutableStateOf(analysis.servingSizeGrams) }
     var servingGrams by rememberSaveable(analysis) { mutableStateOf(analysis.servingSizeGrams) }
-    var servingQuantityText by rememberSaveable(analysis, servingUnitOptions, preferGramsByDefault) {
+    var servingQuantityText by rememberSaveable(analysis, preferGramsByDefault) {
         mutableStateOf(
             ServingUnitOption.initialQuantityText(
                 totalGrams = analysis.servingSizeGrams,
@@ -191,6 +199,8 @@ fun FoodResultSheet(
     var showTimePicker by remember { mutableStateOf(false) }
     var moreNutritionExpanded by rememberSaveable { mutableStateOf(false) }
     var nutritionUnlocked by rememberSaveable { mutableStateOf(false) }
+    val productInfoShown by container.prefs.productInfoShown.collectAsState(initial = false)
+    val productInfoHiddenFields by container.prefs.productInfoHiddenFields.collectAsState(initial = emptySet())
     val reviewMacros = remember(analysis) { analysis.withIngredientMacroTotals() }
     var editableCalories by rememberSaveable(analysis) { mutableStateOf(reviewMacros.calories) }
     var editableProtein by rememberSaveable(analysis) { mutableStateOf(reviewMacros.protein) }
@@ -221,6 +231,7 @@ fun FoodResultSheet(
     var editableFolate by rememberSaveable(analysis) { mutableStateOf(analysis.folate) }
     var editableOmega3 by rememberSaveable(analysis) { mutableStateOf(analysis.omega3) }
     var editableIngredients by rememberSaveable(analysis, stateSaver = foodDraftSaver<List<MealIngredient>>()) { mutableStateOf(analysis.ingredients) }
+    var recipeServings by rememberSaveable(analysis) { mutableStateOf(1) }
     var ingredientEditor by rememberSaveable(stateSaver = foodDraftSaver<IngredientEditorTarget?>()) { mutableStateOf<IngredientEditorTarget?>(null) }
     var previewPhotoIndex by remember { mutableStateOf<Int?>(null) }
     var viewerBitmaps by remember { mutableStateOf<List<android.graphics.Bitmap>?>(null) }
@@ -287,6 +298,11 @@ fun FoodResultSheet(
         editableOmega3 = snapshot.omega3
     }
     fun applyIngredientChanges(displayedIngredients: List<MealIngredient>) {
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        val keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients, scale, recipeServings, servingUnitOptions, selectedServingUnitId
+        )
+        val nextIngredients = keptSplit?.ingredients ?: displayedIngredients
         applyMicronutrients(
             MealMicronutrientSnapshot(
                 sugar = editableSugar,
@@ -313,22 +329,40 @@ fun FoodResultSheet(
                 vitaminK = editableVitaminK,
                 folate = editableFolate,
                 omega3 = editableOmega3
-            ).stretched(editableIngredients.totals().grams, displayedIngredients.totals().grams)
+            ).stretched(editableIngredients.totals().grams, nextIngredients.totals().grams)
         )
-        editableIngredients = displayedIngredients
-        val totals = displayedIngredients.totals()
+        editableIngredients = nextIngredients
+        val totals = nextIngredients.totals()
         editableCalories = totals.calories
         editableProtein = totals.protein
         editableCarbs = totals.carbs
         editableFat = totals.fat
-        if (totals.grams > 0) {
+        if (keptSplit != null) {
+            baseServingGrams = totals.grams
+            recipeServings = keptSplit.split.servings
+            servingUnitOptions = keptSplit.split.options
+            selectedServingUnitId = keptSplit.split.selectedUnitId
+            servingGrams = keptSplit.split.servingGrams
+            servingQuantityText = keptSplit.split.quantityText
+            servingSizeIsKnown = true
+        } else if (totals.grams > 0) {
             baseServingGrams = totals.grams
             servingGrams = totals.grams
             servingQuantityText = ServingUnitOption.formatQuantity(totals.grams)
             selectedServingUnitId = ServingUnitOption.grams.unit
             servingUnitOptions = emptyList()
             servingSizeIsKnown = true
+            // The edited list is now the whole meal again, so any split is gone.
+            recipeServings = 1
         }
+    }
+    fun applyRecipeServings(servings: Int) {
+        val split = RecipeServings.split(servingUnitOptions, baseServingGrams, servings)
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitId = split.selectedUnitId
+        servingGrams = split.servingGrams
+        servingQuantityText = split.quantityText
     }
     fun editedAnalysis() = analysis.copy(
         name = name.trim().ifEmpty { analysis.name },
@@ -521,6 +555,10 @@ fun FoodResultSheet(
                 }
             }
 
+            if (usesSavedBarcodeLabel) {
+                item { SavedBarcodeLabelNoticeCard() }
+            }
+
             item { SheetSectionHeader(stringResource(R.string.sheet_food_details)) }
             item {
                 SheetPillRow {
@@ -541,28 +579,9 @@ fun FoodResultSheet(
                 }
             }
 
-            analysis.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
-                item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                item {
-                    val previewEntry = FoodEntry(
-                        name = name,
-                        calories = analysis.calories,
-                        protein = analysis.protein,
-                        carbs = analysis.carbs,
-                        fat = analysis.fat,
-                        source = source,
-                        ingredients = analysis.ingredients,
-                        productMetadata = analysis.productMetadata
-                    )
-                    FoodProductMetadataCard(
-                        metadata,
-                        previewEntry.allergenAnalysis(profile?.allergenSensitivities.orEmpty())
-                    )
-                }
-            }
-            if (analysis.productMetadata?.hasDisplayDetails != true &&
-                profile?.allergenSensitivities?.isNotEmpty() == true
-            ) {
+            // Allergen safety stays near the top for configured sensitivities;
+            // the longer product details sit at the end of the sheet (#426).
+            if (profile?.allergenSensitivities?.isNotEmpty() == true) {
                 item { SheetSectionHeader(stringResource(R.string.product_allergen_check)) }
                 item {
                     val previewEntry = FoodEntry(
@@ -685,7 +704,12 @@ fun FoodResultSheet(
                                 )
                             }
                         )
-                    }
+                    },
+                    recipeServings = recipeServings.takeIf {
+                        allowsRecipeServings &&
+                            RecipeServings.isAvailable(editableIngredients.size, baseServingGrams, servingSizeIsKnown)
+                    },
+                    onRecipeServingsChange = { applyRecipeServings(it) }
                 )
             }
 
@@ -828,6 +852,20 @@ fun FoodResultSheet(
                         showTimePicker = true
                     }
                 )
+            }
+
+            analysis.productMetadata?.let { metadata ->
+                val productInfoFields = ProductInfoField.visibleFields(metadata, productInfoShown, productInfoHiddenFields)
+                if (productInfoFields.isNotEmpty()) {
+                    item { SheetSectionHeader(stringResource(R.string.product_information)) }
+                    item {
+                        FoodProductMetadataCard(
+                            metadata,
+                            productInfoFields,
+                            profile?.allergenSensitivities.orEmpty()
+                        )
+                    }
+                }
             }
         }
     }
@@ -1190,3 +1228,40 @@ private fun WhatIfImpactRow(
 }
 
 private fun whatIfGrams(value: Double): String = "${MacroValueFormatter.string(value)}g"
+
+/**
+ * Explains a review prefilled from the user's saved nutrition label for a barcode,
+ * and how to forget that label without any extra settings (#485).
+ */
+@Composable
+private fun SavedBarcodeLabelNoticeCard() {
+    SheetPillCard {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                Icons.Outlined.QrCodeScanner,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    stringResource(R.string.barcode_saved_label_title),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.Calorie
+                )
+                Text(
+                    stringResource(R.string.barcode_saved_label_footer),
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
+                )
+            }
+        }
+    }
+}

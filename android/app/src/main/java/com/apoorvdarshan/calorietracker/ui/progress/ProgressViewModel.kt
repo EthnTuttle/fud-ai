@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 
 data class ProgressUiState(
@@ -50,9 +53,10 @@ class ProgressViewModel(private val container: AppContainer) : ViewModel() {
         }.onEach { _ui.value = it }.launchIn(viewModelScope)
     }
 
-    fun addWeight(kg: Double) {
+    fun addWeight(kg: Double, day: LocalDate = LocalDate.now()) {
         viewModelScope.launch {
-            val event = container.weightRepository.addEntry(WeightEntry(weightKg = kg))
+            val date = weighInTime(day, Instant.now(), ZoneId.systemDefault())
+            val event = container.weightRepository.addEntry(WeightEntry(date = date, weightKg = kg))
             if (event != null) {
                 _ui.value = _ui.value.copy(goalReached = true)
                 if (container.prefs.notificationsEnabled.first() &&
@@ -99,4 +103,12 @@ class ProgressViewModel(private val container: AppContainer) : ViewModel() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             ProgressViewModel(container) as T
     }
+}
+
+/** When a weigh-in logged for [day] happened: now for today, otherwise that day at the current
+ *  clock time — the same rule the Coach's log_weight tool uses for a past date. */
+internal fun weighInTime(day: LocalDate, now: Instant, zone: ZoneId): Instant {
+    val current = now.atZone(zone)
+    if (day == current.toLocalDate()) return now
+    return day.atTime(current.toLocalTime().withSecond(0).withNano(0)).atZone(zone).toInstant()
 }

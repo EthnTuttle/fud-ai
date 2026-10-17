@@ -65,7 +65,8 @@ struct ChatService {
         workoutSessions: [StrengthWorkoutSession] = [],
         workoutPlans: [StrengthWorkoutDayPlan] = [],
         workoutPreferences: StrengthWorkoutPreferences? = nil,
-        workoutAccessEnabled: Bool = false
+        workoutAccessEnabled: Bool = false,
+        exerciseLibrary: [ExerciseLibraryItem] = []
     ) async throws -> String {
         if AIModeSettings.isHosted {
             return try await hostedCoachMessage(
@@ -83,7 +84,8 @@ struct ChatService {
                 workoutSessions: workoutSessions,
                 workoutPlans: workoutPlans,
                 workoutPreferences: workoutPreferences,
-                workoutAccessEnabled: workoutAccessEnabled
+                workoutAccessEnabled: workoutAccessEnabled,
+                exerciseLibrary: exerciseLibrary
             )
         }
 
@@ -109,7 +111,8 @@ struct ChatService {
             workoutPlans: workoutPlans,
             workoutPreferences: workoutPreferences,
             workoutPlanWeightUnit: weightMetric ? .kg : .lbs,
-            workoutAccessEnabled: workoutAccessEnabled
+            workoutAccessEnabled: workoutAccessEnabled,
+            exerciseLibrary: exerciseLibrary
         )
 
         let config = AIProviderSettings.currentConfig(requiresVision: imageData != nil)
@@ -291,6 +294,7 @@ struct ChatService {
             lines.append("- \"How is my training progressing?\" → call get_training_summary(from, to), then get_workout_history only if individual sets are needed")
             lines.append("- \"What did I bench last?\" / one-lift trends → call get_exercise_lift_history(exercise)")
             lines.append("- \"What workout do I have planned?\" → call get_workout_plans")
+            lines.append("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
             lines.append("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
         }
         lines.append("Do NOT call tools for questions you can answer from the profile/forecast below.")
@@ -768,7 +772,8 @@ struct ChatService {
         workoutSessions: [StrengthWorkoutSession],
         workoutPlans: [StrengthWorkoutDayPlan],
         workoutPreferences: StrengthWorkoutPreferences?,
-        workoutAccessEnabled: Bool
+        workoutAccessEnabled: Bool,
+        exerciseLibrary: [ExerciseLibraryItem]
     ) async throws -> String {
         try await AIGate.runWithHostedQuota(.coachMessage) {
             try await hostedCoachReply(
@@ -786,7 +791,8 @@ struct ChatService {
                 workoutSessions: workoutSessions,
                 workoutPlans: workoutPlans,
                 workoutPreferences: workoutPreferences,
-                workoutAccessEnabled: workoutAccessEnabled
+                workoutAccessEnabled: workoutAccessEnabled,
+                exerciseLibrary: exerciseLibrary
             )
         }
     }
@@ -806,7 +812,8 @@ struct ChatService {
         workoutSessions: [StrengthWorkoutSession],
         workoutPlans: [StrengthWorkoutDayPlan],
         workoutPreferences: StrengthWorkoutPreferences?,
-        workoutAccessEnabled: Bool
+        workoutAccessEnabled: Bool,
+        exerciseLibrary: [ExerciseLibraryItem]
     ) async throws -> String {
         let systemPrompt = buildSystemPrompt(
             profile: profile,
@@ -830,7 +837,8 @@ struct ChatService {
             workoutPlans: workoutPlans,
             workoutPreferences: workoutPreferences,
             workoutPlanWeightUnit: weightMetric ? .kg : .lbs,
-            workoutAccessEnabled: workoutAccessEnabled
+            workoutAccessEnabled: workoutAccessEnabled,
+            exerciseLibrary: exerciseLibrary
         )
         return try await callHostedGemini(
             systemPrompt: systemPrompt,

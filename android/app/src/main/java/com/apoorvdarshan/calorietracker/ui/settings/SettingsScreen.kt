@@ -97,6 +97,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material.icons.outlined.Percent
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.outlined.Timer
@@ -173,6 +174,7 @@ import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.Gender
+import com.apoorvdarshan.calorietracker.models.MaintenanceBreakdown
 import com.apoorvdarshan.calorietracker.models.MealSchedule
 import com.apoorvdarshan.calorietracker.models.OptionalNutrient
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
@@ -231,6 +233,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.time.LocalTime
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private enum class SettingsSheet {
@@ -285,7 +288,7 @@ internal enum class SettingsCategory(
     AI_PROVIDERS(R.string.settings_category_ai_providers, Icons.Outlined.SmartToy),
     SPEECH_TO_TEXT(R.string.settings_section_speech, Icons.Outlined.Mic),
     VOICE_ASSISTANT(R.string.settings_category_voice_assistant, Icons.Outlined.RecordVoiceOver),
-    APP_PREFERENCES(R.string.settings_section_app, Icons.Outlined.Palette),
+    APP_PREFERENCES(R.string.settings_section_app, Icons.Outlined.Tune),
     WORKOUT(R.string.settings_section_workout, Icons.Outlined.FitnessCenter),
     HEALTH_DATA(R.string.settings_section_health, Icons.Outlined.Favorite),
     DATA_MANAGEMENT(R.string.settings_section_data_management, Icons.Outlined.Download),
@@ -387,6 +390,7 @@ fun SettingsScreen(
     var showDefaultGramsInfo by remember { mutableStateOf(false) }
     var showHealthEnergyGoalsInfo by remember { mutableStateOf(false) }
     var showAdaptiveGoalsInfo by remember { mutableStateOf(false) }
+    var showMaintenanceInfo by remember { mutableStateOf(false) }
     var showCloudEnableConfirm by remember { mutableStateOf(false) }
     var showCloudRestoreChoice by remember { mutableStateOf(false) }
     var showCloudDeleteConfirm by remember { mutableStateOf(false) }
@@ -655,7 +659,7 @@ fun SettingsScreen(
         pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
         healthConnectLauncher.launch(
             if (ui.dailySummaryEnabled) container.health.dailySummaryPermissions
-            else container.health.permissions
+            else container.health.connectPermissions
         )
     }
 
@@ -669,7 +673,7 @@ fun SettingsScreen(
             return
         }
         pendingHealthPermissionAction = HealthConnectPermissionAction.ENERGY_GOALS
-        healthConnectLauncher.launch(container.health.permissions)
+        healthConnectLauncher.launch(container.health.connectPermissions)
     }
 
     fun openBatteryOptimizationSettings() {
@@ -842,6 +846,8 @@ fun SettingsScreen(
                         onClick = { openGoal(SettingsSheet.CALORIES) }
                     )
                     HorizontalDivider()
+                    MaintenanceEstimateRow(p.maintenanceBreakdown) { showMaintenanceInfo = true }
+                    HorizontalDivider()
                     LockableGoalRow(
                         label = stringResource(R.string.macro_protein),
                         value = "${p.effectiveProtein}g",
@@ -1011,6 +1017,12 @@ fun SettingsScreen(
                     stringResource(R.string.settings_meal_times_customize),
                     icon = Icons.Outlined.Add
                 ) { nav.navigate(FudAIRoutes.ADD_MENU) }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.product_information),
+                    stringResource(R.string.settings_meal_times_customize),
+                    icon = Icons.Outlined.QrCodeScanner
+                ) { nav.navigate(FudAIRoutes.PRODUCT_INFO) }
             }
             }
 
@@ -1465,7 +1477,20 @@ fun SettingsScreen(
                         icon = Icons.Outlined.LocalFireDepartment
                     ) {
                         pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
-                        healthConnectLauncher.launch(container.health.permissions)
+                        healthConnectLauncher.launch(container.health.connectPermissions)
+                    }
+                }
+                // Users who connected before history access was requested only see weigh-ins
+                // from 30 days before their first grant; granting it re-runs the import.
+                if (ui.healthConnectEnabled && ui.healthHistoryAccessMissing) {
+                    HorizontalDivider()
+                    SettingRow(
+                        stringResource(R.string.settings_health_history_access),
+                        stringResource(R.string.settings_grant_permission),
+                        icon = Icons.Outlined.MonitorWeight
+                    ) {
+                        pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
+                        healthConnectLauncher.launch(container.health.connectPermissions)
                     }
                 }
                 HorizontalDivider()
@@ -1680,6 +1705,7 @@ fun SettingsScreen(
                     )
                 }
             }
+            StorageSettingsCard(container.storageMaintenance)
             }
 
             // App information and support actions are first-class Settings destinations.
@@ -1949,6 +1975,20 @@ fun SettingsScreen(
             FudGlassDialogActions(
                 primaryText = stringResource(R.string.action_ok),
                 onPrimary = { showHealthEnergyGoalsInfo = false }
+            )
+        }
+    }
+
+    if (showMaintenanceInfo) {
+        FudGlassDialog(onDismissRequest = { showMaintenanceInfo = false }) {
+            Text(stringResource(R.string.settings_estimated_maintenance), fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.settings_estimated_maintenance_info),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.68f)
+            )
+            FudGlassDialogActions(
+                primaryText = stringResource(R.string.action_ok),
+                onPrimary = { showMaintenanceInfo = false }
             )
         }
     }
@@ -4432,6 +4472,57 @@ private fun LockableGoalRow(
 }
 
 /**
+ * Read-only Daily Targets row: the formula maintenance estimate (BMR × activity) and the daily
+ * deficit or surplus of the calorie target against it. Tapping explains how it's estimated.
+ */
+@Composable
+private fun MaintenanceEstimateRow(
+    breakdown: MaintenanceBreakdown,
+    onClick: () -> Unit
+) {
+    val amount = abs(breakdown.dailyDifference)
+    val balanceText = when (breakdown.balance) {
+        MaintenanceBreakdown.Balance.DEFICIT -> stringResource(R.string.settings_maintenance_deficit_format, amount)
+        MaintenanceBreakdown.Balance.SURPLUS -> stringResource(R.string.settings_maintenance_surplus_format, amount)
+        MaintenanceBreakdown.Balance.MAINTENANCE -> stringResource(R.string.settings_maintenance_close)
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FudIconBubble(icon = Icons.Outlined.Speed, size = 22.dp, iconSize = 14.dp)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(R.string.settings_estimated_maintenance),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                balanceText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f)
+            )
+        }
+        Text(
+            stringResource(R.string.kcal_value_format, breakdown.maintenanceCalories),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(start = 12.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Icon(
+            Icons.Outlined.Info,
+            contentDescription = stringResource(R.string.action_info),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+/**
  * Multi-line text editor with a Save row at the bottom that pulses brand pink
  * when the current text differs from the persisted value, mirrors iOS Custom
  * AI Instructions section.
@@ -4482,7 +4573,7 @@ private fun CustomInstructionsBlock(
 }
 
 @Composable
-private fun ToggleRow(
+internal fun ToggleRow(
     label: String,
     checked: Boolean,
     icon: ImageVector? = null,

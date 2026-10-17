@@ -36,9 +36,10 @@ class BodyFatStore {
         entries.sorted { $0.date > $1.date }.first
     }
 
+    /// Day-granular like WeightStore.entries(in:), so today's readings chart.
     func entries(in range: ClosedRange<Date>) -> [BodyFatEntry] {
         entries
-            .filter { range.contains($0.date) }
+            .filter { range.containsDay(of: $0.date) }
             .sorted { $0.date < $1.date }
     }
 

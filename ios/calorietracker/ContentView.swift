@@ -987,11 +987,13 @@ struct HomeView: View {
     @State private var showHostedPaywall = false
     @State private var showHostedCredits = false
     private enum RetryRequest {
-        case analysis(images: [UIImage], mode: CameraMode, description: String?, progressiveMeal: Bool)
+        case analysis(images: [UIImage], mode: CameraMode, description: String?, progressiveMeal: Bool, labelBarcode: String?)
         case text(String)
         case barcode(String)
     }
     @State private var retryRequest: RetryRequest?
+    /// Barcode carried from the "Scan Label" prompt into the next label photo (#485).
+    @State private var labelScanBarcode = LabelScanBarcodeHandoff()
     /// The in-flight photo/text/barcode analysis behind the analyzing sheet, so Cancel can abort it.
     @State private var analysisTask: Task<Void, Never>?
     @State private var selectedDate: Date = .now
@@ -1130,6 +1132,11 @@ struct HomeView: View {
     @State private var currentImages: [UIImage] = []
     @State private var currentEmoji: String?
     @State private var currentFoodSource: FoodSource = .snapFood
+    /// The review shows a barcode's saved nutrition label (#485).
+    @State private var currentFoodResultUsesSavedLabel = false
+    /// The review re-logs an entry that already holds one portion of a split
+    /// recipe, so it hides "Servings in recipe" (#458).
+    @State private var currentFoodResultIsLoggedPortion = false
     @State private var showNutritionDetail = false
     @State private var showCustomWaterLog = false
     @State private var showFastingStart = false
@@ -1348,6 +1355,7 @@ private var dailyStepsTaskKey: String {
     /// later selections retain the short transition that already feels responsive.
     private func presentFoodDestination(_ updates: @escaping () -> Void) {
         cancelPendingLoggingHandoff()
+        labelScanBarcode.clear()
         let shouldAnimate = hasPresentedFoodDestination
         hasPresentedFoodDestination = true
 
@@ -1873,6 +1881,8 @@ private var dailyStepsTaskKey: String {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                 showMultiPhotoCaptureSheet = true
                             }
+                        } else {
+                            labelScanBarcode.clear()
                         }
                     }
                 )
@@ -1902,7 +1912,11 @@ private var dailyStepsTaskKey: String {
                     showMultiPhotoCaptureSheet = true
                 }
             }
-            .sheet(isPresented: $showMultiPhotoCaptureSheet) {
+            .sheet(isPresented: $showMultiPhotoCaptureSheet, onDismiss: {
+                // Removing the last photo or swiping the sheet down leaves the
+                // label scan, so its barcode must not reach a later photo log (#485).
+                labelScanBarcode.captureSheetDismissed()
+            }) {
                 MultiPhotoCaptureSheet(
                     images: $captureImages,
                     isImportingPhotos: isImportingPhotos,
@@ -1910,6 +1924,7 @@ private var dailyStepsTaskKey: String {
                     description: $contextDescription,
                     onAddPhoto: {
                         guard captureImages.count < 10 else { return }
+                        labelScanBarcode.keepForAnotherPhoto()
                         showMultiPhotoCaptureSheet = false
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                             showCamera = true
@@ -1925,6 +1940,7 @@ private var dailyStepsTaskKey: String {
                     onAnalyze: { progressiveMeal in
                         let images = captureImages
                         let description = cameraMode == .snapFoodWithContext ? contextDescription : nil
+                        let labelBarcode = labelScanBarcode.take()
                         showMultiPhotoCaptureSheet = false
                         captureImages = []
                         currentImages = images
@@ -1934,7 +1950,8 @@ private var dailyStepsTaskKey: String {
                                 images: images,
                                 mode: cameraMode,
                                 description: description,
-                                progressiveMeal: progressiveMeal
+                                progressiveMeal: progressiveMeal,
+                                labelBarcode: labelBarcode
                             )
                         }
                     },
@@ -1942,6 +1959,7 @@ private var dailyStepsTaskKey: String {
                         showMultiPhotoCaptureSheet = false
                         captureImages = []
                         contextDescription = ""
+                        labelScanBarcode.clear()
                     }
                 )
                 .presentationDetents([.large])
@@ -2003,6 +2021,8 @@ private var dailyStepsTaskKey: String {
                             ingredients: result.ingredients,
                             progressiveMeal: result.progressiveMeal,
                             productMetadata: result.productMetadata,
+                            usesSavedBarcodeLabel: currentFoodResultUsesSavedLabel,
+                            allowsRecipeServings: !currentFoodResultIsLoggedPortion,
                             servingSizeGrams: result.servingSizeGrams,
                             sugar: result.sugar,
                             addedSugar: result.addedSugar,
@@ -2066,50 +2086,14 @@ private var dailyStepsTaskKey: String {
             .sheet(item: $savedMealsMode, content: { mode in
                 RecentsView(mode: mode, logDate: logDateForSelectedDay, onReview: { entry in
                     afterLoggingPresentationDismisses {
+                        labelScanBarcode.clear()
                         currentImages = entry.parentImageData.compactMap(UIImage.init(data:))
                         currentImage = currentImages.first
                         currentEmoji = entry.emoji
                         currentFoodSource = entry.source
-                        currentFoodResult = GeminiService.FoodAnalysis(
-                            name: entry.name,
-                            calories: entry.calories,
-                            protein: entry.protein,
-                            carbs: entry.carbs,
-                            fat: entry.fat,
-                            servingSizeGrams: entry.reviewServingReference,
-                            emoji: entry.emoji,
-                            sugar: entry.sugar,
-                            addedSugar: entry.addedSugar,
-                            fiber: entry.fiber,
-                            saturatedFat: entry.saturatedFat,
-                            monounsaturatedFat: entry.monounsaturatedFat,
-                            polyunsaturatedFat: entry.polyunsaturatedFat,
-                            cholesterol: entry.cholesterol,
-                            caffeine: entry.caffeine,
-                            supplementalNutrients: entry.supplementalNutrients,
-                            sodium: entry.sodium,
-                            potassium: entry.potassium,
-                            transFat: entry.transFat,
-                            calcium: entry.calcium,
-                            iron: entry.iron,
-                            magnesium: entry.magnesium,
-                            zinc: entry.zinc,
-                            vitaminA: entry.vitaminA,
-                            vitaminC: entry.vitaminC,
-                            vitaminD: entry.vitaminD,
-                            vitaminB12: entry.vitaminB12,
-                            vitaminE: entry.vitaminE,
-                            vitaminK: entry.vitaminK,
-                            folate: entry.folate,
-                            omega3: entry.omega3,
-                            servingUnitOptions: entry.reviewServingUnitOptions,
-                            selectedServingUnit: entry.reviewSelectedServingUnit,
-                            selectedServingQuantity: entry.reviewSelectedServingQuantity,
-                            servingSizeIsKnown: entry.hasKnownServingSize,
-                            progressiveMeal: entry.progressiveMeal,
-                            ingredients: entry.ingredients,
-                            productMetadata: entry.productMetadata
-                        )
+                        currentFoodResult = entry.reviewAnalysis
+                        currentFoodResultUsesSavedLabel = false
+                        currentFoodResultIsLoggedPortion = RecipeServings.isLoggedPortion(options: entry.servingUnitOptions)
                         foodLogPhase = .result
                         activeSheet = .foodResult
                     }
@@ -2278,9 +2262,9 @@ private var dailyStepsTaskKey: String {
                     wasBackgrounded = true
                 }
             }
-            .onReceive(NotificationCenter.default.publisher(for: .fudBarcodeAlertScanLabel)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .fudBarcodeAlertScanLabel)) { notification in
                 retryRequest = nil
-                openCameraForNutritionLabel()
+                openCameraForNutritionLabel(barcode: notification.object as? String)
             }
             .onReceive(NotificationCenter.default.publisher(for: .fudBarcodeAlertRetry)) { _ in
                 retryLastRequest()
@@ -2438,6 +2422,7 @@ private var dailyStepsTaskKey: String {
         guard let image = ShareImportManager.consumeSharedImage() else { return }
         
         cancelPendingLoggingHandoff()
+        labelScanBarcode.clear()
         // Force dismiss any currently open sheets to prevent SwiftUI from swallowing the new presentation
         activeSheet = nil
         
@@ -2462,13 +2447,15 @@ private var dailyStepsTaskKey: String {
         images: [UIImage],
         mode: CameraMode,
         description: String? = nil,
-        progressiveMeal: Bool = false
+        progressiveMeal: Bool = false,
+        labelBarcode: String? = nil
     ) {
         retryRequest = .analysis(
             images: images,
             mode: mode,
             description: description,
-            progressiveMeal: progressiveMeal
+            progressiveMeal: progressiveMeal,
+            labelBarcode: labelBarcode
         )
         presentFoodLogLoading(.analyzing)
 
@@ -2482,9 +2469,8 @@ private var dailyStepsTaskKey: String {
                         progressiveMeal: progressiveMeal
                     )
                     try Task.checkCancellation()
-                    currentFoodSource = .snapFood
                     retryRequest = nil
-                    presentFoodResult(result)
+                    presentPhotoAnalysisResult(result, labelBarcode: labelBarcode)
 
                 case .snapFoodWithContext:
                     let result = try await GeminiService.analyzeFood(
@@ -2493,9 +2479,8 @@ private var dailyStepsTaskKey: String {
                         progressiveMeal: progressiveMeal
                     )
                     try Task.checkCancellation()
-                    currentFoodSource = .snapFood
                     retryRequest = nil
-                    presentFoodResult(result)
+                    presentPhotoAnalysisResult(result, labelBarcode: labelBarcode)
 
                 }
             } catch is CancellationError {
@@ -2511,6 +2496,7 @@ private var dailyStepsTaskKey: String {
     /// URLSession request), dismisses the sheet, and drops the retry request so no error alert follows.
     private func cancelAnalysis() {
         cancelPendingLoggingHandoff()
+        labelScanBarcode.clear()
         analysisTask?.cancel()
         analysisTask = nil
         retryRequest = nil
@@ -2540,6 +2526,8 @@ private var dailyStepsTaskKey: String {
     @MainActor
     private func presentFoodLogLoading(_ phase: FoodLogPhase) {
         currentFoodResult = nil
+        currentFoodResultUsesSavedLabel = false
+        currentFoodResultIsLoggedPortion = false
         foodLogPhase = phase
         switch phase {
         case .analyzing:
@@ -2554,15 +2542,36 @@ private var dailyStepsTaskKey: String {
     }
 
     @MainActor
-    private func presentFoodResult(_ result: GeminiService.FoodAnalysis) {
+    private func presentFoodResult(
+        _ result: GeminiService.FoodAnalysis,
+        usesSavedBarcodeLabel: Bool = false,
+        isLoggedPortion: Bool = false
+    ) {
         currentFoodResult = result
+        currentFoodResultUsesSavedLabel = usesSavedBarcodeLabel
+        currentFoodResultIsLoggedPortion = isLoggedPortion
         foodLogPhase = .result
         activeSheet = .foodResult
+    }
+
+    /// A label photo taken from the barcode prompt keeps that barcode in the
+    /// logged entry, which is what lets the next scan reuse it (#485).
+    @MainActor
+    private func presentPhotoAnalysisResult(_ result: GeminiService.FoodAnalysis, labelBarcode: String?) {
+        var result = result
+        if let labelBarcode {
+            result.productMetadata = BarcodeLabelMemory.labelMetadata(result.productMetadata, barcode: labelBarcode)
+            currentFoodSource = .nutritionLabel
+        } else {
+            currentFoodSource = .snapFood
+        }
+        presentFoodResult(result)
     }
 
     private func startBarcodeLookup(_ barcode: String) {
         let trimmedBarcode = barcode.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedBarcode.isEmpty else { return }
+        labelScanBarcode.clear()
         retryRequest = .barcode(trimmedBarcode)
 
         currentImage = nil
@@ -2589,12 +2598,27 @@ private var dailyStepsTaskKey: String {
                 // User tapped Cancel on the analyzing sheet; cancelAnalysis already reset the UI.
             } catch {
                 if Task.isCancelled { return }
-                presentBarcodeLookupError(error)
+                // Open Food Facts wins when it has nutrition; otherwise reuse the
+                // label the user scanned for this barcode before (#485).
+                if BarcodeLabelMemory.allowsFallback(for: error),
+                   let savedLabel = BarcodeLabelMemory.latestLabelEntry(for: trimmedBarcode, in: foodStore.entries) {
+                    retryRequest = nil
+                    currentEmoji = savedLabel.emoji
+                    currentFoodSource = .nutritionLabel
+                    presentFoodResult(
+                        savedLabel.reviewAnalysis,
+                        usesSavedBarcodeLabel: true,
+                        isLoggedPortion: RecipeServings.isLoggedPortion(options: savedLabel.servingUnitOptions)
+                    )
+                    return
+                }
+                presentBarcodeLookupError(error, barcode: trimmedBarcode)
             }
         }
     }
 
     private func startTextAnalysis(_ description: String) {
+        labelScanBarcode.clear()
         retryRequest = .text(description)
         presentFoodLogLoading(.analyzingText)
         analysisTask?.cancel()
@@ -2644,7 +2668,7 @@ private var dailyStepsTaskKey: String {
     }
 
     @MainActor
-    private func presentBarcodeLookupError(_ error: Error) {
+    private func presentBarcodeLookupError(_ error: Error, barcode: String) {
         let offersScanLabel: Bool
         if let lookupError = error as? OpenFoodFactsService.LookupError {
             switch lookupError {
@@ -2665,13 +2689,15 @@ private var dailyStepsTaskKey: String {
         activeSheet = nil
         BarcodeLookupAlertPresenter.present(
             message: message,
-            offersScanLabel: offersScanLabel
+            offersScanLabel: offersScanLabel,
+            barcode: barcode
         )
     }
 
     @MainActor
-    private func openCameraForNutritionLabel() {
+    private func openCameraForNutritionLabel(barcode: String?) {
         guard canBeginFoodLogging() else { return }
+        labelScanBarcode.arm(barcode)
         cameraMode = .snapFoodWithContext
         isImportingPhotos = false
         captureImages = []
@@ -2684,12 +2710,13 @@ private var dailyStepsTaskKey: String {
     private func retryLastRequest() {
         guard let retryRequest else { return }
         switch retryRequest {
-        case let .analysis(images, mode, description, progressiveMeal):
+        case let .analysis(images, mode, description, progressiveMeal, labelBarcode):
             startAnalysis(
                 images: images,
                 mode: mode,
                 description: description,
-                progressiveMeal: progressiveMeal
+                progressiveMeal: progressiveMeal,
+                labelBarcode: labelBarcode
             )
         case let .text(description):
             startTextAnalysis(description)
@@ -2787,13 +2814,13 @@ private extension Notification.Name {
 /// UIKit alert so the barcode error popup survives SwiftUI sheet dismissal.
 @MainActor
 private enum BarcodeLookupAlertPresenter {
-    static func present(message: String, offersScanLabel: Bool, attempt: Int = 0) {
+    static func present(message: String, offersScanLabel: Bool, barcode: String, attempt: Int = 0) {
         guard let root = keyRootViewController() else { return }
 
         // Wait until the "Looking up barcode..." sheet has fully dismissed.
         if root.presentedViewController != nil, attempt < 30 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-                present(message: message, offersScanLabel: offersScanLabel, attempt: attempt + 1)
+                present(message: message, offersScanLabel: offersScanLabel, barcode: barcode, attempt: attempt + 1)
             }
             return
         }
@@ -2805,7 +2832,7 @@ private enum BarcodeLookupAlertPresenter {
         )
         if offersScanLabel {
             alert.addAction(UIAlertAction(title: "Scan Label", style: .default) { _ in
-                NotificationCenter.default.post(name: .fudBarcodeAlertScanLabel, object: nil)
+                NotificationCenter.default.post(name: .fudBarcodeAlertScanLabel, object: barcode)
             })
         } else {
             alert.addAction(UIAlertAction(title: "Retry", style: .default) { _ in
@@ -4324,8 +4351,8 @@ struct ProgressTabView: View {
             .sheet(isPresented: $showLogWeight) {
                 LogWeightSheet(
                     currentWeightKg: weightStore.latestEntry?.weightKg ?? userProfile.weightKg
-                ) { weightKg in
-                    weightStore.addEntry(WeightEntry(weightKg: weightKg))
+                ) { weightKg, date in
+                    weightStore.addEntry(WeightEntry(date: date, weightKg: weightKg))
                 }
             }
             .sheet(isPresented: $showLogBodyFat) {
@@ -5102,6 +5129,8 @@ struct ProfileView: View {
                         sheet: .editCalories
                     )
 
+                    MaintenanceEstimateRow(profile: profile)
+
                     lockableGoalRow(icon: "p.circle", label: "Protein", valueText: "\(profile.effectiveProtein)g", macro: .protein, sheet: .editProtein)
                     lockableGoalRow(icon: "c.circle", label: "Carbs", valueText: "\(profile.effectiveCarbs)g", macro: .carbs, sheet: .editCarbs)
                     lockableGoalRow(icon: "f.circle", label: "Fat", valueText: "\(profile.effectiveFat)g", macro: .fat, sheet: .editFat)
@@ -5287,6 +5316,23 @@ struct ProfileView: View {
                             }
                         } icon: {
                             Image(systemName: "plus.circle.fill")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+
+                    NavigationLink {
+                        ProductInfoSettingsView()
+                    } label: {
+                        Label {
+                            HStack {
+                                Text("Product Information")
+                                Spacer()
+                                Text("Customize")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        } icon: {
+                            Image(systemName: "barcode")
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
@@ -6265,6 +6311,8 @@ struct ProfileView: View {
                     .buttonStyle(.plain)
                 }
                 .listRowBackground(AppColors.appCard)
+
+                StorageSettingsSection()
                 }
 
                 if let aboutCategory = settingsCategory?.aboutCategory {

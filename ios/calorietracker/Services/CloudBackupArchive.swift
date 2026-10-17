@@ -30,17 +30,18 @@ enum CloudBackupPolicy {
     }
 
     /// Longest photo file name a backup carries; real ones are a UUID and an extension.
-    static let maxPhotoNameLength = 128
+    nonisolated static let maxPhotoNameLength = 128
 
-    private static let photoNameCharacters = CharacterSet(
+    nonisolated private static let photoNameCharacters = CharacterSet(
         charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-"
     )
 
     /// `name` if it is a plain photo file name, else nil: ASCII letters, digits,
     /// ".", "_" and "-" only, a photo extension, at most `maxPhotoNameLength`
     /// characters, no leading dot and no "..". A name with a directory part,
-    /// relative or absolute, is rejected rather than shortened.
-    static func safePhotoName(_ name: String) -> String? {
+    /// relative or absolute, is rejected rather than shortened. Nonisolated so
+    /// Compress Photos can apply the same rule off the main actor.
+    nonisolated static func safePhotoName(_ name: String) -> String? {
         guard !name.isEmpty,
               name.utf8.count <= maxPhotoNameLength,
               !name.hasPrefix("."),
