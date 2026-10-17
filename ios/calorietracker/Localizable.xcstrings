@@ -71912,18 +71912,114 @@
         }
       }
     },
-    "Flat Menu": {
+    "Standalone Methods": {
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طرق مستقلة"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Müstəqil üsullar"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samostatné metody"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigenständige Methoden"
+          }
+        },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Menú plano"
+            "value": "Métodos independientes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Méthodes indépendantes"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्वतंत्र तरीके"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metodi indipendenti"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "単独の方法"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개별 방법"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Losse methoden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samodzielne metody"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métodos avulsos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metode independente"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отдельные способы"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tek Düzeyli Menü"
+            "value": "Bağımsız Yöntemler"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Окремі способи"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "独立方式"
           }
         }
       }
@@ -74869,18 +74965,114 @@
         }
       }
     },
-    "With no groups, enabled methods appear directly under +.": {
+    "These methods appear directly under +, outside any group.": {
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تظهر هذه الطرق مباشرةً تحت +، خارج أي مجموعة."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu üsullar heç bir qrupa daxil olmadan birbaşa + altında görünür."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tyto metody se zobrazují přímo pod +, mimo skupiny."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Methoden erscheinen direkt unter +, außerhalb von Gruppen."
+          }
+        },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sin grupos, los métodos activados aparecen directamente bajo +."
+            "value": "Estos métodos aparecen directamente bajo +, fuera de cualquier grupo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ces méthodes apparaissent directement sous +, hors de tout groupe."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ये तरीके किसी समूह के बाहर, सीधे + के नीचे दिखते हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questi metodi appaiono direttamente sotto +, fuori da qualsiasi gruppo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これらの方法はグループに入らず、+ の直下に表示されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 방법들은 그룹 없이 + 바로 아래에 표시됩니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze methoden staan direct onder +, buiten een groep."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te metody pojawiają się bezpośrednio pod +, poza grupami."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estes métodos aparecem diretamente no +, fora de qualquer grupo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceste metode apar direct sub +, în afara oricărui grup."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эти способы отображаются прямо в меню «+», вне групп."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grup olmadığında etkin yöntemler doğrudan + altında görünür."
+            "value": "Bu yöntemler herhangi bir grubun dışında, doğrudan + altında görünür."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ці способи з’являються безпосередньо в меню «+», поза групами."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些方式直接显示在 + 下，不属于任何分组。"
           }
         }
       }

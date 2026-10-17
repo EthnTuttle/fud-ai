@@ -768,6 +768,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). „Quantifizierung der Wirkung eines Energieungleichgewichts auf das Körpergewicht.“ Lancet 378(9793):826–837. Die klassische Regel von 3.500 kcal pro Pfund geht auf Wishnofsky M (1958), Am J Clin Nutr 6:542–546, zurück.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „Systematische Übersichtsarbeit, Metaanalyse und Metaregression zur Wirkung einer Proteinsupplementierung auf durch Krafttraining erzielte Zuwächse an Muskelmasse und Kraft.“ Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Die Schätzungen beruhen auf den Trainingsdaten des zugrunde liegenden KI-Modells (USDA FoodData Central, Herstellerangaben, wissenschaftliche Literatur). Die Genauigkeit hängt vom Lebensmittel, der Erkennbarkeit der Portionsgröße und dem Anbietermodell ab. Prüfe bei Lebensmitteln, die du häufig protokollierst, immer die Etikettangaben.</string>
+    <string name="settings_add_menu_standalone">Eigenständige Methoden</string>
+    <string name="settings_add_menu_standalone_footer">Diese Methoden erscheinen direkt unter +, außerhalb von Gruppen.</string>
     <string name="about_litert_notices">Drittanbieterhinweise zu LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Die Drittanbieterhinweise zu LiteRT-LM konnten nicht geladen werden.</string>
     <string name="settings_model_source">Modellquelle</string>

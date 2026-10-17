@@ -776,6 +776,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). „Ilościowe określenie wpływu nierównowagi energetycznej na masę ciała”. Lancet 378(9793):826–837. Klasyczna reguła 3500 kcal na funt pochodzi od Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „Przegląd systematyczny, metaanaliza i metaregresja wpływu suplementacji białkiem na przyrost masy mięśniowej i siły wywołany treningiem oporowym”. Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Szacunki opierają się na danych treningowych bazowego modelu AI (USDA FoodData Central, etykietach producentów i literaturze naukowej). Dokładność zależy od produktu, widoczności wielkości porcji i modelu dostawcy. W przypadku często rejestrowanych produktów zawsze porównuj wynik z etykietą.</string>
+    <string name="settings_add_menu_standalone">Samodzielne metody</string>
+    <string name="settings_add_menu_standalone_footer">Te metody pojawiają się bezpośrednio pod +, poza grupami.</string>
     <string name="about_litert_notices">Informacje zewnętrzne LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Nie udało się wczytać informacji zewnętrznych LiteRT-LM.</string>
     <string name="settings_model_source">Źródło modelu</string>

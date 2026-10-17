@@ -1032,6 +1032,8 @@
     <string name="sort_standard">Завтрак → Обед → Ужин</string>
     <string name="sort_latest_first">Сначала последние</string>
     <string name="copy_meal_format">Копировать: %1$s</string>
+    <string name="settings_add_menu_standalone">Отдельные способы</string>
+    <string name="settings_add_menu_standalone_footer">Эти способы отображаются прямо в меню «+», вне групп.</string>
     <string name="settings_fasting_tracking">Отслеживание голодания</string>
     <string name="settings_fasting_goal">Цель голодания по умолчанию</string>
     <string name="settings_fasting_goal_value">%1$d часов</string>

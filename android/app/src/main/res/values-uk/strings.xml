@@ -1289,7 +1289,8 @@
     <string name="settings_add_menu_title">Меню «+»</string>
     <string name="settings_add_menu_food_section">Меню додавання їжі</string>
     <string name="settings_add_menu_groups">Групи</string>
-    <string name="settings_add_menu_flat">Плоске меню</string>
+    <string name="settings_add_menu_standalone">Окремі способи</string>
+    <string name="settings_add_menu_standalone_footer">Ці способи з’являються безпосередньо в меню «+», поза групами.</string>
     <string name="settings_add_menu_hidden">Приховані способи</string>
     <string name="settings_add_menu_reset">Скинути до стандартних</string>
     <string name="settings_add_menu_footer">Налаштуйте меню їжі кнопки «+» на головному екрані. Вода та голодування залишаються окремими, якщо увімкнено. Це не змінює швидкі дії значка додатка.</string>

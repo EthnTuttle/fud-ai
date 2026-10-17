@@ -1300,7 +1300,8 @@
     <string name="settings_add_menu_title">+ Menüsü</string>
     <string name="settings_add_menu_food_section">Yiyecek Ekleme Menüsü</string>
     <string name="settings_add_menu_groups">Gruplar</string>
-    <string name="settings_add_menu_flat">Düz Menü</string>
+    <string name="settings_add_menu_standalone">Bağımsız Yöntemler</string>
+    <string name="settings_add_menu_standalone_footer">Bu yöntemler herhangi bir grubun dışında, doğrudan + altında görünür.</string>
     <string name="settings_add_menu_hidden">Gizli Yöntemler</string>
     <string name="settings_add_menu_reset">Varsayılana Sıfırla</string>
     <string name="settings_add_menu_footer">Ana Sayfa + düğmesi yiyecek menüsünü özelleştirin. Su ve oruç etkinleştirildiğinde ayrı kalır. Bu, uygulama simgesi Hızlı İşlemlerini değiştirmez.</string>

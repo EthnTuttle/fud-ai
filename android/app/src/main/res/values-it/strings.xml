@@ -769,6 +769,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «Quantificazione dell’effetto dello squilibrio energetico sul peso corporeo». Lancet 378(9793):826–837. La classica regola delle 3.500 kcal per libbra deriva da Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Revisione sistematica, meta-analisi e meta-regressione dell’effetto dell’integrazione proteica sugli aumenti di massa muscolare e forza indotti dall’allenamento di resistenza». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Le stime si basano sui dati di addestramento del modello IA sottostante (USDA FoodData Central, etichette dei produttori e letteratura scientifica). La precisione varia in base all’alimento, alla visibilità delle dimensioni della porzione e al modello del provider. Verifica sempre le etichette degli alimenti che registri spesso.</string>
+    <string name="settings_add_menu_standalone">Metodi indipendenti</string>
+    <string name="settings_add_menu_standalone_footer">Questi metodi appaiono direttamente sotto +, fuori da qualsiasi gruppo.</string>
     <string name="about_litert_notices">Avvisi di terze parti per LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Impossibile caricare gli avvisi di terze parti per LiteRT-LM.</string>
     <string name="settings_model_source">Fonte del modello</string>

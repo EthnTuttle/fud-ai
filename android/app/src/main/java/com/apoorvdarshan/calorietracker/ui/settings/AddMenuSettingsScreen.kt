@@ -29,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,22 +62,23 @@ fun AddMenuSettingsScreen(
     onBack: () -> Unit
 ) {
     val ui by vm.ui.collectAsState()
-    var draft by remember(ui.addMenuConfig) { mutableStateOf(ui.addMenuConfig) }
-    // null = closed; -1 = flat menu; >= 0 = that group.
+    // The editor keeps empty groups, which the saved menu drops, so it only adopts
+    // the saved menu when that changed elsewhere (first load, reset).
+    var draft by remember { mutableStateOf(ui.addMenuConfig) }
+    LaunchedEffect(ui.addMenuConfig) {
+        if (ui.addMenuConfig != draft.sanitized()) draft = ui.addMenuConfig
+    }
+    // null = closed; -1 = standalone methods; >= 0 = that group.
     var addMethodTarget by remember { mutableStateOf<Int?>(null) }
 
     fun persist(updated: AddMenuConfig) {
         if (!ui.addMenuLoaded) return
-        draft = updated.sanitized()
+        draft = updated.sanitized(forEditor = true)
         vm.setAddMenuConfig(draft)
     }
 
     val hiddenMethods = remember(draft) {
-        val visible = if (draft.usesFlatLayout) {
-            draft.resolvedFlatMethods().toSet()
-        } else {
-            draft.resolvedGroups().flatMap { it.methods }.toSet()
-        }
+        val visible = draft.visibleMethods().toSet()
         FoodLogMethod.AddMenuCases.filterNot { it in visible }
     }
 
@@ -201,9 +203,51 @@ fun AddMenuSettingsScreen(
                 }
             }
 
-            if (draft.usesFlatLayout) {
+            itemsIndexed(draft.groups) { index, group ->
+                GroupEditor(
+                    groupIndex = index,
+                    group = group,
+                    groupCount = draft.groups.size,
+                    hiddenMethods = hiddenMethods,
+                    onMoveGroup = { direction ->
+                        val groups = draft.groups.toMutableList()
+                        val target = index + direction
+                        if (index in groups.indices && target in groups.indices) {
+                            val item = groups.removeAt(index)
+                            groups.add(target, item)
+                            persist(draft.copy(groups = groups))
+                        }
+                    },
+                    onNameChange = { name ->
+                        val groups = draft.groups.toMutableList()
+                        groups[index] = groups[index].copy(name = name)
+                        persist(draft.copy(groups = groups))
+                    },
+                    onMoveMethod = { methodIndex, direction ->
+                        val groups = draft.groups.toMutableList()
+                        val methods = groups[index].methods.toMutableList()
+                        val target = methodIndex + direction
+                        if (methodIndex in methods.indices && target in methods.indices) {
+                            val item = methods.removeAt(methodIndex)
+                            methods.add(target, item)
+                            groups[index] = groups[index].copy(methods = methods)
+                            persist(draft.copy(groups = groups))
+                        }
+                    },
+                    onRemoveMethod = { method ->
+                        val groups = draft.groups.toMutableList()
+                        groups[index] = groups[index].copy(
+                            methods = groups[index].methods.filterNot { it == method.storageKey }
+                        )
+                        persist(draft.copy(groups = groups))
+                    },
+                    onAddMethodClick = { addMethodTarget = index }
+                )
+            }
+
+            if (draft.flatMethods.isNotEmpty() || hiddenMethods.isNotEmpty()) {
                 item {
-                    FlatMethodsEditor(
+                    StandaloneMethodsEditor(
                         methods = draft.resolvedFlatMethods(),
                         hiddenMethods = hiddenMethods,
                         onReorder = { from, to ->
@@ -226,48 +270,6 @@ fun AddMenuSettingsScreen(
                             )
                         },
                         onAddMethodClick = { addMethodTarget = -1 }
-                    )
-                }
-            } else {
-                itemsIndexed(draft.groups) { index, group ->
-                    GroupEditor(
-                        groupIndex = index,
-                        group = group,
-                        groupCount = draft.groups.size,
-                        hiddenMethods = hiddenMethods,
-                        onMoveGroup = { direction ->
-                            val groups = draft.groups.toMutableList()
-                            val target = index + direction
-                            if (index in groups.indices && target in groups.indices) {
-                                val item = groups.removeAt(index)
-                                groups.add(target, item)
-                                persist(draft.copy(groups = groups))
-                            }
-                        },
-                        onNameChange = { name ->
-                            val groups = draft.groups.toMutableList()
-                            groups[index] = groups[index].copy(name = name)
-                            persist(draft.copy(groups = groups))
-                        },
-                        onMoveMethod = { methodIndex, direction ->
-                            val groups = draft.groups.toMutableList()
-                            val methods = groups[index].methods.toMutableList()
-                            val target = methodIndex + direction
-                            if (methodIndex in methods.indices && target in methods.indices) {
-                                val item = methods.removeAt(methodIndex)
-                                methods.add(target, item)
-                                groups[index] = groups[index].copy(methods = methods)
-                                persist(draft.copy(groups = groups))
-                            }
-                        },
-                        onRemoveMethod = { method ->
-                            val groups = draft.groups.toMutableList()
-                            groups[index] = groups[index].copy(
-                                methods = groups[index].methods.filterNot { it == method.storageKey }
-                            )
-                            persist(draft.copy(groups = groups))
-                        },
-                        onAddMethodClick = { addMethodTarget = index }
                     )
                 }
             }
@@ -352,8 +354,13 @@ fun AddMenuSettingsScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
                             .clickable {
-                                val groupIndex = addTarget.takeIf { it >= 0 }
-                                persist(draft.withRestoredMethod(method, groupIndex))
+                                persist(
+                                    draft.withRestoredMethod(
+                                        method,
+                                        groupIndex = addTarget.takeIf { it >= 0 },
+                                        standalone = addTarget < 0
+                                    )
+                                )
                                 addMethodTarget = null
                             }
                             .padding(horizontal = 8.dp, vertical = 12.dp),
@@ -375,14 +382,17 @@ fun AddMenuSettingsScreen(
 }
 
 @Composable
-private fun FlatMethodsEditor(
+private fun StandaloneMethodsEditor(
     methods: List<FoodLogMethod>,
     hiddenMethods: List<FoodLogMethod>,
     onReorder: (Int, Int) -> Unit,
     onRemove: (FoodLogMethod) -> Unit,
     onAddMethodClick: () -> Unit
 ) {
-    AddMenuSectionCard(title = stringResource(R.string.settings_add_menu_flat)) {
+    AddMenuSectionCard(
+        title = stringResource(R.string.settings_add_menu_standalone),
+        footer = stringResource(R.string.settings_add_menu_standalone_footer)
+    ) {
         methods.forEachIndexed { index, method ->
             MethodRow(
                 label = stringResource(method.titleRes),
@@ -541,7 +551,11 @@ private fun MethodRow(
 }
 
 @Composable
-private fun AddMenuSectionCard(title: String? = null, content: @Composable () -> Unit) {
+private fun AddMenuSectionCard(
+    title: String? = null,
+    footer: String? = null,
+    content: @Composable () -> Unit
+) {
     Column {
         if (title != null) {
             Text(
@@ -559,28 +573,33 @@ private fun AddMenuSectionCard(title: String? = null, content: @Composable () ->
         ) {
             Column(Modifier.padding(vertical = 2.dp)) { content() }
         }
+        if (footer != null) {
+            Text(
+                footer,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
+                modifier = Modifier.padding(start = 6.dp, top = 6.dp, end = 6.dp)
+            )
+        }
     }
 }
 
-private fun updateGroupCount(config: AddMenuConfig, count: Int): AddMenuConfig {
+internal fun updateGroupCount(config: AddMenuConfig, count: Int): AddMenuConfig {
     if (count == 0) {
-        val visible = if (config.groups.isEmpty()) {
-            config.resolvedFlatMethods()
-        } else {
-            config.resolvedGroups().flatMap { it.methods }
-        }
         return config.copy(
             groups = emptyList(),
-            flatMethods = visible.map { it.storageKey }
+            flatMethods = config.visibleMethods().map { it.storageKey }
         )
     }
 
     var groups = config.groups.toMutableList()
+    var standalone = config.flatMethods
     if (groups.isEmpty()) {
         val flat = config.resolvedFlatMethods()
         groups = if (flat.isEmpty()) {
             AddMenuConfig.Default.groups.toMutableList()
         } else {
+            standalone = emptyList()
             mutableListOf(
                 AddMenuGroupConfig(
                     name = AddMenuConfig.DEFAULT_GROUP_FALLBACK_NAME,
@@ -598,5 +617,5 @@ private fun updateGroupCount(config: AddMenuConfig, count: Int): AddMenuConfig {
     while (groups.size > count) {
         groups.removeAt(groups.lastIndex)
     }
-    return config.copy(groups = groups, flatMethods = emptyList())
+    return config.copy(groups = groups, flatMethods = standalone)
 }

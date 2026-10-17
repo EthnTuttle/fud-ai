@@ -768,6 +768,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011)। “शरीर के वज़न पर ऊर्जा असंतुलन के प्रभाव का मात्रात्मक आकलन।” Lancet 378(9793):826–837। प्रति पाउंड 3,500 kcal का पारंपरिक नियम Wishnofsky M (1958), Am J Clin Nutr 6:542–546 से आया है।</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018)। “प्रतिरोध प्रशिक्षण से मांसपेशियों के द्रव्यमान और ताकत में होने वाली वृद्धि पर प्रोटीन सप्लीमेंट के प्रभाव की व्यवस्थित समीक्षा, मेटा-विश्लेषण और मेटा-रिग्रेशन।” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">अनुमान अंतर्निहित AI मॉडल के प्रशिक्षण डेटा (USDA FoodData Central, निर्माताओं के पोषण लेबल और वैज्ञानिक साहित्य) पर आधारित हैं। सटीकता भोजन, परोसने की मात्रा की स्पष्टता और प्रोवाइडर मॉडल के अनुसार बदलती है। जिन खाद्य पदार्थों को आप अक्सर दर्ज करते हैं, उनके लेबल से हमेशा मिलान करें।</string>
+    <string name="settings_add_menu_standalone">स्वतंत्र तरीके</string>
+    <string name="settings_add_menu_standalone_footer">ये तरीके किसी समूह के बाहर, सीधे + के नीचे दिखते हैं।</string>
     <string name="about_litert_notices">LiteRT-LM के तृतीय-पक्ष नोटिस</string>
     <string name="about_litert_notices_load_error">LiteRT-LM के तृतीय-पक्ष नोटिस लोड नहीं किए जा सके।</string>
     <string name="settings_model_source">मॉडल का स्रोत</string>

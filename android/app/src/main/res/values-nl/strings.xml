@@ -768,6 +768,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). ‘Kwantificering van het effect van energieonbalans op het lichaamsgewicht.’ Lancet 378(9793):826–837. De klassieke regel van 3.500 kcal per pond is afkomstig van Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). ‘Een systematische review, meta-analyse en meta-regressie van het effect van eiwitsuppletie op door krachttraining veroorzaakte toename in spiermassa en kracht.’ Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">De schattingen zijn gebaseerd op de trainingsgegevens van het onderliggende AI-model (USDA FoodData Central, voedingsetiketten van fabrikanten en wetenschappelijke literatuur). De nauwkeurigheid varieert per voedingsmiddel, de zichtbaarheid van de portiegrootte en het providermodel. Controleer bij voedingsmiddelen die je vaak logt altijd het etiket.</string>
+    <string name="settings_add_menu_standalone">Losse methoden</string>
+    <string name="settings_add_menu_standalone_footer">Deze methoden staan direct onder +, buiten een groep.</string>
     <string name="about_litert_notices">Kennisgevingen van derden voor LiteRT-LM</string>
     <string name="about_litert_notices_load_error">De kennisgevingen van derden voor LiteRT-LM konden niet worden geladen.</string>
     <string name="settings_model_source">Modelbron</string>

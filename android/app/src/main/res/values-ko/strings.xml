@@ -767,6 +767,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). “에너지 불균형이 체중에 미치는 영향의 정량화.” Lancet 378(9793):826–837. 파운드당 3,500 kcal이라는 고전적 규칙은 Wishnofsky M (1958), Am J Clin Nutr 6:542–546에서 유래했습니다.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “저항 운동으로 인한 근육량 및 근력 증가에 단백질 보충이 미치는 영향에 대한 체계적 문헌고찰, 메타분석 및 메타회귀.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">추정치는 기반 AI 모델의 학습 데이터(USDA FoodData Central, 제조업체 영양 표시, 과학 문헌)를 바탕으로 합니다. 정확도는 음식, 1회 제공량의 가시성, 제공자 모델에 따라 달라집니다. 자주 기록하는 음식은 항상 라벨과 대조하세요.</string>
+    <string name="settings_add_menu_standalone">개별 방법</string>
+    <string name="settings_add_menu_standalone_footer">이 방법들은 그룹 없이 + 바로 아래에 표시됩니다.</string>
     <string name="about_litert_notices">LiteRT-LM 서드 파티 고지사항</string>
     <string name="about_litert_notices_load_error">LiteRT-LM 서드 파티 고지사항을 불러올 수 없습니다.</string>
     <string name="settings_model_source">모델 출처</string>

@@ -769,6 +769,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). “Quantificação do efeito do desequilíbrio energético sobre o peso corporal.” Lancet 378(9793):826–837. A regra clássica de 3.500 kcal por libra tem origem em Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “Revisão sistemática, meta-análise e meta-regressão do efeito da suplementação proteica sobre os ganhos de massa muscular e força induzidos pelo treinamento resistido.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">As estimativas se baseiam nos dados de treinamento do modelo de IA subjacente (USDA FoodData Central, rótulos de fabricantes e literatura científica). A precisão varia conforme o alimento, a visibilidade do tamanho da porção e o modelo do provedor. Sempre confira os rótulos dos alimentos que você registra com frequência.</string>
+    <string name="settings_add_menu_standalone">Métodos avulsos</string>
+    <string name="settings_add_menu_standalone_footer">Estes métodos aparecem diretamente no +, fora de qualquer grupo.</string>
     <string name="about_litert_notices">Avisos de terceiros do LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Não foi possível carregar os avisos de terceiros do LiteRT-LM.</string>
     <string name="settings_model_source">Fonte do modelo</string>

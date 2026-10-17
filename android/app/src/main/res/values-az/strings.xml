@@ -768,6 +768,8 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «Enerji balanssızlığının bədən çəkisinə təsirinin kəmiyyətcə qiymətləndirilməsi». Lancet 378(9793):826–837. Hər funt üçün klassik 3 500 kkal qaydası Wishnofsky M (1958), Am J Clin Nutr 6:542–546 məqaləsindən qaynaqlanır.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Müqavimət məşqlərinin yaratdığı əzələ kütləsi və güc artımına zülal əlavələrinin təsirinin sistematik icmalı, meta-analizi və meta-reqressiyası». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Təxminlər əsas AI modelinin təlim məlumatlarına (USDA FoodData Central, istehsalçıların qida etiketləri və elmi ədəbiyyat) əsaslanır. Dəqiqlik qidaya, porsiya ölçüsünün görünməsinə və provayder modelinə görə dəyişir. Tez-tez qeyd etdiyiniz qidaların etiketlərini həmişə yoxlayın.</string>
+    <string name="settings_add_menu_standalone">Müstəqil üsullar</string>
+    <string name="settings_add_menu_standalone_footer">Bu üsullar heç bir qrupa daxil olmadan birbaşa + altında görünür.</string>
     <string name="about_litert_notices">LiteRT-LM üçün üçüncü tərəf bildirişləri</string>
     <string name="about_litert_notices_load_error">LiteRT-LM üçün üçüncü tərəf bildirişlərini yükləmək mümkün olmadı.</string>
     <string name="settings_model_source">Modelin mənbəyi</string>

@@ -1018,6 +1018,8 @@
     <string name="progressive_meal_description">Fotka 1 → 2 → 3 sleduje každou ingredienci přidanou na stejný talíř. Viditelné rozdíly na kuchyňské váze se stanou hmotnostmi ingrediencí.</string>
     <string name="progressive_meal_info_title">Jak Postupné jídlo funguje</string>
     <string name="progressive_meal_info_body">Použij, když každá fotka ukazuje stejný talíř po přidání další ingredience. Zachovej pořadí fotek a nech displej kuchyňské váhy viditelný. Fud AI použije rozdíl mezi po sobě jdoucími údaji váhy k odhadu každé nové ingredience. Nech vypnuté, pokud jsou fotky jen různé úhly stejného jídla.</string>
+    <string name="settings_add_menu_standalone">Samostatné metody</string>
+    <string name="settings_add_menu_standalone_footer">Tyto metody se zobrazují přímo pod +, mimo skupiny.</string>
     <string name="settings_quick_actions">Rychlé akce</string>
     <string name="settings_app_icon_shortcuts">Zkratky ikony aplikace</string>
     <string name="settings_quick_action_number">Rychlá akce %1$d</string>

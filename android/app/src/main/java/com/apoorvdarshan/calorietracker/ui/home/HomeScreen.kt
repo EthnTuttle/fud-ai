@@ -770,27 +770,25 @@ CalorieHero(
                         }
                         if (ui.activeFast == null) {
                             val addMenuConfig = ui.addMenuConfig
-                            if (addMenuConfig.usesFlatLayout) {
-                                val methods = addMenuConfig.resolvedFlatMethods()
-                                methods.forEach { method ->
-                                    SheetGlassDropdownMenuItem(
-                                        label = stringResource(method.titleRes),
-                                        leadingIcon = method.icon
-                                    ) { performFoodLogMethod(method) }
-                                }
-                                insertedFoodBlock = methods.isNotEmpty()
-                            } else {
-                                val groups = addMenuConfig.resolvedGroups()
-                                groups.forEachIndexed { index, group ->
-                                    if (index > 0) SheetHairline()
-                                    SheetGlassDropdownMenuItem(
-                                        label = group.displayName(),
-                                        leadingIcon = group.methods.firstOrNull()?.icon ?: FoodLogMethodDefaultGroupIcon,
-                                        trailingIcon = Icons.Filled.ChevronRight
-                                    ) { addMenuDestination = AddMenuDestination.FoodGroup(index) }
-                                }
-                                insertedFoodBlock = groups.isNotEmpty()
+                            val groups = addMenuConfig.resolvedGroups()
+                            groups.forEachIndexed { index, group ->
+                                if (index > 0) SheetHairline()
+                                SheetGlassDropdownMenuItem(
+                                    label = group.displayName(),
+                                    leadingIcon = group.methods.firstOrNull()?.icon ?: FoodLogMethodDefaultGroupIcon,
+                                    trailingIcon = Icons.Filled.ChevronRight
+                                ) { addMenuDestination = AddMenuDestination.FoodGroup(index) }
                             }
+                            // Standalone methods follow the groups directly under +.
+                            val standalone = addMenuConfig.resolvedFlatMethods()
+                            if (groups.isNotEmpty() && standalone.isNotEmpty()) SheetHairline()
+                            standalone.forEach { method ->
+                                SheetGlassDropdownMenuItem(
+                                    label = stringResource(method.titleRes),
+                                    leadingIcon = method.icon
+                                ) { performFoodLogMethod(method) }
+                            }
+                            insertedFoodBlock = groups.isNotEmpty() || standalone.isNotEmpty()
                         }
                         if (ui.waterTrackingEnabled) {
                             maybeFoodBoundaryHairline()

@@ -32,12 +32,13 @@ struct AddMenuGroupConfig: Codable, Equatable, Identifiable, Sendable {
 }
 
 struct AddMenuConfig: Codable, Equatable, Sendable {
-    static let currentVersion = 1
+    /// Version 2 shows `flatMethods` next to `groups`; version 1 ignored them whenever a group existed.
+    static let currentVersion = 2
     static let storageKey = "addMenu.config"
 
     var version: Int
     var groups: [AddMenuGroupConfig]
-    /// Used when `groups` is empty — flat list under + with no nesting.
+    /// Standalone methods shown directly under +, after the groups. With no groups this is the whole menu.
     var flatMethods: [FoodLogMethod]
 
     init(version: Int = currentVersion, groups: [AddMenuGroupConfig], flatMethods: [FoodLogMethod] = []) {
@@ -86,10 +87,7 @@ struct AddMenuConfig: Codable, Equatable, Sendable {
     var usesFlatLayout: Bool { groups.isEmpty }
 
     var visibleMethods: [FoodLogMethod] {
-        if usesFlatLayout {
-            return flatMethods
-        }
-        return groups.flatMap(\.methods)
+        groups.flatMap(\.methods) + flatMethods
     }
 
     func sanitized() -> AddMenuConfig {
@@ -116,25 +114,57 @@ struct AddMenuConfig: Codable, Equatable, Sendable {
             )
         }
 
-        if trimmedGroups.isEmpty {
-            return AddMenuConfig(
-                version: Self.currentVersion,
-                groups: [],
-                flatMethods: filterMethods(flatMethods)
-            )
-        }
+        // Version 1 only showed the flat list when there were no groups.
+        let ignoresFlatMethods = version < 2 && !trimmedGroups.isEmpty
 
         return AddMenuConfig(
             version: Self.currentVersion,
             groups: trimmedGroups,
-            flatMethods: []
+            flatMethods: ignoresFlatMethods ? [] : filterMethods(flatMethods)
         )
+    }
+}
+
+/// Where the + menu editor adds a method: one group, or directly under +.
+enum AddMenuMethodTarget: Identifiable, Hashable {
+    case group(UUID)
+    case standalone
+
+    var id: String {
+        switch self {
+        case let .group(id): id.uuidString
+        case .standalone: "standalone"
+        }
+    }
+}
+
+extension AddMenuConfig {
+    /// Moves `method` to the end of `target`, removing it from every other list first.
+    func assigning(_ method: FoodLogMethod, to target: AddMenuMethodTarget) -> AddMenuConfig {
+        var updated = self
+        updated.flatMethods.removeAll { $0 == method }
+        for index in updated.groups.indices {
+            updated.groups[index].methods.removeAll { $0 == method }
+        }
+        switch target {
+        case let .group(groupID):
+            guard let index = updated.groups.firstIndex(where: { $0.id == groupID }) else { return self }
+            updated.groups[index].methods.append(method)
+        case .standalone:
+            updated.flatMethods.append(method)
+        }
+        return updated
     }
 }
 
 enum AddMenuSettings {
     static func load(store: UserDefaults = .standard) -> AddMenuConfig {
-        guard let data = store.data(forKey: AddMenuConfig.storageKey),
+        decode(store.data(forKey: AddMenuConfig.storageKey))
+    }
+
+    /// Decodes the stored menu, e.g. from an `@AppStorage` value so Home refreshes after edits.
+    static func decode(_ data: Data?) -> AddMenuConfig {
+        guard let data,
               let decoded = try? JSONDecoder().decode(AddMenuConfig.self, from: data)
         else {
             return .iOSDefault

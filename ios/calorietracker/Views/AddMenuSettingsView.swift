@@ -3,7 +3,7 @@ import SwiftUI
 struct AddMenuSettingsView: View {
     @State private var config = AddMenuSettings.load()
     @State private var editMode: EditMode = .active
-    @State private var methodPickerGroupID: UUID?
+    @State private var methodPickerTarget: AddMenuMethodTarget?
 
     var body: some View {
         Form {
@@ -28,14 +28,14 @@ struct AddMenuSettingsView: View {
                 Text("Customize the Home + button food menu. Water and fasting stay separate when enabled. This does not change app-icon Quick Actions.")
             }
 
-            if config.usesFlatLayout {
-                flatMethodsSection
-            } else {
+            if !config.groups.isEmpty {
                 groupOrderSection
                 ForEach($config.groups) { $group in
                     groupSection(group: $group)
                 }
             }
+
+            standaloneMethodsSection
 
             if !hiddenMethods.isEmpty {
                 Section {
@@ -63,23 +63,16 @@ struct AddMenuSettingsView: View {
         .onChange(of: config) { _, newValue in
             AddMenuSettings.save(newValue)
         }
-        .sheet(item: methodPickerBinding) { target in
+        .sheet(item: $methodPickerTarget) { target in
             MethodAssignmentSheet(
                 methods: hiddenMethods,
                 onSelect: { method in
-                    assign(method, to: target.id)
-                    methodPickerGroupID = nil
+                    assign(method, to: target)
+                    methodPickerTarget = nil
                 },
-                onCancel: { methodPickerGroupID = nil }
+                onCancel: { methodPickerTarget = nil }
             )
         }
-    }
-
-    private var methodPickerBinding: Binding<GroupPickerTarget?> {
-        Binding(
-            get: { methodPickerGroupID.map(GroupPickerTarget.init) },
-            set: { methodPickerGroupID = $0?.id }
-        )
     }
 
     private var groupOrderSection: some View {
@@ -95,7 +88,7 @@ struct AddMenuSettingsView: View {
         }
     }
 
-    private var flatMethodsSection: some View {
+    private var standaloneMethodsSection: some View {
         Section {
             ForEach(config.flatMethods) { method in
                 Label(method.title, systemImage: method.systemImageName)
@@ -109,17 +102,15 @@ struct AddMenuSettingsView: View {
 
             if !hiddenMethods.isEmpty {
                 Button {
-                    if let method = hiddenMethods.first {
-                        config.flatMethods.append(method)
-                    }
+                    methodPickerTarget = .standalone
                 } label: {
                     Label("Add Method", systemImage: "plus.circle.fill")
                 }
             }
         } header: {
-            Text("Flat Menu")
+            Text("Standalone Methods")
         } footer: {
-            Text("With no groups, enabled methods appear directly under +.")
+            Text("These methods appear directly under +, outside any group.")
         }
     }
 
@@ -140,7 +131,7 @@ struct AddMenuSettingsView: View {
 
             if !hiddenMethods.isEmpty {
                 Button {
-                    methodPickerGroupID = group.id.wrappedValue
+                    methodPickerTarget = .group(group.id.wrappedValue)
                 } label: {
                     Label("Add Method", systemImage: "plus.circle.fill")
                 }
@@ -161,23 +152,23 @@ struct AddMenuSettingsView: View {
 
     private func updateGroupCount(_ count: Int) {
         if count == 0 {
-            let visible = config.groups.isEmpty ? config.flatMethods : config.visibleMethods
-            config = AddMenuConfig(groups: [], flatMethods: visible)
+            config = AddMenuConfig(groups: [], flatMethods: config.visibleMethods)
             return
         }
 
         var groups = config.groups
+        var standalone = config.flatMethods
         if groups.isEmpty {
-            let flat = config.flatMethods
-            if flat.isEmpty {
+            if standalone.isEmpty {
                 groups = AddMenuConfig.iOSDefault.groups
             } else {
                 groups = [
                     AddMenuGroupConfig(
                         name: String(localized: "New Group", comment: "Default name for new add menu group"),
-                        methods: flat
+                        methods: standalone
                     )
                 ]
+                standalone = []
             }
         }
 
@@ -193,21 +184,12 @@ struct AddMenuSettingsView: View {
             groups.removeLast()
         }
 
-        config = AddMenuConfig(groups: groups, flatMethods: [])
+        config = AddMenuConfig(groups: groups, flatMethods: standalone)
     }
 
-    private func assign(_ method: FoodLogMethod, to groupID: UUID) {
-        guard let index = config.groups.firstIndex(where: { $0.id == groupID }) else { return }
-        config.flatMethods.removeAll { $0 == method }
-        for idx in config.groups.indices {
-            config.groups[idx].methods.removeAll { $0 == method }
-        }
-        config.groups[index].methods.append(method)
+    private func assign(_ method: FoodLogMethod, to target: AddMenuMethodTarget) {
+        config = config.assigning(method, to: target)
     }
-}
-
-private struct GroupPickerTarget: Identifiable {
-    let id: UUID
 }
 
 private struct MethodAssignmentSheet: View {

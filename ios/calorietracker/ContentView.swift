@@ -1153,6 +1153,8 @@ struct HomeView: View {
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
     @AppStorage(FastingSettings.notificationEnabledKey) private var fastingGoalNotificationEnabled = true
+    /// Observed so + menu edits in Settings refresh Home right away.
+    @AppStorage(AddMenuConfig.storageKey) private var addMenuConfigData: Data?
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @Environment(ProfileStore.self) private var profileStore
     @State private var homeBurnLine: String?
@@ -2704,23 +2706,22 @@ private var dailyStepsTaskKey: String {
 extension HomeView {
     @ViewBuilder
     var configuredFoodAddMenuContent: some View {
-        let config = AddMenuSettings.load()
-        if config.usesFlatLayout {
+        let config = AddMenuSettings.decode(addMenuConfigData)
+        ForEach(config.groups.filter { !$0.methods.isEmpty }) { group in
+            Section {
+                Menu {
+                    ForEach(group.methods) { method in
+                        addMenuButton(for: method)
+                    }
+                } label: {
+                    Label(group.name, systemImage: addMenuGroupIcon(for: group))
+                }
+            }
+        }
+        if !config.flatMethods.isEmpty {
             Section {
                 ForEach(config.flatMethods) { method in
                     addMenuButton(for: method)
-                }
-            }
-        } else {
-            ForEach(config.groups.filter { !$0.methods.isEmpty }) { group in
-                Section {
-                    Menu {
-                        ForEach(group.methods) { method in
-                            addMenuButton(for: method)
-                        }
-                    } label: {
-                        Label(group.name, systemImage: addMenuGroupIcon(for: group))
-                    }
                 }
             }
         }
