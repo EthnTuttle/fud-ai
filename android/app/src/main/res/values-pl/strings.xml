@@ -515,6 +515,11 @@
     <string name="settings_goal_weight">Waga docelowa</string>
     <string name="settings_calories">Kalorie</string>
     <string name="settings_recalculate_goals">Przelicz cele</string>
+    <string name="settings_estimated_maintenance">Szacowane kalorie na utrzymanie</string>
+    <string name="settings_maintenance_deficit_format">Deficyt: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_surplus_format">Nadwyżka: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_close">Cel jest bliski utrzymaniu</string>
+    <string name="settings_estimated_maintenance_info">Szacowane kalorie na utrzymanie to kalorie, które spalasz w typowy dzień: Twoje BMR z profilu pomnożone przez poziom aktywności. Jedzenie poniżej tej wartości to deficyt pozwalający schudnąć; powyżej — nadwyżka pozwalająca przytyć. Pokazany deficyt lub nadwyżka to Twój cel kaloryczny minus ta szacunkowa wartość. To szacunek oparty na wzorze, więc Twoje rzeczywiste spalanie może się różnić, a przeliczanie celów może ustalić cel na podstawie zapisanych posiłków, trendu wagi lub zmierzonego spalania energii. To nie jest porada medyczna.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Przypięte</string>
@@ -546,8 +551,25 @@
     <string name="settings_clear_key">Wyczyść klucz</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Starsze pomiary wagi</string>
     <string name="settings_clear_food_log">Wyczyść dziennik jedzenia</string>
     <string name="settings_delete_all_data">Usuń wszystkie dane</string>
+    <string name="storage_title">Pamięć</string>
+    <string name="storage_saved_photos">Zapisane zdjęcia</string>
+    <string name="storage_on_device_models">Modele na urządzeniu</string>
+    <string name="storage_cache">Pamięć podręczna</string>
+    <string name="storage_compress_photos">Kompresuj zdjęcia</string>
+    <string name="storage_clear_cache">Wyczyść pamięć podręczną</string>
+    <string name="storage_footer">Kompresuj zdjęcia trwale zmniejsza zdjęcia większe niż 2048 px. Wyczyść pamięć podręczną usuwa miniatury i pobrane obrazy ćwiczeń, które zostaną odtworzone w razie potrzeby. Modele na urządzeniu usuniesz w ich ustawieniach AI lub mowy.</string>
+    <string name="storage_compress_confirm_title">Skompresować zdjęcia?</string>
+    <string name="storage_compress_confirm_message">Zdjęcia, których dłuższy bok przekracza 2048 pikseli, zostaną trwale zmniejszone do 2048 pikseli i zapisane jako JPEG. Mniejsze zdjęcia pozostaną bez zmian. Tej operacji nie można cofnąć.</string>
+    <string name="storage_compress_action">Kompresuj</string>
+    <string name="storage_compressing_progress">Kompresowanie zdjęć… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Zdjęcia skompresowane</string>
+    <string name="storage_compress_freed">Zwolniono %1$s.</string>
+    <string name="storage_compress_nothing">Żadne zdjęcia nie wymagały kompresji.</string>
+    <string name="storage_compress_unreadable">Niektórych zdjęć nie udało się odczytać i pozostały bez zmian.</string>
+    <string name="storage_compress_failed">Niektórych zdjęć nie udało się skompresować i pozostały bez zmian. Upewnij się, że na urządzeniu jest wolne miejsce, i spróbuj ponownie.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Wyczyścić dziennik jedzenia?</string>
@@ -808,4 +830,5 @@
     <string name="photo_save_permission_denied">Odmowa dostępu do zdjęć</string>
     <string name="settings_save_photos_to_gallery">Zapisuj w Zdjęciach</string>
     <string name="settings_save_photos_to_gallery_subtitle">Zapisuj też zdjęcia posiłków w galerii podczas logowania</string>
+    <string name="label_date">Data</string>
 </resources>

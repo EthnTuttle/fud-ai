@@ -509,6 +509,11 @@
     <string name="settings_goal_weight">लक्ष्य वज़न</string>
     <string name="settings_calories">कैलोरी</string>
     <string name="settings_recalculate_goals">लक्ष्य पुनः गणना करें</string>
+    <string name="settings_estimated_maintenance">अनुमानित मेंटेनेंस कैलोरी</string>
+    <string name="settings_maintenance_deficit_format">घाटा: %1$,d kcal/दिन</string>
+    <string name="settings_maintenance_surplus_format">अधिशेष: %1$,d kcal/दिन</string>
+    <string name="settings_maintenance_close">लक्ष्य मेंटेनेंस के करीब है</string>
+    <string name="settings_estimated_maintenance_info">अनुमानित मेंटेनेंस कैलोरी वे कैलोरी हैं जो आप एक सामान्य दिन में जलाते हैं: आपकी प्रोफ़ाइल से BMR को आपके गतिविधि स्तर से गुणा करके। इससे कम खाने पर वज़न घटाने के लिए घाटा होता है; इससे ज़्यादा खाने पर वज़न बढ़ाने के लिए अधिशेष होता है। दिखाया गया घाटा या अधिशेष आपके कैलोरी लक्ष्य में से यह अनुमान घटाकर निकलता है। यह फ़ॉर्मूले पर आधारित अनुमान है, इसलिए आपकी असली खपत अलग हो सकती है, और लक्ष्य की पुनर्गणना आपके लॉग किए गए भोजन, वज़न के रुझान या मापी गई ऊर्जा खपत के आधार पर लक्ष्य तय कर सकती है। यह चिकित्सा सलाह नहीं है।</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · ऑटो</string>
     <string name="settings_macro_pinned_a11y">पिन किया गया</string>
@@ -540,8 +545,25 @@
     <string name="settings_clear_key">कुंजी साफ़ करें</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">पुराने वज़न रिकॉर्ड</string>
     <string name="settings_clear_food_log">खाद्य लॉग साफ़ करें</string>
     <string name="settings_delete_all_data">सभी डेटा हटाएं</string>
+    <string name="storage_title">स्टोरेज</string>
+    <string name="storage_saved_photos">सहेजी गई फ़ोटो</string>
+    <string name="storage_on_device_models">डिवाइस पर मॉडल</string>
+    <string name="storage_cache">कैश</string>
+    <string name="storage_compress_photos">फ़ोटो कंप्रेस करें</string>
+    <string name="storage_clear_cache">कैश साफ़ करें</string>
+    <string name="storage_footer">फ़ोटो कंप्रेस करें 2048 px से बड़ी फ़ोटो का आकार हमेशा के लिए छोटा कर देता है। कैश साफ़ करें थंबनेल और डाउनलोड की गई वर्कआउट इमेज हटाता है, जो ज़रूरत पड़ने पर फिर से बन जाती हैं। डिवाइस पर मौजूद मॉडल उनकी AI या स्पीच सेटिंग्स से हटाएँ।</string>
+    <string name="storage_compress_confirm_title">फ़ोटो कंप्रेस करें?</string>
+    <string name="storage_compress_confirm_message">जिन फ़ोटो की सबसे लंबी भुजा 2048 पिक्सेल से बड़ी है, उन्हें हमेशा के लिए 2048 पिक्सेल पर छोटा करके JPEG के रूप में सहेजा जाएगा। छोटी फ़ोटो में कोई बदलाव नहीं होगा। इसे पूर्ववत नहीं किया जा सकता।</string>
+    <string name="storage_compress_action">कंप्रेस करें</string>
+    <string name="storage_compressing_progress">फ़ोटो कंप्रेस हो रही हैं… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">फ़ोटो कंप्रेस हो गईं</string>
+    <string name="storage_compress_freed">%1$s खाली हुआ।</string>
+    <string name="storage_compress_nothing">किसी फ़ोटो को कंप्रेस करने की ज़रूरत नहीं थी।</string>
+    <string name="storage_compress_unreadable">कुछ फ़ोटो पढ़ी नहीं जा सकीं और उन्हें बिना बदले छोड़ दिया गया।</string>
+    <string name="storage_compress_failed">कुछ फ़ोटो कंप्रेस नहीं की जा सकीं और उन्हें बिना बदले छोड़ दिया गया। पक्का करें कि आपके डिवाइस में खाली जगह है, फिर दोबारा कोशिश करें।</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">खाद्य लॉग साफ़ करें?</string>
@@ -801,4 +823,5 @@
     <string name="settings_save_photos_to_gallery">फ़ोटो में सहेजें</string>
     <string name="settings_save_photos_to_gallery_subtitle">लॉग करते समय भोजन की फ़ोटो गैलरी में भी सहेजें</string>
     <string name="settings_other_nutrients_note">कैलोरी, प्रोटीन, कार्ब्स और वसा के लक्ष्यों से अलग।</string>
+    <string name="label_date">दिनांक</string>
 </resources>

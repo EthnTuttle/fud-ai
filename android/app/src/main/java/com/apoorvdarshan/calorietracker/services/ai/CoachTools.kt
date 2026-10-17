@@ -1,10 +1,12 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
+import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftHistory
 import com.apoorvdarshan.calorietracker.models.ExerciseLiftSet
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
@@ -36,6 +38,8 @@ class CoachTools(
     private val workoutPlans: List<WorkoutDayPlan> = emptyList(),
     private val workoutPreferences: WorkoutPreferences = WorkoutPreferences(),
     private val workoutPlanWeightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS,
+    /** Built-in catalog plus the user's custom exercises, for the read-only library search. */
+    private val exerciseLibrary: List<ExerciseItem> = emptyList(),
     private val clock: Clock = Clock.systemDefaultZone()
 ) {
 
@@ -47,7 +51,10 @@ class CoachTools(
             to = args.optString("to").takeIf { it.isNotBlank() },
             limit = (args.opt("limit") as? Number)?.toInt(),
             exercise = args.optString("exercise").takeIf { it.isNotBlank() },
-            catalogId = args.optString("catalog_id").takeIf { it.isNotBlank() }
+            catalogId = args.optString("catalog_id").takeIf { it.isNotBlank() },
+            query = args.optString("query").takeIf { it.isNotBlank() },
+            muscle = args.optString("muscle").takeIf { it.isNotBlank() },
+            equipment = args.optString("equipment").takeIf { it.isNotBlank() }
         )
     )
 
@@ -63,7 +70,10 @@ class CoachTools(
                 else -> null
             },
             exercise = args["exercise"] as? String,
-            catalogId = args["catalog_id"] as? String
+            catalogId = args["catalog_id"] as? String,
+            query = args["query"] as? String,
+            muscle = args["muscle"] as? String,
+            equipment = args["equipment"] as? String
         )
     )
 
@@ -79,6 +89,7 @@ class CoachTools(
         "get_workout_preferences" -> getWorkoutPreferences()
         "get_training_summary" -> getTrainingSummary(args)
         "get_exercise_lift_history" -> getExerciseLiftHistory(args)
+        "search_exercise_library" -> searchExerciseLibrary(args)
         else -> jsonError("Unknown tool: $name. Available tools: ${TOOL_NAMES.joinToString(", ")}")
     }
 
@@ -625,6 +636,52 @@ class CoachTools(
         MealType.OTHER -> "other"
     }
 
+    // MARK: - Exercise library
+
+    private fun searchExerciseLibrary(args: ToolArguments): String {
+        val query = args.query?.trim().orEmpty()
+        if (query.isEmpty()) return jsonError("query is required.")
+        val muscle = args.muscle?.trim().orEmpty()
+        val equipment = args.equipment?.trim().orEmpty()
+        val queryMatches = rankedLibraryMatches(exerciseLibrary, query)
+        // Filter before choosing complete versus partial name matches, so a barbell exercise
+        // matching every query word cannot hide the cable one the equipment filter asks for.
+        val filtered = rankedLibraryMatches(exerciseLibrary, query, muscle, equipment)
+        val passesFilters = libraryFilter(muscle, equipment)
+        // A filter word the library never uses ("upper" chest, "bench" equipment) must not hide
+        // every match, or Coach would report an exercise that is in the library as missing.
+        val filtersIgnored = filtered.isEmpty() && queryMatches.isNotEmpty()
+        val matches = if (filtersIgnored) queryMatches else filtered
+        val exercises = matches.take(args.boundedLimit(default = 10, maximum = 20)).map { item ->
+            linkedMapOf<String, Any?>(
+                "catalog_id" to item.id,
+                "name" to item.name,
+                "is_custom" to (UserExercise.isUserExercise(item.id) || item.id.startsWith("custom_activity_")),
+                "primary_muscles" to item.primaryMuscles,
+                "secondary_muscles" to item.secondaryMuscles
+            ).apply {
+                libraryMetadata(item.category)?.let { put("category", it) }
+                libraryMetadata(item.equipment)?.let { put("equipment", it) }
+            }
+        }
+        val payload = linkedMapOf<String, Any?>(
+            "query" to query,
+            "count" to exercises.size,
+            "total_matches" to matches.size,
+            "exercises" to exercises
+        )
+        if (muscle.isNotEmpty()) payload["muscle"] = muscle
+        if (equipment.isNotEmpty()) payload["equipment"] = equipment
+        if (filtersIgnored) {
+            payload["filters_ignored"] = true
+            payload["note"] = "No exercise matched both the query and the muscle/equipment filters, so these results ignore the filters."
+        } else {
+            val excluded = queryMatches.count { !passesFilters(it) }
+            if (excluded > 0) payload["excluded_by_filters"] = excluded
+        }
+        return json(payload)
+    }
+
     private fun json(payload: Any): String = GSON.toJson(payload)
 
     private fun jsonError(message: String): String = json(linkedMapOf("error" to message))
@@ -634,7 +691,10 @@ class CoachTools(
         val to: String? = null,
         val limit: Int? = null,
         val exercise: String? = null,
-        val catalogId: String? = null
+        val catalogId: String? = null,
+        val query: String? = null,
+        val muscle: String? = null,
+        val equipment: String? = null
     ) {
         fun boundedLimit(default: Int, maximum: Int): Int = limit?.coerceIn(1, maximum) ?: default
     }
@@ -675,7 +735,8 @@ class CoachTools(
             "get_workout_plans",
             "get_workout_preferences",
             "get_training_summary",
-            "get_exercise_lift_history"
+            "get_exercise_lift_history",
+            "search_exercise_library"
         )
 
         /** Workout tools are deliberately always available, even before the first session. */
@@ -692,8 +753,16 @@ class CoachTools(
             "get_workout_plans" to "Fetch dated workout diary plans, set targets, saved exercise durations, and current timer state. Running or paused timer time is unsaved. Optional ISO from/to dates narrow the result; without them it returns recent and upcoming plans around today.",
             "get_workout_preferences" to "Fetch workout-only preferences such as target muscles, injuries or issues, equipment, schedule, split, RPE scale, and strength numbers.",
             "get_training_summary" to "Summarize workouts between two dates: calculated calorie burn plus sessions, saved exercise duration, sets, reps, volume, best load, and average RPE by exercise. Timed cardio does not require reps or sets.",
-            "get_exercise_lift_history" to "Fetch per-exercise lift history from the local workout diary: dated sessions with logged weight × reps sets, the most recent session, and best load in kg. Use for questions like \"what did I bench last?\" or trends for one lift. Optional catalog_id narrows matching; otherwise exercise name is used."
+            "get_exercise_lift_history" to "Fetch per-exercise lift history from the local workout diary: dated sessions with logged weight × reps sets, the most recent session, and best load in kg. Use for questions like \"what did I bench last?\" or trends for one lift. Optional catalog_id narrows matching; otherwise exercise name is used.",
+            "search_exercise_library" to "Search the exercise library (built-in catalog plus the user's own custom exercises) by name or keywords. Returns matching exercises with catalog_id, name, category, equipment, primary and secondary muscles, and is_custom. Optional muscle and equipment filters narrow the results. When the user shares a photo of a gym machine or exercise, identify it first, then search with its likely names. Read-only: it cannot add, edit, or create exercises."
         )
+
+        /**
+         * The bundled catalog's muscle and equipment names, which custom exercises pick from too.
+         * The library-search schema lists them so the model filters with words the library uses.
+         */
+        const val LIBRARY_MUSCLE_NAMES = "abdominals, abductors, adductors, biceps, calves, chest, forearms, glutes, hamstrings, lats, lower back, middle back, neck, quadriceps, shoulders, traps, triceps"
+        const val LIBRARY_EQUIPMENT_NAMES = "bands, barbell, body only, cable, dumbbell, e-z curl bar, exercise ball, foam roll, kettlebells, machine, medicine ball, other"
 
         /** One schema source is wrapped for Gemini, Anthropic, and OpenAI by [ChatService]. */
         fun parameterSchemaFor(toolName: String): Map<String, Any> {
@@ -723,6 +792,18 @@ class CoachTools(
                     "required" to listOf("exercise")
                 )
             }
+            if (toolName == "search_exercise_library") {
+                return linkedMapOf(
+                    "type" to "object",
+                    "properties" to linkedMapOf(
+                        "query" to linkedMapOf("type" to "string", "description" to "Exercise name or keywords, e.g. chest press machine"),
+                        "muscle" to linkedMapOf("type" to "string", "description" to "Optional muscle filter using the library's muscle names: $LIBRARY_MUSCLE_NAMES"),
+                        "equipment" to linkedMapOf("type" to "string", "description" to "Optional equipment filter using the library's equipment names: $LIBRARY_EQUIPMENT_NAMES"),
+                        "limit" to linkedMapOf("type" to "integer", "description" to "Optional max exercises to return (default 10, max 20)")
+                    ),
+                    "required" to listOf("query")
+                )
+            }
             return linkedMapOf(
                 "type" to "object",
                 "properties" to linkedMapOf(
@@ -733,6 +814,165 @@ class CoachTools(
                 "required" to listOf("from", "to")
             )
         }
+
+        /**
+         * Ranks library items for the coach search: whole-name matches first, then items whose
+         * name holds more of the query words, then muscle/equipment/category matches. Words match
+         * by prefix (with a simple plural strip) so "curls" finds "Curl" but "row" skips "Narrow".
+         * When some items match every query word, only those are returned ("incline press" does
+         * not list an incline curl); otherwise items matching any word by name are kept, so a
+         * descriptive query ("hammer strength chest press") still finds the closest exercise.
+         * Mirrors iOS CoachTools.rankedLibraryMatches.
+         */
+        fun rankedLibraryMatches(
+            library: List<ExerciseItem>,
+            query: String,
+            muscle: String = "",
+            equipment: String = ""
+        ): List<ExerciseItem> {
+            val terms = significantWords(searchWords(query))
+            if (terms.isEmpty()) return emptyList()
+            val passesFilters = libraryFilter(muscle, equipment)
+
+            val scored = library.mapNotNull { item ->
+                if (!passesFilters(item)) return@mapNotNull null
+                val muscleWords = searchWords((item.primaryMuscles + item.secondaryMuscles).joinToString(" "))
+                val nameWords = searchWords(item.name)
+                val metadataWords = muscleWords + searchWords("${item.category} ${item.equipment}")
+                var nameHits = 0
+                var metadataHits = 0
+                for (term in terms) {
+                    if (wordsMatch(term, nameWords)) {
+                        nameHits++
+                    } else if (wordsMatch(term, metadataWords)) {
+                        metadataHits++
+                    }
+                }
+                val allMatched = nameHits + metadataHits == terms.size
+                if (nameHits == 0 && !allMatched) return@mapNotNull null
+                var score = nameHits * 10 + metadataHits * 3
+                if (allMatched) score += 20
+                if (nameHits == terms.size) score += 30
+                if (significantWords(nameWords) == terms) score += 100
+                LibraryMatch(item, score, allMatched)
+            }
+            return scored.filter { it.allMatched }.ifEmpty { scored }
+                .sortedWith(
+                    compareByDescending<LibraryMatch> { it.score }
+                        .thenBy(String.CASE_INSENSITIVE_ORDER) { it.item.name }
+                )
+                .map { it.item }
+        }
+
+        private class LibraryMatch(val item: ExerciseItem, val score: Int, val allMatched: Boolean)
+
+        /**
+         * One- and two-letter words ("a", "on", "ez") prefix-match far too many words, so they
+         * only count when the whole query is that short.
+         */
+        private fun significantWords(words: List<String>): List<String> =
+            words.filter { it.length > 2 }.ifEmpty { words }
+
+        /**
+         * Muscle and equipment filters match the library's own words ("abdominals", "body only",
+         * "e-z curl bar"), so common names the model may use are mapped onto those first. Every
+         * filter word must match; an alias matches when any of its library names does.
+         * Mirrors iOS CoachTools.libraryFilter.
+         */
+        fun libraryFilter(muscle: String, equipment: String): (ExerciseItem) -> Boolean {
+            val muscleGroups = filterGroups(muscle, MUSCLE_FILTER_ALIASES)
+            val equipmentGroups = filterGroups(equipment, EQUIPMENT_FILTER_ALIASES)
+            return { item ->
+                groupsMatch(muscleGroups, searchWords((item.primaryMuscles + item.secondaryMuscles).joinToString(" "))) &&
+                    groupsMatch(equipmentGroups, searchWords(item.equipment))
+            }
+        }
+
+        /**
+         * Common muscle names mapped to the library's own ([LIBRARY_MUSCLE_NAMES]). Keys are
+         * singular; plural filters ("legs", "delts") reach them through the same plural strip.
+         */
+        private val MUSCLE_FILTER_ALIASES: Map<String, List<String>> = mapOf(
+            "ab" to listOf("abdominals"),
+            "abs" to listOf("abdominals"),
+            "core" to listOf("abdominals"),
+            "oblique" to listOf("abdominals"),
+            "stomach" to listOf("abdominals"),
+            "pec" to listOf("chest"),
+            "pectoral" to listOf("chest"),
+            "delt" to listOf("shoulders"),
+            "deltoid" to listOf("shoulders"),
+            "calf" to listOf("calves"),
+            "trapezius" to listOf("traps"),
+            "latissimus" to listOf("lats"),
+            "latissimus dorsi" to listOf("lats"),
+            "back" to listOf("back", "lats", "traps"),
+            "upper back" to listOf("middle back", "lats", "traps"),
+            "leg" to listOf("quadriceps", "hamstrings", "glutes", "calves", "adductors", "abductors"),
+            "thigh" to listOf("quadriceps", "hamstrings", "adductors", "abductors"),
+            "inner thigh" to listOf("adductors"),
+            "outer thigh" to listOf("abductors"),
+            "hip" to listOf("glutes", "adductors", "abductors"),
+            "arm" to listOf("biceps", "triceps", "forearms")
+        )
+
+        /**
+         * Common equipment names mapped to the library's own ([LIBRARY_EQUIPMENT_NAMES]). Smith
+         * machine exercises are listed as machine, and cable stations are often called machines.
+         */
+        private val EQUIPMENT_FILTER_ALIASES: Map<String, List<String>> = mapOf(
+            "bodyweight" to listOf("body only"),
+            "body weight" to listOf("body only"),
+            "no equipment" to listOf("body only"),
+            "smith" to listOf("machine"),
+            "machine" to listOf("machine", "cable"),
+            "pulley" to listOf("cable"),
+            "ez" to listOf("e-z curl bar"),
+            "ezbar" to listOf("e-z curl bar"),
+            "resistance" to listOf("bands"),
+            "stability" to listOf("exercise ball"),
+            "swiss" to listOf("exercise ball"),
+            "roller" to listOf("foam roll"),
+            "free weight" to listOf("barbell", "dumbbell", "kettlebells")
+        )
+
+        /**
+         * One entry per filter word (or one for a whole aliased phrase like "body weight"), each
+         * holding the alternative phrases that satisfy it as word lists.
+         */
+        private fun filterGroups(text: String, aliases: Map<String, List<String>>): List<List<List<String>>> {
+            val words = searchWords(text)
+            if (words.isEmpty()) return emptyList()
+            if (words.size > 1) {
+                aliasTargets(words.joinToString(" "), aliases)?.let { phrases -> return listOf(phrases.map(::searchWords)) }
+            }
+            return words.map { word -> (aliasTargets(word, aliases) ?: listOf(word)).map(::searchWords) }
+        }
+
+        private fun groupsMatch(groups: List<List<List<String>>>, words: List<String>): Boolean =
+            groups.all { phrases -> phrases.any { phrase -> phrase.all { wordsMatch(it, words) } } }
+
+        private fun aliasTargets(key: String, aliases: Map<String, List<String>>): List<String>? =
+            termVariants(key).firstNotNullOfOrNull { aliases[it] }
+
+        private val NON_WORD = Regex("[^\\p{L}\\p{M}\\p{N}]+")
+
+        private fun searchWords(text: String): List<String> =
+            text.lowercase().split(NON_WORD).filter { it.isNotEmpty() }
+
+        private fun wordsMatch(term: String, words: List<String>): Boolean {
+            val variants = termVariants(term)
+            return words.any { word -> variants.any { word.startsWith(it) } }
+        }
+
+        private fun termVariants(term: String): List<String> = buildList {
+            add(term)
+            if (term.length > 3 && term.endsWith("es")) add(term.dropLast(2))
+            if (term.length > 3 && term.endsWith("s")) add(term.dropLast(1))
+        }
+
+        private fun libraryMetadata(value: String): String? =
+            value.trim().takeUnless { it.isEmpty() || it == "Unspecified" }
 
         private const val POUNDS_PER_KILOGRAM = 2.204_622_621_8
         private val GSON = GsonBuilder().serializeNulls().create()

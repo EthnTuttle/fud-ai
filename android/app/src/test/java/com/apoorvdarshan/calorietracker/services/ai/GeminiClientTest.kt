@@ -33,6 +33,19 @@ class GeminiClientTest {
     }
 
     @Test
+    fun latestAliasesKeepAFastThinkingLevel() {
+        // Versionless aliases must not fall through to Gemini's default high thinking (#357/#358).
+        assertEquals("minimal", GeminiClient.thinkingLevel("gemini-flash-lite-latest"))
+        assertEquals("minimal", GeminiClient.thinkingLevel("models/gemini-flash-lite-latest"))
+        assertEquals("low", GeminiClient.thinkingLevel("gemini-flash-latest"))
+        assertEquals("low", GeminiClient.thinkingLevel("models/gemini-flash-latest"))
+        assertEquals("low", GeminiClient.thinkingLevel(" Gemini-Flash-Latest "))
+
+        val json = GeminiClient.GenerationConfig.forFoodAnalysis("gemini-flash-latest", 1024, jsonResponse = true).toJson()!!
+        assertEquals("low", json.obj("thinkingConfig").string("thinkingLevel"))
+    }
+
+    @Test
     fun preGemini3AndUnknownModelsSendNoThinkingLevel() {
         listOf("gemini-2.5-flash", "gemini-2.0-flash-lite", "gemma-3-27b-it", "custom-proxy-model", "")
             .forEach { assertNull(it, GeminiClient.thinkingLevel(it)) }

@@ -40,6 +40,22 @@ internal object FoodImageDecoder {
         return decodeWithImageDecoder(maxDimension) { ImageDecoder.createSource(file) }
     }
 
+    /**
+     * Longest side from the image header alone (no pixel decode), or null when BitmapFactory
+     * can't read the header — e.g. HEIC on some OEM builds; callers then decode to find out.
+     */
+    fun longestSide(bytes: ByteArray): Int? =
+        headerLongestSide { options -> BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options) }
+
+    fun longestSide(file: File): Int? =
+        headerLongestSide { options -> BitmapFactory.decodeFile(file.absolutePath, options) }
+
+    private fun headerLongestSide(readBitmap: (BitmapFactory.Options) -> Bitmap?): Int? = runCatching {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        readBitmap(bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) null else max(bounds.outWidth, bounds.outHeight)
+    }.getOrNull()
+
     /** The fallback path on its own, so tests can prove it matches the BitmapFactory path. */
     @VisibleForTesting
     @RequiresApi(Build.VERSION_CODES.P)

@@ -204,6 +204,8 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
             "gemini-3.7-flash",              // vision, prior Flash model
             "gemini-3.6-flash",              // vision, prior stable Flash model
             "gemini-3.5-flash",              // vision, stable Flash model
+            "gemini-flash-latest",           // vision, Google's alias for the newest Flash (#358)
+            "gemini-flash-lite-latest",      // vision, Google's alias for the newest Flash-Lite (#358)
             "gemini-3.1-pro-preview",        // vision, current flagship (preview)
         ]
         case .openai: [

@@ -20,6 +20,8 @@ import com.apoorvdarshan.calorietracker.backup.CloudBackupCoordinator
 import com.apoorvdarshan.calorietracker.data.WeeklyChallengeRepository
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.services.NotificationService
+import com.apoorvdarshan.calorietracker.services.StorageMaintenance
+import com.apoorvdarshan.calorietracker.services.WorkoutFrameStore
 import com.apoorvdarshan.calorietracker.services.WidgetSnapshotWriter
 import com.apoorvdarshan.calorietracker.services.AdaptiveGoalResult
 import com.apoorvdarshan.calorietracker.services.DailyHealthEnergyEvidence
@@ -30,6 +32,7 @@ import com.apoorvdarshan.calorietracker.models.CurrentMealSchedule
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.services.ai.ChatService
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
+import com.apoorvdarshan.calorietracker.services.health.HealthCapabilities
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectManager
 import com.apoorvdarshan.calorietracker.services.hosted.AiAccessMode
 import com.apoorvdarshan.calorietracker.services.hosted.BillingManager
@@ -201,6 +204,76 @@ open class FudAIApp : Application() {
  *  persisted alongside the token so we can detect a newly-granted read capability. */
 private const val HEALTH_READ_TYPE_WEIGHT = "weight"
 private const val HEALTH_READ_TYPE_BODY_FAT = "bodyfat"
+private const val HEALTH_READ_TYPE_HISTORY = "history"
+
+/** Weight/body-fat backfill window — the Progress "All" range (TimeRange.ALL_TIME). */
+internal const val HEALTH_BODY_BACKFILL_DAYS = 3650L
+
+/** Labels for what the weight/body-fat changes token can see. History access is tracked
+ *  too: granting it later unlocks records older than the 30-day pre-grant window, which
+ *  the token (it only reports new changes) would never deliver. */
+internal fun healthReadTokenTypes(caps: HealthCapabilities): Set<String> = buildSet {
+    if (caps.weightRead) add(HEALTH_READ_TYPE_WEIGHT)
+    if (caps.bodyFatRead) add(HEALTH_READ_TYPE_BODY_FAT)
+    if (caps.historyRead && isNotEmpty()) add(HEALTH_READ_TYPE_HISTORY)
+}
+
+/** Stored with the read types by builds that remember deleted weight/body-fat ids, so every
+ *  deletion since that token's backfill is on record and a full re-import is safe. */
+private const val HEALTH_READ_DELETIONS_TRACKED = "deletionsTracked"
+
+/** Token labels to store when seeding a changes token for [desiredTypes]. */
+internal fun healthReadSeededTypes(desiredTypes: Set<String>): Set<String> =
+    desiredTypes + HEALTH_READ_DELETIONS_TRACKED
+
+/** How one weight/body-fat read sync uses Health Connect. */
+internal enum class HealthReadSync {
+    /** Consume the changes token. */
+    CHANGES,
+    /** No token, or a metric became readable after it was seeded: import the whole
+     *  backfill window and seed a new token. */
+    FULL_BACKFILL,
+    /** Only history access is new, and the token was seeded by a build that did not
+     *  remember deletions. Its backfill already imported everything readable then, and
+     *  importing that window again would bring back readings deleted before deletions
+     *  were remembered, so only records older than that window are imported (see
+     *  [healthHistoryImportCutoff]). */
+    OLDER_HISTORY_ONLY
+}
+
+internal fun healthReadSync(hasToken: Boolean, seededTypes: Set<String>, desiredTypes: Set<String>): HealthReadSync {
+    if (!hasToken) return HealthReadSync.FULL_BACKFILL
+    val missing = desiredTypes - seededTypes
+    return when {
+        missing.isEmpty() -> HealthReadSync.CHANGES
+        missing == setOf(HEALTH_READ_TYPE_HISTORY) && HEALTH_READ_DELETIONS_TRACKED !in seededTypes ->
+            HealthReadSync.OLDER_HISTORY_ONLY
+        else -> HealthReadSync.FULL_BACKFILL
+    }
+}
+
+/** Without history access Health Connect returns other apps' records from 30 days before
+ *  the first grant on, and nothing can be granted before the app is installed, so records
+ *  older than this were never readable before history access. */
+internal fun healthRecordsHiddenWithoutHistoryBefore(firstInstall: Instant): Instant =
+    firstInstall.minus(Duration.ofDays(30))
+
+/**
+ * Where [HealthReadSync.OLDER_HISTORY_ONLY] stops importing: records older than this.
+ *
+ * The earlier backfill imported every other-app reading it could read, so the oldest one
+ * the history still holds ([heldExternalReadingTimes], weight and body fat together)
+ * marks where its window began, however long after install the first grant came. Newer
+ * readings the history lacks were readable then, so the user deleted them and they stay
+ * out. With none held, the window began no earlier than 30 days before install
+ * ([healthRecordsHiddenWithoutHistoryBefore]). Null when neither is known.
+ */
+internal fun healthHistoryImportCutoff(heldExternalReadingTimes: List<Instant>, firstInstall: Instant?): Instant? =
+    heldExternalReadingTimes.minOrNull() ?: firstInstall?.let(::healthRecordsHiddenWithoutHistoryBefore)
+
+/** Token labels after [HealthReadSync.OLDER_HISTORY_ONLY] imported the older records. */
+internal fun healthReadTypesWithHistory(seededTypes: Set<String>): Set<String> =
+    seededTypes + HEALTH_READ_TYPE_HISTORY
 
 data class GoalCalculationEvidenceContext(
     val evidence: GoalEvidence,
@@ -274,6 +347,14 @@ class AppContainer(app: FudAIApp) {
         app, prefs, imageStore, keyStore,
         pruneUnusedPhotos = { foodRepository.pruneOrphanedImages() },
     )
+    val storageMaintenance by lazy {
+        StorageMaintenance(
+            photos = imageStore,
+            workoutFrameCacheBytes = { WorkoutFrameStore.get(appContext).cacheBytes() },
+            clearWorkoutFrameCache = { WorkoutFrameStore.get(appContext).clearCache() },
+            modelBytes = localModels::storedBytes
+        )
+    }
 
     val localGemma = LocalGemmaRuntime(app, localModels)
     val localWhisper = LocalWhisperRuntime(app, localModels)
@@ -368,28 +449,40 @@ class AppContainer(app: FudAIApp) {
 
             if (!caps.weightRead && !caps.bodyFatRead) return
 
-            val desiredTypes = buildSet {
-                if (caps.weightRead) add(HEALTH_READ_TYPE_WEIGHT)
-                if (caps.bodyFatRead) add(HEALTH_READ_TYPE_BODY_FAT)
-            }
-            // If a read type was granted AFTER the token was seeded, the existing token never
-            // observes it. Drop the token so we re-enter the backfill branch and import that
-            // metric's history + re-seed a token covering everything now granted.
-            if (!prefs.healthChangesTokenTypes.first().containsAll(desiredTypes)) {
-                prefs.clearHealthChangesToken()
+            val desiredTypes = healthReadTokenTypes(caps)
+            // If a read type (or history access) was granted AFTER the token was seeded, the
+            // existing token never observes the newly readable records. Drop the token so we
+            // re-enter the backfill branch and import that history + re-seed a token covering
+            // everything now granted — or, when only history is new, import just the older
+            // records (see HealthReadSync.OLDER_HISTORY_ONLY) and keep the token.
+            val seededTypes = prefs.healthChangesTokenTypes.first()
+            when (healthReadSync(prefs.healthChangesToken.first() != null, seededTypes, desiredTypes)) {
+                HealthReadSync.FULL_BACKFILL -> prefs.clearHealthChangesToken()
+                // A failed read retries on the next sync. The token waits too: readings it
+                // would import in between could move the import's cutoff.
+                HealthReadSync.OLDER_HISTORY_ONLY -> if (!importHealthHistoryOlderThanToken(caps, seededTypes)) return
+                HealthReadSync.CHANGES -> Unit
             }
 
             val token = prefs.healthChangesToken.first()
             if (token == null) {
-                // First sync: backfill recent history (two years) so existing scale data shows up.
+                // First sync: backfill history so existing scale data and older weigh-ins show
+                // up. Matches Progress "All"; without history access Health Connect itself
+                // still caps other apps' records at 30 days before the first grant.
                 val now = Instant.now()
-                val from = now.minus(Duration.ofDays(730))
+                val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
+                var readEverything = true
                 if (caps.weightRead) {
-                    weightRepository.importExternalWeights(health.readWeights(from, now))
+                    val weights = health.readWeights(from, now)
+                    if (weights != null) weightRepository.importExternalWeights(weights) else readEverything = false
                 }
                 if (caps.bodyFatRead) {
-                    bodyFatRepository.importExternalBodyFats(health.readBodyFats(from, now))
+                    val bodyFats = health.readBodyFats(from, now)
+                    if (bodyFats != null) bodyFatRepository.importExternalBodyFats(bodyFats) else readEverything = false
                 }
+                // A token seeded now would never deliver what a failed read missed; leave it
+                // unset so the next sync runs the backfill again (imports are deduped).
+                if (!readEverything) return
                 // Seed a token covering only the types we can actually read.
                 val recordTypes = buildSet {
                     if (caps.weightRead) add(androidx.health.connect.client.records.WeightRecord::class)
@@ -397,7 +490,7 @@ class AppContainer(app: FudAIApp) {
                 }
                 health.getChangesToken(recordTypes)?.let {
                     prefs.setHealthChangesToken(it)
-                    prefs.setHealthChangesTokenTypes(desiredTypes)
+                    prefs.setHealthChangesTokenTypes(healthReadSeededTypes(desiredTypes))
                 }
             } else {
                 var next: String? = null
@@ -418,6 +511,30 @@ class AppContainer(app: FudAIApp) {
         } finally {
             healthReadSyncInFlight = false
         }
+    }
+
+    /** [HealthReadSync.OLDER_HISTORY_ONLY]: imports the weigh-ins and body-fat readings
+     *  that history access newly unlocked, then marks the token as covering history.
+     *  Returns false when a read failed: nothing is imported or marked then, so the next
+     *  sync retries with the same cutoff. */
+    private suspend fun importHealthHistoryOlderThanToken(caps: HealthCapabilities, seededTypes: Set<String>): Boolean {
+        val now = Instant.now()
+        val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
+        // The whole window, not just the older part: the readings the history already
+        // holds are what place the cutoff.
+        val weights = if (caps.weightRead) health.readWeights(from, now) ?: return false else emptyList()
+        val bodyFats = if (caps.bodyFatRead) health.readBodyFats(from, now) ?: return false else emptyList()
+        val firstInstall = runCatching {
+            Instant.ofEpochMilli(appContext.packageManager.getPackageInfo(appContext.packageName, 0).firstInstallTime)
+        }.getOrNull()
+        val cutoff = healthHistoryImportCutoff(
+            weightRepository.heldExternalReadingTimes(weights) + bodyFatRepository.heldExternalReadingTimes(bodyFats),
+            firstInstall
+        ) ?: return true // No safe cutoff yet; try again next sync without holding up the token.
+        weightRepository.importExternalWeights(weights.filter { it.time.isBefore(cutoff) })
+        bodyFatRepository.importExternalBodyFats(bodyFats.filter { it.time.isBefore(cutoff) })
+        prefs.setHealthChangesTokenTypes(healthReadTypesWithHistory(seededTypes))
+        return true
     }
 
     /** One privacy-safe evidence snapshot shared by manual Recalculate and Adaptive Goals. Health
