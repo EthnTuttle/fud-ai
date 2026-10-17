@@ -284,7 +284,7 @@ internal enum class SettingsCategory(
     AI_PROVIDERS(R.string.settings_category_ai_providers, Icons.Outlined.SmartToy),
     SPEECH_TO_TEXT(R.string.settings_section_speech, Icons.Outlined.Mic),
     VOICE_ASSISTANT(R.string.settings_category_voice_assistant, Icons.Outlined.RecordVoiceOver),
-    APP_PREFERENCES(R.string.settings_section_app, Icons.Outlined.Palette),
+    APP_PREFERENCES(R.string.settings_section_app, Icons.Outlined.Tune),
     WORKOUT(R.string.settings_section_workout, Icons.Outlined.FitnessCenter),
     HEALTH_DATA(R.string.settings_section_health, Icons.Outlined.Favorite),
     DATA_MANAGEMENT(R.string.settings_section_data_management, Icons.Outlined.Download),
