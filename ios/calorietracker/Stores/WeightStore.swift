@@ -186,16 +186,33 @@ class WeightStore {
     /// Decided against the live entries so overlapping imports can't duplicate.
     /// Returns false when the samples were not saved; HealthKitManager then
     /// keeps its import anchor (or backfill version) so they arrive again.
+    /// `onlyUnloggedDays` also skips readings on any day the history already
+    /// has a weigh-in for (see `HealthKitManager.WeightChangesImport`).
     @discardableResult
-    func importHealthSamples(_ samples: [WeightHealthSample], restoreOwnSamplesIfEmpty: Bool) -> Bool {
+    func importHealthSamples(
+        _ samples: [WeightHealthSample],
+        restoreOwnSamplesIfEmpty: Bool,
+        onlyUnloggedDays: Bool = false
+    ) -> Bool {
         guard !isPersistenceBlocked else { return false }
         guard !samples.isEmpty else { return true }
         return importExternalEntries(Self.healthImportCandidates(
             samples,
             existing: entries,
             tombstones: deletionTombstones,
-            restoringOwnHistory: restoreOwnSamplesIfEmpty && entries.isEmpty
+            restoringOwnHistory: restoreOwnSamplesIfEmpty && entries.isEmpty,
+            onlyUnloggedDays: onlyUnloggedDays
         ))
+    }
+
+    /// One run of HealthKitManager's anchored weight import.
+    @discardableResult
+    func importHealthSamples(_ samples: [WeightHealthSample], for mode: HealthKitManager.WeightChangesImport) -> Bool {
+        importHealthSamples(
+            samples,
+            restoreOwnSamplesIfEmpty: mode == .fullHistory,
+            onlyUnloggedDays: mode == .unloggedDaysOnly
+        )
     }
 
     static func healthImportCandidates(
@@ -203,6 +220,7 @@ class WeightStore {
         existing: [WeightEntry],
         tombstones: [WeightDeletionTombstone],
         restoringOwnHistory: Bool,
+        onlyUnloggedDays: Bool = false,
         calendar: Calendar = .current
     ) -> [WeightEntry] {
         // Same-day + close-value match catches our own pre-metadata writes,
@@ -212,9 +230,13 @@ class WeightStore {
         for entry in existing {
             loggedByDay[calendar.startOfDay(for: entry.date), default: []].append(entry.weightKg)
         }
+        // Days the history held before this batch; readings from the batch
+        // itself don't close a day to its other readings.
+        let historyDays = Set(loggedByDay.keys)
         var fresh: [WeightEntry] = []
         for sample in samples {
             let day = calendar.startOfDay(for: sample.date)
+            if onlyUnloggedDays && historyDays.contains(day) { continue }
             if loggedByDay[day, default: []].contains(where: { abs($0 - sample.weightKg) < 0.01 }) { continue }
             if tombstones.contains(where: { $0.matches(sample, calendar: calendar) }) { continue }
             if let fudaiID = sample.fudaiID {

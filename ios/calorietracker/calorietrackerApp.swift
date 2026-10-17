@@ -233,8 +233,8 @@ struct calorietrackerApp: App {
         healthKitManager.onBodyMeasurementsChanged = { [weightStore, bodyFatStore, healthKitManager] weightKg, weightDate, weightFudaiID, heightCm, bodyFat, bodyFatDate, bodyFatFudaiID, dob, sex in
             // The latest-sample read below misses older readings added to Health
             // later (backdated entries, late scale syncs); pick those up too.
-            healthKitManager.importWeightChangesFromHealthKit { samples, isFullHistory in
-                weightStore.importHealthSamples(samples, restoreOwnSamplesIfEmpty: isFullHistory)
+            healthKitManager.importWeightChangesFromHealthKit { samples, mode in
+                weightStore.importHealthSamples(samples, for: mode)
             }
             guard var profile = UserProfile.load() else { return }
             var changed = false
@@ -372,8 +372,8 @@ struct calorietrackerApp: App {
         healthKitManager.backfillWeightFromHealthKitIfNeeded { [weightStore] samples in
             weightStore.importHealthSamples(samples, restoreOwnSamplesIfEmpty: true)
         }
-        healthKitManager.importWeightChangesFromHealthKit { [weightStore] samples, isFullHistory in
-            weightStore.importHealthSamples(samples, restoreOwnSamplesIfEmpty: isFullHistory)
+        healthKitManager.importWeightChangesFromHealthKit { [weightStore] samples, mode in
+            weightStore.importHealthSamples(samples, for: mode)
         }
         healthKitManager.backfillBodyFatFromHealthKitIfNeeded(
             existing: { [bodyFatStore] in bodyFatStore.entries },

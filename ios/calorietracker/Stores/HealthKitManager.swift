@@ -827,30 +827,34 @@ class HealthKitManager {
         case newSamples
         /// No anchor and no completed backfill: the whole history, like the backfill.
         case fullHistory
-        /// No anchor, but the full-history backfill already ran on this install:
-        /// only store the anchor. That backfill imported everything Health held
-        /// then, and readings deleted before deletions were remembered have no
-        /// tombstone, so importing the whole history again would bring them back.
-        case anchorOnly
+        /// No anchor, but the full-history backfill already ran on this install
+        /// (an update from a build without this import): the whole history, but
+        /// only readings on days the weight history has no weigh-in for. Readings
+        /// the latest-sample observer missed since that backfill (backdated in
+        /// Health, synced late by a scale) mostly fill such days. A reading deleted
+        /// before deletions were remembered has no tombstone, and the same scan
+        /// with the usual rules would bring it back; skipping logged days keeps
+        /// it out whenever its day still holds another weigh-in.
+        case unloggedDaysOnly
     }
 
     static func weightChangesImport(hasAnchor: Bool, backfilledVersion: Int, typesVersion: Int) -> WeightChangesImport {
         if hasAnchor { return .newSamples }
-        return backfilledVersion >= typesVersion ? .anchorOnly : .fullHistory
+        return backfilledVersion >= typesVersion ? .unloggedDaysOnly : .fullHistory
     }
 
     /// Imports weight samples added to Apple Health since the previous run,
     /// whatever their date. The observer only reads the LATEST sample, so a
     /// reading backdated in the Health app (or synced late by a scale) never
     /// reached the chart once the one-shot backfill had run. The first run (no
-    /// anchor yet) scans the full history only when the backfill hasn't run —
-    /// see `WeightChangesImport`; `isFullHistory` tells the caller so own
-    /// samples are only restored from a full scan, like the backfill. Calls
-    /// arriving mid-run queue one follow-up run instead of being dropped.
+    /// anchor yet) scans the full history, under the rules `mode` (see
+    /// `WeightChangesImport`) gives the caller; own samples are only restored
+    /// by `.fullHistory`, like the backfill. Calls arriving mid-run queue one
+    /// follow-up run instead of being dropped.
     /// `importSamples` returns false when the weight store could not save the
     /// samples; the anchor then stays put so the next run delivers them again.
     func importWeightChangesFromHealthKit(
-        importSamples: @escaping (_ samples: [WeightHealthSample], _ isFullHistory: Bool) -> Bool
+        importSamples: @escaping (_ samples: [WeightHealthSample], _ mode: WeightChangesImport) -> Bool
     ) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         guard !isImportingWeightChanges else {
@@ -870,14 +874,12 @@ class HealthKitManager {
                 )
                 guard let result = await fetchWeightSamples(after: anchor) else { return }
                 guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
-                if mode != .anchorOnly {
-                    let weightSamples = result.samples.map {
-                        WeightHealthSample(weightKg: $0.value, date: $0.date, fudaiID: $0.fudaiID)
-                    }
-                    let imported = await MainActor.run { importSamples(weightSamples, mode == .fullHistory) }
-                    // Advancing the anchor past samples the store refused would lose them.
-                    guard imported else { return }
+                let weightSamples = result.samples.map {
+                    WeightHealthSample(weightKg: $0.value, date: $0.date, fudaiID: $0.fudaiID)
                 }
+                let imported = await MainActor.run { importSamples(weightSamples, mode) }
+                // Advancing the anchor past samples the store refused would lose them.
+                guard imported else { return }
                 saveWeightImportAnchor(result.anchor)
             } while weightChangesImportRequested
         }

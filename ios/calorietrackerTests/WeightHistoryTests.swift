@@ -182,13 +182,63 @@ struct WeightHistoryTests {
         #expect(restored.map(\.id) == [ownID])
     }
 
-    @Test func firstAnchoredWeightImportOnlyStoresItsAnchorAfterACompletedBackfill() {
+    @Test func firstAnchoredWeightImportAfterACompletedBackfillOnlyFillsUnloggedDays() {
         // Existing installs already backfilled the full history; scanning it again
-        // would re-add readings deleted before tombstones existed.
-        #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 9, typesVersion: 9) == .anchorOnly)
+        // with the usual rules would re-add readings deleted before tombstones existed.
+        #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 9, typesVersion: 9) == .unloggedDaysOnly)
         #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 0, typesVersion: 9) == .fullHistory)
         #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 8, typesVersion: 9) == .fullHistory)
         #expect(HealthKitManager.weightChangesImport(hasAnchor: true, backfilledVersion: 9, typesVersion: 9) == .newSamples)
+    }
+
+    @Test func firstScanAfterTheBackfillImportsMissedReadingsButNotOldDeletions() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "UTC"))
+        let day = Date(timeIntervalSince1970: 1_790_000_000) // 14:13 UTC
+        // The history after the old backfill: one weigh-in that day. Before this
+        // update the user deleted a wrong scale reading from the same day, and no
+        // tombstone recorded it.
+        let existing = [WeightEntry(date: day, weightKg: 80)]
+        let deletedBeforeUpdate = WeightHealthSample(weightKg: 92.3, date: day.addingTimeInterval(-3_600), fudaiID: nil)
+        // Readings the latest-sample observer never saw: one backdated in Health,
+        // two a scale synced late for the same day.
+        let backdated = WeightHealthSample(weightKg: 84, date: day.addingTimeInterval(-86_400 * 60), fudaiID: nil)
+        let lateFirst = WeightHealthSample(weightKg: 79.8, date: day.addingTimeInterval(86_400 * 2), fudaiID: nil)
+        let lateSecond = WeightHealthSample(weightKg: 80.4, date: lateFirst.date.addingTimeInterval(3_600), fudaiID: nil)
+        // Deleted since this build: its tombstone still applies.
+        let tombstoned = WeightHealthSample(weightKg: 83, date: day.addingTimeInterval(-86_400 * 30), fudaiID: nil)
+        let tombstone = WeightDeletionTombstone(entryID: UUID(), date: tombstoned.date, weightKg: 83)
+        let own = WeightHealthSample(weightKg: 78, date: day.addingTimeInterval(86_400 * 3), fudaiID: UUID())
+        let samples = [backdated, tombstoned, deletedBeforeUpdate, lateFirst, lateSecond, own]
+
+        let fresh = WeightStore.healthImportCandidates(
+            samples, existing: existing, tombstones: [tombstone],
+            restoringOwnHistory: false, onlyUnloggedDays: true, calendar: calendar
+        )
+        #expect(fresh.map(\.weightKg) == [84, 79.8, 80.4])
+
+        // The usual rules alone would bring the old deletion back.
+        let usual = WeightStore.healthImportCandidates(
+            samples, existing: existing, tombstones: [tombstone],
+            restoringOwnHistory: false, calendar: calendar
+        )
+        #expect(usual.map(\.weightKg) == [84, 92.3, 79.8, 80.4])
+    }
+
+    @Test func storeImportsTheFirstAnchoredScanByItsMode() throws {
+        try withStore { store, _ in
+            let day = Date(timeIntervalSince1970: 1_790_000_000)
+            store.replaceAllEntries([WeightEntry(date: day, weightKg: 80)])
+            let sameDay = WeightHealthSample(weightKg: 92.3, date: day.addingTimeInterval(60), fudaiID: nil)
+            let otherDay = WeightHealthSample(weightKg: 84, date: day.addingTimeInterval(-86_400 * 60), fudaiID: nil)
+
+            #expect(store.importHealthSamples([sameDay, otherDay], for: .unloggedDaysOnly))
+            #expect(store.entries.map(\.weightKg).sorted() == [80, 84])
+
+            // Later runs (an anchor is stored) import new readings on logged days too.
+            #expect(store.importHealthSamples([sameDay], for: .newSamples))
+            #expect(store.entries.map(\.weightKg).sorted() == [80, 84, 92.3])
+        }
     }
 
     // MARK: - Logging older weigh-ins
