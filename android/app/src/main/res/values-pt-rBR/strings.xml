@@ -713,6 +713,7 @@
     <string name="whats_new_v30_adaptive">Metas adaptativas e Queima de energia saíram da fase experimental e vêm ativadas por padrão em novas instalações.</string>
     <string name="whats_new_v30_widgets">Widgets redesenhados: o estilo velocímetro da tela inicial, desenhado no tamanho real de cada widget.</string>
     <string name="whats_new_v30_restore">Reinstalou ou trocou de celular? Seu diário alimentar, peso e gordura corporal agora são restaurados automaticamente do Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">Não há espaço livre suficiente para restaurar este backup. Libere espaço e tente novamente.</string>
     <string name="settings_fasting_tracking">Acompanhamento de jejum</string>
     <string name="settings_fasting_goal">Meta de jejum padrão</string>
     <string name="settings_fasting_goal_value">%1$d horas</string>

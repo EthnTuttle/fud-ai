@@ -716,6 +716,7 @@
     <string name="whats_new_v30_adaptive">Obiectivele adaptive și Energia consumată au ieșit din faza experimentală și sunt activate implicit la instalările noi.</string>
     <string name="whats_new_v30_widgets">Widgeturi reproiectate: stilul vitezometru din ecranul principal, desenat la dimensiunea reală a fiecărui widget.</string>
     <string name="whats_new_v30_restore">Ai reinstalat sau ai schimbat telefonul? Jurnalul alimentar, greutatea și grăsimea corporală se restaurează acum automat din Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">Nu există suficient spațiu liber pentru a restaura această copie de rezervă. Eliberează spațiu și încearcă din nou.</string>
     <string name="settings_fasting_tracking">Urmărirea postului</string>
     <string name="settings_fasting_goal">Obiectiv implicit de post</string>
     <string name="settings_fasting_goal_value">%1$d ore</string>

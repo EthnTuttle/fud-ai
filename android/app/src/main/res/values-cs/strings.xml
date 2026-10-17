@@ -751,6 +751,7 @@
     <string name="whats_new_v30_adaptive">Adaptivní cíle a Spálená energie opustily Experimentální a u nových instalací jsou zapnuté.</string>
     <string name="whats_new_v30_widgets">Nový design widgetů: tachometr jako na Domů, vykreslený ve skutečné velikosti každého widgetu.</string>
     <string name="whats_new_v30_restore">Přeinstalace nebo nový telefon? Deník jídel, váha i tělesný tuk se teď automaticky obnoví z Health Connect.</string>
+    <string name="cloud_backup_restore_no_space">Na obnovení této zálohy není dost volného místa. Uvolni trochu místa a zkus to znovu.</string>
     <string name="export_diary_title">Export deníku jídel</string>
     <string name="export_range">Období</string>
     <string name="export_format">Formát</string>

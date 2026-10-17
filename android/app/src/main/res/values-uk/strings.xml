@@ -1028,6 +1028,7 @@
     <string name="cloud_backup_signed_in">Увійшли як %1$s</string>
     <string name="cloud_backup_turn_on">Увімкнути</string>
     <string name="cloud_backup_sign_in_failed">Не вдалося відкрити вхід через Google.</string>
+    <string name="cloud_backup_restore_no_space">Недостатньо вільного місця, щоб відновити цю резервну копію. Звільніть місце й спробуйте ще раз.</string>
     <string name="export_diary_title">Експортувати щоденник харчування</string>
     <string name="import_diary_title">Імпортувати щоденник харчування</string>
     <string name="import_entries">Записи про їжу</string>
