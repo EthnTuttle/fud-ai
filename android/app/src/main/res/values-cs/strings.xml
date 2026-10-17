@@ -1,5 +1,6 @@
 <resources>
     <!-- Widgets -->
+    <string name="app_name">Fud AI</string>
     <string name="widget_calorie_label">Fud AI Kalorie</string>
     <string name="widget_calorie_description">Přehled dnešních kalorií a maker na první pohled.</string>
     <string name="widget_protein_label">Fud AI Bílkoviny</string>
@@ -18,20 +19,44 @@
     <string name="widget_kcal_left_format">zbývá %1$d kcal</string>
     <string name="widget_kj_left_format">zbývá %1$d kJ</string>
     <string name="kj_value_format">%1$,d kJ</string>
+    <string name="grams_value_format">%1$d g</string>
+    <string name="grams_value_decimal_format">%1$.1f g</string>
+    <string name="kg_value_format">%1$.1f kg</string>
+    <string name="lbs_value_format">%1$.1f lb</string>
     <string name="challenge_days_kj_format">%1$d/7 dní · %2$d kJ</string>
     <string name="health_import_count_kj">Nové záznamy: %1$d · %2$d kJ</string>
     <string name="workout_text_estimate_kj">Odhadovaný výdej: %1$d kJ</string>
     <string name="unit_kj">kJ</string>
+    <string name="unit_g">g</string>
+    <string name="unit_mg">mg</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_lbs">lb</string>
+    <string name="unit_ft">ft</string>
+    <string name="unit_in">in</string>
+    <string name="unit_ft_in">ft / in</string>
+    <string name="kcal_value_format">%1$,d kcal</string>
     <string name="widget_g_left_format">zbývá %1$d g</string>
+    <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">bílkoviny g</string>
+    <string name="widget_value_unit_format">%1$d%2$s / %3$d%4$s</string>
+    <string name="widget_center_small_format">/ %1$d</string>
+    <string name="widget_center_small_g_format">/ %1$d g</string>
+    <string name="widget_center_large_g_format">%1$d g</string>
 
     <!-- Common buttons / actions -->
     <string name="action_save">Uložit</string>
     <string name="action_cancel">Zrušit</string>
     <string name="action_retry">Zkusit znovu</string>
+    <string name="action_scan_label">Skenovat etiketu</string>
     <string name="action_done">Hotovo</string>
+    <string name="action_ok">OK</string>
+    <string name="action_info">Info</string>
     <string name="action_clear">Vymazat</string>
     <string name="action_delete">Smazat</string>
+    <string name="action_remove">Odebrat</string>
+    <string name="action_download">Stáhnout</string>
     <string name="action_continue">Pokračovat</string>
     <string name="action_get_started">Začít</string>
     <string name="action_log">Zapsat</string>
@@ -42,10 +67,17 @@
     <string name="action_keep_going">Jen tak dál</string>
     <string name="action_send">Odeslat</string>
     <string name="action_pin">Připnout</string>
+    <string name="unit_kcal">kcal</string>
 
     <!-- Generic units / labels -->
     <string name="kg_per_week_format">%1$.2f kg/týd.</string>
     <string name="lbs_per_week_format">%1$.2f lbs/týd.</string>
+    <string name="height_cm_format">%1$d cm</string>
+    <string name="feet_inches_format">%1$d\' %2$d\"</string>
+    <string name="value_unit_format">%1$d %2$s</string>
+    <string name="ft_label_format">%1$d ft</string>
+    <string name="in_label_format">%1$d in</string>
+    <string name="bullet">·</string>
 
     <!-- Open Food Facts product metadata -->
     <string name="product_information">Informace o produktu</string>
@@ -108,10 +140,38 @@
     <string name="autobalance_protein">Bílkoviny</string>
     <string name="autobalance_carbs">Sacharidy</string>
     <string name="autobalance_fat">Tuky</string>
+    <string name="ai_provider_gemini">Google Gemini</string>
+    <string name="ai_provider_openai">OpenAI</string>
+    <string name="ai_provider_anthropic">Anthropic Claude</string>
+    <string name="ai_provider_xai">xAI Grok</string>
+    <string name="ai_provider_openrouter">OpenRouter</string>
+    <string name="ai_provider_together">Together AI</string>
+    <string name="ai_provider_groq">Groq</string>
+    <string name="ai_provider_huggingface">Hugging Face</string>
+    <string name="ai_provider_fireworks">Fireworks AI</string>
+    <string name="ai_provider_deepinfra">DeepInfra</string>
+    <string name="ai_provider_mistral">Mistral</string>
+    <string name="ai_provider_deepseek">DeepSeek</string>
+    <string name="ai_provider_cerebras">Cerebras</string>
+    <string name="ai_provider_local_gemma">Gemma 4 E2B (v zařízení)</string>
 
     <!-- AI Provider names -->
     <string name="ai_provider_ollama">Ollama (lokální)</string>
     <string name="ai_provider_custom">Vlastní (kompatibilní s OpenAI)</string>
+    <string name="ai_key_placeholder_gemini">Vlož API klíč Gemini</string>
+    <string name="ai_key_placeholder_openai">Vlož API klíč OpenAI</string>
+    <string name="ai_key_placeholder_anthropic">Vlož API klíč Claude</string>
+    <string name="ai_key_placeholder_xai">Vlož API klíč Grok</string>
+    <string name="ai_key_placeholder_openrouter">Vlož API klíč OpenRouter</string>
+    <string name="ai_key_placeholder_together">Vlož API klíč Together AI</string>
+    <string name="ai_key_placeholder_groq">Vlož API klíč Groq</string>
+    <string name="ai_key_placeholder_huggingface">Vlož API klíč Hugging Face</string>
+    <string name="ai_key_placeholder_fireworks">Vlož API klíč Fireworks</string>
+    <string name="ai_key_placeholder_deepinfra">Vlož API klíč DeepInfra</string>
+    <string name="ai_key_placeholder_mistral">Vlož API klíč Mistral</string>
+    <string name="ai_key_placeholder_deepseek">Vlož API klíč DeepSeek</string>
+    <string name="ai_key_placeholder_cerebras">Vlož API klíč Cerebras</string>
+    <string name="ai_key_placeholder_local">Klíč není potřeba</string>
 
     <!-- AI Provider API key placeholders -->
     <string name="ai_key_placeholder_ollama">Klíč není potřeba</string>
@@ -119,15 +179,29 @@
 
     <!-- Speech Provider -->
     <string name="speech_provider_native">Nativní (v zařízení)</string>
+    <string name="speech_provider_local_whisper">Whisper Base (v zařízení)</string>
+    <string name="speech_provider_gemini">Gemini Audio</string>
+    <string name="speech_provider_openai">OpenAI GPT-Transcribe</string>
+    <string name="speech_provider_groq">Groq (Whisper)</string>
+    <string name="speech_provider_mistral">Mistral Voxtral</string>
+    <string name="speech_provider_deepgram">Deepgram</string>
+    <string name="speech_provider_assemblyai">AssemblyAI</string>
 
     <string name="speech_key_placeholder_native">Není potřeba</string>
+    <string name="speech_key_placeholder_local">Není potřeba</string>
+    <string name="speech_key_placeholder_gemini">Vlož API klíč Gemini</string>
+    <string name="speech_key_placeholder_openai">Vlož API klíč</string>
+    <string name="speech_key_placeholder_groq">Vlož API klíč</string>
+    <string name="speech_key_placeholder_mistral">Tvůj API klíč Mistral</string>
     <string name="speech_key_placeholder_deepgram">Tvůj API klíč</string>
     <string name="speech_key_placeholder_assemblyai">Tvůj API klíč</string>
 
     <string name="speech_description_native">Rozpoznávání řeči přímo v zařízení. Zdarma, na většině telefonů funguje offline, průběžné výsledky v reálném čase. Doporučená výchozí volba.</string>
+    <string name="speech_description_local_whisper">Stažený vícejazyčný Whisper Base. Zvuk zůstává v tomto zařízení a není potřeba žádný API klíč.</string>
     <string name="speech_description_gemini">Přepis zvuku přes Gemini API. Používá dávkové porozumění zvuku, ne Speech-to-Text API Google Cloudu v reálném čase.</string>
     <string name="speech_description_openai">OpenAI Whisper API. Vysoká přesnost, 99+ jazyků, platba za minutu.</string>
     <string name="speech_description_groq">Whisper Large v3 hostovaný u Groq. Velmi rychlá inference, má bezplatnou úroveň.</string>
+    <string name="speech_description_mistral">Voxtral Mini Transcribe 2 pro přesný vícejazyčný dávkový přepis.</string>
     <string name="speech_description_deepgram">Deepgram Nova. Režim v reálném čase i dávkový, rychlý a přesný.</string>
     <string name="speech_description_assemblyai">Model AssemblyAI Universal. Vysoká přesnost, k dispozici bezplatná úroveň.</string>
 
@@ -201,6 +275,7 @@
     <string name="onboarding_goal_set_later">Můžeš nastavit později v Nastavení.</string>
     <string name="progress_metric_weight">Váha</string>
     <string name="progress_metric_body_fat">Tělesný tuk</string>
+    <string name="progress_metric_workouts">Tréninky</string>
     <string name="progress_log_body_fat">Zapsat tělesný tuk</string>
     <string name="progress_log_first_body_fat">Zapiš první hodnotu tělesného tuku a sleduj trend</string>
     <string name="progress_log_body_fat_title">Zapsat tělesný tuk</string>
@@ -240,6 +315,7 @@
     <string name="onboarding_health_feature_nutrition">Data o výživě</string>
     <string name="onboarding_health_feature_weight">Synchronizace váhy</string>
     <string name="onboarding_health_feature_body">Tělesné míry</string>
+    <string name="onboarding_health_feature_steps">Denní kroky</string>
     <string name="onboarding_health_unavailable">Health Connect není k dispozici</string>
     <string name="onboarding_health_connected">Propojeno</string>
     <string name="onboarding_health_connect">Propojit</string>
@@ -261,15 +337,26 @@
     <string name="onboarding_provider_step_2">Vyber poskytovatele a vlož klíč níže</string>
     <string name="onboarding_provider_step_3">Vlož klíč — hotovo</string>
     <string name="onboarding_provider_footer">Podporujeme 13 poskytovatelů. Tvůj klíč zůstává\nv tomto zařízení, zašifrovaný.</string>
+    <string name="onboarding_paste_api_key_helper">Vlož svůj API klíč %1$s do pole výše. Text nápovědy není klíč.</string>
+    <string name="onboarding_missing_api_key_title">Vlož svůj API klíč %1$s</string>
+    <string name="onboarding_missing_api_key_message">Pro Pokračovat je potřeba skutečný klíč v poli API klíč. Text nápovědy není klíč — vlož svůj klíč %1$s.</string>
+    <string name="onboarding_ai_notice_analysis_title">AI analýza</string>
+    <string name="onboarding_ai_notice_analysis_body">Fotky jídla, hlasové přepisy a napsaná jídla se posílají přímo tvému vybranému AI poskytovateli.</string>
+    <string name="onboarding_ai_notice_local_title">Místní data</string>
+    <string name="onboarding_ai_notice_local_body">Deník jídel, historie váhy, historie tělesného tuku i tvoje BYOK API klíče zůstávají v tomto zařízení.</string>
+    <string name="onboarding_ai_terms_checkbox">Přijímám Podmínky služby a Zásady ochrany soukromí, včetně výše popsaného sdílení dat s AI poskytovatelem.</string>
+    <string name="onboarding_ai_terms_and">a</string>
 
     <string name="onboarding_building_calories">Kalorie</string>
     <string name="onboarding_building_carbs">Sacharidy</string>
     <string name="onboarding_building_protein">Bílkoviny</string>
     <string name="onboarding_building_fats">Tuky</string>
     <string name="onboarding_building_health_score">Skóre zdraví</string>
+    <string name="onboarding_building_percent_format">%1$d%%</string>
     <string name="onboarding_building_setting_up">Všechno pro tebe\npřipravujeme</string>
     <string name="onboarding_building_finalizing">Dokončujeme výsledky…</string>
     <string name="onboarding_building_recommendation">Denní doporučení pro</string>
+    <string name="onboarding_building_bullet">•</string>
 
     <string name="onboarding_plan_title">Tvůj plán</string>
     <string name="onboarding_plan_subtitle">Klepnutím na hodnotu ji upravíš</string>
@@ -281,10 +368,17 @@
     <string name="onboarding_plan_field_protein">Bílkoviny</string>
     <string name="onboarding_plan_field_carbs">Sacharidy</string>
     <string name="onboarding_plan_field_fat">Tuky</string>
+    <plurals name="home_daily_steps">
+        <item quantity="one">%1$s krok</item>
+        <item quantity="few">%1$s kroky</item>
+        <item quantity="many">%1$s kroku</item>
+        <item quantity="other">%1$s kroků</item>
+    </plurals>
 
     <!-- Home -->
     <string name="home_add_food">Přidat jídlo</string>
     <string name="home_menu_camera">Fotoaparát</string>
+    <string name="home_menu_barcode">Čárový kód</string>
     <string name="home_menu_camera_note">Fotoaparát + poznámka</string>
     <string name="home_menu_nutrition_label">Výživový štítek</string>
     <string name="home_menu_from_photos">Z galerie</string>
@@ -296,7 +390,14 @@
     <string name="home_kcal_left_format">zbývá %1$s</string>
     <string name="home_kj_left_format">zbývá %1$s</string>
     <string name="home_kilojoules">Kilojouly</string>
+    <string name="home_macro_left_format">zbývá %1$s</string>
+    <string name="home_macro_over_format">%1$s navíc</string>
+    <string name="home_macro_no_goal">Bez cíle</string>
+    <string name="home_macro_goal_reached">Cíl splněn</string>
     <string name="home_view_more">Zobrazit více</string>
+    <string name="home_burn_deficit">Spáleno %1$s · deficit %2$s</string>
+    <string name="home_burn_surplus">Spáleno %1$s · přebytek %2$s</string>
+    <string name="home_burn_balanced">Spáleno %1$s · vyrovnáno</string>
     <string name="home_todays_food">Dnešní jídlo</string>
     <string name="home_no_foods_logged">Žádná zapsaná jídla</string>
     <string name="home_swipe_delete">Smazat</string>
@@ -329,9 +430,11 @@
     <string name="manual_protein">Bílkoviny (g)</string>
     <string name="manual_carbs">Sacharidy (g)</string>
     <string name="manual_fat">Tuky (g)</string>
+    <string name="manual_zero_placeholder">0</string>
     <string name="manual_meal_type">Typ jídla</string>
 
     <string name="error_title">Něco se pokazilo</string>
+    <string name="error_barcode_title">Tento čárový kód nelze použít</string>
 
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Detail jídla</string>
@@ -370,6 +473,8 @@
     <!-- Voice input sheet -->
     <string name="voice_listening">Poslouchám…</string>
     <string name="voice_tap_to_start">Klepni na mikrofon a začni</string>
+    <string name="voice_recording_saved">Nahrávka uložena. Pro pokračování ji přepiš.</string>
+    <string name="voice_transcribe">Přepsat</string>
     <string name="voice_transcribing_format">Přepisuji přes %1$s…</string>
     <string name="voice_mic_permission_denied">Přístup k mikrofonu byl zamítnut.</string>
     <string name="voice_mic_start_failed">Mikrofon se nepodařilo spustit. Zkontroluj oprávnění.</string>
@@ -407,6 +512,7 @@
     <string name="nutrition_label_cholesterol">Cholesterol</string>
     <string name="nutrition_label_sodium">Sodík</string>
     <string name="nutrition_label_potassium">Draslík</string>
+    <string name="nutrition_em_dash">—</string>
 
     <!-- Coach -->
     <string name="coach_title">Kouč</string>
@@ -523,12 +629,29 @@
 
     <string name="progress_weight_history">Historie váhy</string>
     <string name="progress_body_fat_history">Historie tělesného tuku</string>
+    <string name="progress_workout_history">Historie tréninků</string>
+    <plurals name="progress_workout_history_count_format">
+        <item quantity="one">%1$d vypočtený výdej · klepnutím zobrazíš nebo smažeš</item>
+        <item quantity="few">%1$d vypočtené výdeje · klepnutím zobrazíš nebo smažeš</item>
+        <item quantity="many">%1$d vypočteného výdeje · klepnutím zobrazíš nebo smažeš</item>
+        <item quantity="other">%1$d vypočtených výdejů · klepnutím zobrazíš nebo smažeš</item>
+    </plurals>
+    <string name="progress_workout_delete_title">Smazat výdej z tréninku?</string>
+    <string name="progress_workout_delete_message">Tím odstraníš vypočtený výdej z Fud AI i z Health Connect. Plán v deníku tréninků zůstane uložený.</string>
     <plurals name="progress_history_count_format">
         <item quantity="one">%1$d záznam · klepnutím zobrazíš nebo smažeš</item>
         <item quantity="few">%1$d záznamy · klepnutím zobrazíš nebo smažeš</item>
         <item quantity="many">%1$d záznamů · klepnutím zobrazíš nebo smažeš</item>
         <item quantity="other">%1$d záznamů · klepnutím zobrazíš nebo smažeš</item>
     </plurals>
+    <string name="progress_workout_section">Tréninková aktivita</string>
+    <string name="progress_workout_stat_workouts">Tréninky</string>
+    <string name="progress_workout_stat_total">Celkový výdej</string>
+    <string name="progress_workout_stat_average">Průměrný výdej</string>
+    <string name="progress_workout_stat_latest">Nejnovější</string>
+    <string name="progress_workout_stat_days">Dny</string>
+    <string name="progress_workout_no_range">V tomto období není žádný vypočtený výdej z tréninků</string>
+    <string name="progress_workout_chart_description">Graf výdeje z tréninků od %1$s do %2$s. Celkem %3$d kilokalorií; poslední %4$d kilokalorií.</string>
 
     <string name="progress_calories_section">Kalorie</string>
     <string name="progress_steps_stat_total">Celkem</string>
@@ -541,12 +664,14 @@
     <string name="progress_steps_chart_description">Graf kroků od %1$s do %2$s. Celkem %3$s kroků; nejlepší den %4$s kroků.</string>
     <string name="progress_include_today">Zahrnout dnešek</string>
     <string name="progress_include_today_caption">Graf kalorií a průměry živin</string>
-    <string name="progress_avg_format">Průměr: %1$d kcal</string>
+    <string name="progress_avg_format">Průměr: %1$,d kcal</string>
     <string name="progress_workout_chart_description_kj">Graf výdeje z tréninků od %1$s do %2$s. Celkem %3$d kilojoulů; naposledy %4$d kilojoulů.</string>
-    <string name="progress_avg_format_kj">Průměr: %1$d kJ</string>
+    <string name="progress_avg_format_kj">Průměr: %1$,d kJ</string>
     <string name="progress_no_food">Zatím žádné zapsané jídlo</string>
 
     <string name="progress_macro_averages">Průměry makroživin</string>
+    <string name="progress_nutrient_averages">Průměry živin</string>
+    <string name="progress_loading_nutrition">Načítám výživu…</string>
     <string name="progress_macro_progress_format">%1$d g / %2$d g</string>
 
     <string name="progress_log_weight_title">Zapsat váhu</string>
@@ -556,12 +681,61 @@
 
     <!-- Settings -->
     <string name="settings_section_personal">Osobní údaje</string>
+    <string name="settings_allergen_sensitivities">Citlivost na alergeny</string>
+    <string name="settings_allergen_add_placeholder">Zadej alergen</string>
+    <string name="settings_allergen_add_section">Přidat citlivost</string>
+    <string name="settings_allergen_add_hint">Přidáš klepnutím na Hotovo. Řádek odstraníš přejetím doleva. Změny se ukládají automaticky.</string>
+    <string name="settings_allergen_empty">Nejsou přidány žádné citlivosti</string>
+    <string name="settings_allergen_remove_title">Smazat alergen?</string>
+    <string name="settings_allergen_remove_message">Odebrat „%1$s“ z tvých citlivostí?</string>
+    <string name="settings_allergen_disclaimer">Slouží k místní kontrole etiket. Výsledky nikdy neznamenají, že je jídlo bezpečné.</string>
+    <string name="settings_allergen_import_section">Laboratorní zpráva</string>
+    <string name="settings_allergen_import_button">Importovat z laboratorní zprávy</string>
+    <string name="settings_allergen_import_disclaimer">Vytáhne možné senzibilizace ze zprávy z alergologického krevního testu typu ISAC/ALEX, jen pro místní kontroly. Nejde o lékařskou diagnózu — před přidáním každý název potvrď.</string>
+    <string name="settings_allergen_import_source_message">Vyber fotku nebo PDF zprávy z alergologického krevního testu.</string>
+    <string name="settings_allergen_import_choose_photo">Vybrat fotku</string>
+    <string name="settings_allergen_import_choose_file">Vybrat soubor</string>
+    <string name="settings_allergen_import_loading">Čtu laboratorní zprávu…</string>
+    <string name="settings_allergen_import_confirm_title">Potvrdit alergeny</string>
+    <string name="settings_allergen_import_confirm_message">Potvrď, které názvy přidat. Nejde o lékařskou diagnózu a nikdy to neznamená, že je jídlo bezpečné.</string>
+    <string name="settings_allergen_import_select_all">Vybrat vše</string>
+    <string name="settings_allergen_import_deselect_all">Zrušit výběr všech</string>
+    <string name="settings_allergen_import_add_selected">Přidat vybrané</string>
+    <string name="settings_allergen_import_error_title">Nelze importovat</string>
+    <string name="settings_allergen_import_none_found">V této zprávě nebyly nalezeny žádné jasně pozitivní ani zvýšené senzibilizace.</string>
+    <string name="settings_allergen_import_failed">Laboratorní zprávu se nepodařilo přečíst.</string>
+    <string name="settings_allergen_import_read_failed">Vybraný soubor se nepodařilo přečíst.</string>
     <string name="settings_section_goals">Cíle a výživa</string>
+    <string name="settings_section_daily_targets">Denní cíle</string>
     <string name="settings_section_app">Nastavení aplikace</string>
     <string name="settings_section_tracking_notifications">Sledování a oznámení</string>
+    <string name="settings_category_ai_providers">Poskytovatelé AI a záložní možnosti</string>
+    <string name="settings_section_ai_voice">AI a hlas</string>
     <string name="settings_section_ai">AI poskytovatel</string>
+    <string name="settings_on_device_models">Modely v zařízení</string>
+    <string name="settings_on_device_models_info">Modely se stahují do soukromého úložiště aplikace a běží bez odesílání fotek, promptů nebo zvuku na server. Platí velikost stahování a licenční podmínky modelu.</string>
+    <string name="settings_local_model_not_downloaded_format">%1$s · Nestaženo</string>
+    <string name="settings_local_model_downloading_format">Stahuji · %1$d %%</string>
+    <string name="settings_local_model_installed">Nainstalováno · Připraveno offline</string>
+    <string name="settings_view_model_license">Zobrazit licenci modelu</string>
+    <string name="settings_model_source">Zdroj modelu</string>
+    <string name="settings_model_license_format">Licence %1$s</string>
+    <string name="settings_model_requires_8gb">Vyžaduje zařízení s 8 GB RAM</string>
+    <string name="settings_model_low_ram_unsupported">Nepodporováno na zařízeních s malou pamětí RAM</string>
+    <string name="settings_model_processor_unsupported">Procesor tohoto zařízení není podporován</string>
+    <string name="settings_section_text_ai">AI pro text</string>
+    <string name="settings_info_speech_fallback">Zopakuje přepis, když selže zvolený poskytovatel STT pro nahraný zvuk. Vytvoří jen přepis; ten pak dál prochází běžnou textovou trasou AI. Nativní řeč Androidu má vlastní obnovu rozpoznávání.</string>
+    <string name="settings_use_separate_text_provider">Použít samostatného poskytovatele pro text</string>
+    <string name="settings_text_provider_footer">Když je zapnuto, požadavky bez obrázků — včetně napsaného jídla, hlasových přepisů, chatu s Koučem, cílů a rad — používají tohoto poskytovatele. Požadavky s fotkami dál používají AI poskytovatele výše. Klíče API se sdílejí podle poskytovatele.</string>
+    <string name="settings_section_text_fallback">Záložní AI pro text</string>
+    <string name="settings_text_fallback_footer">Použije se jen při selhání čistě textového požadavku na AI. Nikdy nezpracovává fotky.</string>
     <string name="settings_section_speech">Převod řeči na text</string>
+    <string name="settings_section_speech_fallback">Záložní STT</string>
+    <string name="settings_speech_fallback_footer">Použije se jen při selhání zvoleného poskytovatele řeči pro nahraný zvuk. Nativní řeč už sama opakuje režimy rozpoznávání v zařízení a online.</string>
+    <string name="settings_native_speech_fallback_footer">Nativní řeč se už automaticky zotaví mezi režimy rozpoznávání Androidu v zařízení, online a automatickým. Pro nastavení samostatného záložního poskytovatele vyber výše vzdáleného poskytovatele řeči.</string>
+    <string name="settings_section_workout">Trénink</string>
     <string name="settings_section_health">Zdraví a data</string>
+    <string name="settings_section_data_management">Správa dat</string>
 
     <string name="settings_gender">Pohlaví</string>
     <string name="settings_birthday">Narozeniny</string>
@@ -597,6 +771,9 @@
     <string name="settings_appearance_system">Systémový</string>
     <string name="settings_appearance_light">Světlý</string>
     <string name="settings_appearance_dark">Tmavý</string>
+    <string name="settings_app_language">Jazyk</string>
+    <string name="settings_app_language_system">Výchozí systémové</string>
+    <string name="sheet_app_language">Jazyk</string>
     <string name="settings_theme_color">Barva motivu</string>
     <string name="sheet_theme_color">Barva motivu</string>
     <string name="sheet_theme_color_footer">Změní hlavní barvu aplikace používanou pro záložky, tlačítka, ikony, grafy a kruhy pokroku.</string>
@@ -623,6 +800,8 @@
     <string name="settings_weight_unit">Jednotka váhy</string>
     <string name="settings_default_to_grams">Výchozí gramy</string>
     <string name="settings_default_to_grams_info">Nové okno kontroly jídla se otevře s předvybranými gramy. Před zapsáním můžeš stále přepnout na porci, plátek, hrnek nebo jinou rozpoznanou jednotku.</string>
+    <string name="settings_save_photos_to_gallery">Uložit do Fotek</string>
+    <string name="settings_save_photos_to_gallery_subtitle">Při zápisu ukládat fotky jídel také do galerie</string>
     <string name="settings_week_starts">Týden začíná</string>
     <string name="settings_energy_unit">Jednotka energie</string>
     <string name="settings_energy_unit_kcal">Kilokalorie (kcal)</string>
@@ -642,6 +821,7 @@
     <string name="settings_notifications">Oznámení</string>
     <string name="settings_water_tracking">Sledování vody</string>
     <string name="settings_water_goal">Denní cíl vody</string>
+    <string name="settings_water_goal_summary">%1$d ml</string>
     <string name="settings_water_goal_wheel_help">Posouvej po 50 ml a vyber denní cíl od 50 do 10 000 ml.</string>
     <string name="settings_water_goal_wheel_help_fl_oz">Posouvej po 1 fl oz a vyber denní cíl od 2 do 338 fl oz.</string>
     <string name="settings_water_unit">Jednotka vody</string>
@@ -663,6 +843,7 @@
     <string name="settings_base_url">Base URL</string>
     <string name="settings_server_url">URL serveru</string>
     <string name="settings_tap_to_edit">Klepni pro úpravu</string>
+    <string name="settings_custom_url_placeholder">https://your-endpoint.com/v1</string>
     <string name="settings_custom_url_title">Vlastní base URL</string>
     <string name="settings_clear_key">Vymazat klíč</string>
 
@@ -739,6 +920,7 @@
 
     <!-- Settings sheets / pickers -->
     <string name="sheet_ai_provider">AI poskytovatel</string>
+    <string name="sheet_model">Model</string>
     <string name="sheet_model_footer">Nebo níže napiš libovolné vlastní ID modelu.</string>
     <string name="sheet_any_model_id">Libovolné ID modelu</string>
     <string name="sheet_api_key_format">API klíč — %1$s</string>
@@ -771,6 +953,7 @@
     <string name="sheet_macros_subtitle">Připni až 2 makra na přesné gramy. Nepřipnutá se automaticky dorovnají ze zbývajících kalorií.</string>
     <string name="sheet_macro_pinned">připnuto</string>
     <string name="sheet_macro_auto">auto</string>
+    <string name="sheet_macro_label_format">%1$s (%2$s)</string>
     <string name="sheet_speech_language">Jazyk řeči</string>
     <string name="speech_language_provider_auto">Auto (poskytovatel)</string>
     <string name="speech_language_provider_auto_subtitle">Nech poskytovatele rozpoznat jazyk.</string>
@@ -803,6 +986,14 @@
     <string name="about_rate">Ohodnotit aplikaci</string>
     <string name="about_share">Sdílet aplikaci</string>
     <string name="about_open_source">Open source (MIT)</string>
+    <string name="about_openssf_best_practices">OpenSSF Best Practices</string>
+    <string name="about_openssf_best_practices_desc">Passing · projekt 14553</string>
+    <string name="about_openssf_scorecard">OpenSSF Scorecard</string>
+    <string name="about_openssf_scorecard_desc">Skóre zabezpečení</string>
+    <string name="about_udyam">Registrováno v Udyam</string>
+    <string name="about_udyam_desc">UDYAM-DL-06-0225072 · Mikropodnik</string>
+    <string name="about_ace">Certifikace ACE</string>
+    <string name="about_ace_desc">Osobní trenér · akreditace NCCA</string>
     <string name="about_star_github">Dát hvězdu na GitHubu</string>
     <string name="about_vote_ph">Hlasovat na Product Huntu</string>
     <string name="about_report_issue">Nahlásit chybu na GitHubu</string>
@@ -816,6 +1007,13 @@
     <string name="about_follow_instagram">Sledovat na Instagramu</string>
     <string name="about_privacy">Zásady ochrany soukromí</string>
     <string name="about_terms">Podmínky služby</string>
+    <string name="about_litert_notices">Upozornění třetích stran pro LiteRT-LM</string>
+    <string name="about_litert_notices_load_error">Upozornění třetích stran pro LiteRT-LM se nepodařilo načíst.</string>
+    <string name="about_category_app_updates">Aplikace a aktualizace</string>
+    <string name="about_category_support">Podpořit Fud AI</string>
+    <string name="about_category_help_feedback">Nápověda a zpětná vazba</string>
+    <string name="about_category_community">Komunita</string>
+    <string name="about_category_legal">Právní informace</string>
     <string name="about_made_by">Vytvořil Apoorv Darshan</string>
     <string name="about_with_care">s péčí, pro všechny</string>
     <string name="about_share_message">Sleduju svoje jídlo s Fud AI — vyfotíš, řekneš nebo napíšeš, a AI zapíše kalorie. Je zdarma, open source a data zůstávají v tvém zařízení.\n\nStáhnout: https://fud-ai.app</string>
@@ -842,6 +1040,8 @@
     <string name="clear_search">Vymazat hledání</string>
     <string name="empty_subtitle">Zkus jiný sval, vybavení nebo hledaný výraz — nebo resetuj filtry výše.</string>
     <string name="empty_title">Žádné cviky neodpovídají</string>
+    <string name="workout_empty_subtitle">Zkus jiné filtry — nebo si vytvoř vlastní cvik.</string>
+    <string name="workout_create_exercise">Vytvořit cvik</string>
     <string name="filter_all">Vše</string>
     <string name="workout_filter_source">Zdroj</string>
     <string name="workout_source_dataset">Databáze</string>
@@ -857,6 +1057,8 @@
     <string name="filter_all_count">Vše %d</string>
     <string name="hide_details">Skrýt detaily</string>
     <string name="instructions">Provedení</string>
+    <string name="watch_on_youtube">Sledovat na YouTube</string>
+    <string name="watch_on_youtube_hint">Otevře vyhledávání na YouTube — nejde o oficiální video Fud AI</string>
     <string name="label_category">Kategorie</string>
     <string name="label_equipment">Vybavení</string>
     <string name="label_force">Síla</string>
@@ -894,6 +1096,23 @@
     <string name="whats_new_v30_adaptive">Adaptivní cíle a Spálená energie opustily Experimentální a u nových instalací jsou zapnuté.</string>
     <string name="whats_new_v30_widgets">Nový design widgetů: tachometr jako na Domů, vykreslený ve skutečné velikosti každého widgetu.</string>
     <string name="whats_new_v30_restore">Přeinstalace nebo nový telefon? Deník jídel, váha i tělesný tuk se teď automaticky obnoví z Health Connect.</string>
+    <string name="cloud_backup_title">Záloha na Disk Google</string>
+    <string name="cloud_backup_footer">Vypnuto, dokud ho nezapneš. Přihlášení slouží jen pro tuto zálohu. Klíče API zůstávají v telefonu. Postupně se zavádí — dokud nebude aplikace ověřena, může Google zobrazit další upozornění.</string>
+    <string name="cloud_backup_enable_message">Nahraje tvůj deník, tréninky, půsty, fotky a nastavení na tvůj Disk Google. Klíče API zůstávají v telefonu.\n\nZáloha na Disk Google se postupně zavádí. Dokud nebude naše aplikace ověřena, může přihlášení zobrazit další upozornění Googlu.</string>
+    <string name="cloud_backup_restore_title">Obnovit zálohu?</string>
+    <string name="cloud_backup_restore_message">Obnov ji, nebo si ponech data v tomto telefonu.</string>
+    <string name="cloud_backup_restore">Obnovit</string>
+    <string name="cloud_backup_keep">Ponechat tento telefon</string>
+    <string name="cloud_backup_now">Zálohovat nyní</string>
+    <string name="cloud_backup_restore_now">Obnovit nyní</string>
+    <string name="cloud_backup_delete">Smazat zálohu v cloudu</string>
+    <string name="cloud_backup_delete_message">Odstraní soubor Fud AI z tvého Disku Google. Tento telefon zůstane beze změny.</string>
+    <string name="cloud_backup_last">Poslední záloha: %1$s</string>
+    <string name="cloud_backup_signed_in">Přihlášen jako %1$s</string>
+    <string name="cloud_backup_sign_out">Odhlásit se</string>
+    <string name="cloud_backup_switch_account">Přepnout účet Google</string>
+    <string name="cloud_backup_turn_on">Zapnout</string>
+    <string name="cloud_backup_sign_in_failed">Přihlášení přes Google se nepodařilo otevřít.</string>
     <string name="cloud_backup_restore_no_space">Na obnovení této zálohy není dost volného místa. Uvolni trochu místa a zkus to znovu.</string>
     <string name="export_diary_title">Export deníku jídel</string>
     <string name="export_range">Období</string>
@@ -937,9 +1156,17 @@
     <string name="cd_hold_to_record">Podržením nahráváš, klepnutím zamkneš</string>
     <string name="cd_cancel_recording">Zrušit nahrávání</string>
     <string name="cd_remove_image">Odebrat obrázek</string>
+    <string name="cd_meal_photo">Fotka %1$d</string>
+    <string name="cd_view_full_photo">Zobrazit celou fotku</string>
     <string name="cd_add_image">Přidat obrázek</string>
     <string name="cd_open_camera">Otevřít fotoaparát</string>
     <string name="cd_close_camera">Zavřít fotoaparát</string>
+    <string name="cd_save_photo">Uložit fotku</string>
+    <string name="gallery_folder_name">Fud AI</string>
+    <string name="photo_saved_to_gallery">Fotka uložena</string>
+    <string name="photo_save_failed">Fotku nelze uložit</string>
+    <string name="photo_save_permission_denied">Přístup k fotkám zamítnut</string>
+    <string name="unit_mcg">µg</string>
 
     <!-- Localization pass: previously hardcoded UI strings -->
     <string name="home_food_log">Deník jídel</string>
@@ -980,6 +1207,10 @@
     <string name="nutrition_label_omega3">Omega-3</string>
     <string name="nutrition_section_home_cards">Karty na Domů</string>
     <string name="home_nutrients_pick_four">Vyber přesně čtyři živiny pro souhrnný řádek na Domů.</string>
+    <string name="home_nutrients_pick_three_water">Vyber jednu až čtyři živiny. Pokud je sledování zapnuté, za nimi se zobrazí voda.</string>
+    <string name="home_nutrients_water_fixed">Když je sledování vody zapnuté, voda se zobrazuje za vybranými živinami.</string>
+    <string name="home_nutrients_water_fixed_short">Zobrazuje se za vybranými živinami</string>
+    <string name="nutrition_section_water">Voda</string>
     <string name="error_analysis_failed">Analýza se nezdařila</string>
     <string name="error_barcode_lookup_failed">Vyhledání čárového kódu se nezdařilo</string>
     <string name="error_ai_suggestion">Návrh AI se nepodařilo načíst.</string>
@@ -1066,8 +1297,20 @@
     <string name="water_three_glasses_amount">3 sklenice (~750 ml)</string>
     <string name="water_custom_amount">Vlastní množství</string>
     <string name="water_add">Přidat vodu</string>
+    <string name="water_progress">%1$d / %2$d ml</string>
+    <string name="unit_ml">ml</string>
     <string name="notif_update_title">Aktualizace k dispozici</string>
     <string name="notif_update_text">Nová verze Fud AI je připravena. Klepni pro aktualizaci.</string>
+    <string name="notif_channel_announcements">Oznámení</string>
+    <string name="notif_channel_announcements_desc">Občasné jednorázové novinky od Fud AI, například spuštění na Product Huntu.</string>
+    <string name="notif_product_hunt_title">Fud AI je teď na Product Hunt 🚀</string>
+    <string name="notif_product_hunt_text">Právě jsme spustili! Klepni, zahlasuj a pomoz dalším lidem najít Fud AI.</string>
+    <string name="post_update_product_hunt_title">Fud AI je na Product Huntu</string>
+    <string name="post_update_product_hunt_body">Právě jsme spustili. Hlas pomůže, aby Fud AI našlo víc lidí.</string>
+    <string name="post_update_product_hunt_not_now">Teď ne</string>
+    <string name="post_update_meet_dev_title">Seznam se s vývojářem</string>
+    <string name="post_update_meet_dev_greeting">Ahoj, já jsem Apoorv 👋</string>
+    <string name="post_update_meet_dev_body">Fud AI stavím sám a otevřeně. Přijď pozdravit, podělit se o zpětnou vazbu nebo jen sledovat dění — opravdu to pomáhá.</string>
     <string name="settings_calc_intro">Tvoje denní kalorické a makro cíle nastavuje AI. Když klepneš na Přepočítat cíle — nebo automaticky zhruba jednou týdně, pokud jsou zapnuté Adaptivní cíle — pošle Fud AI tvému AI poskytovateli tvůj profil, referenční rovnice níže, nedávno zapsané jídlo a trend váhy. Vyjde z těchto recenzovaných vzorců a přizpůsobí je tvým skutečným datům, aby odhadla tvůj skutečný udržovací příjem a cíle.</string>
     <string name="settings_calc_sec_bmr">Klidový metabolismus (BMR)</string>
     <string name="settings_calc_sec_tdee">Denní energetický výdej (TDEE)</string>
@@ -1088,6 +1331,12 @@
     <string name="settings_calc_split_formula">Bílkoviny: ~0,8–2,2 g na kg podle aktivity (při hubnutí mírně víc)\nTuky: ~0,6 g na kg tělesné váhy\nSacharidy: zbylé kalorie ÷ 4 kcal/g</string>
     <string name="settings_calc_micro_name">Odhady pro jednotlivá jídla</string>
     <string name="settings_calc_micro_used">Kalorie, makra, vláknina, cukr, nasycené tuky, cholesterol, sodík, draslík a další mikroživiny u každého jídla jsou odhady generované AI z fotky jídla, hlasového přepisu nebo textového popisu, přes tebou vybraného AI poskytovatele.</string>
+    <string name="settings_calc_mifflin_citation">Mifflin MD, St Jeor ST, et al. (1990). „Nová predikční rovnice pro klidový energetický výdej u zdravých osob.“ Am J Clin Nutr 51(2):241–247.</string>
+    <string name="settings_calc_katch_citation">McArdle WD, Katch FI, Katch VL. Exercise Physiology: Nutrition, Energy, and Human Performance, 7. vydání. Lippincott Williams &amp; Wilkins, 2010.</string>
+    <string name="settings_calc_tdee_citation">Standardní koeficienty PAL (úrovně fyzické aktivity) ze společné odborné konzultace FAO/WHO/UNU o energetických potřebách člověka (2001). Široce je používají také ACSM a výživová doporučení USDA.</string>
+    <string name="settings_calc_target_citation">Hall KD, et al. (2011). „Kvantifikace vlivu energetické nerovnováhy na tělesnou hmotnost.“ Lancet 378(9793):826–837. Klasické pravidlo 3 500 kcal na libru pochází od Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
+    <string name="settings_calc_split_citation">Morton RW, et al. (2018). „Systematický přehled, metaanalýza a metaregrese vlivu suplementace bílkovin na nárůst svalové hmoty a síly při silovém tréninku.“ Br J Sports Med 52(6):376–384.</string>
+    <string name="settings_calc_micro_citation">Odhady vycházejí z trénovacích dat použitého modelu AI (USDA FoodData Central, údaje výrobců, odborná literatura). Přesnost se liší podle jídla, viditelnosti velikosti porce a modelu poskytovatele. U jídel, která zapisuješ často, si vždy ověř údaje na etiketě.</string>
     <string name="settings_not_medical_title">Nejde o lékařské doporučení</string>
     <string name="settings_not_medical_body">Fud AI je odhadovací nástroj, ne klinický přístroj. Predikční rovnice mají přirozenou chybu (u BMR typicky ±10%%). Před zásadními změnami stravy se poraď s nutričním terapeutem, lékařem nebo sportovním lékařem — zvlášť pokud máš zdravotní potíže, čekáš dítě nebo kojíš, je ti méně než 18, nebo řešíš poruchu příjmu potravy.</string>
     <string name="settings_waist_cm_format">Pas %1$.0f cm</string>
@@ -1103,8 +1352,10 @@
     <string name="nutrient_short_vit_a">Vit. A</string>
     <string name="nutrient_short_vit_c">Vit. C</string>
     <string name="nutrient_short_vit_d">Vit. D</string>
+    <string name="nutrient_short_b12">B12</string>
     <string name="nutrient_short_vit_e">Vit. E</string>
     <string name="nutrient_short_vit_k">Vit. K</string>
+    <string name="nutrient_short_omega">Omega</string>
     <string name="sort_standard">Snídaně → Oběd → Večeře</string>
     <string name="sort_latest_first">Nejnovější jídla první</string>
     <string name="copy_meal_format">Zkopírovat: %1$s</string>
@@ -1118,7 +1369,17 @@
     <string name="nutrition_label_l_arginine">L-arginin</string>
     <string name="nutrition_label_taurine">Taurin</string>
     <string name="nutrition_label_betaine">Betain</string>
+    <string name="nutrition_label_hmb">HMB</string>
     <string name="settings_fasting_tracking">Sledování půstu</string>
+    <string name="settings_walk_run_quick_log">Chůze a běh</string>
+    <string name="settings_walk_run_quick_log_footer">Ve výchozím stavu vypnuto. Když je zapnuto, Chůze a Běh se objeví v nabídce + v Trénincích pro rychlý zápis venkovních aktivit.</string>
+    <string name="outdoor_activity_walking">Chůze</string>
+    <string name="outdoor_activity_running">Běh</string>
+    <string name="outdoor_activity_how_long">Jak dlouho?</string>
+    <string name="outdoor_activity_minutes">%1$d min</string>
+    <string name="outdoor_activity_custom_minutes">Vlastní minuty</string>
+    <string name="outdoor_activity_min_suffix">min</string>
+    <string name="outdoor_activity_log">Zapsat %1$s</string>
     <string name="settings_fasting_goal">Výchozí cíl půstu</string>
     <string name="settings_fasting_goal_value">%1$d h</string>
     <string name="settings_notif_fasting_goal">Splnění cíle půstu</string>
@@ -1137,8 +1398,21 @@
     <string name="fasting_started">Začátek</string>
     <string name="fasting_ended">Konec</string>
     <string name="fasting_delete">Smazat půst</string>
+    <string name="fasting_overlap_title">Půst se překrývá s jiným</string>
+    <string name="fasting_overlap_message">Uprav začátek nebo konec, aby se půsty nepřekrývaly.</string>
+    <string name="food_logging_paused">Zapisování jídla pozastaveno</string>
+    <string name="food_blocked_by_active_fast">Před zapsáním jídla ukonči nebo zruš aktivní půst.</string>
+    <string name="fasting_quick_action_disabled_title">Sledování půstu vypnuto</string>
+    <string name="fasting_quick_action_disabled_message">Pro použití této zkratky zapni v Nastavení Sledování půstu.</string>
+    <string name="home_todays_diary">Dnešní deník</string>
+    <string name="home_diary">Deník</string>
+    <string name="home_no_diary_entries">Žádné záznamy v deníku</string>
+    <string name="home_menu_photo_scan">Foto a skenování</string>
+    <string name="home_menu_describe_meal">Popsat jídlo</string>
+    <string name="home_menu_reuse_meal">Znovu použít jídlo</string>
     <string name="settings_health_profile_unsupported">Health Connect může Fud AI zobrazovat jako schválenou, ale Android nepovoluje Health Connect z pracovního profilu, Soukromého prostoru ani klonované aplikace. Nainstaluj a otevři Fud AI v hlavním profilu telefonu.</string>
     <string name="settings_health_system_unavailable">Systémová služba Health Connect není dostupná. Vyžaduje Android 9 nebo novější; na novějším telefonu nainstaluj aktualizace Androidu a systému Google Play, restartuj a zkus to znovu.</string>
+    <string name="settings_get_health_connect">Získat Health Connect</string>
     <string name="notif_summary_deficit">Snědeno %1$d kcal · spáleno %2$d · odhadovaný deficit %3$d kcal</string>
     <string name="notif_summary_surplus">Snědeno %1$d kcal · spáleno %2$d · odhadovaný přebytek %3$d kcal</string>
     <string name="notif_summary_balanced">Snědeno %1$d kcal · spáleno %2$d · odhadem vyrovnáno</string>
@@ -1172,12 +1446,26 @@
     <string name="recipe_servings_footer">Nastavte to po přidání všech ingrediencí. Fud AI recept rozdělí, abyste zapsali 1 porci, a Uložená jídla si tuto velikost porce ponechají.</string>
     <string name="cd_recipe_servings_fewer">Méně porcí</string>
     <string name="cd_recipe_servings_more">Více porcí</string>
+    <string name="combine_action">Sloučit</string>
+    <string name="combine_into_meal">Sloučit do jídla</string>
+    <string name="combine_selected_count">Vybráno: %1$d</string>
+    <string name="ingredients_add_menu_title">Přidat ingredienci</string>
     <string name="progressive_meal_title">Postupné jídlo</string>
     <string name="progressive_meal_description">Fotka 1 → 2 → 3 sleduje každou ingredienci přidanou na stejný talíř. Viditelné rozdíly na kuchyňské váze se stanou hmotnostmi ingrediencí.</string>
     <string name="progressive_meal_info_title">Jak Postupné jídlo funguje</string>
     <string name="progressive_meal_info_body">Použij, když každá fotka ukazuje stejný talíř po přidání další ingredience. Zachovej pořadí fotek a nech displej kuchyňské váhy viditelný. Fud AI použije rozdíl mezi po sobě jdoucími údaji váhy k odhadu každé nové ingredience. Nech vypnuté, pokud jsou fotky jen různé úhly stejného jídla.</string>
+    <string name="settings_add_menu_title">Nabídka +</string>
+    <string name="settings_add_menu_food_section">Nabídka přidání jídla</string>
+    <string name="settings_add_menu_groups">Skupiny</string>
     <string name="settings_add_menu_standalone">Samostatné metody</string>
     <string name="settings_add_menu_standalone_footer">Tyto metody se zobrazují přímo pod +, mimo skupiny.</string>
+    <string name="settings_add_menu_hidden">Skryté metody</string>
+    <string name="settings_add_menu_reset">Obnovit výchozí</string>
+    <string name="settings_add_menu_footer">Přizpůsob nabídku jídla tlačítka + na Domů. Voda a půst zůstanou samostatně, pokud jsou zapnuté. Rychlé akce ikony aplikace se tím nemění.</string>
+    <string name="settings_add_menu_add_method">Přidat metodu</string>
+    <string name="settings_add_menu_restore_a11y">Obnovit %1$s</string>
+    <string name="settings_add_menu_group_name">Název skupiny</string>
+    <string name="settings_add_menu_new_group">Nová skupina</string>
     <string name="settings_tab_bar">Panel karet</string>
     <string name="settings_tab_bar_section">Zobrazit v panelu karet</string>
     <string name="settings_tab_bar_footer">Domů a Nastavení se zobrazují vždy.</string>
@@ -1185,4 +1473,14 @@
     <string name="settings_app_icon_shortcuts">Zkratky ikony aplikace</string>
     <string name="settings_quick_action_number">Rychlá akce %1$d</string>
     <string name="settings_quick_actions_footer">Podrž ikonu Fud AI a použij tyto zkratky. Každý slot přímo otevře vybranou metodu zapisování.</string>
+    <string name="about_whisper_notices">Upozornění třetích stran pro Whisper Base</string>
+    <string name="about_whisper_notices_load_error">Upozornění třetích stran pro Whisper Base se nepodařilo načíst.</string>
+    <string name="import_water_entries">Záznamy vody</string>
+    <string name="import_diary_success">Importované záznamy deníku: %1$d.</string>
+    <string name="import_replace_with_water_explanation">Nahrazení odstraní záznamy jídel v exportovaném období a obnoví je z tohoto souboru. Pokud soubor obsahuje data o vodě, nahradí se i záznamy vody v tomto období. Starší soubory jen s jídlem nechají záznamy vody beze změny. Odpovídající záznamy jídel si ponechají fotky. Přidání zachová aktuální deník a duplicity vytvoří jako nové záznamy.</string>
+    <string name="export_empty_diary">Ve zvoleném období nejsou žádné záznamy jídla ani vody.</string>
+    <string name="workout_rpe_label">Námaha (RPE)</string>
+    <string name="workout_rpe_help_strength">Volitelné — jak náročná ti série připadala. Silová škála: 1 = velmi snadné; 10 = maximální úsilí. Desetinná čísla jsou povolena. Pokud si nejsi jistý, nech prázdné.</string>
+    <string name="workout_rpe_help_cr10">Volitelné — jak náročná ti série připadala. Škála CR10: 0 = žádná námaha; 10 = maximální úsilí. Desetinná čísla jsou povolena. Pokud si nejsi jistý, nech prázdné.</string>
+    <string name="workout_rpe_help_borg">Volitelné — jak náročná ti série připadala. Borgova škála: 6 = žádná námaha; 20 = maximální námaha. Používej celá čísla. Pokud si nejsi jistý, nech prázdné.</string>
 </resources>

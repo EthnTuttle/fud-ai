@@ -13,6 +13,9 @@
     <string name="challenge_public_profile_disclosure">Katılımcılara yalnızca görünen adınız ve isteğe bağlı tek bir X veya Instagram kullanıcı adınız görünür. Kilo ve kilo kaybı asla sıralanmaz.</string>
     <string name="challenge_points_title">Puanlar nasıl işler</string>
     <string name="challenge_points_explanation" formatted="false">Aktivite: pozitif kaydedilmiş bir antrenman yakımı olan bir gün. Beslenme: hedefinizin %85-115\'i arasında günlük kalori. Tutarlılık: o gün kaydedilen herhangi bir yiyecek. Su: takip etkinken karşılanan su hedefi. Genel: dört günlük sayının toplamı, en fazla 28.</string>
+    <string name="challenge_rank_order">Önce görüntülediğiniz kategori dikkate alınır. Eşitlik olursa diğer gün sayıları belirler. Ardından antrenman kalorileri gelir; ancak Aktivite\'de kaloriler diğer günlerden önce gelir. Hafta hâlâ aynıysa bu toplamlara önce ulaşan kişi önde kalır. Aynı toplamları yeniden kaydetmek bu zamanı değiştirmez.</string>
+    <string name="challenge_page_previous">Önceki</string>
+    <string name="challenge_page_next">Sonraki</string>
     <string name="challenge_join_action">Yarışmaya katıl</string>
     <string name="challenge_pending_delete_title">Silme işlemi bağlantı bekliyor</string>
     <string name="challenge_pending_delete_message">Yarışma profiliniz bu cihazda gizlendi. Çevrimiçi olduğunuzda Fud AI, uzak profilinizi ve haftalık puanlarınızı silmeyi yeniden deneyecek.</string>
@@ -33,6 +36,7 @@
     <string name="challenge_edit_profile">Profili düzenle</string>
     <string name="challenge_leave_action">Ayrıl</string>
     <string name="challenge_leaderboard_title">Sıralamalar</string>
+    <string name="challenge_you">Siz</string>
     <string name="challenge_manage_blocked">Engellenenleri yönet</string>
     <string name="challenge_leaderboard_empty">Henüz başka sıralanmış katılımcı yok. Yenilemek için aşağı çekin.</string>
     <string name="challenge_more_actions">%1$s için daha fazla işlem</string>
