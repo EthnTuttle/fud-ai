@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
+import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.KeyStore
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -64,7 +65,8 @@ class ChatService(
         workoutSessions: List<WorkoutSession> = emptyList(),
         workoutPlans: List<WorkoutDayPlan> = emptyList(),
         workoutPreferences: WorkoutPreferences = WorkoutPreferences(),
-        workoutPlanWeightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS
+        workoutPlanWeightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS,
+        exerciseLibrary: List<ExerciseItem> = emptyList()
     ): String {
         val baseSystemPrompt = buildSystemPrompt(
             profile = profile,
@@ -90,7 +92,8 @@ class ChatService(
             workoutSessions = workoutSessions,
             workoutPlans = workoutPlans,
             workoutPreferences = workoutPreferences,
-            workoutPlanWeightUnit = workoutPlanWeightUnit
+            workoutPlanWeightUnit = workoutPlanWeightUnit,
+            exerciseLibrary = exerciseLibrary
         )
 
         if (hosted != null && prefs.aiAccessMode.first() == AiAccessMode.HOSTED) {
@@ -265,6 +268,7 @@ class ChatService(
         lines.add("- \"How is my training progressing?\" → call get_training_summary(from, to), then get_workout_history only if individual sets are needed")
         lines.add("- \"What did I bench last?\" / one-lift trends → call get_exercise_lift_history(exercise)")
         lines.add("- \"What workout do I have planned?\" → call get_workout_plans")
+        lines.add("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
         lines.add("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
         lines.add("Do NOT call tools for questions you can answer from the profile/forecast below.")
         lines.add("")
