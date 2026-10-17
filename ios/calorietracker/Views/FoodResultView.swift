@@ -20,6 +20,12 @@ struct FoodResultView: View {
     let source: FoodSource
     let progressiveMeal: Bool
     let productMetadata: FoodProductMetadata?
+    /// True when a barcode Open Food Facts could not use was prefilled from the
+    /// user's own earlier nutrition-label scan (#485).
+    let usesSavedBarcodeLabel: Bool
+    /// False when the review re-logs an entry that already holds one portion of
+    /// a split recipe, so that portion is never split again (#458).
+    let allowsRecipeServings: Bool
 
     @State private var baseServingSizeGrams: Double
     @State private var servingUnitOptions: [ServingUnitOption]
@@ -61,6 +67,7 @@ struct FoodResultView: View {
     @State private var editableFolate: Double?
     @State private var editableOmega3: Double?
     @State private var editableIngredients: [MealIngredient]
+    @State private var recipeServings = 1
     @State private var ingredientEditor: IngredientEditorTarget?
     @State private var showWhatIfSheet = false
     @State private var imagePreview: FullScreenImagePreview?
@@ -132,6 +139,8 @@ struct FoodResultView: View {
         ingredients: [MealIngredient] = [],
         progressiveMeal: Bool = false,
         productMetadata: FoodProductMetadata? = nil,
+        usesSavedBarcodeLabel: Bool = false,
+        allowsRecipeServings: Bool = true,
         servingSizeGrams: Double = 100,
         sugar: Double? = nil,
         addedSugar: Double? = nil,
@@ -199,6 +208,8 @@ struct FoodResultView: View {
         self.source = source
         self.progressiveMeal = progressiveMeal
         self.productMetadata = productMetadata
+        self.usesSavedBarcodeLabel = usesSavedBarcodeLabel
+        self.allowsRecipeServings = allowsRecipeServings
         self._baseServingSizeGrams = State(initialValue: servingSizeGrams)
         self._servingUnitOptions = State(initialValue: normalizedServingUnitOptions)
         self._servingSizeIsKnown = State(initialValue: servingSizeIsKnown)
@@ -360,18 +371,37 @@ struct FoodResultView: View {
     }
 
     private func applyIngredientChanges(_ displayedIngredients: [MealIngredient]) {
+        // While a recipe split is active the edit is to one portion, so the split carries over.
+        let keptSplit = RecipeServings.keepingSplit(
+            displayedIngredients: displayedIngredients,
+            scale: scale,
+            servings: recipeServings,
+            options: servingUnitOptions,
+            selectedUnitID: selectedServingUnitID
+        )
+        let nextIngredients = keptSplit?.ingredients ?? displayedIngredients
         applyMicros(
             currentMicros.stretched(
                 oldGrams: editableIngredients.ingredientTotals.grams,
-                newGrams: displayedIngredients.ingredientTotals.grams
+                newGrams: nextIngredients.ingredientTotals.grams
             )
         )
-        editableIngredients = displayedIngredients
-        let totals = displayedIngredients.ingredientTotals
+        editableIngredients = nextIngredients
+        let totals = nextIngredients.ingredientTotals
         editableCalories = totals.calories
         editableProtein = totals.protein
         editableCarbs = totals.carbs
         editableFat = totals.fat
+        if let keptSplit {
+            baseServingSizeGrams = totals.grams
+            recipeServings = keptSplit.split.servings
+            servingUnitOptions = keptSplit.split.options
+            selectedServingUnitID = keptSplit.split.selectedUnitID
+            servingSizeGrams = keptSplit.split.servingSizeGrams
+            servingSizeText = keptSplit.split.quantityText
+            servingSizeIsKnown = true
+            return
+        }
         guard totals.grams > 0 else { return }
         baseServingSizeGrams = totals.grams
         servingSizeGrams = totals.grams
@@ -379,6 +409,33 @@ struct FoodResultView: View {
         selectedServingUnitID = ServingUnitOption.grams.unit
         servingUnitOptions = []
         servingSizeIsKnown = true
+        // The edited list is now the whole meal again, so any split is gone.
+        recipeServings = 1
+    }
+
+    /// Shown only for a real ingredient breakdown with a known total mass (#458).
+    private var recipeServingsBinding: Binding<Int>? {
+        guard allowsRecipeServings,
+              RecipeServings.isAvailable(
+                  ingredientCount: editableIngredients.count,
+                  totalGrams: baseServingSizeGrams,
+                  servingSizeIsKnown: servingSizeIsKnown
+              )
+        else { return nil }
+        return Binding(get: { recipeServings }, set: applyRecipeServings)
+    }
+
+    private func applyRecipeServings(_ servings: Int) {
+        let split = RecipeServings.split(
+            options: servingUnitOptions,
+            totalGrams: baseServingSizeGrams,
+            servings: servings
+        )
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitID = split.selectedUnitID
+        servingSizeGrams = split.servingSizeGrams
+        servingSizeText = split.quantityText
     }
 
     var body: some View {
@@ -428,6 +485,10 @@ struct FoodResultView: View {
                             }
                             .listRowBackground(Color.clear)
                         }
+                    }
+
+                    if usesSavedBarcodeLabel {
+                        SavedBarcodeLabelNoticeSection()
                     }
 
                     Section("Food Details") {
@@ -550,7 +611,8 @@ struct FoodResultView: View {
                                     applyIngredientChanges(scaledIngredients + [ingredient])
                                 }
                             )
-                        )
+                        ),
+                        recipeServings: recipeServingsBinding
                     )
 
                     Section {
@@ -760,6 +822,20 @@ struct FoodResultView: View {
 
 }
 
+/// Explains a review prefilled from the user's saved nutrition label for a
+/// barcode, and how to forget that label without any extra settings (#485).
+private struct SavedBarcodeLabelNoticeSection: View {
+    var body: some View {
+        Section {
+            Label("Using your saved label for this barcode", systemImage: "barcode.viewfinder")
+                .font(.system(.body, design: .rounded, weight: .semibold))
+                .foregroundStyle(AppColors.calorie)
+        } footer: {
+            Text("Open Food Facts has no nutrition for this product. To forget this label, delete the food logs that used it.")
+        }
+    }
+}
+
 struct IngredientEditorTarget: Identifiable {
     let id = UUID()
     let index: Int?
@@ -771,6 +847,8 @@ struct MealIngredientsSection: View {
     let onEdit: (Int) -> Void
     var onAdd: (() -> Void)? = nil
     var addMenu: AnyView? = nil
+    /// "Servings in recipe" stepper; nil hides it (#458).
+    var recipeServings: Binding<Int>? = nil
 
     var body: some View {
         Section {
@@ -829,10 +907,27 @@ struct MealIngredientsSection: View {
                 }
                 .tint(AppColors.calorie)
             }
+
+            if let recipeServings {
+                Stepper(value: recipeServings, in: RecipeServings.range) {
+                    HStack {
+                        Text("Servings in recipe")
+                        Spacer()
+                        Text(String(recipeServings.wrappedValue))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
         } header: {
             Text("Ingredients")
         } footer: {
-            Text("Ingredient changes update the meal's calorie and macro totals automatically.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Ingredient changes update the meal's calorie and macro totals automatically.")
+                if recipeServings != nil {
+                    Text("Set this after adding every ingredient. Fud AI splits the recipe so you log 1 serving, and Saved Meals keep that serving size.")
+                }
+            }
         }
     }
 

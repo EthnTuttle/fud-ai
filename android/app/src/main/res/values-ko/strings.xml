@@ -371,6 +371,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">음식 상세</string>
     <string name="sheet_serving">1회 제공량</string>
+    <string name="recipe_servings_title">레시피 인분 수</string>
+    <string name="recipe_servings_footer">모든 재료를 추가한 뒤 설정하세요. Fud AI가 레시피를 나눠 1인분을 기록하고, 저장된 식사에도 그 1인분 크기가 유지됩니다.</string>
+    <string name="cd_recipe_servings_fewer">인분 줄이기</string>
+    <string name="cd_recipe_servings_more">인분 늘리기</string>
     <string name="sheet_nutrition">영양</string>
     <string name="sheet_meal">식사</string>
     <string name="sheet_more_nutrition">추가 영양 정보</string>

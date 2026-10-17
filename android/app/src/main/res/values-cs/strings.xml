@@ -44,6 +44,8 @@
     <!-- Open Food Facts product metadata -->
     <string name="product_information">Informace o produktu</string>
     <string name="product_barcode">Čárový kód</string>
+    <string name="barcode_saved_label_title">Používá se váš uložený výživový štítek pro tento čárový kód</string>
+    <string name="barcode_saved_label_footer">Open Food Facts pro tento produkt nemá nutriční hodnoty. Chcete-li tento štítek zapomenout, smažte záznamy jídla, které ho použily.</string>
     <string name="product_package">Balení</string>
     <string name="product_nutri_score">Nutri-Score</string>
     <string name="product_nova_group">Skupina NOVA</string>
@@ -1055,6 +1057,10 @@
     <string name="ingredients_remove">Odebrat</string>
     <string name="ingredients_weight">Hmotnost</string>
     <string name="ingredients_footer">Změny ingrediencí automaticky aktualizují celkové kalorie a makra jídla.</string>
+    <string name="recipe_servings_title">Porce v receptu</string>
+    <string name="recipe_servings_footer">Nastavte to po přidání všech ingrediencí. Fud AI recept rozdělí, abyste zapsali 1 porci, a Uložená jídla si tuto velikost porce ponechají.</string>
+    <string name="cd_recipe_servings_fewer">Méně porcí</string>
+    <string name="cd_recipe_servings_more">Více porcí</string>
     <string name="progressive_meal_title">Postupné jídlo</string>
     <string name="progressive_meal_description">Fotka 1 → 2 → 3 sleduje každou ingredienci přidanou na stejný talíř. Viditelné rozdíly na kuchyňské váze se stanou hmotnostmi ingrediencí.</string>
     <string name="progressive_meal_info_title">Jak Postupné jídlo funguje</string>

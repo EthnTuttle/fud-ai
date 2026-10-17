@@ -372,6 +372,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Essensdetails</string>
     <string name="sheet_serving">Portion</string>
+    <string name="recipe_servings_title">Portionen im Rezept</string>
+    <string name="recipe_servings_footer">Lege das fest, nachdem du alle Zutaten hinzugefügt hast. Fud AI teilt das Rezept auf, sodass du 1 Portion einträgst, und Gespeicherte Mahlzeiten behalten diese Portionsgröße.</string>
+    <string name="cd_recipe_servings_fewer">Weniger Portionen</string>
+    <string name="cd_recipe_servings_more">Mehr Portionen</string>
     <string name="sheet_nutrition">Ernährung</string>
     <string name="sheet_meal">Mahlzeit</string>
     <string name="sheet_more_nutrition">Weitere Nährwerte</string>

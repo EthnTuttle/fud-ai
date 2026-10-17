@@ -372,6 +372,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Yemək Təfərrüatları</string>
     <string name="sheet_serving">Porsiya</string>
+    <string name="recipe_servings_title">Reseptdəki porsiyalar</string>
+    <string name="recipe_servings_footer">Bunu bütün inqrediyentləri əlavə etdikdən sonra təyin edin. Fud AI resepti bölür ki, 1 porsiya qeyd edəsiniz, Saxlanılmış Yeməklər isə həmin porsiya ölçüsünü yadda saxlayır.</string>
+    <string name="cd_recipe_servings_fewer">Daha az porsiya</string>
+    <string name="cd_recipe_servings_more">Daha çox porsiya</string>
     <string name="sheet_nutrition">Qidalanma</string>
     <string name="sheet_meal">Yemək</string>
     <string name="sheet_more_nutrition">Daha çox Qidalanma</string>
