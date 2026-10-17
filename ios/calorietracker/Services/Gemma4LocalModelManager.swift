@@ -217,15 +217,16 @@ final class Gemma4LocalModelManager {
         do {
             try prepareRootDirectory()
             try removeUnverifiedArtifacts()
-            try requireDownloadHeadroom()
+            let keptBytes = partialByteCount
+            try requireDownloadHeadroom(keptBytes: keptBytes)
 
-            state = .downloading(0)
-            // Interruptions resume from URLSession resume data, which is also kept on disk so a
-            // later Download (even after a relaunch) continues instead of starting over.
-            var retry = GemmaDownloadRetryState(resumeData: try? Data(contentsOf: resumeDataURL))
-            while true {
+            state = .downloading(Double(keptBytes) / Double(Self.artifactByteCount))
+            // The partial file survives failures and relaunches. Every attempt asks the pinned
+            // resolve URL for the remaining range, so a resume never replays an expired CDN link.
+            var retry = GemmaDownloadRetryState()
+            while partialByteCount < Self.artifactByteCount {
                 let download = GemmaArtifactDownloadOperation(
-                    destinationURL: partialModelURL,
+                    fileURL: partialModelURL,
                     expectedByteCount: Self.artifactByteCount,
                     fileManager: fileManager
                 ) { [weak self] progress in
@@ -236,14 +237,12 @@ final class Gemma4LocalModelManager {
                 }
                 activeDownload = download
                 do {
-                    try await download.start(url: Self.artifactURL, resumeData: retry.resumeData)
+                    try await download.start(url: Self.artifactURL)
                     activeDownload = nil
-                    break
                 } catch {
                     activeDownload = nil
                     if Task.isCancelled || Self.isCancellation(error) { throw error }
                     let decision = retry.recordFailure(error, receivedBytes: download.receivedBytes)
-                    storeResumeData(retry.resumeData)
                     guard case .retry(let delay) = decision else { throw error }
                     let wait = Task { try await Task.sleep(for: .seconds(delay)) }
                     retryWait = wait
@@ -255,8 +254,6 @@ final class Gemma4LocalModelManager {
                     retryWait = nil
                 }
             }
-            // The finished transfer consumed the resume data.
-            storeResumeData(nil)
 
             state = .verifying
             let partialURL = partialModelURL
@@ -289,12 +286,13 @@ final class Gemma4LocalModelManager {
         } catch {
             activeDownload = nil
             retryWait = nil
-            try? fileManager.removeItem(at: partialModelURL)
             let cancelled = Task.isCancelled || Self.isCancellation(error)
-            if cancelled { storeResumeData(nil) }
-            // Resume data left by a failed (not cancelled) download keeps the directory so the
-            // next Download continues from it.
-            if !isDownloaded, !fileManager.fileExists(atPath: resumeDataURL.path),
+            // A failed download keeps its partial so the next Download resumes it (Delete still
+            // removes it). Cancel and bytes that failed verification discard it.
+            if cancelled || Self.isVerificationFailure(error) {
+                try? fileManager.removeItem(at: partialModelURL)
+            }
+            if !isDownloaded, partialByteCount == 0,
                fileManager.fileExists(atPath: rootDirectory.path) {
                 try? fileManager.removeItem(at: rootDirectory)
             }
@@ -394,8 +392,11 @@ final class Gemma4LocalModelManager {
         return wholeGiB + (hasPartialGiB ? 1 : 0)
     }
 
+    /// Bytes kept from an interrupted download already occupy their share of the space, so only
+    /// the remainder plus installation headroom has to be free.
     nonisolated static func hasRequiredStorage(
         availableBytes: Int64,
+        keptBytes: Int64 = 0,
         artifactBytes: Int64 = artifactByteCount,
         headroomBytes: Int64 = installationHeadroomBytes
     ) -> Bool {
@@ -403,7 +404,19 @@ final class Gemma4LocalModelManager {
               artifactBytes <= Int64.max - headroomBytes else {
             return false
         }
-        return availableBytes >= artifactBytes + headroomBytes
+        return availableBytes >= requiredStorageBytes(
+            keptBytes: keptBytes,
+            artifactBytes: artifactBytes,
+            headroomBytes: headroomBytes
+        )
+    }
+
+    nonisolated static func requiredStorageBytes(
+        keptBytes: Int64 = 0,
+        artifactBytes: Int64 = artifactByteCount,
+        headroomBytes: Int64 = installationHeadroomBytes
+    ) -> Int64 {
+        artifactBytes - min(max(keptBytes, 0), artifactBytes) + headroomBytes
     }
 
     nonisolated static func engineConfig(
@@ -506,8 +519,17 @@ final class Gemma4LocalModelManager {
         rootDirectory.appendingPathComponent(Self.artifactFilename)
     }
 
+    /// Named after the pinned artifact hash so a partial never continues a different artifact.
     private var partialModelURL: URL {
-        rootDirectory.appendingPathComponent("\(Self.artifactFilename).partial")
+        rootDirectory.appendingPathComponent("\(Self.artifactSHA256).partial")
+    }
+
+    /// Bytes an interrupted download left for the next attempt to resume after.
+    private var partialByteCount: Int64 {
+        guard let attributes = try? fileManager.attributesOfItem(atPath: partialModelURL.path) else {
+            return 0
+        }
+        return (attributes[.size] as? NSNumber)?.int64Value ?? 0
     }
 
     private var verificationMarkerURL: URL {
@@ -516,19 +538,6 @@ final class Gemma4LocalModelManager {
 
     private var preparedMarkerURL: URL {
         rootDirectory.appendingPathComponent("prepared.version")
-    }
-
-    /// Named after the pinned artifact hash so resume data never continues a different artifact.
-    private var resumeDataURL: URL {
-        rootDirectory.appendingPathComponent("\(Self.artifactSHA256).resume")
-    }
-
-    private func storeResumeData(_ data: Data?) {
-        if let data {
-            try? data.write(to: resumeDataURL, options: .atomic)
-        } else if fileManager.fileExists(atPath: resumeDataURL.path) {
-            try? fileManager.removeItem(at: resumeDataURL)
-        }
     }
 
     private var cacheDirectory: URL {
@@ -558,29 +567,33 @@ final class Gemma4LocalModelManager {
     }
 
     private func removeUnverifiedArtifacts() throws {
-        for url in [partialModelURL, modelURL, verificationMarkerURL, preparedMarkerURL]
+        for url in [modelURL, verificationMarkerURL, preparedMarkerURL]
         where fileManager.fileExists(atPath: url.path) {
             try fileManager.removeItem(at: url)
         }
-        // Resume data for any other artifact revision can never be used.
+        // A partial of another artifact revision, or one longer than the artifact, can never
+        // verify. The current partial is kept so this download resumes it.
+        if partialByteCount > Self.artifactByteCount {
+            try fileManager.removeItem(at: partialModelURL)
+        }
         let contents = (try? fileManager.contentsOfDirectory(
             at: rootDirectory,
             includingPropertiesForKeys: nil
         )) ?? []
         for url in contents
-        where url.pathExtension == "resume" && url.lastPathComponent != resumeDataURL.lastPathComponent {
-            try? fileManager.removeItem(at: url)
+        where url.pathExtension == "partial" && url.lastPathComponent != partialModelURL.lastPathComponent {
+            try fileManager.removeItem(at: url)
         }
     }
 
-    private func requireDownloadHeadroom() throws {
+    private func requireDownloadHeadroom(keptBytes: Int64) throws {
         let values = try rootDirectory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
         guard let available = values.volumeAvailableCapacityForImportantUsage else {
             throw LocalModelError.storageCapacityUnavailable
         }
-        guard Self.hasRequiredStorage(availableBytes: available) else {
+        guard Self.hasRequiredStorage(availableBytes: available, keptBytes: keptBytes) else {
             throw LocalModelError.insufficientStorage(
-                required: Self.artifactByteCount + Self.installationHeadroomBytes,
+                required: Self.requiredStorageBytes(keptBytes: keptBytes),
                 available: available
             )
         }
@@ -642,11 +655,15 @@ final class Gemma4LocalModelManager {
     private static func isCancellation(_ error: Error) -> Bool {
         error is CancellationError || (error as? URLError)?.code == .cancelled
     }
+
+    private static func isVerificationFailure(_ error: Error) -> Bool {
+        guard case .invalidDownload? = error as? LocalModelError else { return false }
+        return true
+    }
 }
 
-/// Bounded retry bookkeeping for the Gemma download. An interruption that hands back resume data
-/// continues from the bytes already received; only consecutive attempts that received nothing
-/// spend the retry budget.
+/// Bounded retry bookkeeping for the Gemma download. Every attempt resumes after the bytes already
+/// on disk; only consecutive attempts that received nothing spend the retry budget.
 struct GemmaDownloadRetryState {
     enum Decision: Equatable {
         case retry(after: TimeInterval)
@@ -655,46 +672,32 @@ struct GemmaDownloadRetryState {
 
     static let standardDelays: [TimeInterval] = [1, 2, 4, 8, 16, 30]
 
-    private(set) var resumeData: Data?
     private(set) var consecutiveFailures = 0
     let delays: [TimeInterval]
 
-    init(resumeData: Data?, delays: [TimeInterval] = standardDelays) {
-        self.resumeData = resumeData
+    init(delays: [TimeInterval] = standardDelays) {
         self.delays = delays
     }
 
     mutating func recordFailure(_ error: Error, receivedBytes: Int64) -> Decision {
         if receivedBytes > 0 { consecutiveFailures = 0 }
-        let retryable: Bool
-        if let freshResumeData = Self.resumeData(from: error) {
-            resumeData = freshResumeData
-            retryable = true
-        } else if Self.isTransient(error) {
-            retryable = true
-        } else if resumeData != nil {
-            // Resume data that can no longer be resumed (an expired CDN link or a purged
-            // temporary file) is dropped, and the next attempt starts over.
-            resumeData = nil
-            retryable = true
-        } else {
-            retryable = false
-        }
-        guard retryable, consecutiveFailures < delays.count else { return .fail }
+        guard Self.isTransient(error), consecutiveFailures < delays.count else { return .fail }
         let delay = delays[consecutiveFailures]
         consecutiveFailures += 1
         return .retry(after: delay)
     }
 
-    static func resumeData(from error: Error) -> Data? {
-        (error as? URLError)?.downloadTaskResumeData
-            ?? (error as NSError).userInfo[NSURLSessionDownloadTaskResumeData] as? Data
-    }
-
     static func isTransient(_ error: Error) -> Bool {
-        if let downloadError = error as? GemmaArtifactDownloadOperation.DownloadError,
-           case .httpStatus(let status) = downloadError {
-            return status == 408 || status == 429 || (500...599).contains(status)
+        if let downloadError = error as? GemmaArtifactDownloadOperation.DownloadError {
+            switch downloadError {
+            case .httpStatus(let status):
+                return status == 408 || status == 429 || (500...599).contains(status)
+            case .unexpectedRange:
+                // The partial was reset, so the next attempt starts over from zero.
+                return true
+            case .invalidHTTPResponse:
+                return false
+            }
         }
         guard let urlError = error as? URLError else { return false }
         switch urlError.code {
@@ -708,15 +711,17 @@ struct GemmaDownloadRetryState {
     }
 }
 
-final class GemmaArtifactDownloadOperation: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+/// One attempt at the Gemma artifact: appends whatever follows the bytes already in `fileURL`,
+/// requested with an HTTP Range. The bytes it writes stay on disk whatever the outcome.
+final class GemmaArtifactDownloadOperation: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     enum DownloadError: LocalizedError {
         case invalidHTTPResponse
         case httpStatus(Int)
-        case missingDownloadedFile
+        case unexpectedRange
 
         var errorDescription: String? {
             switch self {
-            case .invalidHTTPResponse:
+            case .invalidHTTPResponse, .unexpectedRange:
                 LocalModelStrings.text(
                     "gemma.download.invalidHTTPResponse",
                     defaultValue: "The model server returned an invalid response."
@@ -727,54 +732,84 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDownloadDelegate
                     defaultValue: "The model server returned HTTP %@.",
                     String(status)
                 )
-            case .missingDownloadedFile:
-                LocalModelStrings.text(
-                    "gemma.download.missingFile",
-                    defaultValue: "The model download completed without a file."
-                )
             }
         }
     }
 
-    private let destinationURL: URL
+    private static let progressStepBytes: Int64 = 1_024 * 1_024
+
+    private let fileURL: URL
     private let expectedByteCount: Int64
     private let fileManager: FileManager
+    private let configuration: URLSessionConfiguration
     private let progressHandler: @Sendable (Double) -> Void
     private let lock = NSLock()
     private var continuation: CheckedContinuation<Void, Error>?
     private var session: URLSession?
-    private var task: URLSessionDownloadTask?
-    private var movedDownloadedFile = false
+    private var task: URLSessionDataTask?
+    private var output: FileHandle?
+    private var failure: Error?
     private var isCancelled = false
-    private var resumedOffset: Int64 = 0
+    private var fileLength: Int64 = 0
+    private var reportedLength: Int64 = 0
     private var newBytes: Int64 = 0
 
     init(
-        destinationURL: URL,
+        fileURL: URL,
         expectedByteCount: Int64,
         fileManager: FileManager,
+        configuration: URLSessionConfiguration = GemmaArtifactDownloadOperation.sessionConfiguration(),
         progressHandler: @escaping @Sendable (Double) -> Void
     ) {
-        self.destinationURL = destinationURL
+        self.fileURL = fileURL
         self.expectedByteCount = expectedByteCount
         self.fileManager = fileManager
+        self.configuration = configuration
         self.progressHandler = progressHandler
     }
 
-    /// Bytes this attempt received from the network, excluding any resumed offset.
+    static func sessionConfiguration() -> URLSessionConfiguration {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 120
+        configuration.timeoutIntervalForResource = 6 * 60 * 60
+        configuration.waitsForConnectivity = true
+        // The body streams straight to the partial file; none of it belongs in a cache.
+        configuration.urlCache = nil
+        return configuration
+    }
+
+    /// Bytes this attempt appended, excluding those kept from earlier attempts.
     var receivedBytes: Int64 {
         lock.lock()
         defer { lock.unlock() }
         return newBytes
     }
 
-    func start(url: URL, resumeData: Data? = nil) async throws {
+    /// Returns once `fileURL` holds `expectedByteCount` bytes. A transfer that ends early throws and
+    /// leaves what it received for the next attempt to resume after.
+    func start(url: URL) async throws {
         try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { continuation in
-                let configuration = URLSessionConfiguration.ephemeral
-                configuration.timeoutIntervalForRequest = 120
-                configuration.timeoutIntervalForResource = 6 * 60 * 60
-                configuration.waitsForConnectivity = true
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                let output: FileHandle
+                let keptLength: Int64
+                do {
+                    if !fileManager.fileExists(atPath: fileURL.path),
+                       !fileManager.createFile(atPath: fileURL.path, contents: nil) {
+                        throw CocoaError(.fileWriteUnknown, userInfo: [NSURLErrorKey: fileURL])
+                    }
+                    output = try FileHandle(forWritingTo: fileURL)
+                    keptLength = Int64(try output.seekToEnd())
+                } catch {
+                    continuation.resume(throwing: error)
+                    return
+                }
+
+                var request = URLRequest(url: url)
+                // Range offsets must count stored bytes, never a compressed encoding of them.
+                request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
+                if keptLength > 0 {
+                    request.setValue("bytes=\(keptLength)-", forHTTPHeaderField: "Range")
+                }
 
                 let delegateQueue = OperationQueue()
                 delegateQueue.name = "app.fud-ai.gemma-download"
@@ -785,16 +820,19 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDownloadDelegate
                     delegate: self,
                     delegateQueue: delegateQueue
                 )
-                let task = resumeData.map { session.downloadTask(withResumeData: $0) }
-                    ?? session.downloadTask(with: url)
+                let task = session.dataTask(with: request)
 
                 lock.lock()
                 self.continuation = continuation
                 self.session = session
                 self.task = task
+                self.output = output
+                fileLength = keptLength
+                reportedLength = keptLength
                 let cancelledBeforeStart = isCancelled
                 lock.unlock()
 
+                reportProgress(keptLength)
                 task.resume()
                 if Task.isCancelled || cancelledBeforeStart { cancel() }
             }
@@ -813,66 +851,46 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDownloadDelegate
 
     func urlSession(
         _ session: URLSession,
-        downloadTask: URLSessionDownloadTask,
-        didResumeAtOffset fileOffset: Int64,
-        expectedTotalBytes: Int64
-    ) {
-        lock.lock()
-        resumedOffset = fileOffset
-        lock.unlock()
-        reportProgress()
-    }
-
-    func urlSession(
-        _ session: URLSession,
-        downloadTask: URLSessionDownloadTask,
-        didWriteData bytesWritten: Int64,
-        totalBytesWritten: Int64,
-        totalBytesExpectedToWrite: Int64
-    ) {
-        // An error page body is neither progress nor a reason to reset the retry budget.
-        guard let response = downloadTask.response as? HTTPURLResponse,
-              (200..<300).contains(response.statusCode) else {
-            return
-        }
-        lock.lock()
-        newBytes += bytesWritten
-        lock.unlock()
-        reportProgress()
-    }
-
-    /// Progress counts the resumed bytes against the full artifact, independent of how a resumed
-    /// task reports its own totals.
-    private func reportProgress() {
-        guard expectedByteCount > 0 else { return }
-        lock.lock()
-        let written = resumedOffset + newBytes
-        lock.unlock()
-        progressHandler(min(1, max(0, Double(written) / Double(expectedByteCount))))
-    }
-
-    func urlSession(
-        _ session: URLSession,
-        downloadTask: URLSessionDownloadTask,
-        didFinishDownloadingTo location: URL
+        dataTask: URLSessionDataTask,
+        didReceive response: URLResponse,
+        completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
     ) {
         do {
-            guard let response = downloadTask.response as? HTTPURLResponse else {
-                throw DownloadError.invalidHTTPResponse
-            }
-            guard (200..<300).contains(response.statusCode) else {
-                throw DownloadError.httpStatus(response.statusCode)
-            }
-            if fileManager.fileExists(atPath: destinationURL.path) {
-                try fileManager.removeItem(at: destinationURL)
-            }
-            try fileManager.moveItem(at: location, to: destinationURL)
-            lock.lock()
-            movedDownloadedFile = true
-            lock.unlock()
+            try accept(response)
+            completionHandler(.allow)
         } catch {
-            complete(.failure(error))
+            fail(with: error)
+            completionHandler(.cancel)
         }
+    }
+
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        lock.lock()
+        let output = output
+        let keptLength = fileLength
+        let failed = failure != nil
+        lock.unlock()
+        guard let output, !failed else { return }
+
+        let length = keptLength + Int64(data.count)
+        do {
+            guard length <= expectedByteCount else {
+                throw Self.sizeMismatch(received: length, expected: expectedByteCount)
+            }
+            try output.write(contentsOf: data)
+        } catch {
+            fail(with: error)
+            dataTask.cancel()
+            return
+        }
+
+        lock.lock()
+        fileLength = length
+        newBytes += Int64(data.count)
+        let report = length - reportedLength >= Self.progressStepBytes || length == expectedByteCount
+        if report { reportedLength = length }
+        lock.unlock()
+        if report { reportProgress(length) }
     }
 
     func urlSession(
@@ -880,15 +898,126 @@ final class GemmaArtifactDownloadOperation: NSObject, URLSessionDownloadDelegate
         task: URLSessionTask,
         didCompleteWithError error: Error?
     ) {
-        if let error {
-            complete(.failure(error))
-            return
-        }
-
         lock.lock()
-        let movedDownloadedFile = movedDownloadedFile
+        let output = output
+        let failure = failure
+        let cancelled = isCancelled
+        let finished = fileLength == expectedByteCount
+        self.output = nil
         lock.unlock()
-        complete(movedDownloadedFile ? .success(()) : .failure(DownloadError.missingDownloadedFile))
+
+        var result: Result<Void, Error>
+        if cancelled {
+            result = .failure(URLError(.cancelled))
+        } else if let failure {
+            result = .failure(failure)
+        } else if let error {
+            result = .failure(error)
+        } else if !finished {
+            // The body ended before the artifact did; the next attempt resumes from here.
+            result = .failure(URLError(.networkConnectionLost))
+        } else {
+            result = .success(())
+        }
+        if let output {
+            do {
+                try output.synchronize()
+            } catch {
+                if case .success = result { result = .failure(error) }
+            }
+            try? output.close()
+        }
+        complete(result)
+    }
+
+    /// A 206 is appended only when it starts exactly where the partial ends.
+    nonisolated static func continues(
+        at offset: Int64,
+        contentRange: String?,
+        expectedByteCount: Int64
+    ) -> Bool {
+        guard let value = contentRange?.trimmingCharacters(in: .whitespaces),
+              value.hasPrefix("bytes ") else {
+            return false
+        }
+        let parts = value.dropFirst("bytes ".count)
+            .split(separator: "/", maxSplits: 1, omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return false }
+        let bounds = parts[0].split(separator: "-", maxSplits: 1, omittingEmptySubsequences: false)
+        guard bounds.count == 2, let start = Int64(bounds[0]), let end = Int64(bounds[1]) else {
+            return false
+        }
+        return start == offset && start <= end && end < expectedByteCount
+            && (parts[1] == "*" || Int64(parts[1]) == expectedByteCount)
+    }
+
+    private func accept(_ response: URLResponse) throws {
+        guard let response = response as? HTTPURLResponse else {
+            throw DownloadError.invalidHTTPResponse
+        }
+        lock.lock()
+        let keptLength = fileLength
+        lock.unlock()
+        switch response.statusCode {
+        case 206:
+            guard Self.continues(
+                at: keptLength,
+                contentRange: response.value(forHTTPHeaderField: "Content-Range"),
+                expectedByteCount: expectedByteCount
+            ) else {
+                try truncate(to: 0)
+                throw DownloadError.unexpectedRange
+            }
+        case 200:
+            // The server ignored the Range header, so the body starts at byte zero.
+            if keptLength > 0 { try truncate(to: 0) }
+            let declaredLength = response.expectedContentLength
+            if declaredLength >= 0, declaredLength != expectedByteCount {
+                throw Self.sizeMismatch(received: declaredLength, expected: expectedByteCount)
+            }
+        case 416:
+            // Only reachable with a partial shorter than the artifact, which the server no longer
+            // accepts as a resume point.
+            try truncate(to: 0)
+            throw DownloadError.unexpectedRange
+        default:
+            throw DownloadError.httpStatus(response.statusCode)
+        }
+    }
+
+    private func truncate(to length: Int64) throws {
+        lock.lock()
+        let output = output
+        lock.unlock()
+        try output?.truncate(atOffset: UInt64(length))
+        lock.lock()
+        fileLength = length
+        reportedLength = length
+        lock.unlock()
+        reportProgress(length)
+    }
+
+    private func fail(with error: Error) {
+        lock.lock()
+        if failure == nil { failure = error }
+        lock.unlock()
+    }
+
+    /// Progress counts the kept bytes against the full artifact.
+    private func reportProgress(_ length: Int64) {
+        guard expectedByteCount > 0 else { return }
+        progressHandler(min(1, max(0, Double(length) / Double(expectedByteCount))))
+    }
+
+    private static func sizeMismatch(received: Int64, expected: Int64) -> Error {
+        Gemma4LocalModelManager.LocalModelError.invalidDownload(
+            LocalModelStrings.format(
+                "gemma.verification.wrongSize",
+                defaultValue: "expected %@ bytes, received %@",
+                String(expected),
+                String(received)
+            )
+        )
     }
 
     private func complete(_ result: Result<Void, Error>) {
