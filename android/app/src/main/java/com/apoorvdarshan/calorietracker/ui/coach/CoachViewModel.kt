@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.coach
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.services.ai.AiError
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -136,10 +138,14 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 container.chatRepository.append(ChatMessage(role = ChatMessage.Role.ASSISTANT, content = reply.trim()))
                 _ui.value = _ui.value.copy(sending = false)
             } catch (e: AiError) {
+                logFailure(e)
                 // Hosted quota / no-plan errors open the paywall flow; others show localized text.
                 val routed = container.hostedUi.handle(e)
                 _ui.value = _ui.value.copy(sending = false, error = if (routed) null else e.userMessage(container.appContext))
             } catch (e: Throwable) {
+                // Leaving the screen cancels the send; that is not a chat failure.
+                ensureActive()
+                logFailure(e)
                 _ui.value = _ui.value.copy(
                     sending = false,
                     error = e.localizedMessage,
@@ -155,9 +161,28 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
 
     fun dismissError() { _ui.value = _ui.value.copy(error = null, errorRes = null) }
 
+    private fun logFailure(error: Throwable) {
+        // Log is a stub in JVM unit tests; logging must never change the send's outcome.
+        runCatching { Log.w(TAG, "Coach chat failed: ${coachFailureSummary(error)}") }
+    }
+
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             CoachViewModel(container) as T
     }
+
+    private companion object {
+        const val TAG = "FudAICoach"
+    }
+}
+
+/**
+ * Why a send failed, for Logcat: exception types (with causes) and the top code locations.
+ * Messages are left out because provider/HTTP errors can carry URLs, response text or keys.
+ */
+internal fun coachFailureSummary(error: Throwable): String {
+    val causes = generateSequence(error) { it.cause }.take(5).joinToString(" <- ") { it.javaClass.name }
+    val frames = error.stackTrace.take(3).joinToString(" | ") { "${it.className}.${it.methodName}:${it.lineNumber}" }
+    return if (frames.isEmpty()) causes else "$causes at $frames"
 }
