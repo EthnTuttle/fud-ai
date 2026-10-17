@@ -7,14 +7,15 @@ nonisolated struct AppStorageUsage: Equatable, Sendable {
     var cacheBytes: Int64
     var modelBytes: Int64
 
-    /// Allocated size of every regular file under `directory` (0 when missing).
-    static func directorySize(at directory: URL?) -> Int64 {
+    /// Allocated size of every regular file under `directory` (0 when missing). Hidden files
+    /// count only when `includingHiddenFiles` is set.
+    static func directorySize(at directory: URL?, includingHiddenFiles: Bool = false) -> Int64 {
         guard let directory else { return 0 }
         let keys: Set<URLResourceKey> = [.isRegularFileKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey, .fileSizeKey]
         guard let enumerator = FileManager.default.enumerator(
             at: directory,
             includingPropertiesForKeys: Array(keys),
-            options: [.skipsHiddenFiles]
+            options: includingHiddenFiles ? [] : [.skipsHiddenFiles]
         ) else {
             return 0
         }
@@ -24,6 +25,14 @@ nonisolated struct AppStorageUsage: Equatable, Sendable {
             total += Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? values.fileSize ?? 0)
         }
         return total
+    }
+
+    /// Size of the on-device model folders as they are on disk, hidden files included. The
+    /// model managers' installed sizes only change when a download ends, so measuring is what
+    /// counts a download in progress: Gemma's `.partial` file and WhisperKit's `.incomplete`
+    /// files under a hidden `.cache` folder.
+    static func modelBytes(in folders: [URL]) -> Int64 {
+        folders.reduce(0) { $0 + directorySize(at: $1, includingHiddenFiles: true) }
     }
 }
 
@@ -47,15 +56,16 @@ final class StorageMaintenance {
         let photoFolder = FoodImageStore.shared.photoFolderURL
         let thumbnailFolder = FoodImageStore.shared.thumbnailCacheFolderURL
         let frameFolder = WorkoutFrameStore.defaultCacheDirectory()
-        // The model managers keep their installed size current on download and delete.
-        let modelBytes = Gemma4LocalModelManager.shared.installedByteCount
-            + WhisperBaseModelManager.shared.installedByteCount
+        let modelFolders = [
+            Gemma4LocalModelManager.shared.storageDirectory,
+            WhisperBaseModelManager.shared.storageDirectory
+        ]
         usage = await Task.detached(priority: .utility) {
             AppStorageUsage(
                 photoBytes: AppStorageUsage.directorySize(at: photoFolder),
                 cacheBytes: AppStorageUsage.directorySize(at: thumbnailFolder)
                     + AppStorageUsage.directorySize(at: frameFolder),
-                modelBytes: modelBytes
+                modelBytes: AppStorageUsage.modelBytes(in: modelFolders)
             )
         }.value
     }

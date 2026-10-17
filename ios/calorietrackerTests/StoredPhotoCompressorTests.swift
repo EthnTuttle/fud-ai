@@ -53,6 +53,64 @@ struct StoredPhotoCompressorTests {
         #expect(restoreStore.load(filename: restoredName) == large)
     }
 
+    @Test func fileIdentityChangesWhenAPhotoIsReplacedEvenWithTheSameBytes() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("meal.jpg")
+        let photo = Data(repeating: 7, count: 4_096)
+        try photo.write(to: url, options: .atomic)
+
+        let saved = try #require(StoredPhotoCompressor.fileIdentity(of: url))
+        #expect(StoredPhotoCompressor.fileIdentity(of: url) == saved)
+
+        // A restore moves its staged copy over the photo; the bytes and size can be the same.
+        let staged = folder.appendingPathComponent("staged.jpg")
+        try photo.write(to: staged)
+        _ = try FileManager.default.replaceItemAt(url, withItemAt: staged)
+        let restored = try #require(StoredPhotoCompressor.fileIdentity(of: url))
+        #expect(restored.size == saved.size)
+        #expect(restored != saved)
+
+        try FileManager.default.removeItem(at: url)
+        #expect(StoredPhotoCompressor.fileIdentity(of: url) == nil)
+    }
+
+    @Test func queuedNewPhotoJobLeavesAPhotoARestoreReplacedBeforeTheJobRan() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let store = FoodImageStore(baseURL: base)
+        let large = try jpegData(width: 3_000, height: 2_000)
+        // Hold the serial queue so the job queued by the save starts only after the restore
+        // has finished (and its restore guard no longer applies).
+        let gate = DispatchSemaphore(value: 0)
+        StoredPhotoCompressor.newPhotoQueue.async { gate.wait() }
+        let saved = store.store(data: large, for: UUID())
+        let restore = Result { () throws -> Void in
+            guard let name = saved else { throw CocoaError(.fileWriteUnknown) }
+            let staging = try store.makeRestoreStaging()
+            defer { staging.discard() }
+            // The backup holds the same bytes, so only the file itself differs.
+            try store.stage(large, filename: name, in: staging)
+            try store.moveInStagedPhotos(staging)
+        }
+        gate.signal()
+        StoredPhotoCompressor.newPhotoQueue.sync {}
+
+        try restore.get()
+        let name = try #require(saved)
+        #expect(!StoredPhotoCompressor.isRestoring)
+        #expect(store.load(filename: name) == large)
+
+        // A save that no restore replaced is still capped.
+        let kept = try #require(store.store(data: large, for: UUID()))
+        StoredPhotoCompressor.newPhotoQueue.sync {}
+        let info = try imageInfo(try #require(store.load(filename: kept)))
+        #expect(max(info.width, info.height) <= StoredPhotoCompressor.maxPixelSize)
+    }
+
     @Test func compressionReplacesNothingWhileABackupRestoreRuns() throws {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("StoredPhotoCompressorTests-\(UUID().uuidString)", isDirectory: true)
@@ -214,6 +272,26 @@ struct StoredPhotoCompressorTests {
         #expect(AppStorageUsage.directorySize(at: folder) >= 12_000)
         #expect(AppStorageUsage.directorySize(at: folder.appendingPathComponent("missing")) == 0)
         #expect(AppStorageUsage.directorySize(at: nil) == 0)
+    }
+
+    @Test func modelSizeCountsPartialAndHiddenDownloadFiles() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AppStorageUsageTests-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: base) }
+        let gemma = base.appendingPathComponent("Gemma4E2B", isDirectory: true)
+        let whisper = base.appendingPathComponent("WhisperBase", isDirectory: true)
+        let incomplete = whisper.appendingPathComponent("models/argmaxinc/whisperkit-coreml/.cache/huggingface/download", isDirectory: true)
+        try FileManager.default.createDirectory(at: gemma, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: incomplete, withIntermediateDirectories: true)
+        // A Gemma download in progress and a WhisperKit file still downloading.
+        try Data(count: 50_000).write(to: gemma.appendingPathComponent("artifact.partial"))
+        try Data(count: 30_000).write(to: incomplete.appendingPathComponent("weights.bin.etag.incomplete"))
+
+        #expect(AppStorageUsage.directorySize(at: whisper) < 30_000)
+        #expect(AppStorageUsage.modelBytes(in: [gemma, whisper]) >= 80_000)
+        #expect(AppStorageUsage.modelBytes(in: [base.appendingPathComponent("missing")]) == 0)
+        let manager = Gemma4LocalModelManager(rootDirectory: gemma, physicalMemoryBytes: 0)
+        #expect(manager.storageDirectory == gemma)
     }
 
     // MARK: - Helpers

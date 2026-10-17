@@ -102,16 +102,19 @@ struct FoodImageStore {
         guard let folderURL else { return nil }
         let url = folderURL.appendingPathComponent(filename)
         do {
-            try StoredPhotoCompressor.withPhotoFileLock {
+            // The identity is read under the same lock as the write, so the queued downscale
+            // touches only this file and never one a restore or a later save put at `url`.
+            let written = try StoredPhotoCompressor.withPhotoFileLock { () throws -> StoredPhotoCompressor.FileIdentity? in
                 try data.write(to: url, options: .atomic)
+                return StoredPhotoCompressor.fileIdentity(of: url)
             }
             if let thumbnail = decodeImage(at: url, maxPixelSize: Self.thumbnailMaxDimension) {
                 writeThumbnail(thumbnail, filename: filename)
             }
-            if downscalingLargePhotos,
+            if downscalingLargePhotos, let written,
                let longest = StoredPhotoCompressor.longestSide(of: data),
                longest > StoredPhotoCompressor.maxPixelSize {
-                StoredPhotoCompressor.downscaleNewPhotoInBackground(at: url)
+                StoredPhotoCompressor.downscaleNewPhotoInBackground(at: url, expecting: written)
             }
             return filename
         } catch {

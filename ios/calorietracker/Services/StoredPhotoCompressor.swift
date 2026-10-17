@@ -9,7 +9,8 @@ import UniformTypeIdentifiers
 /// background right after they are stored; existing ones only when the user confirms Compress
 /// Photos in Settings. Backup restores, migrated legacy photos and images already within the
 /// cap keep their original bytes, and so does any photo whose re-encoded copy isn't smaller.
-/// Nothing is replaced while a backup restore is staging or moving photos in.
+/// Nothing is replaced while a backup restore is staging or moving photos in, and a queued
+/// new-photo job skips a photo that a restore or a later save replaced before the job ran.
 nonisolated enum StoredPhotoCompressor {
     /// Longest side kept for stored photos (matches `FoodImageStore.viewerMaxDimension`).
     static let maxPixelSize = 2048
@@ -57,11 +58,43 @@ nonisolated enum StoredPhotoCompressor {
         withPhotoFileLock { restoresRunning > 0 }
     }
 
-    /// Queues `url` (a photo `FoodImageStore` just wrote) to be capped at `maxPixelSize` with the
-    /// same swap rules as Compress Photos, so the caller never waits for the decode and encode.
-    static func downscaleNewPhotoInBackground(at url: URL, maxPixelSize: Int = maxPixelSize) {
+    /// Which file is at a path: its file system and file number, size and modification date.
+    /// Every save, restore or delete replaces the file or changes its size or date, so a
+    /// different identity means the path no longer holds the file that was checked earlier.
+    struct FileIdentity: Equatable, Sendable {
+        let fileSystemNumber: Int64?
+        let fileNumber: UInt64?
+        let size: Int64
+        let modified: Date
+    }
+
+    /// Identity of the item at `url` (not following a symbolic link), or nil when nothing is there.
+    static func fileIdentity(of url: URL) -> FileIdentity? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let size = (attributes[.size] as? NSNumber)?.int64Value,
+              let modified = attributes[.modificationDate] as? Date else {
+            return nil
+        }
+        return FileIdentity(
+            fileSystemNumber: (attributes[.systemNumber] as? NSNumber)?.int64Value,
+            fileNumber: (attributes[.systemFileNumber] as? NSNumber)?.uint64Value,
+            size: size,
+            modified: modified
+        )
+    }
+
+    /// Queues `url` (a photo `FoodImageStore` just wrote, with the `identity` it had right after
+    /// that write) to be capped at `maxPixelSize` with the same swap rules as Compress Photos, so
+    /// the caller never waits for the decode and encode. The job leaves the photo alone when the
+    /// path no longer holds that file by the time it runs: a backup restore, a newer save or a
+    /// delete in the meantime replaced it, and restored bytes must stay as they are.
+    static func downscaleNewPhotoInBackground(
+        at url: URL,
+        expecting identity: FileIdentity,
+        maxPixelSize: Int = maxPixelSize
+    ) {
         newPhotoQueue.async {
-            _ = autoreleasepool { compressPhoto(at: url, maxPixelSize: maxPixelSize) }
+            _ = autoreleasepool { compressPhoto(at: url, expecting: identity, maxPixelSize: maxPixelSize) }
         }
     }
 
@@ -131,15 +164,13 @@ nonisolated enum StoredPhotoCompressor {
         case failed
     }
 
-    private struct FileSignature: Equatable {
-        let size: Int64
-        let modified: Date
-    }
-
-    private static func compressPhoto(at url: URL, maxPixelSize: Int) -> Outcome {
+    /// `expected` is the file a queued new-photo job was queued for; when the path now holds
+    /// another file the photo is left alone.
+    private static func compressPhoto(at url: URL, expecting expected: FileIdentity? = nil, maxPixelSize: Int) -> Outcome {
         guard !isRestoring else { return .failed }
         let fileManager = FileManager.default
-        guard let before = signature(of: url) else { return .unchanged }
+        guard let before = fileIdentity(of: url) else { return .unchanged }
+        if let expected, before != expected { return .unchanged }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary),
               let longest = longestSide(of: source) else {
             return .unreadable
@@ -164,7 +195,7 @@ nonisolated enum StoredPhotoCompressor {
                 // A restore that started while this photo was encoded owns the folder until it ends.
                 guard restoresRunning == 0 else { return .failed }
                 // Skip if the photo was deleted, restored or rewritten while it was being encoded.
-                guard signature(of: url) == before else { return .unchanged }
+                guard fileIdentity(of: url) == before else { return .unchanged }
                 _ = try fileManager.replaceItemAt(url, withItemAt: staged)
                 return .compressed(before.size - Int64(data.count))
             }
@@ -220,14 +251,5 @@ nonisolated enum StoredPhotoCompressor {
             return nil
         }
         return max(width, height)
-    }
-
-    private static func signature(of url: URL) -> FileSignature? {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
-              let size = (attributes[.size] as? NSNumber)?.int64Value,
-              let modified = attributes[.modificationDate] as? Date else {
-            return nil
-        }
-        return FileSignature(size: size, modified: modified)
     }
 }
