@@ -138,7 +138,8 @@ class WorkoutModelsTest {
             timer = ExerciseTimer(accumulatedSeconds = 1_800.0, savedDurationSeconds = 1_800.0)
         )
         val moderate = estimate(listOf(cardio))!!
-        assertEquals(312, moderate.calories)
+        // Net of rest: (8.5 - 1) MET × 3.5 × 70 kg / 200 × 30 min.
+        assertEquals(276, moderate.calories)
         assertEquals(0, moderate.performedSetCount)
         val withReps = estimate(listOf(cardio.copy(sets = listOf(PlannedSet(reps = "10")))))!!
         assertEquals(moderate.calories, withReps.calories)
@@ -178,7 +179,29 @@ class WorkoutModelsTest {
             category = "stretching",
             timer = cardio.timer!!.copy(intensity = WorkoutIntensity.VIGOROUS)
         )
-        assertEquals(28, estimate(listOf(stretching))!!.calories)
+        // Stretching has one Compendium value (2.3 MET) at every effort: 1.3 net MET × 10 min.
+        assertEquals(16, estimate(listOf(stretching))!!.calories)
+    }
+
+    @Test
+    fun burnEstimatesAreNetActiveEnergyAboveRest() {
+        // Issue #509: 200 lb (90.7 kg) walking for 94 minutes.
+        fun walk(intensity: WorkoutIntensity) = exercise(PlannedSet()).copy(
+            itemId = "Walking_Outdoor",
+            category = "cardio",
+            sets = emptyList(),
+            timer = ExerciseTimer(accumulatedSeconds = 94 * 60.0, savedDurationSeconds = 94 * 60.0, intensity = intensity)
+        )
+        fun walkCalories(intensity: WorkoutIntensity) = WorkoutBurnEstimator.estimate(
+            listOf(walk(intensity)), 90.7, WorkoutWeightUnit.LBS, WorkoutRpeScale.STRENGTH
+        )!!.calories
+        // Gross walking METs 2.8 / 3.8 / 4.8 minus 1 resting MET.
+        assertEquals(269, walkCalories(WorkoutIntensity.LIGHT))
+        assertEquals(418, walkCalories(WorkoutIntensity.MODERATE))
+        assertEquals(567, walkCalories(WorkoutIntensity.VIGOROUS))
+
+        // Rep-based strength is net too: 5.24 gross MET (default effort) - 1, over the 4-minute minimum.
+        assertEquals(21, estimate(listOf(exercise(PlannedSet(reps = "10"))))!!.calories)
     }
 
     @Test
