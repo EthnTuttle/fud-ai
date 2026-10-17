@@ -528,6 +528,11 @@
     <string name="settings_goal_weight">Poids cible</string>
     <string name="settings_calories">Calories</string>
     <string name="settings_recalculate_goals">Recalculer les objectifs</string>
+    <string name="settings_estimated_maintenance">Maintien estimé</string>
+    <string name="settings_maintenance_deficit_format">Déficit : %1$,d kcal/jour</string>
+    <string name="settings_maintenance_surplus_format">Surplus : %1$,d kcal/jour</string>
+    <string name="settings_maintenance_close">L’objectif est proche du maintien</string>
+    <string name="settings_estimated_maintenance_info">Le maintien estimé correspond aux calories que vous brûleriez lors d’une journée type : votre métabolisme de base (BMR) issu de votre profil multiplié par votre niveau d’activité. Manger en dessous crée un déficit pour perdre du poids ; manger au-dessus crée un surplus pour en prendre. Le déficit ou le surplus affiché correspond à votre objectif calorique moins cette estimation. C’est une estimation par formule : votre dépense réelle peut différer, et le recalcul des objectifs peut fixer votre objectif à partir de vos repas enregistrés, de votre tendance de poids ou de votre dépense énergétique mesurée. Ceci n’est pas un avis médical.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Épinglé</string>
@@ -560,8 +565,25 @@
     <string name="settings_clear_key">Effacer la clé</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesées plus anciennes</string>
     <string name="settings_clear_food_log">Effacer le journal alimentaire</string>
     <string name="settings_delete_all_data">Supprimer toutes les données</string>
+    <string name="storage_title">Stockage</string>
+    <string name="storage_saved_photos">Photos enregistrées</string>
+    <string name="storage_on_device_models">Modèles sur l’appareil</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Compresser les photos</string>
+    <string name="storage_clear_cache">Vider le cache</string>
+    <string name="storage_footer">Compresser les photos redimensionne définitivement les photos de plus de 2048 px. Vider le cache supprime les miniatures et les images d’exercices téléchargées, qui sont recréées au besoin. Supprimez les modèles sur l’appareil depuis leurs réglages d’IA ou de reconnaissance vocale.</string>
+    <string name="storage_compress_confirm_title">Compresser les photos ?</string>
+    <string name="storage_compress_confirm_message">Les photos dont le plus grand côté dépasse 2048 pixels seront définitivement redimensionnées à 2048 pixels et enregistrées en JPEG. Les photos plus petites restent inchangées. Cette action est irréversible.</string>
+    <string name="storage_compress_action">Compresser</string>
+    <string name="storage_compressing_progress">Compression des photos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Photos compressées</string>
+    <string name="storage_compress_freed">%1$s libérés.</string>
+    <string name="storage_compress_nothing">Aucune photo n’avait besoin d’être compressée.</string>
+    <string name="storage_compress_unreadable">Certaines photos n’ont pas pu être lues et n’ont pas été modifiées.</string>
+    <string name="storage_compress_failed">Certaines photos n’ont pas pu être compressées et n’ont pas été modifiées. Assurez-vous que votre appareil dispose d’espace libre, puis réessayez.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Effacer le journal alimentaire ?</string>
@@ -821,4 +843,5 @@
     <string name="settings_save_photos_to_gallery">Enregistrer dans Photos</string>
     <string name="settings_save_photos_to_gallery_subtitle">Enregistrer aussi les photos de repas dans votre galerie lors de la saisie</string>
     <string name="settings_other_nutrients_note">Distinct des objectifs de calories, protéines, glucides et lipides.</string>
+    <string name="label_date">Date</string>
 </resources>

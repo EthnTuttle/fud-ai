@@ -527,6 +527,11 @@
     <string name="settings_goal_weight">Zielgewicht</string>
     <string name="settings_calories">Kalorien</string>
     <string name="settings_recalculate_goals">Ziele neu berechnen</string>
+    <string name="settings_estimated_maintenance">Geschätzter Erhaltungsbedarf</string>
+    <string name="settings_maintenance_deficit_format">Defizit: %1$,d kcal/Tag</string>
+    <string name="settings_maintenance_surplus_format">Überschuss: %1$,d kcal/Tag</string>
+    <string name="settings_maintenance_close">Ziel liegt nahe am Erhaltungsbedarf</string>
+    <string name="settings_estimated_maintenance_info">Der geschätzte Erhaltungsbedarf ist die Kalorienmenge, die du an einem typischen Tag verbrennst: dein Grundumsatz (BMR) aus deinem Profil multipliziert mit deinem Aktivitätslevel. Isst du weniger, entsteht ein Defizit zum Abnehmen; isst du mehr, ein Überschuss zum Zunehmen. Das angezeigte Defizit bzw. der Überschuss ist dein Kalorienziel minus diese Schätzung. Es ist eine Formelschätzung, dein tatsächlicher Verbrauch kann abweichen, und die Zielberechnung kann dein Ziel stattdessen aus deinen erfassten Mahlzeiten, deinem Gewichtstrend oder deinem gemessenen Energieverbrauch festlegen. Dies ist keine medizinische Beratung.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Angeheftet</string>
@@ -559,8 +564,25 @@
     <string name="settings_clear_key">Schlüssel löschen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Ältere Gewichtseinträge</string>
     <string name="settings_clear_food_log">Ernährungstagebuch löschen</string>
     <string name="settings_delete_all_data">Alle Daten löschen</string>
+    <string name="storage_title">Speicher</string>
+    <string name="storage_saved_photos">Gespeicherte Fotos</string>
+    <string name="storage_on_device_models">Modelle auf dem Gerät</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Fotos komprimieren</string>
+    <string name="storage_clear_cache">Cache leeren</string>
+    <string name="storage_footer">„Fotos komprimieren“ verkleinert Fotos über 2048 px dauerhaft. „Cache leeren“ entfernt Miniaturansichten und heruntergeladene Übungsbilder; sie werden bei Bedarf neu erstellt. Modelle auf dem Gerät löschst du in ihren KI- oder Spracheinstellungen.</string>
+    <string name="storage_compress_confirm_title">Fotos komprimieren?</string>
+    <string name="storage_compress_confirm_message">Fotos, deren längste Seite 2048 Pixel überschreitet, werden dauerhaft auf 2048 Pixel verkleinert und als JPEG gespeichert. Kleinere Fotos bleiben unverändert. Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="storage_compress_action">Komprimieren</string>
+    <string name="storage_compressing_progress">Fotos werden komprimiert … %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotos komprimiert</string>
+    <string name="storage_compress_freed">%1$s freigegeben.</string>
+    <string name="storage_compress_nothing">Keine Fotos mussten komprimiert werden.</string>
+    <string name="storage_compress_unreadable">Einige Fotos konnten nicht gelesen werden und blieben unverändert.</string>
+    <string name="storage_compress_failed">Einige Fotos konnten nicht komprimiert werden und blieben unverändert. Stelle sicher, dass auf deinem Gerät Speicherplatz frei ist, und versuche es erneut.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Ernährungstagebuch löschen?</string>
@@ -820,4 +842,5 @@
     <string name="settings_save_photos_to_gallery">In Fotos speichern</string>
     <string name="settings_save_photos_to_gallery_subtitle">Mahlzeitfotos beim Protokollieren auch in deiner Galerie speichern</string>
     <string name="settings_other_nutrients_note">Getrennt von den Zielen für Kalorien, Protein, Kohlenhydrate und Fett.</string>
+    <string name="label_date">Datum</string>
 </resources>

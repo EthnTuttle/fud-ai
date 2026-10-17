@@ -3,10 +3,12 @@ package com.apoorvdarshan.calorietracker.data
 import com.apoorvdarshan.calorietracker.models.CompletedExercise
 import com.apoorvdarshan.calorietracker.models.CompletedSet
 import com.apoorvdarshan.calorietracker.models.ExerciseTimerAction
+import com.apoorvdarshan.calorietracker.models.WorkoutBurnEstimator
 import com.apoorvdarshan.calorietracker.models.WorkoutIntensity
 import com.apoorvdarshan.calorietracker.models.PlannedSet
 import com.apoorvdarshan.calorietracker.models.WorkoutDayPlan
 import com.apoorvdarshan.calorietracker.models.WorkoutPersistedState
+import com.apoorvdarshan.calorietracker.models.WorkoutPreferences
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -323,7 +325,108 @@ class WorkoutRepositoryTest {
         val exercise = repository.planNow(date).exercises.single()
         assertEquals("Running_Outdoor", exercise.itemId)
         assertEquals(2_700.0, exercise.timer!!.savedSeconds, 0.001)
+        assertEquals(WorkoutIntensity.MODERATE, exercise.timer!!.intensity)
         assertTrue(exercise.sets.isEmpty())
+
+        // The quick Walking/Running sheet passes the chosen effort, and it drives the burn.
+        repository.logQuickCardio(
+            exerciseItem().copy(id = "Walking_Outdoor", name = "Walking", category = "cardio"),
+            minutes = 94,
+            date = date.plusDays(1),
+            intensity = WorkoutIntensity.LIGHT
+        )
+        val walk = repository.planNow(date.plusDays(1)).exercises.single()
+        assertEquals(WorkoutIntensity.LIGHT, walk.timer!!.intensity)
+        assertEquals(269, repository.calculateBurn(date.plusDays(1), 90.7, WorkoutWeightUnit.LBS)!!.caloriesBurned)
+    }
+
+    @Test
+    fun choosingEffortBeforeStartingKeepsTheTimerIdleUntilStarted() = runBlocking {
+        val repository = WorkoutRepository(FakeWorkoutStateStore())
+        val date = LocalDate.of(2026, 9, 8)
+        val start = Instant.parse("2026-09-08T10:00:00Z")
+        repository.toggleExercise(exerciseItem().copy(id = "Walking_Treadmill", category = "cardio"), date)
+        val exercise = repository.planNow(date).exercises.single()
+
+        repository.setTimerIntensity(exercise.id, date, WorkoutIntensity.VIGOROUS)
+        val idle = repository.planNow(date).exercises.single().timer!!
+        assertFalse(idle.hasStarted)
+        assertFalse(repository.planNow(date).exercises.single().hasCalculableWork)
+
+        repository.updateTimer(exercise.id, date, ExerciseTimerAction.START, start)
+        repository.updateTimer(exercise.id, date, ExerciseTimerAction.STOP, start.plusSeconds(600))
+        val saved = repository.planNow(date).exercises.single().timer!!
+        assertTrue(saved.hasStarted)
+        assertEquals(WorkoutIntensity.VIGOROUS, saved.intensity)
+        // (4.8 - 1) MET × 3.5 × 70 kg / 200 × 10 min.
+        assertEquals(47, repository.calculateBurn(date, 70.0, WorkoutWeightUnit.KG)!!.caloriesBurned)
+    }
+
+    @Test
+    fun choosingCardioEffortReplacesHiddenSetRpeButKeepsStrengthRpe() = runBlocking {
+        val repository = WorkoutRepository(FakeWorkoutStateStore())
+        val date = LocalDate.of(2026, 9, 8)
+        val rpeScale = WorkoutPreferences().rpeScale
+        repository.toggleExercise(exerciseItem().copy(id = "Running_Treadmill", category = "cardio"), date)
+        repository.toggleExercise(exerciseItem(), date)
+        val (cardio, strength) = repository.planNow(date).exercises
+        // Cardio cards show no set fields, so this RPE (e.g. from a text log) is invisible there.
+        repository.updateSet(cardio.id, cardio.sets.single().id, date, rpe = "10")
+        repository.updateSet(strength.id, strength.sets.single().id, date, reps = "8", rpe = "10")
+        suspend fun current(id: UUID) = repository.planNow(date).exercises.single { it.id == id }
+        assertEquals(WorkoutIntensity.VIGOROUS, WorkoutBurnEstimator.timerIntensity(current(cardio.id), rpeScale))
+
+        // The chosen effort is what the card then shows and what the burn uses.
+        repository.setTimerIntensity(cardio.id, date, WorkoutIntensity.LIGHT)
+        assertEquals("", current(cardio.id).sets.single().rpe)
+        assertNull(current(cardio.id).sets.single().rpeScale)
+        assertEquals(WorkoutIntensity.LIGHT, WorkoutBurnEstimator.timerIntensity(current(cardio.id), rpeScale))
+
+        repository.setTimerIntensity(strength.id, date, WorkoutIntensity.LIGHT)
+        assertEquals("10", current(strength.id).sets.single().rpe)
+        assertEquals(WorkoutIntensity.VIGOROUS, WorkoutBurnEstimator.timerIntensity(current(strength.id), rpeScale))
+    }
+
+    @Test
+    fun moveExerciseReordersOneDayClampsAtEndsAndPersistsWithoutClearingTheBurn() = runBlocking {
+        val store = FakeWorkoutStateStore()
+        val repository = WorkoutRepository(store)
+        val date = LocalDate.of(2026, 9, 8)
+        val otherDay = date.plusDays(1)
+        repository.toggleExercise(exerciseItem(), date)
+        repository.toggleExercise(exerciseItem().copy(id = "row", name = "Barbell Row"), date)
+        repository.logQuickCardio(
+            exerciseItem().copy(id = "Walking_Outdoor", name = "Walking", category = "cardio"),
+            minutes = 30,
+            date = date
+        )
+        repository.toggleExercise(exerciseItem(), otherDay)
+        val burn = repository.calculateBurn(date, 70.0, WorkoutWeightUnit.KG)!!
+        val (bench, row, walk) = repository.planNow(date).exercises.map { it.id }
+
+        repository.moveExercise(walk, date, -1)
+        assertEquals(listOf(bench, walk, row), repository.planNow(date).exercises.map { it.id })
+        repository.moveExercise(walk, date, -5)
+        assertEquals(listOf(walk, bench, row), repository.planNow(date).exercises.map { it.id })
+
+        // Moving past either end, by zero, or an unknown id changes nothing and writes nothing.
+        val writes = store.writes
+        repository.moveExercise(walk, date, -1)
+        repository.moveExercise(row, date, 1)
+        repository.moveExercise(bench, date, 0)
+        repository.moveExercise(UUID.randomUUID(), date, 1)
+        assertEquals(writes, store.writes)
+
+        // Order is persisted and a reorder keeps the day's calculated burn.
+        assertEquals(listOf(walk, bench, row), WorkoutRepository(store).planNow(date).exercises.map { it.id })
+        assertEquals(burn, repository.snapshot().completedSessions.single())
+        assertEquals(1, repository.planNow(otherDay).exercises.size)
+
+        // New exercises still append after the user's order.
+        repository.toggleExercise(exerciseItem().copy(id = "squat", name = "Squat"), date)
+        val exercises = repository.planNow(date).exercises
+        assertEquals(listOf(walk, bench, row), exercises.take(3).map { it.id })
+        assertEquals("squat", exercises.last().itemId)
     }
 
     @Test
@@ -469,8 +572,11 @@ class WorkoutRepositoryTest {
 private class FakeWorkoutStateStore(initial: WorkoutPersistedState = WorkoutPersistedState()) : WorkoutStateStore {
     private val mutable = MutableStateFlow(initial)
     override val workoutState: Flow<WorkoutPersistedState> = mutable
+    var writes = 0
+        private set
 
     override suspend fun setWorkoutState(state: WorkoutPersistedState) {
+        writes += 1
         mutable.value = state
     }
 

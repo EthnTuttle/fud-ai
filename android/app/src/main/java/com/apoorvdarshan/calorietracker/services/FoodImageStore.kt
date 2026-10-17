@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
+import kotlin.math.max
 
 /**
  * Local food-photo cache. Port of iOS FoodImageStore.
@@ -44,6 +45,11 @@ class FoodImageStore private constructor(
     private val stagingThumbnailDir: File = File(filesRoot, STAGING_THUMBNAIL_DIR_NAME)
     private val stagingLock = Any()
     private var stagingActive = false
+
+    // True from startStaging to discardStaged. Guarded by photoFileLock, so
+    // Compress Photos checks it in the same step as its swap and never
+    // replaces a photo while a restore is staging or moving photos in.
+    private var restoreWritingPhotos = false
 
     // A Drive restore replaces the photos while the app stays usable (#484).
     // Deletions decided from the diary as it was before the restore would
@@ -70,22 +76,28 @@ class FoodImageStore private constructor(
     /** Writes the bitmap as JPEG (quality 80) under a new filename. Returns filename or null. */
     fun store(bitmap: Bitmap, entryId: UUID): String? = runCatching {
         val filename = "${entryId}.jpg"
-        FileOutputStream(File(dir, filename)).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+        synchronized(photoFileLock) {
+            FileOutputStream(File(dir, filename)).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
+            }
         }
         runCatching { writeThumbnail(filename, bitmap) }
         filename
     }.getOrNull()
 
     /**
-     * Writes the original bytes untouched. Pass [writeThumbnail] = false on latency-sensitive
-     * paths; [loadThumbnail] / [warmThumbnails] generate the thumbnail lazily on first use.
+     * Writes a newly captured photo. Photos whose longest side exceeds [STORED_MAX_DIMENSION]
+     * are stored as an upright JPEG at that size (the viewer never decodes more) when that copy
+     * is smaller; smaller, undecodable or already well-compressed images keep their original
+     * bytes. Pass [writeThumbnail] = false on latency-sensitive paths; [loadThumbnail] /
+     * [warmThumbnails] generate it lazily on first use.
      */
     fun storeBytes(bytes: ByteArray, entryId: UUID, writeThumbnail: Boolean = true): String? = runCatching {
         val filename = "${entryId}.jpg"
-        File(dir, filename).writeBytes(bytes)
+        val stored = smallerOrOriginal(bytes, downscaledForStorage(bytes))
+        synchronized(photoFileLock) { File(dir, filename).writeBytes(stored) }
         if (writeThumbnail) runCatching {
-            FoodImageDecoder.decode(bytes, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
+            FoodImageDecoder.decode(stored, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
         }
         filename
     }.getOrNull()
@@ -138,8 +150,9 @@ class FoodImageStore private constructor(
         return if (file.isFile) runCatching { file.readBytes() }.getOrNull() else null
     }
 
+    /** Writes backup bytes byte-identical — restores are never re-compressed. */
     fun restoreBytes(filename: String, bytes: ByteArray): Boolean = runCatching {
-        File(dir, filename).writeBytes(bytes)
+        synchronized(photoFileLock) { File(dir, filename).writeBytes(bytes) }
         runCatching {
             FoodImageDecoder.decode(bytes, THUMBNAIL_MAX_DIMENSION)?.let { writeThumbnail(filename, it) }
         }
@@ -151,6 +164,7 @@ class FoodImageStore private constructor(
     override fun startStaging() {
         synchronized(stagingLock) {
             stagingActive = true
+            synchronized(photoFileLock) { restoreWritingPhotos = true }
             deleteStagingFolders()
             if (!stagingDir.mkdirs() || !stagingThumbnailDir.mkdirs()) throw CloudBackupPhotoWriteException()
         }
@@ -188,8 +202,10 @@ class FoodImageStore private constructor(
                 val source = childFile(stagingDir, name) ?: throw CloudBackupPhotoWriteException()
                 val target = childFile(dir, name) ?: throw CloudBackupPhotoWriteException()
                 // A rename within the app's files folder replaces any photo
-                // with the same name in one step.
-                if (!source.renameTo(target)) throw CloudBackupPhotoWriteException()
+                // with the same name in one step. The bytes move as staged,
+                // never re-encoded, and under the lock Compress Photos swaps in.
+                val moved = synchronized(photoFileLock) { source.renameTo(target) }
+                if (!moved) throw CloudBackupPhotoWriteException()
                 val thumbnail = File(thumbnailDir, target.name)
                 val stagedThumbnail = File(stagingThumbnailDir, target.name)
                 // A thumbnail of the photo just replaced must not outlive it.
@@ -204,6 +220,7 @@ class FoodImageStore private constructor(
         synchronized(stagingLock) {
             deleteStagingFolders()
             stagingActive = false
+            synchronized(photoFileLock) { restoreWritingPhotos = false }
         }
     }
 
@@ -277,15 +294,135 @@ class FoodImageStore private constructor(
     }
 
     private fun deleteFiles(filename: String) {
-        runCatching { File(dir, filename).delete() }
+        synchronized(photoFileLock) { runCatching { File(dir, filename).delete() } }
         runCatching { File(thumbnailDir, filename).delete() }
         evictThumbnails(filename)
     }
 
     fun clearAll() {
-        dir.listFiles()?.forEach { runCatching { it.delete() } }
+        synchronized(photoFileLock) { dir.listFiles()?.forEach { runCatching { it.delete() } } }
         thumbnailDir.listFiles()?.forEach { runCatching { it.delete() } }
         thumbnailCache.evictAll()
+    }
+
+    /** Disk space used by stored photos and by the regenerable thumbnail cache. */
+    fun storageUsage(): PhotoStorageUsage {
+        val photos = dir.listFiles()?.filter { it.isFile }.orEmpty()
+        return PhotoStorageUsage(
+            photoCount = photos.size,
+            photoBytes = photos.sumOf { it.length() },
+            thumbnailBytes = thumbnailDir.listFiles()?.filter { it.isFile }?.sumOf { it.length() } ?: 0L
+        )
+    }
+
+    /** Deletes cached thumbnails only; [loadThumbnail] rebuilds them from the photos on demand. */
+    fun clearThumbnailCache() {
+        thumbnailDir.listFiles()?.forEach { runCatching { it.delete() } }
+        runCatching { thumbnailCache.evictAll() }
+    }
+
+    /**
+     * Downscales existing photos larger than [STORED_MAX_DIMENSION], one file at a time so only
+     * one bounded bitmap is alive. Each result is staged outside the photo folder and renamed
+     * over the original only when it is smaller and the original is unchanged; files that can't
+     * be decoded, or whose copy couldn't be written or swapped in, are left as they are and
+     * counted. An error on one photo never stops the rest. Thumbnails stay valid because both
+     * versions decode upright. Lossy and permanent, so it only ever runs after the user confirms
+     * it in Settings.
+     *
+     * Only plain photo names whose canonical path is a direct child of the photo folder are
+     * touched. While a Drive restore is staging or moving photos in, no photo is replaced; the
+     * ones the run reaches meanwhile are counted as failed so the user can run it again.
+     */
+    fun compressExistingPhotos(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }): PhotoCompressionResult {
+        val photos = dir.listFiles()
+            ?.mapNotNull { file -> childFile(dir, file.name)?.takeIf { it.isFile } }
+            .orEmpty()
+        val staging = File(filesRoot, COMPRESSION_STAGING_DIR_NAME)
+        staging.deleteRecursively()
+        staging.mkdirs()
+        var compressed = 0
+        var unreadable = 0
+        var failed = 0
+        var bytesSaved = 0L
+        try {
+            photos.forEachIndexed { index, photo ->
+                val outcome = try {
+                    compressStoredPhoto(photo, staging)
+                } catch (e: Exception) {
+                    CompressionOutcome.Failed
+                }
+                when (outcome) {
+                    is CompressionOutcome.Compressed -> {
+                        compressed++
+                        bytesSaved += outcome.bytesSaved
+                    }
+                    CompressionOutcome.Unchanged -> Unit
+                    CompressionOutcome.Unreadable -> unreadable++
+                    CompressionOutcome.Failed -> failed++
+                }
+                onProgress(index + 1, photos.size)
+            }
+        } finally {
+            staging.deleteRecursively()
+        }
+        return PhotoCompressionResult(compressed, unreadable, bytesSaved, failed)
+    }
+
+    private sealed interface CompressionOutcome {
+        data class Compressed(val bytesSaved: Long) : CompressionOutcome
+        data object Unchanged : CompressionOutcome
+        data object Unreadable : CompressionOutcome
+        data object Failed : CompressionOutcome
+    }
+
+    private fun compressStoredPhoto(photo: File, staging: File): CompressionOutcome {
+        if (synchronized(photoFileLock) { restoreWritingPhotos }) return CompressionOutcome.Failed
+        val lengthBefore = photo.length()
+        val modifiedBefore = photo.lastModified()
+        val headerLongest = FoodImageDecoder.longestSide(photo)
+        if (headerLongest != null && headerLongest <= STORED_MAX_DIMENSION) return CompressionOutcome.Unchanged
+        val bitmap = FoodImageDecoder.decode(photo, STORED_MAX_DIMENSION) ?: return CompressionOutcome.Unreadable
+        val staged = File(staging, "${photo.name}.${UUID.randomUUID()}.tmp")
+        try {
+            if (headerLongest == null && max(bitmap.width, bitmap.height) < STORED_MAX_DIMENSION) {
+                return CompressionOutcome.Unchanged
+            }
+            val written = runCatching {
+                FileOutputStream(staged).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, STORED_JPEG_QUALITY, out)
+                }
+            }.getOrDefault(false)
+            if (!written) {
+                staged.delete()
+                return CompressionOutcome.Failed
+            }
+        } finally {
+            bitmap.recycle()
+        }
+        // A copy that isn't smaller (an already heavily compressed photo) is never swapped in.
+        if (staged.length() >= lengthBefore) {
+            staged.delete()
+            return CompressionOutcome.Unchanged
+        }
+        synchronized(photoFileLock) {
+            // A restore that started while we were encoding owns the photo folder until it ends.
+            if (restoreWritingPhotos) {
+                staged.delete()
+                return CompressionOutcome.Failed
+            }
+            // Skip if the photo was deleted, restored, or rewritten while we were encoding it.
+            val unchanged = photo.isFile && photo.length() == lengthBefore && photo.lastModified() == modifiedBefore
+            if (!unchanged) {
+                staged.delete()
+                return CompressionOutcome.Unchanged
+            }
+            if (!staged.renameTo(photo)) {
+                staged.delete()
+                return CompressionOutcome.Failed
+            }
+            return CompressionOutcome.Compressed(lengthBefore - photo.length())
+        }
     }
 
     /**
@@ -351,16 +488,72 @@ class FoodImageStore private constructor(
         }
     }
 
+    data class PhotoStorageUsage(
+        val photoCount: Int,
+        val photoBytes: Long,
+        val thumbnailBytes: Long
+    )
+
+    data class PhotoCompressionResult(
+        val compressedCount: Int,
+        val unreadableCount: Int,
+        val bytesSaved: Long,
+        /**
+         * Photos left as they were because writing or swapping in the smaller copy failed (for
+         * example with no free space), because a Drive restore was replacing photos at the time,
+         * or that the run never reached because it stopped early.
+         */
+        val failedCount: Int = 0
+    )
+
     companion object {
         private const val DIR_NAME = "fudai-food-images"
         private const val THUMBNAIL_DIR_NAME = "fudai-food-thumbnails-v2"
         private const val LEGACY_THUMBNAIL_DIR_NAME = "fudai-food-thumbnails"
+        private const val COMPRESSION_STAGING_DIR_NAME = "fudai-food-images-compressing"
         private const val STAGING_DIR_NAME = "fudai-food-images-restore"
         private const val STAGING_THUMBNAIL_DIR_NAME = "fudai-food-thumbnails-restore"
         private const val TEMP_SUFFIX = ".tmp"
         private const val THUMBNAIL_MAX_DIMENSION = 320
         const val VIEWER_MAX_DIMENSION = 2048
+        /** Longest side kept for stored photos: the viewer never decodes more than this. */
+        const val STORED_MAX_DIMENSION = VIEWER_MAX_DIMENSION
+        const val STORED_JPEG_QUALITY = 80
         private const val THUMBNAIL_CACHE_KB_DEFAULT = 12 * 1024
+
+        /**
+         * Serializes photo writes and deletes with the compressor's last unchanged-file check and
+         * rename, so a photo saved, restored or deleted mid-compression is never replaced by a
+         * copy of the older bytes. Process-wide because some screens build their own instance.
+         * Held only around single file operations.
+         */
+        private val photoFileLock = Any()
+
+        /** [candidate] when it is a smaller encoding than [original]; otherwise [original] unchanged. */
+        internal fun smallerOrOriginal(original: ByteArray, candidate: ByteArray?): ByteArray =
+            candidate?.takeIf { it.size < original.size } ?: original
+
+        /**
+         * Upright JPEG capped at [maxDimension] on the longest side, or null when the image is
+         * already within the cap or can't be decoded — callers then keep the original bytes.
+         */
+        internal fun downscaledForStorage(bytes: ByteArray, maxDimension: Int = STORED_MAX_DIMENSION): ByteArray? =
+            runCatching {
+                val headerLongest = FoodImageDecoder.longestSide(bytes)
+                if (headerLongest != null && headerLongest <= maxDimension) return null
+                val bitmap = FoodImageDecoder.decode(bytes, maxDimension) ?: return null
+                try {
+                    // Formats BitmapFactory can't read report no header size; the decoder only
+                    // scales images over the cap, so a smaller result means it was within bounds.
+                    if (headerLongest == null && max(bitmap.width, bitmap.height) < maxDimension) return null
+                    ByteArrayOutputStream().use { out ->
+                        if (!bitmap.compress(Bitmap.CompressFormat.JPEG, STORED_JPEG_QUALITY, out)) return null
+                        out.toByteArray()
+                    }
+                } finally {
+                    bitmap.recycle()
+                }
+            }.getOrNull()
 
         fun thumbnailCacheKbFor(context: Context): Int {
             val memoryClass =

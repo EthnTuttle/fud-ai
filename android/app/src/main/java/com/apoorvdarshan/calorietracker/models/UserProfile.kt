@@ -11,6 +11,31 @@ object GoalEnergyMath {
     const val KILOCALORIES_PER_KILOGRAM = 7_700.0
 }
 
+/** How the calorie target the user follows compares with their formula maintenance estimate
+ *  (BMR × activity). Shown in Settings as an estimate, never as measured burn. */
+data class MaintenanceBreakdown(
+    val maintenanceCalories: Int,
+    val targetCalories: Int
+) {
+    enum class Balance { DEFICIT, MAINTENANCE, SURPLUS }
+
+    /** Target minus maintenance: negative is a daily deficit, positive a daily surplus. */
+    val dailyDifference: Int get() = targetCalories - maintenanceCalories
+
+    val balance: Balance get() = when {
+        dailyDifference <= -MAINTENANCE_TOLERANCE -> Balance.DEFICIT
+        dailyDifference >= MAINTENANCE_TOLERANCE -> Balance.SURPLUS
+        else -> Balance.MAINTENANCE
+    }
+
+    companion object {
+        /** Differences smaller than this read as "close to maintenance": the formula estimate is
+         *  far less precise than ±50 kcal, so an AI-tuned Maintain target must not show a
+         *  "30 kcal deficit". */
+        const val MAINTENANCE_TOLERANCE = 50
+    }
+}
+
 @Serializable
 data class UserProfile(
     val name: String? = null,
@@ -103,6 +128,11 @@ data class UserProfile(
     val carbsGoal: Int get() = maxOf(0, (dailyCalories - proteinGoal * 4 - fatGoal * 9) / 4)
 
     val effectiveCalories: Int get() = customCalories ?: dailyCalories
+
+    /** Maintenance uses the same truncated TDEE as [dailyCalories], so a formula target's
+     *  difference is exactly [calorieAdjustment]; custom and AI-set targets compare as followed. */
+    val maintenanceBreakdown: MaintenanceBreakdown
+        get() = MaintenanceBreakdown(maintenanceCalories = tdee.toInt(), targetCalories = effectiveCalories)
 
     fun isPinned(macro: AutoBalanceMacro): Boolean = customValue(macro) != null
 

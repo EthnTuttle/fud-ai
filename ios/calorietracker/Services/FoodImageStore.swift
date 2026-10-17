@@ -87,13 +87,34 @@ struct FoodImageStore {
         store(data: data, filename: "\(id.uuidString)-\(index).jpg")
     }
 
-    private func store(data: Data, filename: String) -> String? {
+    /// Moves a photo that an older build kept inline in the diary JSON to disk with its bytes
+    /// unchanged: existing photos are only ever re-encoded by a confirmed Compress Photos.
+    @discardableResult
+    func storeLegacyInlinePhoto(data: Data, for id: UUID) -> String? {
+        store(data: data, filename: "\(id.uuidString).jpg", downscalingLargePhotos: false)
+    }
+
+    /// Writes the bytes as given and returns at once. New photos over
+    /// `StoredPhotoCompressor.maxPixelSize` are then capped to an upright JPEG at that size (the
+    /// viewer never decodes more) on a background queue, and only when that copy is smaller;
+    /// smaller or undecodable images keep their bytes.
+    private func store(data: Data, filename: String, downscalingLargePhotos: Bool = true) -> String? {
         guard let folderURL else { return nil }
         let url = folderURL.appendingPathComponent(filename)
         do {
-            try data.write(to: url, options: .atomic)
+            // The identity is read under the same lock as the write, so the queued downscale
+            // touches only this file and never one a restore or a later save put at `url`.
+            let written = try StoredPhotoCompressor.withPhotoFileLock { () throws -> StoredPhotoCompressor.FileIdentity? in
+                try data.write(to: url, options: .atomic)
+                return StoredPhotoCompressor.fileIdentity(of: url)
+            }
             if let thumbnail = decodeImage(at: url, maxPixelSize: Self.thumbnailMaxDimension) {
                 writeThumbnail(thumbnail, filename: filename)
+            }
+            if downscalingLargePhotos, let written,
+               let longest = StoredPhotoCompressor.longestSide(of: data),
+               longest > StoredPhotoCompressor.maxPixelSize {
+                StoredPhotoCompressor.downscaleNewPhotoInBackground(at: url, expecting: written)
             }
             return filename
         } catch {
@@ -104,6 +125,23 @@ struct FoodImageStore {
     func filenames() -> [String] {
         guard let folderURL else { return [] }
         return (try? FileManager.default.contentsOfDirectory(atPath: folderURL.path)) ?? []
+    }
+
+    /// Folder of stored photos, for Settings › Storage and Compress Photos.
+    var photoFolderURL: URL? { folderURL }
+
+    /// Folder of regenerable thumbnails, for Settings › Storage.
+    var thumbnailCacheFolderURL: URL? { thumbnailFolderURL }
+
+    /// Deletes cached thumbnails only; `loadThumbnail` rebuilds them from the photos on demand.
+    /// The folder can hold thousands of files, so it is removed off the main actor.
+    func clearThumbnailCache() async {
+        thumbnailCache.removeAllObjects()
+        guard let thumbFolderURL = thumbnailFolderURL else { return }
+        await Task.detached(priority: .userInitiated) {
+            try? FileManager.default.removeItem(at: thumbFolderURL)
+        }.value
+        thumbnailCache.removeAllObjects()
     }
 
     /// Reads the bytes at `filename` (not a full path), or nil if missing.
@@ -162,7 +200,9 @@ struct FoodImageStore {
     func delete(filename: String) {
         guard let folderURL else { return }
         let url = folderURL.appendingPathComponent(filename)
-        try? FileManager.default.removeItem(at: url)
+        StoredPhotoCompressor.withPhotoFileLock {
+            _ = try? FileManager.default.removeItem(at: url)
+        }
         if let thumbFolderURL = thumbnailFolderURL {
             let thumbURL = thumbFolderURL.appendingPathComponent(filename)
             try? FileManager.default.removeItem(at: thumbURL)
@@ -173,7 +213,9 @@ struct FoodImageStore {
     /// Wipes the entire image folder (used by Delete All Data).
     func deleteAll() {
         guard let folderURL else { return }
-        try? FileManager.default.removeItem(at: folderURL)
+        StoredPhotoCompressor.withPhotoFileLock {
+            _ = try? FileManager.default.removeItem(at: folderURL)
+        }
         if let thumbFolderURL = thumbnailFolderURL {
             try? FileManager.default.removeItem(at: thumbFolderURL)
         }
@@ -201,9 +243,10 @@ struct FoodImageStore {
         try? FileManager.default.removeItem(at: base.appendingPathComponent(restoreStagingThumbnailFolderName, isDirectory: true))
     }
 
-    /// Writes one restored photo, and its thumbnail when it decodes, into
-    /// `staging`. Throws if `filename` is not a plain photo name inside the
-    /// staging folder or the write fails; current photos are never touched.
+    /// Writes one restored photo byte-identical (restores are never
+    /// re-compressed), and its thumbnail when it decodes, into `staging`.
+    /// Throws if `filename` is not a plain photo name inside the staging
+    /// folder or the write fails; current photos are never touched.
     func stage(_ data: Data, filename: String, in staging: CloudBackupPhotoStaging) throws {
         guard let url = Self.photoURL(named: filename, inside: staging.folder) else {
             throw CocoaError(.fileWriteInvalidFileName)
@@ -228,7 +271,11 @@ struct FoodImageStore {
             guard let source = Self.photoURL(named: name, inside: staging.folder),
                   let target = Self.photoURL(named: name, inside: folderURL)
             else { throw CocoaError(.fileWriteInvalidFileName) }
-            try Self.move(source, replacing: target)
+            // Under the lock Compress Photos swaps in, so it never replaces a
+            // photo with a copy of the bytes this move just replaced.
+            try StoredPhotoCompressor.withPhotoFileLock {
+                try Self.move(source, replacing: target)
+            }
             guard let thumbFolderURL,
                   let thumbnailTarget = Self.photoURL(named: name, inside: thumbFolderURL)
             else { continue }
@@ -252,8 +299,9 @@ struct FoodImageStore {
     /// `folder`/`filename` for a plain photo name whose path stays a direct
     /// child of `folder` and is not a symbolic link; nil otherwise. Restored
     /// names come from a downloaded archive, so a crafted one cannot reach
-    /// outside the folder.
-    static func photoURL(named filename: String, inside folder: URL) -> URL? {
+    /// outside the folder. Compress Photos, off the main actor, uses the same
+    /// check to touch only plain photos in the photo folder.
+    nonisolated static func photoURL(named filename: String, inside folder: URL) -> URL? {
         guard let name = CloudBackupPolicy.safePhotoName(filename) else { return nil }
         let root = folder.standardizedFileURL
         let url = root.appendingPathComponent(name, isDirectory: false)

@@ -77,6 +77,8 @@ data class SettingsUiState(
     val fastingGoalNotificationEnabled: Boolean = true,
     val healthConnectEnabled: Boolean = false,
     val workoutHealthWriteGranted: Boolean = false,
+    /** Connected without Health Connect history access, so older weigh-ins stay hidden. */
+    val healthHistoryAccessMissing: Boolean = false,
     val healthEnergyGoalsEnabled: Boolean = false,
     val adaptiveGoalsEnabled: Boolean = true,
     val applyingHealthEnergyGoals: Boolean = false,
@@ -340,11 +342,14 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             val reconciledHealthConnect = reconcileHealthConnectState()
             val reconciledWorkoutWrite = reconciledHealthConnect &&
                 container.health.hasActiveEnergyWrite()
+            val reconciledHistoryMissing = reconciledHealthConnect &&
+                container.health.isHistoryAccessMissing()
             val reconciledProfile = container.profileRepository.current()
             _ui.value = _ui.value.copy(
                 profile = reconciledProfile ?: _ui.value.profile,
                 healthConnectEnabled = reconciledHealthConnect,
                 workoutHealthWriteGranted = reconciledWorkoutWrite,
+                healthHistoryAccessMissing = reconciledHistoryMissing,
                 healthEnergyGoalsEnabled = container.prefs.healthEnergyGoalsEnabled.first() &&
                     reconciledHealthConnect,
                 goalsNeedRecalc = needsRecalc(reconciledProfile ?: _ui.value.profile)
@@ -1137,6 +1142,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                     profile = restored ?: _ui.value.profile,
                     healthConnectEnabled = false,
                     workoutHealthWriteGranted = false,
+                    healthHistoryAccessMissing = false,
                     healthEnergyGoalsEnabled = false
                 )
                 return@launch
@@ -1155,6 +1161,7 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
             _ui.value = _ui.value.copy(
                 healthConnectEnabled = enabled,
                 workoutHealthWriteGranted = enabled && container.health.hasActiveEnergyWrite(),
+                healthHistoryAccessMissing = enabled && container.health.isHistoryAccessMissing(),
                 healthEnergyGoalsEnabled = if (enabled) _ui.value.healthEnergyGoalsEnabled else false
             )
         }

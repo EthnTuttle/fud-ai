@@ -489,6 +489,11 @@
     <string name="settings_goal_weight">Cílová váha</string>
     <string name="settings_calories">Kalorie</string>
     <string name="settings_recalculate_goals">Přepočítat cíle</string>
+    <string name="settings_estimated_maintenance">Odhadovaný udržovací příjem</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/den</string>
+    <string name="settings_maintenance_surplus_format">Přebytek: %1$,d kcal/den</string>
+    <string name="settings_maintenance_close">Cíl je blízko udržovacímu příjmu</string>
+    <string name="settings_estimated_maintenance_info">Odhadovaný udržovací příjem je počet kalorií, které spálíte v běžný den: váš BMR z profilu vynásobený úrovní aktivity. Když jíte méně, vzniká deficit pro hubnutí; když více, vzniká přebytek pro nabírání. Zobrazený deficit nebo přebytek je váš kalorický cíl minus tento odhad. Jde o odhad podle vzorce, takže skutečný výdej se může lišit, a přepočet cílů může nastavit cíl podle zaznamenaného jídla, vývoje hmotnosti nebo naměřeného výdeje energie. Nejde o lékařskou radu.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Připnuto</string>
@@ -572,6 +577,7 @@
     <string name="settings_fallback_footer">Když primární poskytovatel selže (přetížení, limit požadavků, chyba sítě), aplikace to automaticky zkusí znovu s tímto záložním. Může být stejný jako primární — jen vyber jiný model.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Starší záznamy hmotnosti</string>
     <string name="settings_manage_health_access">Spravovat přístup Health Connect</string>
     <string name="settings_permissions">Oprávnění</string>
     <string name="settings_energy_goals">Cíle podle spálené energie</string>
@@ -582,6 +588,22 @@
     <string name="settings_refresh_energy_goals">Obnovit cíle ze spálené energie</string>
     <string name="settings_clear_food_log">Vymazat deník jídel</string>
     <string name="settings_delete_all_data">Smazat všechna data</string>
+    <string name="storage_title">Úložiště</string>
+    <string name="storage_saved_photos">Uložené fotky</string>
+    <string name="storage_on_device_models">Modely v zařízení</string>
+    <string name="storage_cache">Mezipaměť</string>
+    <string name="storage_compress_photos">Komprimovat fotky</string>
+    <string name="storage_clear_cache">Vymazat mezipaměť</string>
+    <string name="storage_footer">Komprimovat fotky trvale zmenší fotky větší než 2048 px. Vymazat mezipaměť odstraní miniatury a stažené obrázky cviků, které se v případě potřeby znovu vytvoří. Modely v zařízení smažete v jejich nastavení AI nebo řeči.</string>
+    <string name="storage_compress_confirm_title">Komprimovat fotky?</string>
+    <string name="storage_compress_confirm_message">Fotky, jejichž delší strana přesahuje 2048 pixelů, budou trvale zmenšeny na 2048 pixelů a uloženy jako JPEG. Menší fotky zůstanou beze změny. Tuto akci nelze vrátit.</string>
+    <string name="storage_compress_action">Komprimovat</string>
+    <string name="storage_compressing_progress">Komprimace fotek… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotky zkomprimovány</string>
+    <string name="storage_compress_freed">Uvolněno %1$s.</string>
+    <string name="storage_compress_nothing">Žádné fotky nebylo třeba komprimovat.</string>
+    <string name="storage_compress_unreadable">Některé fotky nebylo možné načíst a zůstaly beze změny.</string>
+    <string name="storage_compress_failed">Některé fotky nebylo možné zkomprimovat a zůstaly beze změny. Ujisti se, že má zařízení volné místo, a zkus to znovu.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Vymazat deník jídel?</string>

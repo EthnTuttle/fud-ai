@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.json.JSONObject
@@ -268,7 +269,11 @@ internal object FoodJsonParser {
             vitaminK = optDouble("vitamin_k"),
             folate = optDouble("folate"),
             omega3 = optDouble("omega_3"),
-            ingredients = parseIngredients(json),
+            ingredients = parseIngredients(
+                extractedJson,
+                mealCalories = json.optInt("calories"),
+                mealGrams = responseServingSizeGrams
+            ),
             servingUnitOptions = unitOptions,
             selectedServingUnit = if (responseServingSizeGrams == null) "serving" else selectedOption?.unit,
             selectedServingQuantity = if (responseServingSizeGrams == null) 1.0 else selectedOption?.quantityFor(servingSizeGrams),
@@ -280,30 +285,92 @@ internal object FoodJsonParser {
         )
     }
 
-    private fun parseIngredients(json: JSONObject): List<MealIngredient> {
-        val array = json.optJSONArray("ingredients") ?: return emptyList()
-        return buildList {
-            for (index in 0 until minOf(array.length(), 20)) {
-                val item = array.optJSONObject(index) ?: continue
-                val name = item.optString("name").trim()
-                val grams = optDouble(item, "grams") ?: continue
-                val calories = optDouble(item, "calories") ?: continue
-                val protein = optDouble(item, "protein") ?: continue
-                val carbs = optDouble(item, "carbs") ?: continue
-                val fat = optDouble(item, "fat") ?: continue
-                if (name.isEmpty() || grams <= 0 || listOf(calories, protein, carbs, fat).any { it < 0 }) continue
-                add(
-                    MealIngredient(
-                        name = name,
-                        grams = grams,
-                        calories = calories.roundToInt(),
-                        protein = protein,
-                        carbs = carbs,
-                        fat = fat
-                    )
-                )
+    /** The prompts ask for at most this many entries; a longer list is dropped, never truncated. */
+    private const val MAX_INGREDIENT_COUNT = 20
+    /** Pure fat; a repaired weight that implies more energy per gram is not a real food. */
+    private const val MAX_INGREDIENT_CALORIES_PER_GRAM = 9.0
+    /** A list covering less than this share of the meal calories is missing dishes. */
+    private const val MIN_INGREDIENT_CALORIE_COVERAGE = 0.5
+    /** A list adding up to more than this share also counts something twice, such as a total row. */
+    private const val MAX_INGREDIENT_CALORIE_COVERAGE = 1.5
+    /** No single ingredient comes near this; a larger number is malformed and would saturate Int. */
+    private const val MAX_INGREDIENT_VALUE = 100_000.0
+
+    private class IngredientDraft(
+        val name: String,
+        val grams: Double?,
+        val calories: Double,
+        val protein: Double,
+        val carbs: Double,
+        val fat: Double
+    )
+
+    /**
+     * The breakdown replaces the meal macros, so it must be complete or absent (#343): any
+     * entry that cannot be kept or repaired drops the whole list and the model's meal totals
+     * stay. Missing ingredient weights (common for screenshots of meal lists that only show
+     * calories) are estimated from the meal weight left after the listed weights instead of
+     * dropping the dish. Mirrors iOS GeminiService.parseIngredientBreakdown.
+     */
+    fun parseIngredients(
+        text: String,
+        mealCalories: Int,
+        mealGrams: Double?
+    ): List<MealIngredient> {
+        val json = runCatching { Json.parseToJsonElement(extractJson(text)) as? JsonObject }
+            .getOrNull() ?: return emptyList()
+        val array = json["ingredients"] as? JsonArray ?: return emptyList()
+        if (array.isEmpty() || array.size > MAX_INGREDIENT_COUNT) return emptyList()
+        val drafts = mutableListOf<IngredientDraft>()
+        for (element in array) {
+            val item = element as? JsonObject ?: return emptyList()
+            val name = (item["name"] as? JsonPrimitive)?.takeUnless { it is JsonNull }?.content?.trim().orEmpty()
+            val calories = jsonNumber(item["calories"]) ?: return emptyList()
+            val protein = jsonNumber(item["protein"]) ?: return emptyList()
+            val carbs = jsonNumber(item["carbs"]) ?: return emptyList()
+            val fat = jsonNumber(item["fat"]) ?: return emptyList()
+            if (name.isEmpty() || listOf(calories, protein, carbs, fat).any { it < 0 || it > MAX_INGREDIENT_VALUE }) {
+                return emptyList()
+            }
+            val listedGrams = jsonNumber(item["grams"])
+            // 0 is the prompt's placeholder for an unknown weight; a negative weight is malformed.
+            if (listedGrams != null && (listedGrams < 0 || listedGrams > MAX_INGREDIENT_VALUE)) return emptyList()
+            val grams = listedGrams?.takeIf { it > 0 }
+            // Without a weight or calories there is nothing to estimate the weight from.
+            if (grams == null && calories <= 0) return emptyList()
+            drafts.add(IngredientDraft(name, grams, calories, protein, carbs, fat))
+        }
+
+        var gramsPerMissingCalorie = 0.0
+        val missingCalories = drafts.filter { it.grams == null }.sumOf { it.calories }
+        if (missingCalories > 0) {
+            if (mealGrams == null || mealGrams <= 0) return emptyList()
+            val remainingGrams = mealGrams - drafts.sumOf { it.grams ?: 0.0 }
+            // The repaired weights must fit in the meal: when the listed weights leave no room
+            // for the missing dishes, the numbers disagree and no repair is reliable.
+            if (remainingGrams <= 0 || missingCalories / remainingGrams > MAX_INGREDIENT_CALORIES_PER_GRAM) {
+                return emptyList()
+            }
+            gramsPerMissingCalorie = remainingGrams / missingCalories
+        }
+
+        val ingredients = drafts.map { draft ->
+            MealIngredient(
+                name = draft.name,
+                grams = draft.grams ?: (round(draft.calories * gramsPerMissingCalorie * 10) / 10),
+                calories = draft.calories.roundToInt(),
+                protein = draft.protein,
+                carbs = draft.carbs,
+                fat = draft.fat
+            )
+        }
+        if (mealCalories > 0) {
+            val coverage = ingredients.totals().calories.toDouble() / mealCalories
+            if (coverage < MIN_INGREDIENT_CALORIE_COVERAGE || coverage > MAX_INGREDIENT_CALORIE_COVERAGE) {
+                return emptyList()
             }
         }
+        return ingredients
     }
 
     fun parseLabel(text: String): NutritionLabelAnalysis = parseLabelResponse(text).analysis
@@ -563,6 +630,12 @@ internal object FoodJsonParser {
         if (!option.isValid || option.isGramUnit) return null
         if (!approximatelyRepresentsServing(quantity, gramsPerUnit, servingSizeGrams)) return null
         return option
+    }
+
+    private fun jsonNumber(value: JsonElement?): Double? {
+        val primitive = value as? JsonPrimitive ?: return null
+        if (primitive is JsonNull) return null
+        return primitive.content.toDoubleOrNull()?.takeUnless { it.isNaN() || it.isInfinite() }
     }
 
     private fun positiveJsonNumber(value: JsonElement?): Double? {

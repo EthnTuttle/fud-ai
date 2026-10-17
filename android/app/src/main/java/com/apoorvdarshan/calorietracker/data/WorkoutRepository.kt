@@ -234,6 +234,21 @@ class WorkoutRepository(
         }
     }
 
+    suspend fun moveExercise(exerciseId: UUID, date: LocalDate, offset: Int) =
+        moveExercise(exerciseId, WorkoutDate.key(date), offset)
+
+    /** Moves one exercise within its day; the stored list order is the diary order. Clamped at both ends. */
+    suspend fun moveExercise(exerciseId: UUID, dateKey: String, offset: Int) {
+        if (offset == 0) return
+        updatePlan(WorkoutDate.requireKey(dateKey)) { plan ->
+            val from = plan.exercises.indexOfFirst { it.id == exerciseId }
+            if (from < 0) return@updatePlan plan
+            val to = (from + offset).coerceIn(0, plan.exercises.lastIndex)
+            if (to == from) return@updatePlan plan
+            plan.copy(exercises = plan.exercises.toMutableList().apply { add(to, removeAt(from)) })
+        }
+    }
+
     suspend fun setSetCount(count: Int, exerciseId: UUID, date: LocalDate) =
         setSetCount(count, exerciseId, WorkoutDate.key(date))
 
@@ -332,9 +347,17 @@ class WorkoutRepository(
         }
     }
 
+    /**
+     * Stores the timer's effort. Cardio cards show no set fields, so RPE left on a cardio
+     * exercise's sets (e.g. from a text log) is cleared here; otherwise it would keep
+     * overriding the effort the user just chose. Strength RPE stays authoritative.
+     */
     suspend fun setTimerIntensity(exerciseId: UUID, date: LocalDate, intensity: WorkoutIntensity) {
         updateExercise(WorkoutDate.key(date), exerciseId) { exercise ->
-            exercise.copy(timer = (exercise.timer ?: ExerciseTimer()).copy(intensity = intensity))
+            exercise.copy(
+                sets = if (exercise.isCardio) exercise.sets.map { it.copy(rpe = "", rpeScale = null) } else exercise.sets,
+                timer = (exercise.timer ?: ExerciseTimer()).copy(intensity = intensity)
+            )
         }
     }
 

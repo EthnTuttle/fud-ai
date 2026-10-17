@@ -528,6 +528,11 @@
     <string name="settings_goal_weight">Peso-meta</string>
     <string name="settings_calories">Calorias</string>
     <string name="settings_recalculate_goals">Recalcular metas</string>
+    <string name="settings_estimated_maintenance">Manutenção estimada</string>
+    <string name="settings_maintenance_deficit_format">Déficit: %1$,d kcal/dia</string>
+    <string name="settings_maintenance_surplus_format">Superávit: %1$,d kcal/dia</string>
+    <string name="settings_maintenance_close">A meta está próxima da manutenção</string>
+    <string name="settings_estimated_maintenance_info">A manutenção estimada são as calorias que você queimaria em um dia típico: sua TMB (BMR) do perfil multiplicada pelo seu nível de atividade. Comer abaixo disso gera um déficit para perder peso; comer acima gera um superávit para ganhar. O déficit ou superávit exibido é sua meta de calorias menos esta estimativa. É uma estimativa por fórmula, então seu gasto real pode ser diferente, e o recálculo de metas pode definir sua meta com base nos alimentos registrados, na tendência de peso ou no gasto energético medido. Isto não é aconselhamento médico.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Fixado</string>
@@ -560,8 +565,25 @@
     <string name="settings_clear_key">Limpar chave</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Pesagens anteriores</string>
     <string name="settings_clear_food_log">Limpar diário alimentar</string>
     <string name="settings_delete_all_data">Apagar todos os dados</string>
+    <string name="storage_title">Armazenamento</string>
+    <string name="storage_saved_photos">Fotos salvas</string>
+    <string name="storage_on_device_models">Modelos no dispositivo</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Comprimir fotos</string>
+    <string name="storage_clear_cache">Limpar cache</string>
+    <string name="storage_footer">Comprimir fotos reduz permanentemente as fotos maiores que 2048 px. Limpar cache remove miniaturas e imagens de exercícios baixadas, que são recriadas quando necessário. Exclua os modelos no dispositivo nas configurações de IA ou de fala correspondentes.</string>
+    <string name="storage_compress_confirm_title">Comprimir fotos?</string>
+    <string name="storage_compress_confirm_message">Fotos cujo lado maior ultrapasse 2048 pixels serão redimensionadas permanentemente para 2048 pixels e salvas como JPEG. Fotos menores permanecem inalteradas. Esta ação não pode ser desfeita.</string>
+    <string name="storage_compress_action">Comprimir</string>
+    <string name="storage_compressing_progress">Comprimindo fotos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Fotos comprimidas</string>
+    <string name="storage_compress_freed">%1$s liberados.</string>
+    <string name="storage_compress_nothing">Nenhuma foto precisava ser comprimida.</string>
+    <string name="storage_compress_unreadable">Algumas fotos não puderam ser lidas e foram mantidas sem alterações.</string>
+    <string name="storage_compress_failed">Algumas fotos não puderam ser comprimidas e foram mantidas sem alterações. Verifique se o dispositivo tem espaço livre e tente novamente.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Limpar diário alimentar?</string>
@@ -821,4 +843,5 @@
     <string name="settings_save_photos_to_gallery">Salvar em Fotos</string>
     <string name="settings_save_photos_to_gallery_subtitle">Também salvar fotos de refeições na galeria ao registrar</string>
     <string name="settings_other_nutrients_note">Separado das metas de calorias, proteínas, carboidratos e gorduras.</string>
+    <string name="label_date">Data</string>
 </resources>
