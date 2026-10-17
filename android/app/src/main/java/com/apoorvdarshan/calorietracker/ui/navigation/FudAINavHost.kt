@@ -36,7 +36,6 @@ import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateChecker
 import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateState
 import com.apoorvdarshan.calorietracker.ui.coach.CoachScreen
-import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.ui.components.PostUpdatePromptsHost
 import com.apoorvdarshan.calorietracker.ui.hosted.HostedUiHost
 import com.apoorvdarshan.calorietracker.ui.home.HomeScreen
@@ -49,7 +48,6 @@ import com.apoorvdarshan.calorietracker.ui.settings.OptionalNutrientGoalsScreen
 import com.apoorvdarshan.calorietracker.ui.settings.SettingsScreen
 import com.apoorvdarshan.calorietracker.ui.settings.SettingsViewModel
 import com.apoorvdarshan.calorietracker.ui.workouts.WorkoutsScreen
-import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.WorkoutTabMode
 import com.apoorvdarshan.calorietracker.models.QuickActionRequest
 import com.apoorvdarshan.calorietracker.ui.settings.AddMenuSettingsScreen
@@ -111,7 +109,6 @@ fun FudAINavHost(
     val voiceUi by container.voiceAssistant.ui.collectAsState()
     // Null until the stored choice is read, so a hidden tab never flashes in the bar.
     val hiddenTabs by container.prefs.hiddenTabs.collectAsState(initial = null)
-    val energyUnit by container.prefs.energyUnit.collectAsState(initial = EnergyUnit.Default)
     val showTabs = selectedTabRoute != null && hiddenTabs != null && !analyzing &&
         !(voiceUi.visible && voiceUi.expanded)
     // Bumped when the Settings tab is re-tapped so SettingsScreen can pop back to the hub
@@ -265,10 +262,7 @@ fun FudAINavHost(
         onVoiceLaunchHandled(request)
     }
 
-    CompositionLocalProvider(
-        LocalLaunchFillEpoch provides launchFillEpoch,
-        LocalEnergyUnit provides energyUnit
-    ) {
+    CompositionLocalProvider(LocalLaunchFillEpoch provides launchFillEpoch) {
     Scaffold(
         bottomBar = {
             if (showTabs) {

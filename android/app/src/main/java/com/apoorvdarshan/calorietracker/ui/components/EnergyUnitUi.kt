@@ -6,8 +6,9 @@ import androidx.compose.ui.res.stringResource
 import com.apoorvdarshan.calorietracker.models.EnergyUnit
 
 /**
- * The user's energy display unit (kcal / kJ), provided once above the NavHost so every
- * screen, sheet and the voice overlay show calories the same way. Values stay kcal.
+ * The user's energy display unit (kcal / kJ), provided once at the Compose root in
+ * MainActivity so every screen, sheet, the voice overlay and the shared-meal import sheet
+ * show calories the same way. Values stay kcal.
  */
 val LocalEnergyUnit = compositionLocalOf { EnergyUnit.Default }
 
