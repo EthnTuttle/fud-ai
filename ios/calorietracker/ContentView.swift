@@ -1173,6 +1173,7 @@ struct HomeView: View {
     @State private var launchFillEpoch = 1
     @State private var wasBackgrounded = false
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @AppStorage(FoodLogSortOrder.storageKey) private var foodLogSortOrderRaw = FoodLogSortOrder.defaultOrder.rawValue
     @AppStorage(HomeTopNutrient.storageKey) private var homeTopNutrientsRaw = HomeTopNutrient.storageValue(for: HomeTopNutrient.defaultSelection)
     @AppStorage(OptionalNutrientGoals.storageKey) private var optionalNutrientGoalsData = Data()
@@ -1260,23 +1261,24 @@ private var dailyStepsTaskKey: String {
 
     private var homeBurnRefreshToken: String {
         let profileBmr = Int(userProfile.bmr.rounded())
-        return "\(healthKitEnabled)-\(selectedDate.timeIntervalSince1970)-\(selectedCalories)-\(profileBmr)-\(homeBurnRefreshGeneration)"
+        return "\(healthKitEnabled)-\(selectedDate.timeIntervalSince1970)-\(selectedCalories)-\(profileBmr)-\(homeBurnRefreshGeneration)-\(energyUnit.rawValue)"
     }
 
     private func formattedHomeBurnLine(from balance: DailyCalorieBalance) -> String {
-        let burned = balance.burnedCalories.formatted()
+        let burned = energyUnit.number(kcal: balance.burnedCalories)
+        let difference = energyUnit.number(kcal: balance.differenceCalories)
         switch balance.direction {
         case .deficit:
             return String(
                 format: String(localized: "%@ burned · %@ deficit"),
                 burned,
-                balance.differenceCalories.formatted()
+                difference
             )
         case .surplus:
             return String(
                 format: String(localized: "%@ burned · %@ surplus"),
                 burned,
-                balance.differenceCalories.formatted()
+                difference
             )
         case .balanced:
             return String(format: String(localized: "%@ burned · balanced"), burned)
@@ -1835,7 +1837,7 @@ private var dailyStepsTaskKey: String {
                                 if !group.foodEntries.isEmpty {
                                     // Keep food totals on the leading side, clear of the floating controls.
                                     VStack(alignment: .leading, spacing: 1) {
-                                        Text("\(group.totalCalories.formatted()) kcal")
+                                        Text(energyUnit.format(kcal: group.totalCalories))
                                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                             .foregroundStyle(AppColors.calorie)
                                             .accessibilityIdentifier("home.meal.calories")
@@ -3102,6 +3104,7 @@ struct NutritionDetailView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var showHomeNutrientPicker = false
 
     private var userProfile: UserProfile { profileStore.profile }
@@ -3157,7 +3160,7 @@ struct NutritionDetailView: View {
                 }
 
                 Section("Macros") {
-                    NutritionDetailRow(icon: "flame.fill", label: "Calories", value: "\(foodStore.calories(for: date))", unit: "kcal", goal: "\(userProfile.effectiveCalories)")
+                    NutritionDetailRow(icon: "flame.fill", label: "Calories", value: "\(energyUnit.displayValue(kcal: foodStore.calories(for: date)))", unit: energyUnit.symbol, goal: "\(energyUnit.displayValue(kcal: userProfile.effectiveCalories))")
                     NutritionDetailRow(icon: "p.circle.fill", label: "Protein", value: MacroValueFormatter.string(foodStore.protein(for: date)), unit: "g", goal: "\(userProfile.effectiveProtein)")
                     NutritionDetailRow(icon: "c.circle.fill", label: "Carbs", value: MacroValueFormatter.string(foodStore.carbs(for: date)), unit: "g", goal: "\(userProfile.effectiveCarbs)")
                     NutritionDetailRow(icon: "f.circle.fill", label: "Fat", value: MacroValueFormatter.string(foodStore.fat(for: date)), unit: "g", goal: "\(userProfile.effectiveFat)")
@@ -4010,6 +4013,7 @@ final class BarcodeScannerViewController: UIViewController, AVCaptureMetadataOut
 struct FoodRow: View {
     let entry: FoodEntry
     @Environment(FoodStore.self) private var foodStore
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var imagePreview: FullScreenImagePreview?
     @State private var thumbnailPhotoID: FoodEntryPhoto.ID?
 
@@ -4086,7 +4090,7 @@ struct FoodRow: View {
                 }
 
                 HStack(spacing: 6) {
-                    Text("\(entry.calories.formatted()) kcal")
+                    Text(energyUnit.format(kcal: entry.calories))
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(AppColors.calorie)
 
@@ -4759,6 +4763,7 @@ struct ProfileView: View {
     @AppStorage(AdaptiveGoalSettings.enabledKey) private var adaptiveGoalsEnabled = true
     @AppStorage(EnergyBurnSettings.enabledKey) private var energyBurnEnabled = false
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = true
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @AppStorage(FoodMeasurementSettings.preferGramsByDefaultKey) private var preferGramsByDefault = false
     @AppStorage(MealPhotoSettings.saveToGalleryKey) private var saveMealPhotosToGallery = false
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
@@ -5235,7 +5240,7 @@ struct ProfileView: View {
                     lockableGoalRow(
                         icon: "flame",
                         label: "Calories",
-                        valueText: "\(profile.effectiveCalories.formatted()) kcal",
+                        valueText: energyUnit.format(kcal: profile.effectiveCalories),
                         macro: nil,
                         sheet: .editCalories
                     )
@@ -5396,6 +5401,32 @@ struct ProfileView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(.secondary)
+
+                    Picker(selection: $energyUnit) {
+                        ForEach(EnergyUnit.allCases) { unit in
+                            Text(unit.title).tag(unit)
+                        }
+                    } label: {
+                        Label {
+                            Text("Energy Unit")
+                        } icon: {
+                            Image(systemName: "flame")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.secondary)
+                    .accessibilityIdentifier("settings.energyUnit")
+                    .onChange(of: energyUnit) { _, _ in
+                        // Widgets, the Watch and the scheduled daily summary render
+                        // calorie text ahead of time, so refresh them in the new unit.
+                        WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
+                        if UserDefaults.standard.bool(forKey: "notificationsEnabled") {
+                            notificationManager.rescheduleDataDependentNotifications(
+                                foodStore: foodStore, weightStore: weightStore, bodyFatStore: bodyFatStore, profile: profile
+                            )
+                        }
+                    }
 
                     NavigationLink {
                         QuickActionsSettingsView()
@@ -6604,10 +6635,10 @@ struct ProfileView: View {
 
                 case .editCalories:
                     NutritionPickerSheet(
-                        label: "Calories", unit: "kcal",
-                        currentValue: profile.effectiveCalories,
-                        range: 800...6000, step: 50,
-                        onSave: { setCalories(to: $0) },
+                        label: "Calories", unit: energyUnit.symbol,
+                        currentValue: energyUnit.displayValue(kcal: profile.effectiveCalories),
+                        range: energyUnit.goalPickerRange, step: energyUnit.goalPickerStep,
+                        onSave: { setCalories(to: energyUnit.goalKcal(fromPicked: $0, currentKcal: profile.effectiveCalories)) },
                         onResetToAuto: profile.isCaloriesLocked ? { resetCaloriesLock() } : nil
                     )
 
@@ -7565,7 +7596,7 @@ struct ProfileView: View {
             markGoalsRecalculated()
             AdaptiveGoalSettings.markCheckedToday()
             if showAlert {
-                showAdaptiveGoalAlert(title: "Adaptive Goals", message: "Updated to \(result.calories) kcal from your latest data." + (result.reason.map { " \($0)" } ?? ""))
+                showAdaptiveGoalAlert(title: "Adaptive Goals", message: "Updated to \(energyUnit.format(kcal: result.calories)) from your latest data." + (result.reason.map { " \($0)" } ?? ""))
             }
         } catch {
             guard adaptiveGoalsEnabled,

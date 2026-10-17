@@ -23,6 +23,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.models.UserProfile
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyUnitLabel
 import com.apoorvdarshan.calorietracker.models.allergenAnalysis
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -574,7 +576,7 @@ fun EditFoodEntrySheet(
             item { SheetSectionHeader(stringResource(R.string.sheet_nutrition)) }
             item {
                 SheetPillCard {
-                    SheetNutritionRow(stringResource(R.string.nutrition_label_calories), "${scaledInt(currentBaseEntry.calories)}", stringResource(R.string.unit_kcal))
+                    SheetNutritionRow(stringResource(R.string.nutrition_label_calories), "${LocalEnergyUnit.current.displayValue(scaledInt(currentBaseEntry.calories))}", energyUnitLabel())
                     SheetHairline()
                     SheetNutritionRow(stringResource(R.string.nutrition_label_protein), MacroValueFormatter.string(scaledMacro(currentBaseEntry.protein)), stringResource(R.string.unit_g))
                     SheetHairline()

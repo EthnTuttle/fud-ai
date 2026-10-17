@@ -319,6 +319,8 @@ class FoodAnalysisService(
             ?.let { "${(it * 100).toInt()}%" }
             ?: "not set"
         fun grams(value: Double) = String.format(Locale.US, "%.1fg", value)
+        // Empty for kcal users, so their prompt is unchanged.
+        val energyHint = prefs.energyUnit.first().aiReplyInstruction()?.let { "\n\n$it" }.orEmpty()
 
         val prompt = """
             The user tapped "What if?" before logging a meal in a nutrition tracker.
@@ -358,7 +360,7 @@ class FoodAnalysisService(
             - Protein: ${grams(afterProtein)}
             - Carbs: ${grams(afterCarbs)}
             - Fat: ${grams(afterFat)}
-        """.trimIndent()
+        """.trimIndent() + energyHint
         return callAi(prompt, imageBytesList = emptyList(), jsonResponse = false).trim()
     }
 
@@ -496,6 +498,18 @@ class FoodAnalysisService(
             {"allergens":["milk","peanut"]}
         """.trimIndent()
         return FoodJsonParser.parseAllergensFromLabReport(callAi(prompt, images))
+    }
+
+    /**
+     * Identifies the exercise in a custom-exercise photo. Metadata is limited to [options];
+     * the result only prefills the editor and is never saved here.
+     */
+    suspend fun suggestUserExercise(
+        imageBytes: ByteArray,
+        options: UserExerciseAiFill.Options
+    ): UserExerciseAiFill.Suggestion {
+        if (imageBytes.isEmpty()) throw AiError.ImageConversionFailed
+        return UserExerciseAiFill.parse(callAi(UserExerciseAiFill.prompt(options), imageBytes), options)
     }
 
     // -- Internal dispatch ------------------------------------------------

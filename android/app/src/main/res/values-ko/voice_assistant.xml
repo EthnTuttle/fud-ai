@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">운동 초안</string>
     <string name="voice_card_dismiss">닫기</string>
     <string name="voice_card_totals">%1$d kcal · 단백질: %2$dg · 탄수화물: %3$dg · 지방: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · 단백질: %2$dg · 탄수화물: %3$dg · 지방: %4$dg</string>
     <string name="voice_card_log">기록하기</string>
     <string name="voice_card_logged">기록됨</string>
     <string name="voice_card_confirm_title">확인</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">저장됨</string>
     <string name="voice_card_undo">실행 취소</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">%1$s 기록 · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">%1$s 기록 · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">물 %1$s 기록</string>
     <string name="voice_change_start_fast">%1$d시간 단식 시작</string>
     <string name="voice_change_end_fast">단식 종료 · %1$s</string>

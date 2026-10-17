@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.services.ai
 import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.FastingSession
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.UserProfile
@@ -30,7 +31,8 @@ object CoachContext {
         heightMetric: Boolean,
         weightMetric: Boolean,
         workoutSessions: List<WorkoutSession> = emptyList(),
-        workoutPlans: List<WorkoutDayPlan> = emptyList()
+        workoutPlans: List<WorkoutDayPlan> = emptyList(),
+        energyUnit: EnergyUnit = EnergyUnit.Default
     ): List<String> {
         val forecast: WeightForecast = WeightAnalysisService.compute(weights, foods, profile)
 
@@ -61,6 +63,8 @@ object CoachContext {
         profile.goalWeightKg?.let { lines.add("- Goal weight: ${wUnit(it)}") }
         profile.bodyFatPercentage?.let { lines.add("- Body fat: ${(it * 100).toInt()}%") }
         profile.goalBodyFatPercentage?.let { lines.add("- Goal body fat: ${(it * 100).toInt()}%") }
+        // Data stays kcal; a kJ user is answered in kJ. Nothing changes for kcal users.
+        energyUnit.aiReplyInstruction(toolArguments = true)?.let { lines.add("- $it") }
         lines.add("")
         lines.add("## Formulas in use")
         lines.add("- BMR: $bmrFormula. Current BMR ≈ ${profile.bmr.toInt()} kcal/day")

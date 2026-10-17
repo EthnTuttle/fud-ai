@@ -524,6 +524,7 @@ struct WeightChartSection: View {
 struct CalorieChartSection: View {
     let dailyCalories: [(date: Date, calories: Int)]
     let calorieGoal: Int
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var selectedDay: Date?
     /// Axis a drag committed to at its first movement, keyed by where it began:
     /// only a clearly horizontal drag scrubs (and clears on release), so a page
@@ -543,7 +544,7 @@ struct CalorieChartSection: View {
                 Spacer()
                 if !dailyCalories.isEmpty {
                     let avg = dailyCalories.reduce(0) { $0 + $1.calories } / max(dailyCalories.count, 1)
-                    Text("Avg: \(avg.formatted()) kcal")
+                    Text("Avg: \(energyUnit.format(kcal: avg))")
                         .font(.system(.subheadline, design: .rounded, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -558,7 +559,7 @@ struct CalorieChartSection: View {
                     ForEach(dailyCalories, id: \.date) { item in
                         BarMark(
                             x: .value("Date", item.date, unit: .day),
-                            y: .value("Calories", item.calories)
+                            y: .value("Calories", energyUnit.displayValue(kcal: item.calories))
                         )
                         .foregroundStyle(
                             LinearGradient(colors: AppColors.calorieGradient, startPoint: .bottom, endPoint: .top)
@@ -567,7 +568,7 @@ struct CalorieChartSection: View {
                         .cornerRadius(4)
                     }
 
-                    RuleMark(y: .value("Goal", calorieGoal))
+                    RuleMark(y: .value("Goal", energyUnit.displayValue(kcal: calorieGoal)))
                         .foregroundStyle(AppColors.calorie.opacity(0.6))
                         .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
 
@@ -696,7 +697,7 @@ struct CalorieChartSection: View {
             Text(item.date.formatted(date: .abbreviated, time: .omitted))
                 .font(.system(.caption2, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
-            Text("\(item.calories.formatted()) kcal")
+            Text(energyUnit.format(kcal: item.calories))
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
                 .foregroundStyle(.primary)
         }

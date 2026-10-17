@@ -7,6 +7,7 @@ struct ServingSizeInputView: View {
     @State private var servingAmount: String
     var onContinue: (GeminiService.FoodAnalysis) -> Void
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     init(
         image: UIImage,
@@ -60,7 +61,7 @@ struct ServingSizeInputView: View {
                 }
 
                 Section("Estimated Nutrition") {
-                    LabeledContent("Calories", value: "\(preview.calories) kcal")
+                    LabeledContent("Calories", value: energyUnit.format(kcal: preview.calories))
                     LabeledContent("Protein", value: "\(MacroValueFormatter.string(preview.protein)) g")
                     LabeledContent("Carbs", value: "\(MacroValueFormatter.string(preview.carbs)) g")
                     LabeledContent("Fat", value: "\(MacroValueFormatter.string(preview.fat)) g")

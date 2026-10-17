@@ -16,6 +16,12 @@
     <string name="widget_fat">Tuky</string>
     <string name="widget_water">Voda</string>
     <string name="widget_kcal_left_format">zbývá %1$d kcal</string>
+    <string name="widget_kj_left_format">zbývá %1$d kJ</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="challenge_days_kj_format">%1$d/7 dní · %2$d kJ</string>
+    <string name="health_import_count_kj">Nové záznamy: %1$d · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Odhadovaný výdej: %1$d kJ</string>
+    <string name="unit_kj">kJ</string>
     <string name="widget_g_left_format">zbývá %1$d g</string>
     <string name="widget_protein_g">bílkoviny g</string>
 
@@ -288,6 +294,8 @@
     <string name="home_menu_saved_meals">Uložená jídla</string>
     <string name="home_kcal_of_format">z %1$s kcal</string>
     <string name="home_kcal_left_format">zbývá %1$s</string>
+    <string name="home_kj_left_format">zbývá %1$s</string>
+    <string name="home_kilojoules">Kilojouly</string>
     <string name="home_view_more">Zobrazit více</string>
     <string name="home_todays_food">Dnešní jídlo</string>
     <string name="home_no_foods_logged">Žádná zapsaná jídla</string>
@@ -514,6 +522,8 @@
     <string name="progress_include_today">Zahrnout dnešek</string>
     <string name="progress_include_today_caption">Graf kalorií a průměry živin</string>
     <string name="progress_avg_format">Průměr: %1$d kcal</string>
+    <string name="progress_workout_chart_description_kj">Graf výdeje z tréninků od %1$s do %2$s. Celkem %3$d kilojoulů; naposledy %4$d kilojoulů.</string>
+    <string name="progress_avg_format_kj">Průměr: %1$d kJ</string>
     <string name="progress_no_food">Zatím žádné zapsané jídlo</string>
 
     <string name="progress_macro_averages">Průměry makroživin</string>
@@ -553,7 +563,9 @@
     <string name="settings_recalculate_goals">Přepočítat cíle</string>
     <string name="settings_estimated_maintenance">Odhadovaný udržovací příjem</string>
     <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/den</string>
+    <string name="settings_maintenance_deficit_format_kj">Deficit: %1$,d kJ/den</string>
     <string name="settings_maintenance_surplus_format">Přebytek: %1$,d kcal/den</string>
+    <string name="settings_maintenance_surplus_format_kj">Přebytek: %1$,d kJ/den</string>
     <string name="settings_maintenance_close">Cíl je blízko udržovacímu příjmu</string>
     <string name="settings_estimated_maintenance_info">Odhadovaný udržovací příjem je počet kalorií, které spálíte v běžný den: váš BMR z profilu vynásobený úrovní aktivity. Když jíte méně, vzniká deficit pro hubnutí; když více, vzniká přebytek pro nabírání. Zobrazený deficit nebo přebytek je váš kalorický cíl minus tento odhad. Jde o odhad podle vzorce, takže skutečný výdej se může lišit, a přepočet cílů může nastavit cíl podle zaznamenaného jídla, vývoje hmotnosti nebo naměřeného výdeje energie. Nejde o lékařskou radu.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
@@ -592,6 +604,9 @@
     <string name="settings_default_to_grams">Výchozí gramy</string>
     <string name="settings_default_to_grams_info">Nové okno kontroly jídla se otevře s předvybranými gramy. Před zapsáním můžeš stále přepnout na porci, plátek, hrnek nebo jinou rozpoznanou jednotku.</string>
     <string name="settings_week_starts">Týden začíná</string>
+    <string name="settings_energy_unit">Jednotka energie</string>
+    <string name="settings_energy_unit_kcal">Kilokalorie (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojouly (kJ)</string>
     <string name="settings_meal_times">Časy jídel</string>
     <string name="settings_meal_times_customize">Přizpůsobit</string>
     <string name="settings_meal_times_description">Nastav, kdy se automatický výběr přepne na další jídlo.</string>
@@ -817,6 +832,8 @@
     <string name="workout_exercise_take_photo">Pořídit fotku</string>
     <string name="workout_exercise_camera_denied_title">Je potřeba přístup k fotoaparátu</string>
     <string name="workout_exercise_camera_denied_message">Chcete-li fotit cviky, povolte aplikaci Fud AI přístup k fotoaparátu v nastavení systému.</string>
+    <string name="workout_exercise_ai_fill">Vyplnit pomocí AI</string>
+    <string name="workout_exercise_ai_fill_hint">Funkce Vyplnit pomocí AI odešle tuto fotku vašemu poskytovateli AI. Před uložením navržené údaje zkontrolujte.</string>
     <string name="filter_all_count">Vše %d</string>
     <string name="hide_details">Skrýt detaily</string>
     <string name="instructions">Provedení</string>
@@ -988,6 +1005,7 @@
     <string name="import_note">Přidá se do tvého deníku s přesnými nutričními hodnotami od odesílatele. Fotka není součástí.</string>
     <string name="import_add_to_log">Přidat do deníku</string>
     <string name="import_add_to_log_many_format">Přidat %1$d do deníku · %2$d kcal</string>
+    <string name="import_add_to_log_many_format_kj">Přidat %1$d do deníku · %2$d kJ</string>
     <string name="voice_release_to_cancel">Uvolněním zrušíš</string>
     <string name="voice_slide_to_cancel">‹ přejetím zrušíš</string>
     <string name="camera_error_open">Fotoaparát se nepodařilo otevřít</string>
@@ -1104,6 +1122,9 @@
     <string name="notif_summary_deficit">Snědeno %1$d kcal · spáleno %2$d · odhadovaný deficit %3$d kcal</string>
     <string name="notif_summary_surplus">Snědeno %1$d kcal · spáleno %2$d · odhadovaný přebytek %3$d kcal</string>
     <string name="notif_summary_balanced">Snědeno %1$d kcal · spáleno %2$d · odhadem vyrovnáno</string>
+    <string name="notif_summary_deficit_kj">Snědeno %1$d kJ · spáleno %2$d kJ · odhadovaný deficit %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Snědeno %1$d kJ · spáleno %2$d kJ · odhadovaný přebytek %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Snědeno %1$d kJ · spáleno %2$d kJ · odhadem vyrovnáno</string>
     <string name="import_diary_title">Import deníku jídel</string>
     <string name="import_entries">Záznamy jídel</string>
     <string name="import_date_range">Období</string>

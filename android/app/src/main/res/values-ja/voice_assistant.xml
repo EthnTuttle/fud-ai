@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">ワークアウトの下書き</string>
     <string name="voice_card_dismiss">閉じる</string>
     <string name="voice_card_totals">%1$d kcal · タンパク質: %2$dg · 炭水化物: %3$dg · 脂質: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · タンパク質: %2$dg · 炭水化物: %3$dg · 脂質: %4$dg</string>
     <string name="voice_card_log">記録する</string>
     <string name="voice_card_logged">記録済み</string>
     <string name="voice_card_confirm_title">確定</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">保存しました</string>
     <string name="voice_card_undo">取り消す</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">%1$sを記録 · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">%1$sを記録 · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">水%1$sを記録</string>
     <string name="voice_change_start_fast">%1$d時間の断食を開始</string>
     <string name="voice_change_end_fast">断食を終了 · %1$s</string>

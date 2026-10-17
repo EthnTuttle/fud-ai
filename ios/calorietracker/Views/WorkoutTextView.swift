@@ -3,6 +3,7 @@ import SwiftUI
 struct WorkoutTextView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(StrengthWorkoutStore.self) private var workoutStore
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     let selectedDate: Date
     let unit: WeightUnit
     let bodyWeightKg: Double
@@ -59,7 +60,7 @@ struct WorkoutTextView: View {
                         if let planned = try? binding.wrappedValue.planned(library: library),
                            let estimate = StrengthWorkoutBurnEstimator.estimate(exercises: planned, bodyWeightKg: bodyWeightKg,
                                defaultWeightUnit: unit, defaultRPEScale: workoutStore.preferences.rpeScale) {
-                            Text("Estimated burn: \(estimate.calories) kcal").font(.headline)
+                            Text("Estimated burn: \(energyUnit.format(kcal: estimate.calories))").font(.headline)
                         }
                         Text("Calories are estimates. Use Calculate in the diary after adding your workout.")
                             .font(.footnote).foregroundStyle(.secondary)

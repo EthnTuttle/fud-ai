@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.data.nutritionImportCandidates
 import com.apoorvdarshan.calorietracker.services.health.ExternalNutrition
 import kotlinx.coroutines.CancellationException
@@ -122,7 +123,14 @@ internal fun HealthNutritionImportDialog(container: AppContainer, onDismiss: () 
                         }
                     }
                     if (selected.isNotEmpty()) {
-                        Text(stringResource(R.string.health_import_count, selected.size, selected.sumOf { it.calories ?: 0.0 }.toInt()))
+                        val energyUnit = LocalEnergyUnit.current
+                        Text(
+                            stringResource(
+                                energyUnit.pick(R.string.health_import_count, R.string.health_import_count_kj),
+                                selected.size,
+                                energyUnit.displayValue(selected.sumOf { it.calories ?: 0.0 }.toInt())
+                            )
+                        )
                         selected.take(5).forEach { record ->
                             Text("${record.time.atZone(ZoneId.systemDefault()).toLocalDate()} · ${record.name?.takeIf { it.isNotBlank() } ?: resources.getString(R.string.health_import_unnamed)}", style = MaterialTheme.typography.bodySmall)
                         }

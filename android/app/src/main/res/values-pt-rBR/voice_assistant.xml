@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Rascunho de treino</string>
     <string name="voice_card_dismiss">Dispensar</string>
     <string name="voice_card_totals">%1$d kcal · Proteína: %2$dg · Carboidratos: %3$dg · Gordura: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · Proteína: %2$dg · Carboidratos: %3$dg · Gordura: %4$dg</string>
     <string name="voice_card_log">Registrar</string>
     <string name="voice_card_logged">Registrado</string>
     <string name="voice_card_confirm_title">Confirmar</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Salvo</string>
     <string name="voice_card_undo">Desfazer</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">Registrar %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">Registrar %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">Registrar %1$s de água</string>
     <string name="voice_change_start_fast">Iniciar jejum de %1$d h</string>
     <string name="voice_change_end_fast">Encerrar seu jejum · %1$s</string>

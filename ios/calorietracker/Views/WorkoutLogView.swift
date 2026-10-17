@@ -1023,6 +1023,7 @@ private struct WorkoutLogStatsStrip: View {
     let repCount: Int
     let caloriesBurned: Int?
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         HStack(spacing: 0) {
@@ -1034,7 +1035,7 @@ private struct WorkoutLogStatsStrip: View {
             divider
             metric(
                 label: "Burn",
-                value: caloriesBurned.map { "\($0.formatted()) kcal" } ?? "-- kcal",
+                value: caloriesBurned.map { energyUnit.format(kcal: $0) } ?? "-- \(energyUnit.symbol)",
                 systemImage: "flame.fill",
                 active: caloriesBurned != nil
             )

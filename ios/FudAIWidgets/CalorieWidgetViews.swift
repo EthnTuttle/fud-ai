@@ -162,13 +162,13 @@ private struct SmallCalorieView: View {
                 lineWidth: 9
             ) {
                 VStack(spacing: 0) {
-                    Text("\(snapshot.calories)")
+                    Text("\(snapshot.displayCalories)")
                         .font(.system(.title3, design: .rounded, weight: .bold).monospacedDigit())
                         .foregroundStyle(snapshot.themeGradient)
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
                         .padding(.horizontal, 16)
-                    Text("/ \(snapshot.calorieGoal)")
+                    Text("/ \(snapshot.displayCalorieGoal)")
                         .font(.system(.caption2, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -177,11 +177,17 @@ private struct SmallCalorieView: View {
 
             Spacer(minLength: 2)
 
-            Text("\(snapshot.caloriesRemaining) kcal left")
-                .font(.system(.caption2, design: .rounded, weight: .semibold))
-                .foregroundStyle(snapshot.themeColor)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+            Group {
+                if snapshot.usesKilojoules {
+                    Text("\(snapshot.displayCaloriesRemaining) kJ left")
+                } else {
+                    Text("\(snapshot.caloriesRemaining) kcal left")
+                }
+            }
+            .font(.system(.caption2, design: .rounded, weight: .semibold))
+            .foregroundStyle(snapshot.themeColor)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
         }
     }
 }
@@ -198,7 +204,7 @@ private struct MediumCalorieView: View {
                     diameter: 126,
                     lineWidth: 10
                 ) {
-                    Text("\(snapshot.calories)")
+                    Text("\(snapshot.displayCalories)")
                         .font(.system(size: 26, weight: .bold, design: .rounded).monospacedDigit())
                         .foregroundStyle(snapshot.themeGradient)
                         .lineLimit(1)
@@ -209,8 +215,15 @@ private struct MediumCalorieView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")
                         .font(.system(size: 10, weight: .semibold))
-                    Text("\(snapshot.caloriesRemaining) left")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                    Group {
+                        // kJ numbers are about 4x the kcal ones, so they always carry their unit.
+                        if snapshot.usesKilojoules {
+                            Text("\(snapshot.displayCaloriesRemaining) kJ left")
+                        } else {
+                            Text("\(snapshot.caloriesRemaining) left")
+                        }
+                    }
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
                 }
                 .foregroundStyle(snapshot.themeColor)
                 .lineLimit(1)
@@ -238,12 +251,25 @@ private struct LargeCalorieView: View {
     let snapshot: WidgetSnapshot
 
     private var remainingText: String {
-        snapshot.caloriesRemaining > 0
-            ? String.localizedStringWithFormat(
-                NSLocalizedString("%lld kcal left", bundle: .main, comment: "Calories remaining"),
-                Int64(snapshot.caloriesRemaining)
+        guard snapshot.caloriesRemaining > 0 else {
+            return NSLocalizedString("Goal reached", bundle: .main, comment: "Calorie goal status")
+        }
+        if snapshot.usesKilojoules {
+            return String.localizedStringWithFormat(
+                NSLocalizedString("%lld kJ left", bundle: .main, comment: "Kilojoules remaining"),
+                Int64(snapshot.displayCaloriesRemaining)
             )
-            : NSLocalizedString("Goal reached", bundle: .main, comment: "Calorie goal status")
+        }
+        return String.localizedStringWithFormat(
+            NSLocalizedString("%lld kcal left", bundle: .main, comment: "Calories remaining"),
+            Int64(snapshot.caloriesRemaining)
+        )
+    }
+
+    private var goalText: Text {
+        snapshot.usesKilojoules
+            ? Text("/ \(snapshot.displayCalorieGoal) kJ")
+            : Text("/ \(snapshot.calorieGoal) kcal")
     }
 
     var body: some View {
@@ -277,13 +303,13 @@ private struct LargeCalorieView: View {
                     lineWidth: 14
                 ) {
                     VStack(spacing: 1) {
-                        Text("\(snapshot.calories)")
+                        Text("\(snapshot.displayCalories)")
                             .font(.system(size: 38, weight: .bold, design: .rounded).monospacedDigit())
                             .foregroundStyle(snapshot.themeGradient)
                             .lineLimit(1)
                             .minimumScaleFactor(0.55)
                             .padding(.horizontal, 30)
-                        Text("/ \(snapshot.calorieGoal) kcal")
+                        goalText
                             .font(.system(.caption2, design: .rounded, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -329,8 +355,8 @@ private struct CircularCalorieView: View {
     var body: some View {
         AccessoryCircularMetricView(
             iconName: "flame.fill",
-            value: "\(snapshot.calories)",
-            label: "kcal"
+            value: "\(snapshot.displayCalories)",
+            label: snapshot.usesKilojoules ? "kJ" : "kcal"
         )
     }
 }
@@ -343,14 +369,15 @@ private struct RectangularCalorieView: View {
             // Header: just the name and today's eaten count, rendered large —
             // no flame icon, no goal (matches the label+eaten style of the grid).
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("Calories")
+                // Typed as keys: a ternary of plain literals infers String and skips translation.
+                Text(snapshot.usesKilojoules ? LocalizedStringKey("Kilojoules") : LocalizedStringKey("Calories"))
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
 
                 Spacer(minLength: 4)
 
-                Text("\(snapshot.calories)")
+                Text("\(snapshot.displayCalories)")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .lineLimit(1)
@@ -395,7 +422,11 @@ private struct InlineCalorieView: View {
 
     var body: some View {
         // Inline widgets get exactly one line of text; iOS ignores colors.
-        Text("\(snapshot.calories) / \(snapshot.calorieGoal) kcal · \(snapshot.caloriesRemaining) left")
+        if snapshot.usesKilojoules {
+            Text("\(snapshot.displayCalories) / \(snapshot.displayCalorieGoal) kJ · \(snapshot.displayCaloriesRemaining) left")
+        } else {
+            Text("\(snapshot.calories) / \(snapshot.calorieGoal) kcal · \(snapshot.caloriesRemaining) left")
+        }
     }
 }
 

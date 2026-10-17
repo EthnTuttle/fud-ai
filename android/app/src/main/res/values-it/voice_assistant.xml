@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Bozza di allenamento</string>
     <string name="voice_card_dismiss">Chiudi</string>
     <string name="voice_card_totals">%1$d kcal · Proteine: %2$dg · Carboidrati: %3$dg · Grassi: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · Proteine: %2$dg · Carboidrati: %3$dg · Grassi: %4$dg</string>
     <string name="voice_card_log">Registra</string>
     <string name="voice_card_logged">Registrato</string>
     <string name="voice_card_confirm_title">Conferma</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Salvato</string>
     <string name="voice_card_undo">Annulla</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">Registra %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">Registra %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">Registra %1$s d’acqua</string>
     <string name="voice_change_start_fast">Avvia un digiuno di %1$d h</string>
     <string name="voice_change_end_fast">Termina il digiuno · %1$s</string>

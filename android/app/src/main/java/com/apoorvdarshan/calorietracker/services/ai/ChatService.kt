@@ -6,6 +6,7 @@ import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
@@ -78,7 +79,8 @@ class ChatService(
             heightMetric = heightMetric,
             weightMetric = weightMetric,
             workoutSessions = workoutSessions,
-            workoutPlans = workoutPlans
+            workoutPlans = workoutPlans,
+            energyUnit = prefs.energyUnit.first()
         )
         val userContext = prefs.userContext.first()
         val systemPrompt = if (userContext.isNotBlank())
@@ -246,7 +248,8 @@ class ChatService(
         heightMetric: Boolean,
         weightMetric: Boolean,
         workoutSessions: List<WorkoutSession> = emptyList(),
-        workoutPlans: List<WorkoutDayPlan> = emptyList()
+        workoutPlans: List<WorkoutDayPlan> = emptyList(),
+        energyUnit: EnergyUnit = EnergyUnit.Default
     ): String {
         val zone = ZoneId.systemDefault()
         val currentDate = LocalDate.now(zone).format(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -283,7 +286,8 @@ class ChatService(
                 heightMetric = heightMetric,
                 weightMetric = weightMetric,
                 workoutSessions = workoutSessions,
-                workoutPlans = workoutPlans
+                workoutPlans = workoutPlans,
+                energyUnit = energyUnit
             )
         )
         lines.add("")

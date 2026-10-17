@@ -107,6 +107,8 @@ import androidx.compose.ui.semantics.Role
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
 import com.apoorvdarshan.calorietracker.models.Gender
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialog
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialogActions
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassPrimaryButton
@@ -1475,8 +1477,12 @@ private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoa
             Spacer(Modifier.weight(1f))
             if (dailyCalories.isNotEmpty()) {
                 val avg = dailyCalories.sumOf { it.second } / dailyCalories.size
+                val energyUnit = LocalEnergyUnit.current
                 Text(
-                    stringResource(R.string.progress_avg_format, avg),
+                    stringResource(
+                        energyUnit.pick(R.string.progress_avg_format, R.string.progress_avg_format_kj),
+                        energyUnit.displayValue(avg)
+                    ),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -1492,7 +1498,12 @@ private fun CalorieSection(dailyCalories: List<Pair<LocalDate, Int>>, calorieGoa
                 )
             }
         } else {
-            CalorieBarChart(dailyCalories = dailyCalories, goal = calorieGoal)
+            // The chart plots, labels and inspects display units; storage stays kcal.
+            val energyUnit = LocalEnergyUnit.current
+            val shownDays = remember(dailyCalories, energyUnit) {
+                dailyCalories.map { (day, kcal) -> day to energyUnit.displayValue(kcal) }
+            }
+            CalorieBarChart(dailyCalories = shownDays, goal = energyUnit.displayValue(calorieGoal))
         }
     }
 }
@@ -1654,7 +1665,7 @@ internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: In
                             maxLines = 1
                         )
                         Text(
-                            stringResource(R.string.kcal_value_format, cals),
+                            stringResource(LocalEnergyUnit.current.valueFormatRes, cals),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -2108,7 +2119,7 @@ private fun AllWorkoutHistorySheet(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(
-                                    "${entry.caloriesBurned ?: 0} kcal",
+                                    energyText(entry.caloriesBurned ?: 0),
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )

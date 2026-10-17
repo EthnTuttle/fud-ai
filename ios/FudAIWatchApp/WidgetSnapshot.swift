@@ -57,6 +57,9 @@ struct WidgetSnapshot: Codable, Equatable {
     /// User's theme gradient as raw hex (e.g. 0xFF375F). Fud Pink when absent.
     var themeStartHex: UInt?
     var themeEndHex: UInt?
+    /// Energy display unit ("kcal" or "kj"). Calorie fields stay kilocalories;
+    /// views convert for display. Nil in snapshots from older builds (kcal).
+    var energyUnitRaw: String? = nil
 
     static var appGroupID: String {
         Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String
@@ -103,7 +106,8 @@ struct WidgetSnapshot: Codable, Equatable {
             waterGoalMl: waterGoalMl,
             waterUnitRaw: waterUnitRaw,
             themeStartHex: themeStartHex,
-            themeEndHex: themeEndHex
+            themeEndHex: themeEndHex,
+            energyUnitRaw: energyUnitRaw
         )
     }
 
@@ -193,6 +197,15 @@ struct WidgetSnapshot: Codable, Equatable {
     }
 
     var caloriesRemaining: Int { max(0, calorieGoal - calories) }
+    var usesKilojoules: Bool { energyUnitRaw == "kj" }
+    /// Whole display units for a stored kcal amount (1 kcal = 4.184 kJ).
+    func energyValue(_ kcal: Int) -> Int {
+        usesKilojoules ? Int((Double(kcal) * 4.184).rounded()) : kcal
+    }
+    var displayCalories: Int { energyValue(calories) }
+    var displayCalorieGoal: Int { energyValue(calorieGoal) }
+    /// Goal minus eaten in display units, so "eaten / goal · left" always adds up.
+    var displayCaloriesRemaining: Int { max(0, displayCalorieGoal - displayCalories) }
     var proteinRemaining: Double { max(0, Double(proteinGoal) - protein) }
     var carbsRemaining: Double { max(0, Double(carbsGoal) - carbs) }
     var fatRemaining: Double { max(0, Double(fatGoal) - fat) }

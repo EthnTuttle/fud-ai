@@ -12,6 +12,7 @@
     <string name="widget_carbs">Koolhydraten</string>
     <string name="widget_fat">Vet</string>
     <string name="widget_kcal_left_format">%1$d kcal over</string>
+    <string name="widget_kj_left_format">%1$d kJ over</string>
     <string name="widget_g_left_format">%1$dg over</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">eiwit g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d nieuwe records · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Geschat verbruik: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">%1$d toevoegen aan logboek · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -332,6 +338,8 @@
     <string name="home_menu_saved_meals">Opgeslagen maaltijden</string>
     <string name="home_kcal_of_format">van %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s over</string>
+    <string name="home_kj_left_format">%1$s over</string>
+    <string name="home_kilojoules">Kilojoule</string>
     <string name="home_view_more">Meer bekijken</string>
     <string name="home_todays_food">Eten van vandaag</string>
     <string name="home_no_foods_logged">Geen voedsel geregistreerd</string>
@@ -534,6 +542,7 @@
     <string name="progress_include_today">Vandaag meetellen</string>
     <string name="progress_include_today_caption">Caloriegrafiek en voedingsgemiddelden</string>
     <string name="progress_avg_format">Gem.: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Gem.: %1$,d kJ</string>
     <string name="progress_no_food">Nog geen eten geregistreerd</string>
 
     <string name="progress_macro_averages">Macro-gemiddelden</string>
@@ -574,7 +583,9 @@
     <string name="settings_recalculate_goals">Doelen opnieuw berekenen</string>
     <string name="settings_estimated_maintenance">Geschatte onderhoudsbehoefte</string>
     <string name="settings_maintenance_deficit_format">Tekort: %1$,d kcal/dag</string>
+    <string name="settings_maintenance_deficit_format_kj">Tekort: %1$,d kJ/dag</string>
     <string name="settings_maintenance_surplus_format">Overschot: %1$,d kcal/dag</string>
+    <string name="settings_maintenance_surplus_format_kj">Overschot: %1$,d kJ/dag</string>
     <string name="settings_maintenance_close">Doel ligt dicht bij onderhoud</string>
     <string name="settings_estimated_maintenance_info">Geschatte onderhoudsbehoefte is het aantal calorieën dat je op een gemiddelde dag verbrandt: je BMR uit je profiel vermenigvuldigd met je activiteitsniveau. Eet je minder, dan heb je een tekort om af te vallen; eet je meer, dan heb je een overschot om aan te komen. Het getoonde tekort of overschot is je caloriedoel min deze schatting. Het is een schatting op basis van een formule, dus je werkelijke verbruik kan afwijken, en het herberekenen van doelen kan je doel in plaats daarvan baseren op je gelogde voeding, gewichtstrend of gemeten energieverbruik. Dit is geen medisch advies.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -590,6 +601,9 @@
     <string name="settings_height_unit">Lengte-eenheid</string>
     <string name="settings_weight_unit">Gewichtseenheid</string>
     <string name="settings_week_starts">Week begint op</string>
+    <string name="settings_energy_unit">Energie-eenheid</string>
+    <string name="settings_energy_unit_kcal">Kilocalorieën (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojoule (kJ)</string>
     <string name="settings_meal_times_customize">Aanpassen</string>
     <string name="settings_week_monday">Maandag</string>
     <string name="settings_week_sunday">Zondag</string>
@@ -727,6 +741,9 @@
     <string name="notif_streak_text">Houd je streak gaande — log iets van vandaag.</string>
     <string name="notif_summary_title">De samenvatting van vandaag is klaar</string>
     <string name="notif_summary_text">Tik om te zien hoe de macro\'s van vandaag uitkwamen.</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ gegeten · %2$d kJ verbrand · geschat tekort %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ gegeten · %2$d kJ verbrand · geschat overschot %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ gegeten · %2$d kJ verbrand · geschat in balans</string>
 
     <string name="onboarding_goal_optional">Doel (optioneel)</string>
     <string name="onboarding_goal_set_later">Je kunt dit later in Instellingen instellen.</string>
@@ -755,6 +772,7 @@
     <string name="progress_workout_stat_days">Dagen</string>
     <string name="progress_workout_no_range">Geen berekende work-outverbrandingen in deze periode</string>
     <string name="progress_workout_chart_description">Grafiek van trainingsverbranding van %1$s tot %2$s. Totaal %3$d kilocalorieën; laatste %4$d kilocalorieën.</string>
+    <string name="progress_workout_chart_description_kj">Grafiek van trainingsverbranding van %1$s tot %2$s. Totaal %3$d kilojoule; laatste %4$d kilojoule.</string>
     <string name="workout_filter_source">Bron</string>
     <string name="workout_source_dataset">Database</string>
     <string name="workout_source_saved">Opgeslagen</string>
@@ -764,6 +782,8 @@
     <string name="workout_exercise_take_photo">Maak foto</string>
     <string name="workout_exercise_camera_denied_title">Toegang tot de camera nodig</string>
     <string name="workout_exercise_camera_denied_message">Geef Fud AI in de systeeminstellingen toegang tot de camera om foto’s van oefeningen te maken.</string>
+    <string name="workout_exercise_ai_fill">Invullen met AI</string>
+    <string name="workout_exercise_ai_fill_hint">Invullen met AI stuurt deze foto naar je AI-provider. Controleer de voorgestelde gegevens voordat je opslaat.</string>
     <string name="progress_steps_stat_total">Totaal</string>
     <string name="progress_steps_stat_average">Gemiddelde</string>
     <string name="progress_steps_stat_best_day">Beste dag</string>

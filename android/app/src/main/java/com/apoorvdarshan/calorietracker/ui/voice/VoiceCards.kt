@@ -51,6 +51,7 @@ import com.apoorvdarshan.calorietracker.services.voice.LiveProvider
 import com.apoorvdarshan.calorietracker.services.voice.VoiceCard
 import com.apoorvdarshan.calorietracker.services.voice.VoiceChange
 import com.apoorvdarshan.calorietracker.services.voice.VoiceSettingKey
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import com.apoorvdarshan.calorietracker.ui.theme.AppThemeColor
 import kotlinx.coroutines.delay
@@ -165,7 +166,13 @@ private fun DraftCardView(card: VoiceCard.Draft, actions: CardActions, compact: 
         card.totals?.let { totals ->
             Spacer(Modifier.height(6.dp))
             Text(
-                stringResource(R.string.voice_card_totals, totals.calories, grams(totals.proteinG), grams(totals.carbsG), grams(totals.fatG)),
+                stringResource(
+                    LocalEnergyUnit.current.pick(R.string.voice_card_totals, R.string.voice_card_totals_kj),
+                    LocalEnergyUnit.current.displayValue(totals.calories),
+                    grams(totals.proteinG),
+                    grams(totals.carbsG),
+                    grams(totals.fatG)
+                ),
                 color = CardText,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
@@ -194,7 +201,11 @@ private fun DraftRow(item: DraftItem) {
             }
         }
         item.calories?.let {
-            Text(stringResource(R.string.voice_kcal, it), color = CardMuted, fontSize = 13.sp)
+            Text(
+                stringResource(LocalEnergyUnit.current.pick(R.string.voice_kcal, R.string.voice_kj), LocalEnergyUnit.current.displayValue(it)),
+                color = CardMuted,
+                fontSize = 13.sp
+            )
         }
     }
 }
@@ -271,12 +282,25 @@ private fun UndoCardView(card: VoiceCard.Undo, actions: CardActions, units: Card
     }
 }
 
+/** "Name · 205 kcal" in the energy unit in use; the tool's value stays kcal. */
+@Composable
+private fun foodChangeText(name: String, kcal: Int): String = stringResource(
+    LocalEnergyUnit.current.pick(R.string.voice_change_food, R.string.voice_change_food_kj),
+    name,
+    LocalEnergyUnit.current.displayValue(kcal)
+)
+
 /** A change, in the user's language and units. */
 @Composable
 internal fun changeText(change: VoiceChange, units: CardUnits): String = when (change) {
-    is VoiceChange.LogFood -> stringResource(R.string.voice_change_log_food, change.name, change.calories, mealName(change.meal))
-    is VoiceChange.UpdateFood -> stringResource(R.string.voice_change_food, change.name, change.calories)
-    is VoiceChange.DeleteFood -> stringResource(R.string.voice_change_food, change.name, change.calories)
+    is VoiceChange.LogFood -> stringResource(
+        LocalEnergyUnit.current.pick(R.string.voice_change_log_food, R.string.voice_change_log_food_kj),
+        change.name,
+        LocalEnergyUnit.current.displayValue(change.calories),
+        mealName(change.meal)
+    )
+    is VoiceChange.UpdateFood -> foodChangeText(change.name, change.calories)
+    is VoiceChange.DeleteFood -> foodChangeText(change.name, change.calories)
     is VoiceChange.LogWater -> stringResource(R.string.voice_change_water, units.water.format(change.milliliters))
     is VoiceChange.StartFast -> stringResource(R.string.voice_change_start_fast, change.goalHours)
     is VoiceChange.EndFast -> stringResource(R.string.voice_change_end_fast, formatFastingDuration(change.elapsedMinutes * 60))
@@ -322,7 +346,10 @@ private fun settingValue(key: VoiceSettingKey, value: String): String = when (ke
         }
     )
     VoiceSettingKey.UNITS -> stringResource(if (value == "metric") R.string.voice_units_metric else R.string.voice_units_imperial)
-    VoiceSettingKey.CALORIE_GOAL -> stringResource(R.string.voice_kcal, value.toIntOrNull() ?: 0)
+    VoiceSettingKey.CALORIE_GOAL -> stringResource(
+        LocalEnergyUnit.current.pick(R.string.voice_kcal, R.string.voice_kj),
+        LocalEnergyUnit.current.displayValue(value.toIntOrNull() ?: 0)
+    )
     VoiceSettingKey.PROTEIN_GOAL_G, VoiceSettingKey.CARBS_GOAL_G, VoiceSettingKey.FAT_GOAL_G -> "$value g"
     VoiceSettingKey.WATER_GOAL_ML -> "$value ml"
     VoiceSettingKey.ASSISTANT_VOICE -> LiveProvider.voiceDisplayName(value)

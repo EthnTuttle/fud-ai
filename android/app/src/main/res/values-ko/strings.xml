@@ -12,6 +12,7 @@
     <string name="widget_carbs">탄수화물</string>
     <string name="widget_fat">지방</string>
     <string name="widget_kcal_left_format">%1$d kcal 남음</string>
+    <string name="widget_kj_left_format">%1$d kJ 남음</string>
     <string name="widget_g_left_format">%1$dg 남음</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">단백질 g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">새 기록 %1$d개 · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">예상 소모량: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">%1$d개 기록에 추가 · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -331,6 +337,8 @@
     <string name="home_menu_saved_meals">저장된 식사</string>
     <string name="home_kcal_of_format">/ %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s 남음</string>
+    <string name="home_kj_left_format">%1$s 남음</string>
+    <string name="home_kilojoules">킬로줄</string>
     <string name="home_view_more">더 보기</string>
     <string name="home_todays_food">오늘의 음식</string>
     <string name="home_no_foods_logged">기록된 음식 없음</string>
@@ -528,6 +536,7 @@
     <string name="progress_include_today">오늘 포함</string>
     <string name="progress_include_today_caption">칼로리 차트와 영양 평균</string>
     <string name="progress_avg_format">평균: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">평균: %1$,d kJ</string>
     <string name="progress_no_food">아직 기록된 음식이 없어요</string>
 
     <string name="progress_macro_averages">매크로 평균</string>
@@ -568,7 +577,9 @@
     <string name="settings_recalculate_goals">목표 다시 계산</string>
     <string name="settings_estimated_maintenance">예상 유지 칼로리</string>
     <string name="settings_maintenance_deficit_format">칼로리 적자: %1$,d kcal/일</string>
+    <string name="settings_maintenance_deficit_format_kj">칼로리 적자: %1$,d kJ/일</string>
     <string name="settings_maintenance_surplus_format">칼로리 잉여: %1$,d kcal/일</string>
+    <string name="settings_maintenance_surplus_format_kj">칼로리 잉여: %1$,d kJ/일</string>
     <string name="settings_maintenance_close">목표가 유지 칼로리에 가깝습니다</string>
     <string name="settings_estimated_maintenance_info">예상 유지 칼로리는 평소 하루에 소모하는 칼로리입니다. 프로필의 BMR(기초대사량)에 활동 수준을 곱해 계산합니다. 이보다 적게 먹으면 체중 감량을 위한 칼로리 적자, 많이 먹으면 체중 증가를 위한 칼로리 잉여가 됩니다. 표시되는 적자 또는 잉여는 칼로리 목표에서 이 추정치를 뺀 값입니다. 공식에 따른 추정치이므로 실제 소모량과 다를 수 있으며, 목표 재계산은 기록한 음식, 체중 추세 또는 측정된 에너지 소모를 바탕으로 목표를 정할 수도 있습니다. 이는 의학적 조언이 아닙니다.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -584,6 +595,9 @@
     <string name="settings_height_unit">키 단위</string>
     <string name="settings_weight_unit">체중 단위</string>
     <string name="settings_week_starts">주 시작 요일</string>
+    <string name="settings_energy_unit">에너지 단위</string>
+    <string name="settings_energy_unit_kcal">킬로칼로리 (kcal)</string>
+    <string name="settings_energy_unit_kj">킬로줄 (kJ)</string>
     <string name="settings_meal_times_customize">사용자 지정</string>
     <string name="settings_week_monday">월요일</string>
     <string name="settings_week_sunday">일요일</string>
@@ -721,6 +735,9 @@
     <string name="notif_streak_text">연속 기록을 유지하세요 — 오늘 먹은 음식을 기록해 보세요.</string>
     <string name="notif_summary_title">오늘의 요약이 준비되었어요</string>
     <string name="notif_summary_text">탭하여 오늘의 매크로 결과를 확인하세요.</string>
+    <string name="notif_summary_deficit_kj">섭취 %1$d kJ · 소모 %2$d kJ · 예상 적자 %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">섭취 %1$d kJ · 소모 %2$d kJ · 예상 잉여 %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">섭취 %1$d kJ · 소모 %2$d kJ · 예상 균형</string>
 
     <string name="onboarding_goal_optional">목표(선택)</string>
     <string name="onboarding_goal_set_later">나중에 설정에서 설정할 수 있습니다.</string>
@@ -749,6 +766,7 @@
     <string name="progress_workout_stat_days">일수</string>
     <string name="progress_workout_no_range">이 기간에 계산된 운동 소모량이 없습니다</string>
     <string name="progress_workout_chart_description">%1$s부터 %2$s까지의 운동 소모 차트. 총 %3$d킬로칼로리, 최근 %4$d킬로칼로리.</string>
+    <string name="progress_workout_chart_description_kj">%1$s부터 %2$s까지의 운동 소모 차트. 총 %3$d킬로줄, 최근 %4$d킬로줄.</string>
     <string name="workout_filter_source">출처</string>
     <string name="workout_source_dataset">데이터베이스</string>
     <string name="workout_source_saved">저장됨</string>
@@ -758,6 +776,8 @@
     <string name="workout_exercise_take_photo">사진 찍기</string>
     <string name="workout_exercise_camera_denied_title">카메라 접근 권한이 필요합니다</string>
     <string name="workout_exercise_camera_denied_message">운동 사진을 찍으려면 시스템 설정에서 Fud AI의 카메라 사용을 허용하세요.</string>
+    <string name="workout_exercise_ai_fill">AI로 채우기</string>
+    <string name="workout_exercise_ai_fill_hint">AI로 채우기는 이 사진을 사용 중인 AI 제공업체로 보냅니다. 저장하기 전에 제안된 내용을 확인하세요.</string>
     <string name="progress_steps_stat_total">합계</string>
     <string name="progress_steps_stat_average">평균</string>
     <string name="progress_steps_stat_best_day">최고 기록일</string>
