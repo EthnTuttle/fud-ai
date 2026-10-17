@@ -55,18 +55,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.EventAvailable
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -110,6 +116,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder
 import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.unit.Dp
@@ -118,12 +125,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.WorkoutDate
 import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
 import com.apoorvdarshan.calorietracker.models.SpeechLanguage
 import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.ui.navigation.BottomNavDockedControlPadding
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.io.ByteArrayOutputStream
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Base64
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
@@ -321,6 +332,9 @@ fun CoachScreen(container: AppContainer) {
                         sending = ui.sending,
                         error = resolvedError,
                         listState = listState,
+                        resolvingProposalIds = ui.resolvingProposalIds,
+                        onAddProposal = { message, proposal -> vm.addProposal(message.id, proposal.id) },
+                        onDismissProposal = { message, proposal -> vm.dismissProposal(message.id, proposal.id) },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -516,6 +530,9 @@ private fun MessageList(
     sending: Boolean,
     error: String?,
     listState: androidx.compose.foundation.lazy.LazyListState,
+    resolvingProposalIds: Set<String>,
+    onAddProposal: (ChatMessage, CoachExerciseProposal) -> Unit,
+    onDismissProposal: (ChatMessage, CoachExerciseProposal) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -524,7 +541,14 @@ private fun MessageList(
         contentPadding = PaddingValues(top = 14.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        items(messages, key = { it.id }) { MessageBubble(it) }
+        items(messages, key = { it.id }) { message ->
+            MessageBubble(
+                msg = message,
+                resolvingProposalIds = resolvingProposalIds,
+                onAddProposal = { onAddProposal(message, it) },
+                onDismissProposal = { onDismissProposal(message, it) }
+            )
+        }
 
         if (sending) {
             item("typing") {
@@ -620,14 +644,37 @@ private fun TypingIndicator() {
 }
 
 @Composable
-private fun MessageBubble(msg: ChatMessage) {
+private fun MessageBubble(
+    msg: ChatMessage,
+    resolvingProposalIds: Set<String> = emptySet(),
+    onAddProposal: (CoachExerciseProposal) -> Unit = {},
+    onDismissProposal: (CoachExerciseProposal) -> Unit = {}
+) {
     val isUser = msg.role == ChatMessage.Role.USER
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         verticalAlignment = Alignment.Top,
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        if (!isUser) {
+        if (!isUser && msg.proposals.isNotEmpty()) {
+            AssistantBadge()
+            Spacer(Modifier.width(8.dp))
+            Column(
+                modifier = Modifier.weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Bubble(content = msg.content, isUser = false)
+                msg.proposals.forEach { proposal ->
+                    ProposalCard(
+                        proposal = proposal,
+                        busy = proposal.id in resolvingProposalIds,
+                        onAdd = { onAddProposal(proposal) },
+                        onDismiss = { onDismissProposal(proposal) }
+                    )
+                }
+            }
+            Spacer(Modifier.width(48.dp))
+        } else if (!isUser) {
             AssistantBadge()
             Spacer(Modifier.width(8.dp))
             Bubble(content = msg.content, isUser = false)
@@ -658,6 +705,125 @@ private fun AssistantBadge() {
             tint = AppColors.Calorie
         )
     }
+}
+
+/**
+ * A workout change Coach proposed. Nothing is saved until the user taps Add; once resolved the
+ * card shows its outcome instead of the buttons. Port of iOS CoachProposalCard.
+ */
+@Composable
+private fun ProposalCard(
+    proposal: CoachExerciseProposal,
+    busy: Boolean,
+    onAdd: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val shape = RoundedCornerShape(16.dp)
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val isCustom = proposal.kind == CoachExerciseProposal.Kind.CUSTOM_EXERCISE
+    Column(
+        modifier = Modifier
+            .widthIn(max = 320.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.88f))
+            .background(AppColors.Calorie.copy(alpha = 0.045f))
+            .border(0.6.dp, AppColors.Calorie.copy(alpha = 0.18f), shape)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Icon(
+                if (isCustom) Icons.Filled.FitnessCenter else Icons.Filled.EventAvailable,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                stringResource(if (isCustom) R.string.coach_proposal_custom_title else R.string.coach_proposal_add_title),
+                color = AppColors.Calorie,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Text(proposal.name, color = onSurface, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+        proposalDetails(proposal).forEach { line ->
+            Text(line, color = onSurface.copy(alpha = 0.65f), fontSize = 13.sp, lineHeight = 18.sp)
+        }
+        if (proposal.instructions.isNotEmpty()) {
+            Text(
+                proposal.instructions.joinToString("\n"),
+                color = onSurface.copy(alpha = 0.65f),
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        when (proposal.status) {
+            CoachExerciseProposal.Status.PENDING -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(
+                    onClick = onAdd,
+                    enabled = !busy,
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie, contentColor = Color.White),
+                    modifier = Modifier.weight(1f).heightIn(min = 44.dp)
+                ) { Text(stringResource(R.string.coach_proposal_add), fontWeight = FontWeight.SemiBold) }
+                OutlinedButton(
+                    onClick = onDismiss,
+                    enabled = !busy,
+                    modifier = Modifier.weight(1f).heightIn(min = 44.dp)
+                ) { Text(stringResource(R.string.coach_proposal_dismiss), fontWeight = FontWeight.SemiBold) }
+            }
+            CoachExerciseProposal.Status.ADDED -> ProposalOutcome(
+                icon = Icons.Filled.CheckCircle,
+                text = stringResource(R.string.coach_proposal_added),
+                color = Color(0xFF34C759)
+            )
+            CoachExerciseProposal.Status.DISMISSED -> ProposalOutcome(
+                icon = Icons.Filled.Close,
+                text = stringResource(R.string.coach_proposal_dismissed),
+                color = onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProposalOutcome(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+        Text(text, color = color, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/** The card's detail lines, in the same order as iOS. Catalog values stay as the library shows them. */
+@Composable
+private fun proposalDetails(proposal: CoachExerciseProposal): List<String> {
+    val lines = mutableListOf<String>()
+    when (proposal.kind) {
+        CoachExerciseProposal.Kind.CUSTOM_EXERCISE -> {
+            proposal.category?.let { lines += stringResource(R.string.coach_proposal_category, it) }
+            proposal.equipment?.let { lines += stringResource(R.string.coach_proposal_equipment, it) }
+            if (proposal.primaryMuscles.isNotEmpty()) {
+                lines += stringResource(R.string.coach_proposal_primary_muscles, proposal.primaryMuscles.joinToString(", "))
+            }
+            if (proposal.secondaryMuscles.isNotEmpty()) {
+                lines += stringResource(R.string.coach_proposal_secondary_muscles, proposal.secondaryMuscles.joinToString(", "))
+            }
+        }
+        CoachExerciseProposal.Kind.ADD_TO_DAY -> {
+            val locale = LocalConfiguration.current.locales[0]
+            proposal.dateKey?.let(WorkoutDate::parse)?.let { day ->
+                val formatted = day.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale))
+                lines += stringResource(R.string.coach_proposal_date, formatted)
+            }
+            proposal.sets?.let { lines += stringResource(R.string.coach_proposal_sets, it) }
+            proposal.reps?.let { lines += stringResource(R.string.coach_proposal_reps, it) }
+            proposal.durationMinutes?.let { lines += stringResource(R.string.coach_proposal_duration, it) }
+        }
+    }
+    return lines
 }
 
 /**

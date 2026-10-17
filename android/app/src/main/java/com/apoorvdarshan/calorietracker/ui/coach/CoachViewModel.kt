@@ -6,11 +6,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
+import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.services.ai.AiError
+import com.apoorvdarshan.calorietracker.services.ai.CoachProposalApplier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +27,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Base64
+import java.util.UUID
 
 /**
  * Sealed wrapper around chip text — either a resource (for our preset chips,
@@ -39,7 +44,9 @@ data class CoachUiState(
     val sending: Boolean = false,
     val error: String? = null,
     val errorRes: Int? = null,
-    val suggestions: List<Int> = emptyList()
+    val suggestions: List<Int> = emptyList(),
+    /** Proposal cards whose Add or Dismiss is being saved; their buttons are disabled meanwhile. */
+    val resolvingProposalIds: Set<String> = emptySet()
 )
 
 class CoachViewModel(private val container: AppContainer) : ViewModel() {
@@ -120,11 +127,8 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                 val heightMetric = container.prefs.heightUnit.first() == "cm"
                 val weightMetric = container.prefs.weightUnit.first() == "kg"
                 val workoutState = container.workoutRepository.snapshot()
-                val exerciseLibrary = withContext(Dispatchers.IO) {
-                    ExerciseRepository.get(container.appContext)
-                        .includingActivities(workoutState.customActivities + workoutState.userExercises)
-                        .exercises
-                }
+                val exerciseLibrary = currentExerciseLibrary()
+                val proposals = CoachProposalCollector()
 
                 val reply = container.chatService.sendMessage(
                     history = history,
@@ -142,9 +146,12 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     workoutPlans = workoutState.dayPlans.values.toList(),
                     workoutPreferences = workoutState.preferences,
                     workoutPlanWeightUnit = if (weightMetric) WorkoutWeightUnit.KG else WorkoutWeightUnit.LBS,
-                    exerciseLibrary = exerciseLibrary
+                    exerciseLibrary = exerciseLibrary,
+                    proposals = proposals
                 )
-                container.chatRepository.append(ChatMessage(role = ChatMessage.Role.ASSISTANT, content = reply.trim()))
+                container.chatRepository.append(
+                    ChatMessage(role = ChatMessage.Role.ASSISTANT, content = reply.trim(), proposals = proposals.proposals)
+                )
                 _ui.value = _ui.value.copy(sending = false)
             } catch (e: AiError) {
                 logFailure(e)
@@ -161,6 +168,59 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
                     errorRes = if (e.localizedMessage.isNullOrBlank()) R.string.coach_chat_failed else null
                 )
             }
+        }
+    }
+
+    /**
+     * The user confirmed a Coach proposal. The repository runs the write only while the card is
+     * pending, so a second tap (or a card already added) never writes again.
+     */
+    fun addProposal(messageId: UUID, proposalId: String) = resolveProposal(proposalId) {
+        var failure: Int? = null
+        container.chatRepository.addProposal(messageId, proposalId) { proposal ->
+            val library = if (proposal.kind == CoachExerciseProposal.Kind.ADD_TO_DAY) currentExerciseLibrary() else emptyList()
+            when (CoachProposalApplier.apply(proposal, container.workoutRepository, container.imageStore, library)) {
+                CoachProposalApplier.Outcome.APPLIED -> true
+                CoachProposalApplier.Outcome.EXERCISE_MISSING -> {
+                    failure = R.string.coach_proposal_exercise_missing
+                    false
+                }
+                CoachProposalApplier.Outcome.SAVE_FAILED -> {
+                    failure = R.string.coach_proposal_save_failed
+                    false
+                }
+            }
+        }
+        failure?.let { _ui.value = _ui.value.copy(error = null, errorRes = it) }
+    }
+
+    fun dismissProposal(messageId: UUID, proposalId: String) = resolveProposal(proposalId) {
+        container.chatRepository.dismissProposal(messageId, proposalId)
+    }
+
+    private fun resolveProposal(proposalId: String, work: suspend () -> Unit) {
+        if (proposalId in _ui.value.resolvingProposalIds) return
+        _ui.value = _ui.value.copy(resolvingProposalIds = _ui.value.resolvingProposalIds + proposalId, error = null, errorRes = null)
+        viewModelScope.launch {
+            try {
+                work()
+            } catch (e: Throwable) {
+                ensureActive()
+                logFailure(e)
+                _ui.value = _ui.value.copy(error = null, errorRes = R.string.coach_proposal_save_failed)
+            } finally {
+                _ui.value = _ui.value.copy(resolvingProposalIds = _ui.value.resolvingProposalIds - proposalId)
+            }
+        }
+    }
+
+    /** Built-in catalog plus the user's custom activities and exercises. */
+    private suspend fun currentExerciseLibrary(): List<ExerciseItem> {
+        val workoutState = container.workoutRepository.snapshot()
+        return withContext(Dispatchers.IO) {
+            ExerciseRepository.get(container.appContext)
+                .includingActivities(workoutState.customActivities + workoutState.userExercises)
+                .exercises
         }
     }
 

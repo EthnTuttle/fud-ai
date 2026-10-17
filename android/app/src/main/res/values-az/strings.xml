@@ -456,6 +456,22 @@
     <string name="coach_reset_confirm">Sıfırla</string>
     <string name="coach_no_profile_error">Hələ profil yoxdur. Əvvəlcə qeydiyyatı tamamlayın.</string>
     <string name="coach_chat_failed">Söhbət alınmadı</string>
+    <string name="coach_proposal_custom_title">Yeni fərdi məşq</string>
+    <string name="coach_proposal_add_title">Məşqə əlavə et</string>
+    <string name="coach_proposal_add">Əlavə et</string>
+    <string name="coach_proposal_dismiss">Bağla</string>
+    <string name="coach_proposal_added">Əlavə edildi</string>
+    <string name="coach_proposal_dismissed">Rədd edildi</string>
+    <string name="coach_proposal_category">Kateqoriya: %1$s</string>
+    <string name="coach_proposal_equipment">Avadanlıq: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Əsas əzələlər: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">İkincili əzələlər: %1$s</string>
+    <string name="coach_proposal_date">Tarix: %1$s</string>
+    <string name="coach_proposal_sets">Setlər: %1$d</string>
+    <string name="coach_proposal_reps">Təkrarlar: %1$d</string>
+    <string name="coach_proposal_duration">Müddət: %1$d dəq</string>
+    <string name="coach_proposal_exercise_missing">Bu məşq artıq kitabxananızda deyil.</string>
+    <string name="coach_proposal_save_failed">Bu dəyişiklik yadda saxlanmadı. Yenidən cəhd edin.</string>
 
     <string name="coach_chip_predict_30_days">30 gün sonra gözlənilən çəkim nə qədər olacaq?</string>
     <string name="coach_chip_lose_faster">Təhlükəsiz şəkildə necə daha tez arıqlaya bilərəm?</string>

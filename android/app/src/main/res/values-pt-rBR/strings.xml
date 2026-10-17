@@ -457,6 +457,22 @@
     <string name="coach_reset_confirm">Redefinir</string>
     <string name="coach_no_profile_error">Nenhum perfil ainda. Conclua a configuração inicial primeiro.</string>
     <string name="coach_chat_failed">Falha no chat</string>
+    <string name="coach_proposal_custom_title">Novo exercício personalizado</string>
+    <string name="coach_proposal_add_title">Adicionar ao treino</string>
+    <string name="coach_proposal_add">Adicionar</string>
+    <string name="coach_proposal_dismiss">Dispensar</string>
+    <string name="coach_proposal_added">Adicionado</string>
+    <string name="coach_proposal_dismissed">Dispensado</string>
+    <string name="coach_proposal_category">Categoria: %1$s</string>
+    <string name="coach_proposal_equipment">Equipamento: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Músculos principais: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">Músculos secundários: %1$s</string>
+    <string name="coach_proposal_date">Data: %1$s</string>
+    <string name="coach_proposal_sets">Séries: %1$d</string>
+    <string name="coach_proposal_reps">Repetições: %1$d</string>
+    <string name="coach_proposal_duration">Duração: %1$d min</string>
+    <string name="coach_proposal_exercise_missing">Este exercício não está mais na sua biblioteca.</string>
+    <string name="coach_proposal_save_failed">Não foi possível salvar esta alteração. Tente novamente.</string>
 
     <string name="coach_chip_predict_30_days">Qual será meu peso em 30 dias?</string>
     <string name="coach_chip_lose_faster">Como emagrecer mais rápido com segurança?</string>

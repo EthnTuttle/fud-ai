@@ -525,6 +525,22 @@
     <string name="coach_reset_confirm">Reset</string>
     <string name="coach_no_profile_error">No profile yet. Finish onboarding first.</string>
     <string name="coach_chat_failed">Chat failed</string>
+    <string name="coach_proposal_custom_title">New custom exercise</string>
+    <string name="coach_proposal_add_title">Add to workout</string>
+    <string name="coach_proposal_add">Add</string>
+    <string name="coach_proposal_dismiss">Dismiss</string>
+    <string name="coach_proposal_added">Added</string>
+    <string name="coach_proposal_dismissed">Dismissed</string>
+    <string name="coach_proposal_category">Category: %1$s</string>
+    <string name="coach_proposal_equipment">Equipment: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Primary muscles: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">Secondary muscles: %1$s</string>
+    <string name="coach_proposal_date">Date: %1$s</string>
+    <string name="coach_proposal_sets">Sets: %1$d</string>
+    <string name="coach_proposal_reps">Reps: %1$d</string>
+    <string name="coach_proposal_duration">Duration: %1$d min</string>
+    <string name="coach_proposal_exercise_missing">This exercise is no longer in your library.</string>
+    <string name="coach_proposal_save_failed">Couldn\'t save this change. Try again.</string>
 
     <string name="coach_chip_predict_30_days">What\'s my expected weight in 30 days?</string>
     <string name="coach_chip_lose_faster">How do I lose weight faster safely?</string>

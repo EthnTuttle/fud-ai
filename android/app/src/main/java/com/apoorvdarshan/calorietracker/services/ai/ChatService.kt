@@ -7,6 +7,7 @@ import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
 import com.apoorvdarshan.calorietracker.models.ChatMessage
+import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
 import com.apoorvdarshan.calorietracker.models.UserProfile
@@ -66,7 +67,8 @@ class ChatService(
         workoutPlans: List<WorkoutDayPlan> = emptyList(),
         workoutPreferences: WorkoutPreferences = WorkoutPreferences(),
         workoutPlanWeightUnit: WorkoutWeightUnit = WorkoutWeightUnit.LBS,
-        exerciseLibrary: List<ExerciseItem> = emptyList()
+        exerciseLibrary: List<ExerciseItem> = emptyList(),
+        proposals: CoachProposalCollector? = null
     ): String {
         val baseSystemPrompt = buildSystemPrompt(
             profile = profile,
@@ -78,7 +80,8 @@ class ChatService(
             heightMetric = heightMetric,
             weightMetric = weightMetric,
             workoutSessions = workoutSessions,
-            workoutPlans = workoutPlans
+            workoutPlans = workoutPlans,
+            canProposeWorkoutChanges = proposals != null
         )
         val userContext = prefs.userContext.first()
         val systemPrompt = if (userContext.isNotBlank())
@@ -93,13 +96,15 @@ class ChatService(
             workoutPlans = workoutPlans,
             workoutPreferences = workoutPreferences,
             workoutPlanWeightUnit = workoutPlanWeightUnit,
-            exerciseLibrary = exerciseLibrary
+            exerciseLibrary = exerciseLibrary,
+            proposals = proposals
         )
 
         if (hosted != null && prefs.aiAccessMode.first() == AiAccessMode.HOSTED) {
             // Hosted Coach: same Gemini tool loop, sent through the Worker's /gemini
             // allow-list. Every round is one metered action; no BYOK fallback.
             hosted.requireEntitlement()
+            proposals?.reset()
             return runGeminiToolLoop(
                 systemPrompt, history, newUserMessage, tools, imageBytes,
                 maxToolResultChars = HostedAiConstants.MAX_TOOL_RESULT_CHARS
@@ -125,6 +130,7 @@ class ChatService(
         val requestTimeoutSeconds = prefs.aiRequestTimeoutSeconds.first()
 
         return try {
+            proposals?.reset()
             runProvider(
                 provider, model, baseUrl, apiKey, systemPrompt, history, newUserMessage,
                 tools, imageBytes, maxTokens, requestTimeoutSeconds
@@ -137,6 +143,8 @@ class ChatService(
                 primaryModel = model,
                 primaryBaseUrl = baseUrl
             ) ?: throw primaryError
+            // The fallback answers from scratch, so cards from the failed attempt are dropped.
+            proposals?.reset()
             runProvider(
                 fallback.provider, fallback.model, fallback.baseUrl, fallback.apiKey,
                 systemPrompt, history, newUserMessage, tools, imageBytes, maxTokens,
@@ -162,7 +170,7 @@ class ChatService(
             val conversation = buildString {
                 history.takeLast(12).forEach { message ->
                     append(if (message.role == ChatMessage.Role.USER) "User: " else "Assistant: ")
-                    appendLine(message.content)
+                    appendLine(message.contextContent)
                 }
                 append("User: ")
                 append(newUserMessage)
@@ -246,7 +254,8 @@ class ChatService(
         heightMetric: Boolean,
         weightMetric: Boolean,
         workoutSessions: List<WorkoutSession> = emptyList(),
-        workoutPlans: List<WorkoutDayPlan> = emptyList()
+        workoutPlans: List<WorkoutDayPlan> = emptyList(),
+        canProposeWorkoutChanges: Boolean = false
     ): String {
         val zone = ZoneId.systemDefault()
         val currentDate = LocalDate.now(zone).format(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -270,6 +279,9 @@ class ChatService(
         lines.add("- \"What workout do I have planned?\" → call get_workout_plans")
         lines.add("- A photo of a gym machine, or \"is this exercise in my library?\" → identify the exercise, then call search_exercise_library(query)")
         lines.add("- Use get_workout_preferences when injuries, available equipment, split, schedule, RPE scale, or strength baselines affect the answer.")
+        if (canProposeWorkoutChanges) {
+            lines.add("- \"Add this to my workout\" → search_exercise_library, then propose_add_exercise_to_day. A gym machine that is not in the library → propose_custom_exercise. These only show the user a card to confirm; nothing is saved until they tap Add, so never say a change was made.")
+        }
         lines.add("Do NOT call tools for questions you can answer from the profile/forecast below.")
         lines.add("")
         lines.addAll(
@@ -310,7 +322,7 @@ class ChatService(
         val url = "$baseUrl/chat/completions"
         // OpenAI tool schema: {type:function, function:{name, description, parameters}}
         val toolsArr = JSONArray()
-        for (name in CoachTools.TOOL_NAMES) {
+        for (name in tools.availableToolNames) {
             toolsArr.put(JSONObject().apply {
                 put("type", "function")
                 put("function", JSONObject().apply {
@@ -326,7 +338,7 @@ class ChatService(
         messages.put(JSONObject().put("role", "system").put("content", systemPrompt))
         for (msg in history) {
             val role = if (msg.role == ChatMessage.Role.USER) "user" else "assistant"
-            messages.put(JSONObject().put("role", role).put("content", msg.content))
+            messages.put(JSONObject().put("role", role).put("content", msg.contextContent))
         }
         messages.put(JSONObject().put("role", "user").put("content", openAIUserContent(newUserMessage, imageBytes)))
 
@@ -424,7 +436,7 @@ class ChatService(
         val url = "$baseUrl/messages"
         // Anthropic tool schema: {name, description, input_schema}
         val toolsArr = JSONArray()
-        for (name in CoachTools.TOOL_NAMES) {
+        for (name in tools.availableToolNames) {
             toolsArr.put(JSONObject().apply {
                 put("name", name)
                 put("description", CoachTools.TOOL_DESCRIPTIONS[name] ?: "")
@@ -436,7 +448,7 @@ class ChatService(
         val messages = JSONArray()
         for (msg in history) {
             val role = if (msg.role == ChatMessage.Role.USER) "user" else "assistant"
-            messages.put(JSONObject().put("role", role).put("content", msg.content))
+            messages.put(JSONObject().put("role", role).put("content", msg.contextContent))
         }
         messages.put(JSONObject().put("role", "user").put("content", anthropicUserContent(newUserMessage, imageBytes)))
 
@@ -516,7 +528,7 @@ class ChatService(
     ): String {
         // Gemini tool schema: tools=[{functionDeclarations:[{name,description,parameters}]}]
         val declarations = JSONArray()
-        for (name in CoachTools.TOOL_NAMES) {
+        for (name in tools.availableToolNames) {
             declarations.put(JSONObject().apply {
                 put("name", name)
                 put("description", CoachTools.TOOL_DESCRIPTIONS[name] ?: "")
@@ -532,7 +544,7 @@ class ChatService(
             val role = if (msg.role == ChatMessage.Role.USER) "user" else "model"
             contents.put(JSONObject().apply {
                 put("role", role)
-                put("parts", JSONArray().put(JSONObject().put("text", msg.content)))
+                put("parts", JSONArray().put(JSONObject().put("text", msg.contextContent)))
             })
         }
         contents.put(JSONObject().apply {

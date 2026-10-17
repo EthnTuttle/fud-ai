@@ -517,6 +517,22 @@
     <string name="coach_reset_confirm">Sıfırla</string>
     <string name="coach_no_profile_error">Henüz profil yok. Önce ilk kurulumu tamamlayın.</string>
     <string name="coach_chat_failed">Sohbet başarısız oldu</string>
+    <string name="coach_proposal_custom_title">Yeni özel egzersiz</string>
+    <string name="coach_proposal_add_title">Antrenmana ekle</string>
+    <string name="coach_proposal_add">Ekle</string>
+    <string name="coach_proposal_dismiss">Kapat</string>
+    <string name="coach_proposal_added">Eklendi</string>
+    <string name="coach_proposal_dismissed">Reddedildi</string>
+    <string name="coach_proposal_category">Kategori: %1$s</string>
+    <string name="coach_proposal_equipment">Ekipman: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Birincil kaslar: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">İkincil kaslar: %1$s</string>
+    <string name="coach_proposal_date">Tarih: %1$s</string>
+    <string name="coach_proposal_sets">Setler: %1$d</string>
+    <string name="coach_proposal_reps">Tekrarlar: %1$d</string>
+    <string name="coach_proposal_duration">Süre: %1$d dk</string>
+    <string name="coach_proposal_exercise_missing">Bu egzersiz artık kitaplığınızda yok.</string>
+    <string name="coach_proposal_save_failed">Bu değişiklik kaydedilemedi. Tekrar deneyin.</string>
 
     <string name="coach_chip_predict_30_days">30 gün içindeki beklenen kilom ne olacak?</string>
     <string name="coach_chip_lose_faster">Nasıl daha hızlı ve güvenli kilo verebilirim?</string>

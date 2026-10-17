@@ -516,6 +516,22 @@
     <string name="coach_reset_confirm">Скинути</string>
     <string name="coach_no_profile_error">Профіль ще не створено. Спочатку завершіть налаштування.</string>
     <string name="coach_chat_failed">Помилка чату</string>
+    <string name="coach_proposal_custom_title">Нова власна вправа</string>
+    <string name="coach_proposal_add_title">Додати до тренування</string>
+    <string name="coach_proposal_add">Додати</string>
+    <string name="coach_proposal_dismiss">Закрити</string>
+    <string name="coach_proposal_added">Додано</string>
+    <string name="coach_proposal_dismissed">Відхилено</string>
+    <string name="coach_proposal_category">Категорія: %1$s</string>
+    <string name="coach_proposal_equipment">Обладнання: %1$s</string>
+    <string name="coach_proposal_primary_muscles">Основні м’язи: %1$s</string>
+    <string name="coach_proposal_secondary_muscles">Додаткові м’язи: %1$s</string>
+    <string name="coach_proposal_date">Дата: %1$s</string>
+    <string name="coach_proposal_sets">Підходи: %1$d</string>
+    <string name="coach_proposal_reps">Повторення: %1$d</string>
+    <string name="coach_proposal_duration">Тривалість: %1$d хв</string>
+    <string name="coach_proposal_exercise_missing">Цієї вправи більше немає у вашій бібліотеці.</string>
+    <string name="coach_proposal_save_failed">Не вдалося зберегти зміну. Спробуйте ще раз.</string>
 
     <string name="coach_chip_predict_30_days">Якою буде моя очікувана вага через 30 днів?</string>
     <string name="coach_chip_lose_faster">Як безпечно схуднути швидше?</string>
