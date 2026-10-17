@@ -78,6 +78,28 @@ struct WorkoutRestTimer: Equatable {
         return !wasLogged && isLogged
     }
 
+    /// The set stepper adds the next set prefilled from the one before it, so
+    /// its reps never go from blank to filled. Adding a set with the stepper
+    /// therefore finishes the previous one: returns that set when its reps are
+    /// filled in and it should rest now. A rest that is still counting down for
+    /// it keeps running, so adding sets ahead never restarts it.
+    static func setFinishedByAddingSets(
+        before: [StrengthPlannedSet],
+        after: [StrengthPlannedSet],
+        restSeconds: Int,
+        isToday: Bool,
+        running: WorkoutRestTimer?,
+        now: Date = .now
+    ) -> UUID? {
+        guard let finished = before.last,
+              after.count > before.count,
+              after.contains(where: { $0.id == finished.id }),
+              shouldStart(previousReps: "", newReps: finished.reps, restSeconds: restSeconds, isToday: isToday)
+        else { return nil }
+        if let running, running.setID == finished.id, !running.isFinished(at: now) { return nil }
+        return finished.id
+    }
+
     /// "m:ss", the same in every language.
     static func clockText(seconds: Int) -> String {
         let safe = max(0, seconds)

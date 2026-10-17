@@ -76,6 +76,29 @@ data class WorkoutRestTimer(
         fun shouldStart(previousReps: String, newReps: String, restSeconds: Int, isToday: Boolean): Boolean =
             restSeconds > 0 && isToday && previousReps.isBlank() && newReps.isNotBlank()
 
+        /**
+         * The set stepper adds the next set prefilled from the one before it, so its reps never
+         * go from blank to filled. Adding a set with the stepper therefore finishes the previous
+         * one: returns that set when its reps are filled in and it should rest now. A rest that
+         * is still counting down for it keeps running, so adding sets ahead never restarts it.
+         */
+        fun setFinishedByAddingSets(
+            setsBefore: List<PlannedSet>,
+            setsAfter: List<PlannedSet>,
+            restSeconds: Int,
+            isToday: Boolean,
+            running: WorkoutRestTimer?,
+            at: Instant = Instant.now()
+        ): UUID? {
+            val finished = setsBefore.lastOrNull() ?: return null
+            if (setsAfter.size <= setsBefore.size || setsAfter.none { it.id == finished.id }) return null
+            if (!shouldStart(previousReps = "", newReps = finished.reps, restSeconds = restSeconds, isToday = isToday)) {
+                return null
+            }
+            if (running != null && running.setId == finished.id && !running.isFinished(at)) return null
+            return finished.id
+        }
+
         /** "m:ss", the same in every language. */
         fun clockText(seconds: Long): String {
             val safe = seconds.coerceAtLeast(0)

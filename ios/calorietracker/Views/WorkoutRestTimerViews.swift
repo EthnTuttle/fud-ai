@@ -25,14 +25,20 @@ struct WorkoutRestTimerBar: View {
                 .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 1) {
+                    // The countdown is what the bar is for, so it never truncates
+                    // or wraps: a long translation of Rest gives way instead.
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text("Rest")
                             .font(.system(.caption, design: .rounded, weight: .heavy))
                             .foregroundStyle(Color.workoutMutedText)
+                            .lineLimit(1)
                         Text(WorkoutRestTimer.clockText(seconds: timer.remainingSeconds(at: context.date)))
                             .font(.system(.title3, design: .rounded, weight: .heavy).monospacedDigit())
                             .foregroundStyle(Color.workoutCharcoal)
                             .contentTransition(.numericText(countsDown: true))
+                            .lineLimit(1)
+                            .fixedSize()
+                            .layoutPriority(1)
                     }
                     Text(timer.exerciseName)
                         .font(.system(.caption2, design: .rounded, weight: .semibold))

@@ -288,9 +288,26 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.moveExercise(exerciseId, date, offset) }
     }
 
+    /** On today's log, adding a set with the stepper finishes the previous set and starts its rest. */
     fun setSetCount(exerciseId: UUID, count: Int) {
         val date = diaryUiState.selectedDate
-        viewModelScope.launch { workoutRepository?.setSetCount(count, exerciseId, date) }
+        viewModelScope.launch {
+            val repository = workoutRepository ?: return@launch
+            suspend fun exercise() = repository.planNow(date).exercises.firstOrNull { it.id == exerciseId }
+            val before = exercise()
+            repository.setSetCount(count, exerciseId, date)
+            val after = exercise() ?: return@launch
+            if (before == null || after.isCardio) return@launch
+            val restSeconds = diaryUiState.preferences.restTimerSeconds
+            val finishedSetId = WorkoutRestTimer.setFinishedByAddingSets(
+                setsBefore = before.sets,
+                setsAfter = after.sets,
+                restSeconds = restSeconds,
+                isToday = date == LocalDate.now(),
+                running = restTimer?.timer?.value
+            ) ?: return@launch
+            restTimer?.start(exerciseId, finishedSetId, after.name, restSeconds)
+        }
     }
 
     fun updateTimer(exerciseId: UUID, action: ExerciseTimerAction) {

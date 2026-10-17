@@ -95,6 +95,57 @@ struct WorkoutRestTimerTests {
         #expect(!WorkoutRestTimer.shouldStart(previousReps: "", newReps: "8", restSeconds: 90, isToday: false))
     }
 
+    @Test func addingASetWithTheStepperFinishesThePreviousLoggedSet() throws {
+        let first = StrengthPlannedSet(weight: "60", reps: "8")
+        let second = first.copyingFromPrevious()
+        let third = second.copyingFromPrevious()
+        func finished(
+            _ before: [StrengthPlannedSet],
+            _ after: [StrengthPlannedSet],
+            restSeconds: Int = 90,
+            isToday: Bool = true,
+            running: WorkoutRestTimer? = nil,
+            at now: Date? = nil
+        ) -> UUID? {
+            WorkoutRestTimer.setFinishedByAddingSets(
+                before: before,
+                after: after,
+                restSeconds: restSeconds,
+                isToday: isToday,
+                running: running,
+                now: now ?? start
+            )
+        }
+
+        // The new set arrives with the reps already filled in, so typing never starts its rest.
+        #expect(second.reps == "8")
+        #expect(finished([first], [first, second]) == first.id)
+        #expect(finished([first, second], [first, second, third]) == second.id)
+
+        // A set whose reps are still blank is not logged yet, and removing or keeping sets logs nothing.
+        let blank = StrengthPlannedSet()
+        #expect(finished([blank], [blank, blank.copyingFromPrevious()]) == nil)
+        #expect(finished([first, second], [first]) == nil)
+        #expect(finished([first], [first]) == nil)
+        #expect(finished([], [first]) == nil)
+        // Off, or planning/back-filling another day.
+        #expect(finished([first], [first, second], restSeconds: 0) == nil)
+        #expect(finished([first], [first, second], isToday: false) == nil)
+
+        // Adding sets ahead while the previous set rests keeps that countdown; once it ran out,
+        // or while another set rests, the previous set starts its own rest.
+        let resting = try #require(WorkoutRestTimer(
+            exerciseID: exerciseID,
+            setID: first.id,
+            exerciseName: "Bench Press",
+            durationSeconds: 90,
+            now: start
+        ))
+        #expect(finished([first], [first, second], running: resting, at: start.addingTimeInterval(30)) == nil)
+        #expect(finished([first], [first, second], running: resting, at: start.addingTimeInterval(90)) == first.id)
+        #expect(finished([first, second], [first, second, third], running: resting) == second.id)
+    }
+
     @Test func clockTextIsMinutesAndPaddedSeconds() {
         #expect(WorkoutRestTimer.clockText(seconds: 90) == "1:30")
         #expect(WorkoutRestTimer.clockText(seconds: 5) == "0:05")
@@ -244,6 +295,38 @@ struct WorkoutRoutineTests {
         for set in try #require(store.exercises(for: monday).first { $0.itemID == "bench" }).sets {
             store.updateSet(exerciseID: bench.id, setID: set.id, on: monday, weight: "60", weightUnit: .kg, reps: "10", rpe: "8")
         }
+    }
+
+    @Test func steppingUpAfterALoggedSetRestsThatSetEachTime() throws {
+        let fixture = WorkoutTestFixture()
+        defer { fixture.cleanUp() }
+        let store = fixture.makeStore()
+        store.toggleExercise(WorkoutTestFixture.exercise(id: "bench", name: "Bench Press"), on: monday)
+        let bench = try #require(store.exercises(for: monday).first)
+        let firstSetID = try #require(bench.sets.first).id
+        store.updateSet(exerciseID: bench.id, setID: firstSetID, on: monday, weight: "60", weightUnit: .kg, reps: "8")
+        func sets() -> [StrengthPlannedSet] { store.exercises(for: monday).first?.sets ?? [] }
+
+        // What the workout log does when + is tapped: compare the sets before and after.
+        func restAfterAddingSet() -> UUID? {
+            let before = sets()
+            store.setSetCount(before.count + 1, exerciseID: bench.id, on: monday)
+            return WorkoutRestTimer.setFinishedByAddingSets(
+                before: before,
+                after: sets(),
+                restSeconds: 90,
+                isToday: true,
+                running: nil
+            )
+        }
+
+        let first = try #require(sets().first)
+        #expect(restAfterAddingSet() == first.id)
+        // Set 2 arrived with set 1's reps, so adding set 3 finishes set 2 without any typing.
+        let second = sets()[1]
+        #expect(second.reps == "8")
+        #expect(restAfterAddingSet() == second.id)
+        #expect(sets().count == 3)
     }
 
     @Test func savingKeepsTheDaysPlanAndRejectsEmptyDaysAndNames() throws {

@@ -98,6 +98,43 @@ class WorkoutRestTimerTest {
     }
 
     @Test
+    fun addingASetWithTheStepperFinishesThePreviousLoggedSet() {
+        val first = PlannedSet(weight = "60", reps = "8")
+        val second = first.copyingFromPrevious()
+        val third = second.copyingFromPrevious()
+        fun finished(
+            before: List<PlannedSet>,
+            after: List<PlannedSet>,
+            restSeconds: Int = 90,
+            isToday: Boolean = true,
+            running: WorkoutRestTimer? = null,
+            at: Instant = start
+        ) = WorkoutRestTimer.setFinishedByAddingSets(before, after, restSeconds, isToday, running, at)
+
+        // The new set arrives with the reps already filled in, so typing never starts its rest.
+        assertEquals("8", second.reps)
+        assertEquals(first.id, finished(listOf(first), listOf(first, second)))
+        assertEquals(second.id, finished(listOf(first, second), listOf(first, second, third)))
+
+        // A set whose reps are still blank is not logged yet, and removing or keeping sets logs nothing.
+        val blank = PlannedSet()
+        assertNull(finished(listOf(blank), listOf(blank, blank.copyingFromPrevious())))
+        assertNull(finished(listOf(first, second), listOf(first)))
+        assertNull(finished(listOf(first), listOf(first)))
+        assertNull(finished(emptyList(), listOf(first)))
+        // Off, or planning/back-filling another day.
+        assertNull(finished(listOf(first), listOf(first, second), restSeconds = 0))
+        assertNull(finished(listOf(first), listOf(first, second), isToday = false))
+
+        // Adding sets ahead while the previous set rests keeps that countdown; once it ran out,
+        // or while another set rests, the previous set starts its own rest.
+        val resting = requireNotNull(WorkoutRestTimer.start(exerciseId, first.id, "Bench Press", 90, start))
+        assertNull(finished(listOf(first), listOf(first, second), running = resting, at = start.plusSeconds(30)))
+        assertEquals(first.id, finished(listOf(first), listOf(first, second), running = resting, at = start.plusSeconds(90)))
+        assertEquals(second.id, finished(listOf(first, second), listOf(first, second, third), running = resting))
+    }
+
+    @Test
     fun clockTextIsMinutesAndPaddedSeconds() {
         assertEquals("1:30", WorkoutRestTimer.clockText(90))
         assertEquals("0:05", WorkoutRestTimer.clockText(5))

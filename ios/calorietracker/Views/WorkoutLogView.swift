@@ -358,7 +358,7 @@ struct WorkoutLogView: View {
                                         workoutStore.setTimerIntensity(intensity, exerciseID: exercise.id, on: selectedDate)
                                     },
                                     updateSetCount: { count in
-                                        workoutStore.setSetCount(count, exerciseID: exercise.id, on: selectedDate)
+                                        changeSetCount(count, exercise: exercise)
                                     },
                                     updateWeight: { setID, value in
                                         workoutStore.updateSet(
@@ -752,6 +752,25 @@ struct WorkoutLogView: View {
 
     private func currentReps(setID: UUID, exerciseID: UUID) -> String {
         selectedExercises.first { $0.id == exerciseID }?.sets.first { $0.id == setID }?.reps ?? ""
+    }
+
+    /// On today's log, adding a set with the stepper finishes the previous set
+    /// and starts its rest.
+    private func changeSetCount(_ count: Int, exercise: StrengthPlannedExercise) {
+        let before = currentSets(exerciseID: exercise.id)
+        workoutStore.setSetCount(count, exerciseID: exercise.id, on: selectedDate)
+        guard let setID = WorkoutRestTimer.setFinishedByAddingSets(
+            before: before,
+            after: currentSets(exerciseID: exercise.id),
+            restSeconds: workoutStore.preferences.restSeconds,
+            isToday: Calendar.current.isDateInToday(selectedDate),
+            running: restTimer.timer
+        ) else { return }
+        startRest(after: setID, in: exercise)
+    }
+
+    private func currentSets(exerciseID: UUID) -> [StrengthPlannedSet] {
+        selectedExercises.first { $0.id == exerciseID }?.sets ?? []
     }
 
     private func startRest(after setID: UUID, in exercise: StrengthPlannedExercise) {

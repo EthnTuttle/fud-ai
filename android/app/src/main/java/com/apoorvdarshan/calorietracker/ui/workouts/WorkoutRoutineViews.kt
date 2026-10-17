@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +32,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -46,6 +49,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -53,6 +58,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -86,75 +92,110 @@ internal fun WorkoutRestTimerBar(
     }
     val addDescription = stringResource(R.string.workout_rest_add_15_description)
     val skipDescription = stringResource(R.string.workout_rest_skip_description)
+    val clock = WorkoutRestTimer.clockText(timer.remainingSeconds(now))
+    val clockStyle = LocalTextStyle.current.copy(fontSize = 20.sp, fontWeight = FontWeight.Black)
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
     FudGlassSurface(modifier = modifier.fillMaxWidth(), cornerRadius = 22.dp, padding = 0.dp) {
-        Row(
-            modifier = Modifier.padding(start = 12.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    progress = { 1f - timer.progress(now) },
-                    modifier = Modifier.fillMaxSize(),
-                    color = AppColors.Calorie,
-                    trackColor = AppColors.Calorie.copy(alpha = 0.18f),
-                    strokeWidth = 4.dp
-                )
-                Icon(
-                    Icons.Outlined.HourglassTop,
-                    contentDescription = null,
-                    tint = AppColors.Calorie,
-                    modifier = Modifier.size(16.dp)
-                )
+        BoxWithConstraints(Modifier.padding(start = 12.dp, end = 10.dp, top = 10.dp, bottom = 10.dp)) {
+            // The countdown is what the bar is for, so it always keeps its full width: with long
+            // translations or very large text the buttons and the Rest label give way instead.
+            // Whole pixels, the way the row lays them out, so the clock is never a pixel short.
+            val controlsMaxWidth = with(density) {
+                val clockWidth = textMeasurer.measure(clock, clockStyle, softWrap = false, maxLines = 1).size.width
+                val reserved = RestRingSize.roundToPx() + RestBarSpacing.roundToPx() * 2 + clockWidth
+                (constraints.maxWidth - reserved).coerceAtLeast(0).toDp()
             }
-            Column(
-                modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {},
-                verticalArrangement = Arrangement.spacedBy(1.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(RestBarSpacing)
             ) {
-                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        stringResource(R.string.workout_rest_label),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 3.dp)
+                Box(Modifier.size(RestRingSize), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        progress = { 1f - timer.progress(now) },
+                        modifier = Modifier.fillMaxSize(),
+                        color = AppColors.Calorie,
+                        trackColor = AppColors.Calorie.copy(alpha = 0.18f),
+                        strokeWidth = 4.dp
                     )
-                    Text(
-                        WorkoutRestTimer.clockText(timer.remainingSeconds(now)),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black
+                    Icon(
+                        Icons.Outlined.HourglassTop,
+                        contentDescription = null,
+                        tint = AppColors.Calorie,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
-                Text(
-                    timer.exerciseName,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Column(
+                    modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {},
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            stringResource(R.string.workout_rest_label),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            // Weighted, so it is measured after the clock and only gets what is left.
+                            modifier = Modifier.weight(1f, fill = false).padding(end = 6.dp, bottom = 3.dp)
+                        )
+                        Text(
+                            clock,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = clockStyle,
+                            maxLines = 1,
+                            softWrap = false,
+                            modifier = Modifier.testTag(RestClockTestTag)
+                        )
+                    }
+                    Text(
+                        timer.exerciseName,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.58f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Row(
+                    modifier = Modifier.widthIn(max = controlsMaxWidth),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(RestBarSpacing)
+                ) {
+                    WorkoutRestPill(
+                        text = stringResource(R.string.workout_rest_add_15),
+                        description = addDescription,
+                        filled = false,
+                        onClick = onExtend
+                    )
+                    WorkoutRestPill(
+                        text = stringResource(R.string.workout_rest_skip),
+                        description = skipDescription,
+                        filled = true,
+                        onClick = onSkip,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                }
             }
-            WorkoutRestPill(
-                text = stringResource(R.string.workout_rest_add_15),
-                description = addDescription,
-                filled = false,
-                onClick = onExtend
-            )
-            WorkoutRestPill(
-                text = stringResource(R.string.workout_rest_skip),
-                description = skipDescription,
-                filled = true,
-                onClick = onSkip
-            )
         }
     }
 }
 
+private val RestRingSize = 38.dp
+private val RestBarSpacing = 10.dp
+internal const val RestClockTestTag = "workout.rest.clock"
+
 @Composable
-private fun WorkoutRestPill(text: String, description: String, filled: Boolean, onClick: () -> Unit) {
+private fun WorkoutRestPill(
+    text: String,
+    description: String,
+    filled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .minimumInteractiveComponentSize()
             .clip(CircleShape)
             .background(if (filled) AppColors.Calorie else AppColors.Calorie.copy(alpha = 0.13f))
@@ -168,7 +209,8 @@ private fun WorkoutRestPill(text: String, description: String, filled: Boolean, 
             color = if (filled) Color.White else AppColors.Calorie,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
