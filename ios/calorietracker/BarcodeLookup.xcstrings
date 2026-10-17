@@ -27,6 +27,96 @@
             "state": "translated",
             "value": "Çevrimdışı görünüyorsunuz. Bağlantınızı kontrol edip tekrar taramayı deneyin."
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبدو أنك غير متصل بالإنترنت. تحقق من اتصالك وحاول المسح مرة أخرى."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deyəsən, oflayn rejimdəsiniz. Bağlantınızı yoxlayıb yenidən skan edin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vypadá to, že jsi offline. Zkontroluj připojení a zkus skenovat znovu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du scheinst offline zu sein. Prüfe deine Verbindung und scanne erneut."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous semblez hors ligne. Vérifiez votre connexion et réessayez de scanner."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लगता है आप ऑफ़लाइन हैं। अपना कनेक्शन जाँचें और फिर से स्कैन करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sembra che tu sia offline. Controlla la connessione e riprova la scansione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフラインのようです。接続を確認して、もう一度スキャンしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오프라인 상태인 것 같습니다. 연결을 확인하고 다시 스캔하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lijkt offline te zijn. Controleer je verbinding en scan opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wygląda na to, że jesteś offline. Sprawdź połączenie i zeskanuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parece que você está offline. Verifique sua conexão e escaneie novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se pare că ești offline. Verifică-ți conexiunea și scanează din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Похоже, вы не в сети. Проверьте подключение и отсканируйте ещё раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你似乎处于离线状态。请检查网络连接后重新扫描。"
+          }
         }
       }
     },
@@ -55,6 +145,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Food Facts yanıt vermek için çok uzun sürdü. Tekrar taramayı deneyin."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استغرق Open Food Facts وقتًا طويلًا للرد. حاول المسح مرة أخرى."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts cavab vermək üçün çox vaxt sərf etdi. Yenidən skan edin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts odpovídal příliš dlouho. Zkus skenovat znovu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts hat zu lange gebraucht. Scanne erneut."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts a mis trop de temps à répondre. Réessayez de scanner."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts ने जवाब देने में बहुत समय लिया। फिर से स्कैन करें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts ha impiegato troppo a rispondere. Riprova la scansione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Factsの応答に時間がかかりすぎました。もう一度スキャンしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts의 응답이 너무 오래 걸렸습니다. 다시 스캔하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts deed er te lang over. Scan opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts odpowiadało zbyt długo. Zeskanuj ponownie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Open Food Facts demorou demais para responder. Escaneie novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts a răspuns prea greu. Scanează din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts отвечал слишком долго. Отсканируйте ещё раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts 响应时间过长。请重新扫描。"
           }
         }
       }
@@ -170,6 +350,12 @@
             "state": "translated",
             "value": "Bu barkod okunamadı. Tekrar taramayı deneyin."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Čárový kód se nepodařilo přečíst. Zkus ho naskenovat znovu."
+          }
         }
       }
     },
@@ -283,6 +469,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open Food Facts beklenmedik bir yanıt döndürdü."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts vrátil neočekávanou odpověď."
           }
         }
       }
@@ -398,6 +590,12 @@
             "state": "translated",
             "value": "Bu barkod bulundu ancak besin verisi eksik. Bunun yerine besin etiketini tarayın."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Čárový kód byl nalezen, ale nutriční údaje jsou neúplné. Naskenuj raději nutriční etiketu."
+          }
         }
       }
     },
@@ -511,6 +709,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Barkod araması başarısız oldu. Bağlantınızı kontrol edip tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vyhledání čárového kódu selhalo. Zkontroluj připojení a zkus to znovu."
           }
         }
       }
@@ -626,6 +830,12 @@
             "state": "translated",
             "value": "Ürün Open Food Facts'te bulunamadı. Bunun yerine besin etiketini tarayın."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produkt nebyl v Open Food Facts nalezen. Naskenuj raději nutriční etiketu."
+          }
         }
       }
     },
@@ -739,6 +949,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çok fazla barkod araması yapıldı. Biraz bekleyin ve tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Příliš mnoho vyhledávání čárových kódů. Chvíli počkej a zkus to znovu."
           }
         }
       }
@@ -854,6 +1070,12 @@
             "state": "translated",
             "value": "Open Food Facts geçici olarak kullanılamıyor. Daha sonra tekrar deneyin."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Food Facts je dočasně nedostupný. Zkus to později."
+          }
         }
       }
     },
@@ -967,6 +1189,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Barkod %@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Čárový kód %@"
           }
         }
       }

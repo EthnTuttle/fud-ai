@@ -110,6 +110,12 @@
             "state": "translated",
             "value": "#%1$@"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#%1$@"
+          }
         }
       }
     },
@@ -222,6 +228,12 @@
             "state": "translated",
             "value": "%1$@ / 300"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / 300"
+          }
         }
       }
     },
@@ -320,7 +332,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ из 28 баллов"
+            "value": "%1$@ з 28 балів"
           }
         },
         "zh-Hans": {
@@ -333,6 +345,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ / 28 puan"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / 28 b."
           }
         }
       }
@@ -432,7 +450,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ из 7 дней"
+            "value": "%1$@ з 7 днів"
           }
         },
         "zh-Hans": {
@@ -445,6 +463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ / 7 gün"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / 7 dní"
           }
         }
       }
@@ -544,7 +568,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ из 7 дней\n%2$@ ккал"
+            "value": "%1$@ з 7 днів\n%2$@ ккал"
           }
         },
         "zh-Hans": {
@@ -557,6 +581,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ / 7 gün\n%2$@ kcal"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ / 7 dní\n%2$@ kcal"
           }
         }
       }
@@ -668,7 +698,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ из 7 дней\n%2$@ кДж"
+            "value": "%1$@ з 7 днів\n%2$@ кДж"
           }
         },
         "zh-Hans": {
@@ -788,6 +818,12 @@
             "state": "translated",
             "value": "%1$@ – %2$@"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ – %2$@"
+          }
         }
       }
     },
@@ -900,6 +936,12 @@
             "state": "translated",
             "value": "@%1$@ · %2$@"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%1$@ · %2$@"
+          }
         }
       }
     },
@@ -998,7 +1040,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Другие действия для"
+            "value": "Дії для"
           }
         },
         "zh-Hans": {
@@ -1011,6 +1053,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Şunun için işlemler:"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akce pro"
           }
         }
       }
@@ -1124,6 +1172,12 @@
             "state": "translated",
             "value": "Aktivite"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivita"
+          }
         }
       }
     },
@@ -1235,6 +1289,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktivite: pozitif kaydedilmiş bir antrenman yakımı olan bir gün. Beslenme: hedefinizin %85-115'i arasında günlük kalori. Tutarlılık: o gün kaydedilen herhangi bir yiyecek. Su: takip etkinken karşılanan su hedefi. Genel: dört günlük sayının toplamı, en fazla 28."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivita: den s kladným zapsaným výdejem při tréninku. Výživa: denní kalorie v rozmezí 85–115 % tvého cíle. Pravidelnost: v ten den zapsané jakékoli jídlo. Hydratace: splněný cíl vody, pokud je sledování zapnuté. Celkem: součet všech čtyř počtů dní, maximálně 28."
           }
         }
       }
@@ -1348,6 +1408,12 @@
             "state": "translated",
             "value": "Engelle"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokovat"
+          }
         }
       }
     },
@@ -1446,7 +1512,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Заблокированние участники"
+            "value": "Заблоковані учасники"
           }
         },
         "zh-Hans": {
@@ -1460,6 +1526,12 @@
             "state": "translated",
             "value": "Engellenen Katılımcılar"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blokovaní účastníci"
+          }
         }
       }
     },
@@ -1468,19 +1540,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يجري Fud AI جميع الحسابات على جهازك. لا يرفع سوى تاريخ بدء الأسبوع وإجمالي النقاط وعدد أيام النشاط والتغذية والاستمرارية والترطيب المؤهلة وإجمالي سعرات النشاط. لا يتم أبدًا رفع أسماء الأطعمة أو الوجبات أو الوزن أو تفاصيل التمارين أو سجلات Apple Health."
+            "value": "يُحسب محليًا. لا تُرفع أي بيانات خام عن الطعام أو الماء أو التمارين أو الصحة أو وزن الجسم أو فقدان الوزن."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI hər şeyi cihazınızda hesablayır. Yalnız həftənin başlanğıcı, ümumi xallar, uyğun fəaliyyət, qidalanma, ardıcıllıq və su qəbulu günlərinin sayı və ümumi fəaliyyət kaloriləri göndərilir. Qida adları, yeməklər, çəki, məşq təfərrüatları və Apple Health qeydləri heç vaxt göndərilmir."
+            "value": "Yerli olaraq hesablanır. Heç bir xam qida, su, məşq, sağlamlıq, bədən çəkisi və ya arıqlama məlumatı yüklənmir."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI berechnet alles auf deinem Gerät. Hochgeladen werden nur Wochenbeginn, Gesamtpunkte, die Anzahl qualifizierter Aktivitäts-, Ernährungs-, Regelmäßigkeits- und Flüssigkeitstage sowie die gesamten Aktivitätskalorien. Lebensmittelnamen, Mahlzeiten, Gewicht, Trainingsdetails und Apple Health-Daten werden niemals hochgeladen."
+            "value": "Wird lokal berechnet. Es werden keine Rohdaten zu Essen, Wasser, Training, Gesundheit, Körpergewicht oder Gewichtsverlust hochgeladen."
           }
         },
         "en": {
@@ -1492,85 +1564,91 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI calcula todo en tu dispositivo. Solo sube el inicio de la semana, los puntos totales, los recuentos de días válidos de actividad, nutrición, constancia e hidratación, y las calorías totales de actividad. Nunca se suben nombres de alimentos, comidas, peso, detalles de entrenamientos ni registros de Apple Health."
+            "value": "Se calcula en tu dispositivo. No se sube ningún dato sin procesar de comida, agua, entrenamientos, Salud, peso corporal ni pérdida de peso."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI effectue tous les calculs sur votre appareil. Seuls le début de la semaine, le total de points, le nombre de jours d’activité, de nutrition, de régularité et d’hydratation validés, ainsi que le total des calories d’activité sont envoyés. Les noms d’aliments, repas, poids, détails des entraînements et données Apple Health ne sont jamais envoyés."
+            "value": "Calculé localement. Aucune donnée brute sur l’alimentation, l’eau, les entraînements, la santé, le poids ou la perte de poids n’est envoyée."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI सभी गणना आपके डिवाइस पर करता है। केवल सप्ताह शुरू होने की तारीख, कुल अंक, योग्य गतिविधि, पोषण, निरंतरता और जल सेवन के दिनों की संख्या तथा गतिविधि की कुल कैलोरी अपलोड होती हैं। भोजन के नाम, मील, वज़न, वर्कआउट का विवरण और Apple Health रिकॉर्ड कभी अपलोड नहीं होते।"
+            "value": "स्थानीय रूप से गणना की जाती है। भोजन, पानी, वर्कआउट, Health, शरीर के वज़न या वज़न घटने का कोई कच्चा डेटा अपलोड नहीं होता।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI calcola tutto sul tuo dispositivo. Carica solo l’inizio della settimana, i punti complessivi, il numero di giorni validi per attività, alimentazione, costanza e idratazione e le calorie totali dell’attività. Nomi degli alimenti, pasti, peso, dettagli degli allenamenti e dati di Apple Health non vengono mai caricati."
+            "value": "Calcolato in locale. Non viene caricato alcun dato grezzo su cibo, acqua, allenamenti, Salute, peso corporeo o perdita di peso."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI はすべて端末上で計算します。アップロードするのは週の開始日、総合ポイント、条件を満たした運動・栄養・継続・水分補給の日数、運動カロリー合計だけです。食品名、食事、体重、ワークアウトの詳細、Apple Health の記録は一切アップロードしません。"
+            "value": "ローカルで計算されます。食事、水分、ワークアウト、ヘルスケア、体重、減量の生データはアップロードされません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI는 모든 값을 기기에서 계산합니다. 주 시작일, 종합 점수, 조건을 충족한 활동·영양·꾸준함·수분 섭취 일수와 총 활동 칼로리만 업로드합니다. 음식 이름, 식사, 체중, 운동 세부 정보 및 Apple Health 기록은 절대 업로드하지 않습니다."
+            "value": "기기에서 계산됩니다. 음식, 물, 운동, 건강, 체중, 감량에 관한 원본 데이터는 업로드되지 않습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI berekent alles op je apparaat. Alleen het begin van de week, totaalscore, aantallen geldige activiteits-, voedings-, regelmaat- en hydratatiedagen en totale activiteitscalorieën worden geüpload. Namen van voeding, maaltijden, gewicht, trainingsdetails en Apple Health-gegevens worden nooit geüpload."
+            "value": "Lokaal berekend. Er worden geen ruwe gegevens over voeding, water, trainingen, Gezondheid, lichaamsgewicht of gewichtsverlies geüpload."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obliczenia są wykonywane lokalnie. Nie są przesyłane szczegółowe dane o jedzeniu, wodzie, treningach, zdrowiu, masie ciała ani utracie wagi."
+            "value": "Obliczane lokalnie. Nie są przesyłane żadne surowe dane o jedzeniu, wodzie, treningach, zdrowiu, masie ciała ani utracie wagi."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Fud AI calcula tudo no seu dispositivo. Ele envia somente o início da semana, os pontos gerais, as contagens de dias válidos de atividade, nutrição, consistência e hidratação, e o total de calorias da atividade. Nomes de alimentos, refeições, peso, detalhes de treinos e registros do Apple Health nunca são enviados."
+            "value": "Calculado localmente. Nenhum dado bruto de alimentação, água, treinos, Saúde, peso corporal ou perda de peso é enviado."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI calculează totul pe dispozitiv. Încarcă doar începutul săptămânii, punctele totale, numărul de zile eligibile de activitate, nutriție, consecvență și hidratare și totalul caloriilor de activitate. Numele alimentelor, mesele, greutatea, detaliile antrenamentelor și datele Apple Health nu sunt încărcate niciodată."
+            "value": "Calculat local. Nu se încarcă date brute despre mâncare, apă, antrenamente, Sănătate, greutatea corporală sau scăderea în greutate."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI выполняет все расчёты на устройстве. Отправляются только дата начала недели, общие баллы, количество зачётных дней активности, питания, регулярности и питьевого режима, а также суммарные калории активности. Названия продуктов, приёмы пищи, вес, сведения о тренировках и записи Apple Health никогда не отправляются."
+            "value": "Рассчитывается на устройстве. Никакие исходные данные о еде, воде, тренировках, здоровье, весе тела или снижении веса не загружаются."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI виполняет все расчёти на устройстве. Отправляются только дата начала недели, общие балли, количество зачётних дней активности, питания, регулярности и питьевого режима, а также суммарние калории активности. Названия продуктів, приёми пищи, вес, сведения о тренировках и записи Apple Health никогда не отправляются."
+            "value": "Розраховується на пристрої. Жодні вихідні дані про їжу, воду, тренування, здоров’я, вагу тіла чи схуднення не завантажуються."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI 在您的设备上完成所有计算。仅上传周开始日期、总分、达到要求的活动、营养、坚持和饮水天数，以及活动总卡路里。绝不会上传食物名称、餐食、体重、锻炼详情或 Apple Health 记录。"
+            "value": "在本地计算。不会上传任何关于饮食、饮水、训练、健康、体重或减重的原始数据。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Yerel olarak hesaplanır. Ham yiyecek, su, antrenman, Sağlık, vücut ağırlığı veya kilo kaybı verisi yüklenmez."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Počítá se lokálně. Nenahrávají se žádná nezpracovaná data o jídle, vodě, trénincích, zdraví, tělesné váze ani hubnutí."
           }
         }
       }
@@ -1684,6 +1762,12 @@
             "state": "translated",
             "value": "İptal"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zrušit"
+          }
         }
       }
     },
@@ -1782,7 +1866,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Удаление ожидает подключения"
+            "value": "Видалення змагання очікує"
           }
         },
         "zh-Hans": {
@@ -1796,6 +1880,12 @@
             "state": "translated",
             "value": "Yarışma Silme Bekliyor"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smazání výzvy čeká"
+          }
         }
       }
     },
@@ -1804,19 +1894,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التحدي الأسبوعي"
+            "value": "فئة التحدي"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Həftəlik çağırış"
+            "value": "Çağırış kateqoriyası"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wochen-Challenge"
+            "value": "Challenge-Kategorie"
           }
         },
         "en": {
@@ -1834,37 +1924,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Défi de la semaine"
+            "value": "Catégorie du défi"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साप्ताहिक चुनौती"
+            "value": "चुनौती की श्रेणी"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sfida settimanale"
+            "value": "Categoria della sfida"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "週間チャレンジ"
+            "value": "チャレンジのカテゴリ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "주간 챌린지"
+            "value": "챌린지 카테고리"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Weekuitdaging"
+            "value": "Categorie van de uitdaging"
           }
         },
         "pl": {
@@ -1876,37 +1966,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desafio semanal"
+            "value": "Categoria do desafio"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Provocare săptămânală"
+            "value": "Categoria provocării"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Еженедельное соревнование"
+            "value": "Категория соревнования"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Щотижневе змагання"
+            "value": "Категорія змагання"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "每周挑战"
+            "value": "挑战类别"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Yarışma kategorisi"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie výzvy"
           }
         }
       }
@@ -2006,7 +2102,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Профиль соревнования скрит на етом устройстве. Fud AI повторит удаление удалённого профиля и еженедельних результатов, когда появится интернет."
+            "value": "Видалення змагання очікує й автоматично повториться, коли Fud AI буде онлайн."
           }
         },
         "zh-Hans": {
@@ -2019,6 +2115,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yarışma silme işlemi beklemede ve Fud AI çevrimiçi olduğunda otomatik olarak yeniden denenecek."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smazání výzvy čeká a automaticky se zopakuje, až bude Fud AI online."
           }
         }
       }
@@ -2118,7 +2220,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Виберите другое отображаемое имя, соответствующее Правилам сообщества."
+            "value": "Виберіть інше відображуване ім’я, що відповідає Правилам спільноти."
           }
         },
         "zh-Hans": {
@@ -2131,6 +2233,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Topluluk Kurallarına uyan farklı bir görünen ad seçin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zvol jiné zobrazované jméno, které odpovídá Pravidlům komunity."
           }
         }
       }
@@ -2244,6 +2352,12 @@
             "state": "translated",
             "value": "Tutarlılık"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pravidelnost"
+          }
         }
       }
     },
@@ -2355,6 +2469,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Görünen ad"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zobrazované jméno"
           }
         }
       }
@@ -2468,6 +2588,12 @@
             "state": "translated",
             "value": "Bitti"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hotovo"
+          }
         }
       }
     },
@@ -2580,6 +2706,12 @@
             "state": "translated",
             "value": "Genel Profili Düzenle"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upravit veřejný profil"
+          }
         }
       }
     },
@@ -2588,19 +2720,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "التحدي الأسبوعي"
+            "value": "الأهلية والمجتمع"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Həftəlik çağırış"
+            "value": "Uyğunluq və icma"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wochen-Challenge"
+            "value": "Teilnahmebedingungen & Community"
           }
         },
         "en": {
@@ -2618,79 +2750,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Défi de la semaine"
+            "value": "Conditions et communauté"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साप्ताहिक चुनौती"
+            "value": "पात्रता और कम्युनिटी"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sfida settimanale"
+            "value": "Requisiti e community"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "週間チャレンジ"
+            "value": "参加資格とコミュニティ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "주간 챌린지"
+            "value": "참여 자격 및 커뮤니티"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Weekuitdaging"
+            "value": "Voorwaarden en community"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uprawnienia i społeczność"
+            "value": "Warunki udziału i społeczność"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desafio semanal"
+            "value": "Requisitos e comunidade"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Provocare săptămânală"
+            "value": "Eligibilitate și comunitate"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Еженедельное соревнование"
+            "value": "Условия участия и сообщество"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Щотижневе змагання"
+            "value": "Умови участі та спільнота"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "每周挑战"
+            "value": "参与资格与社区"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Uygunluk ve Topluluk"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podmínky účasti a komunita"
           }
         }
       }
@@ -2790,7 +2928,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Введите только имя пользователя, без @ и ссилки."
+            "value": "Введіть лише ім’я користувача — без @, пробілів чи URL профілю."
           }
         },
         "zh-Hans": {
@@ -2803,6 +2941,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yalnızca bir kullanıcı adı girin — @, boşluk veya profil URL'si olmadan."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zadej jen uživatelské jméno — bez @, mezer nebo URL profilu."
           }
         }
       }
@@ -2902,7 +3046,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Введите только имя пользователя, без @ и ссилки."
+            "value": "Введіть ім’я користувача, а не URL."
           }
         },
         "zh-Hans": {
@@ -2916,6 +3060,12 @@
             "state": "translated",
             "value": "URL değil, bir kullanıcı adı girin."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zadej uživatelské jméno, ne URL."
+          }
         }
       }
     },
@@ -2924,19 +3074,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أدخل اسم المستخدم فقط، دون @ أو رابط."
+            "value": "أدخل اسم المستخدم للشبكة الاجتماعية المحددة، أو اختر «بدون رابط اجتماعي»."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "@ və ya keçid olmadan yalnız istifadəçi adını daxil edin."
+            "value": "Seçilmiş sosial şəbəkə üçün istifadəçi adını daxil edin və ya \"Sosial keçid yoxdur\" seçin."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur das Handle ohne @ oder Link eingeben."
+            "value": "Gib das Handle für das ausgewählte Netzwerk ein oder wähle „Kein Social-Link“."
           }
         },
         "en": {
@@ -2954,79 +3104,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saisissez uniquement l’identifiant, sans @ ni lien."
+            "value": "Saisissez l’identifiant du réseau sélectionné ou choisissez Aucun lien social."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "@ या लिंक के बिना केवल यूज़रनेम लिखें।"
+            "value": "चुने गए सोशल नेटवर्क का यूज़रनेम दर्ज करें, या कोई सोशल लिंक नहीं चुनें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inserisci solo il nome utente, senza @ o link."
+            "value": "Inserisci il nome utente del social selezionato oppure scegli Nessun link social."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "@やリンクを付けずにユーザー名だけを入力してください。"
+            "value": "選択したSNSのユーザー名を入力するか、「SNSリンクなし」を選択してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "@ 또는 링크 없이 사용자 이름만 입력하세요."
+            "value": "선택한 소셜 계정의 사용자 이름을 입력하거나 '소셜 링크 없음'을 선택하세요."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voer alleen de gebruikersnaam in, zonder @ of link."
+            "value": "Voer de gebruikersnaam voor het gekozen netwerk in of kies Geen sociale link."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wprowadź wybrany uchwyt społecznościowy lub wybierz Brak linku społecznościowego."
+            "value": "Wpisz nazwę użytkownika wybranego serwisu lub wybierz Brak linku społecznościowego."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Digite somente o nome de usuário, sem @ ou link."
+            "value": "Digite o usuário da rede social selecionada ou escolha Sem link social."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Introdu doar identificatorul, fără @ sau link."
+            "value": "Introdu numele de utilizator pentru rețeaua selectată sau alege Fără link social."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Введите только имя пользователя, без @ и ссылки."
+            "value": "Введите имя пользователя в выбранной соцсети или выберите «Без ссылки на соцсеть»."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Введите только имя пользователя, без @ и ссилки."
+            "value": "Введіть ім’я користувача у вибраній соцмережі або виберіть «Без посилання на соцмережу»."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "仅输入用户名，不要包含 @ 或链接。"
+            "value": "输入所选社交平台的用户名，或选择“不添加社交链接”。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Seçilen sosyal medya kullanıcı adını girin veya Sosyal bağlantı yok seçin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zadej uživatelské jméno pro vybranou síť, nebo zvol Bez sociální sítě."
           }
         }
       }
@@ -3140,6 +3296,12 @@
             "state": "translated",
             "value": "Hata"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chyba"
+          }
         }
       }
     },
@@ -3252,6 +3414,12 @@
             "state": "translated",
             "value": "Hata: %1$@"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chyba: %1$@"
+          }
         }
       }
     },
@@ -3260,19 +3428,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذا الأسبوع"
+            "value": "البيانات الأسبوعية المجمّعة الدقيقة"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu həftə"
+            "value": "Dəqiq həftəlik ümumi məlumatlar"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Woche"
+            "value": "Exakte wöchentliche Gesamtdaten"
           }
         },
         "en": {
@@ -3290,79 +3458,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette semaine"
+            "value": "Données hebdomadaires agrégées exactes"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इस सप्ताह"
+            "value": "सटीक साप्ताहिक कुल डेटा"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa settimana"
+            "value": "Dati settimanali aggregati esatti"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "今週"
+            "value": "送信される週間集計データ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이번 주"
+            "value": "정확한 주간 집계 데이터"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze week"
+            "value": "Exacte geaggregeerde weekgegevens"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dokładny tygodniowy zestaw danych zbiorczych"
+            "value": "Dokładne zbiorcze dane tygodniowe"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta semana"
+            "value": "Dados semanais agregados exatos"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Săptămâna aceasta"
+            "value": "Date săptămânale agregate exacte"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта неделя"
+            "value": "Точные недельные сводные данные"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Цього тижня"
+            "value": "Точні тижневі зведені дані"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本周"
+            "value": "确切的每周汇总数据"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tam haftalık toplu veri"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přesná týdenní souhrnná data"
           }
         }
       }
@@ -3372,19 +3546,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يجري Fud AI جميع الحسابات على جهازك. لا يرفع سوى تاريخ بدء الأسبوع وإجمالي النقاط وعدد أيام النشاط والتغذية والاستمرارية والترطيب المؤهلة وإجمالي سعرات النشاط. لا يتم أبدًا رفع أسماء الأطعمة أو الوجبات أو الوزن أو تفاصيل التمارين أو سجلات Apple Health."
+            "value": "يحسب Fud AI هذه الإجماليات على هذا الجهاز. ولا يرفع أبدًا أسماء الأطعمة أو الوجبات أو الطوابع الزمنية أو إدخالات الماء أو تفاصيل التمارين أو سجلات الصحة أو وزن الجسم أو فقدان الوزن."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI hər şeyi cihazınızda hesablayır. Yalnız həftənin başlanğıcı, ümumi xallar, uyğun fəaliyyət, qidalanma, ardıcıllıq və su qəbulu günlərinin sayı və ümumi fəaliyyət kaloriləri göndərilir. Qida adları, yeməklər, çəki, məşq təfərrüatları və Apple Health qeydləri heç vaxt göndərilmir."
+            "value": "Fud AI bu cəmləri bu cihazda hesablayır. O, heç vaxt qida adlarını, yeməkləri, vaxt qeydlərini, su qeydlərini, məşq təfərrüatlarını, sağlamlıq qeydlərini, bədən çəkisini və ya arıqlamanı yükləmir."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI berechnet alles auf deinem Gerät. Hochgeladen werden nur Wochenbeginn, Gesamtpunkte, die Anzahl qualifizierter Aktivitäts-, Ernährungs-, Regelmäßigkeits- und Flüssigkeitstage sowie die gesamten Aktivitätskalorien. Lebensmittelnamen, Mahlzeiten, Gewicht, Trainingsdetails und Apple Health-Daten werden niemals hochgeladen."
+            "value": "Fud AI berechnet diese Summen auf diesem Gerät. Lebensmittelnamen, Mahlzeiten, Zeitstempel, Wassereinträge, Trainingsdetails, Health-Daten, Körpergewicht oder Gewichtsverlust werden niemals hochgeladen."
           }
         },
         "en": {
@@ -3396,85 +3570,91 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI calcula todo en tu dispositivo. Solo sube el inicio de la semana, los puntos totales, los recuentos de días válidos de actividad, nutrición, constancia e hidratación, y las calorías totales de actividad. Nunca se suben nombres de alimentos, comidas, peso, detalles de entrenamientos ni registros de Apple Health."
+            "value": "Fud AI calcula estos totales en este dispositivo. Nunca sube nombres de alimentos, comidas, marcas de tiempo, registros de agua, detalles de entrenamientos, registros de Salud, peso corporal ni pérdida de peso."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI effectue tous les calculs sur votre appareil. Seuls le début de la semaine, le total de points, le nombre de jours d’activité, de nutrition, de régularité et d’hydratation validés, ainsi que le total des calories d’activité sont envoyés. Les noms d’aliments, repas, poids, détails des entraînements et données Apple Health ne sont jamais envoyés."
+            "value": "Fud AI calcule ces totaux sur cet appareil. Il n’envoie jamais les noms d’aliments, les repas, les horodatages, les entrées d’eau, le détail des entraînements, les données de santé, le poids ni la perte de poids."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI सभी गणना आपके डिवाइस पर करता है। केवल सप्ताह शुरू होने की तारीख, कुल अंक, योग्य गतिविधि, पोषण, निरंतरता और जल सेवन के दिनों की संख्या तथा गतिविधि की कुल कैलोरी अपलोड होती हैं। भोजन के नाम, मील, वज़न, वर्कआउट का विवरण और Apple Health रिकॉर्ड कभी अपलोड नहीं होते।"
+            "value": "Fud AI ये कुल आँकड़े इसी डिवाइस पर निकालता है। यह कभी भी भोजन के नाम, भोजन, टाइमस्टैम्प, पानी की प्रविष्टियाँ, वर्कआउट विवरण, Health रिकॉर्ड, शरीर का वज़न या वज़न घटना अपलोड नहीं करता।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI calcola tutto sul tuo dispositivo. Carica solo l’inizio della settimana, i punti complessivi, il numero di giorni validi per attività, alimentazione, costanza e idratazione e le calorie totali dell’attività. Nomi degli alimenti, pasti, peso, dettagli degli allenamenti e dati di Apple Health non vengono mai caricati."
+            "value": "Fud AI calcola questi totali su questo dispositivo. Non carica mai nomi degli alimenti, pasti, orari, voci d’acqua, dettagli degli allenamenti, dati di Salute, peso corporeo o perdita di peso."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI はすべて端末上で計算します。アップロードするのは週の開始日、総合ポイント、条件を満たした運動・栄養・継続・水分補給の日数、運動カロリー合計だけです。食品名、食事、体重、ワークアウトの詳細、Apple Health の記録は一切アップロードしません。"
+            "value": "Fud AIはこれらの合計をこのデバイス上で計算します。食品名、食事、タイムスタンプ、水分の記録、ワークアウトの詳細、ヘルスケアの記録、体重、減量をアップロードすることはありません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI는 모든 값을 기기에서 계산합니다. 주 시작일, 종합 점수, 조건을 충족한 활동·영양·꾸준함·수분 섭취 일수와 총 활동 칼로리만 업로드합니다. 음식 이름, 식사, 체중, 운동 세부 정보 및 Apple Health 기록은 절대 업로드하지 않습니다."
+            "value": "Fud AI는 이 합계를 이 기기에서 계산합니다. 음식 이름, 식사, 시간 기록, 물 항목, 운동 세부 정보, 건강 기록, 체중, 감량 정보는 절대 업로드하지 않습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI berekent alles op je apparaat. Alleen het begin van de week, totaalscore, aantallen geldige activiteits-, voedings-, regelmaat- en hydratatiedagen en totale activiteitscalorieën worden geüpload. Namen van voeding, maaltijden, gewicht, trainingsdetails en Apple Health-gegevens worden nooit geüpload."
+            "value": "Fud AI berekent deze totalen op dit apparaat. Het uploadt nooit voedingsnamen, maaltijden, tijdstempels, wateritems, trainingsdetails, Gezondheid-gegevens, lichaamsgewicht of gewichtsverlies."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI oblicza te sumy na tym urządzeniu. Nigdy nie przesyła nazw potraw, posiłków, znaczników czasu, wpisów dotyczących wody, szczegółów treningu, dokumentacji medycznej, masy ciała ani utraty wagi."
+            "value": "Fud AI oblicza te sumy na tym urządzeniu. Nigdy nie przesyła nazw produktów, posiłków, znaczników czasu, wpisów wody, szczegółów treningów, danych zdrowotnych, masy ciała ani utraty wagi."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Fud AI calcula tudo no seu dispositivo. Ele envia somente o início da semana, os pontos gerais, as contagens de dias válidos de atividade, nutrição, consistência e hidratação, e o total de calorias da atividade. Nomes de alimentos, refeições, peso, detalhes de treinos e registros do Apple Health nunca são enviados."
+            "value": "O Fud AI calcula esses totais neste dispositivo. Ele nunca envia nomes de alimentos, refeições, horários, registros de água, detalhes de treinos, registros do Saúde, peso corporal ou perda de peso."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI calculează totul pe dispozitiv. Încarcă doar începutul săptămânii, punctele totale, numărul de zile eligibile de activitate, nutriție, consecvență și hidratare și totalul caloriilor de activitate. Numele alimentelor, mesele, greutatea, detaliile antrenamentelor și datele Apple Health nu sunt încărcate niciodată."
+            "value": "Fud AI calculează aceste totaluri pe acest dispozitiv. Nu încarcă niciodată nume de alimente, mese, marcaje de timp, intrări de apă, detalii despre antrenamente, înregistrări din Sănătate, greutatea corporală sau scăderea în greutate."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI выполняет все расчёты на устройстве. Отправляются только дата начала недели, общие баллы, количество зачётных дней активности, питания, регулярности и питьевого режима, а также суммарные калории активности. Названия продуктов, приёмы пищи, вес, сведения о тренировках и записи Apple Health никогда не отправляются."
+            "value": "Fud AI рассчитывает эти итоги на устройстве. Он никогда не загружает названия продуктов, приёмы пищи, отметки времени, записи воды, детали тренировок, данные о здоровье, вес тела или снижение веса."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI виполняет все расчёти на устройстве. Отправляются только дата начала недели, общие балли, количество зачётних дней активности, питания, регулярности и питьевого режима, а также суммарние калории активности. Названия продуктів, приёми пищи, вес, сведения о тренировках и записи Apple Health никогда не отправляются."
+            "value": "Fud AI розраховує ці підсумки на цьому пристрої. Він ніколи не завантажує назви продуктів, прийоми їжі, позначки часу, записи води, деталі тренувань, дані про здоров’я, вагу тіла чи схуднення."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI 在您的设备上完成所有计算。仅上传周开始日期、总分、达到要求的活动、营养、坚持和饮水天数，以及活动总卡路里。绝不会上传食物名称、餐食、体重、锻炼详情或 Apple Health 记录。"
+            "value": "Fud AI 在此设备上计算这些总数，绝不会上传食物名称、餐食、时间戳、饮水记录、训练详情、健康记录、体重或减重数据。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Fud AI bu toplamları bu cihazda hesaplar. Yiyecek adlarını, öğünleri, zaman damgalarını, su kayıtlarını, antrenman detaylarını, Sağlık kayıtlarını, vücut ağırlığını veya kilo kaybını asla yüklemez."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI počítá tyto souhrny v tomto zařízení. Nikdy nenahrává názvy jídel, jídla, časové údaje, záznamy vody, podrobnosti tréninků, zdravotní záznamy, tělesnou váhu ani hubnutí."
           }
         }
       }
@@ -3484,19 +3664,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذر تحديث التحدي الأسبوعي. حاول مرة أخرى بعد قليل."
+            "value": "تعذّر على Fud AI الانضمام إلى التحدي. حاول مرة أخرى."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Həftəlik çağırışı yeniləmək mümkün olmadı. Bir az sonra yenidən cəhd edin."
+            "value": "Fud AI çağırışa qoşula bilmədi. Yenidən cəhd edin."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Wochen-Challenge konnte nicht aktualisiert werden. Versuche es gleich noch einmal."
+            "value": "Fud AI konnte der Challenge nicht beitreten. Versuche es erneut."
           }
         },
         "en": {
@@ -3514,79 +3694,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de mettre à jour le Défi de la semaine. Réessayez bientôt."
+            "value": "Fud AI n’a pas pu rejoindre le défi. Réessayez."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साप्ताहिक चुनौती अपडेट नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।"
+            "value": "Fud AI चुनौती में शामिल नहीं हो सका। फिर से कोशिश करें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossibile aggiornare la Sfida settimanale. Riprova tra poco."
+            "value": "Fud AI non è riuscito a partecipare alla sfida. Riprova."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "週間チャレンジを更新できませんでした。しばらくしてからもう一度お試しください。"
+            "value": "Fud AIはチャレンジに参加できませんでした。もう一度お試しください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "주간 챌린지를 업데이트할 수 없습니다. 잠시 후 다시 시도하세요."
+            "value": "Fud AI가 챌린지에 참여하지 못했습니다. 다시 시도하세요."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De Weekuitdaging kon niet worden bijgewerkt. Probeer het straks opnieuw."
+            "value": "Fud AI kon niet deelnemen aan de uitdaging. Probeer het opnieuw."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI nie mógł dołączyć do wyzwania. Spróbuj ponownie."
+            "value": "Fud AI nie udało się dołączyć do wyzwania. Spróbuj ponownie."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível atualizar o Desafio semanal. Tente novamente em breve."
+            "value": "O Fud AI não conseguiu entrar no desafio. Tente novamente."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Provocarea săptămânală nu a putut fi actualizată. Încearcă din nou în curând."
+            "value": "Fud AI nu a putut intra în provocare. Încearcă din nou."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось обновить еженедельное соревнование. Повторите попытку позже."
+            "value": "Fud AI не удалось присоединиться к соревнованию. Повторите попытку."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося обновить еженедельное соревнование. Спробуйте знову позже."
+            "value": "Fud AI не вдалося приєднатися до змагання. Спробуйте ще раз."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法更新每周挑战，请稍后重试。"
+            "value": "Fud AI 无法加入挑战。请重试。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Fud AI yarışmaya katılamadı. Tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI se nepodařilo připojit k výzvě. Zkus to znovu."
           }
         }
       }
@@ -3596,19 +3782,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أؤكد أن عمري 18 عامًا أو أكثر. لا يصل Fud AI إلى تاريخ ميلادي ولا يرفعه."
+            "value": "لا يقرأ Fud AI تاريخ ميلادك ولا يرفعه لهذا التأكيد."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "18 və ya daha böyük yaşda olduğumu təsdiq edirəm. Fud AI doğum tariximə daxil olmur və onu göndərmir."
+            "value": "Fud AI bu təsdiq üçün doğum tarixinizi oxumur və yükləmir."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ich bestätige, dass ich mindestens 18 Jahre alt bin. Fud AI greift nicht auf mein Geburtsdatum zu und lädt es nicht hoch."
+            "value": "Fud AI liest oder lädt dein Geburtsdatum für diese Bestätigung nicht hoch."
           }
         },
         "en": {
@@ -3626,79 +3812,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je confirme avoir au moins 18 ans. Fud AI n’accède pas à ma date de naissance et ne l’envoie pas."
+            "value": "Fud AI ne lit ni n’envoie votre date de naissance pour cette confirmation."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "मैं पुष्टि करता/करती हूँ कि मेरी उम्र 18 वर्ष या अधिक है। Fud AI मेरी जन्मतिथि को ऐक्सेस या अपलोड नहीं करता।"
+            "value": "Fud AI इस पुष्टि के लिए आपकी जन्मतिथि न पढ़ता है, न अपलोड करता है।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confermo di avere almeno 18 anni. Fud AI non accede né carica la mia data di nascita."
+            "value": "Fud AI non legge né carica la tua data di nascita per questa conferma."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "18歳以上であることを確認します。Fud AI は生年月日にアクセスしたりアップロードしたりしません。"
+            "value": "この確認のために、Fud AIがあなたの生年月日を読み取ったりアップロードしたりすることはありません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "만 18세 이상임을 확인합니다. Fud AI는 생년월일에 접근하거나 업로드하지 않습니다."
+            "value": "Fud AI는 이 확인을 위해 생년월일을 읽거나 업로드하지 않습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ik bevestig dat ik 18 jaar of ouder ben. Fud AI opent of uploadt mijn geboortedatum niet."
+            "value": "Fud AI leest of uploadt je geboortedatum niet voor deze bevestiging."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI nie odczytuje ani nie przesyła Twojej daty urodzenia dla tego potwierdzenia."
+            "value": "Fud AI nie odczytuje ani nie przesyła Twojej daty urodzenia na potrzeby tego potwierdzenia."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmo que tenho 18 anos ou mais. O Fud AI não acessa nem envia minha data de nascimento."
+            "value": "O Fud AI não lê nem envia sua data de nascimento para esta confirmação."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirm că am cel puțin 18 ani. Fud AI nu accesează și nu încarcă data mea de naștere."
+            "value": "Fud AI nu citește și nu încarcă data ta de naștere pentru această confirmare."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Я подтверждаю, что мне не менее 18 лет. Fud AI не получает и не отправляет мою дату рождения."
+            "value": "Fud AI не считывает и не загружает вашу дату рождения для этого подтверждения."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Я подтверждаю, что мне не менее 18 лет. Fud AI не получает и не отправляет мою дату рождения."
+            "value": "Fud AI не зчитує й не завантажує вашу дату народження для цього підтвердження."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "我确认已年满 18 岁。Fud AI 不会访问或上传我的出生日期。"
+            "value": "进行此确认时，Fud AI 不会读取或上传你的出生日期。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Fud AI bu onay için doğum tarihinizi okumaz veya yüklemez."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI pro toto potvrzení nečte ani nenahrává tvé datum narození."
           }
         }
       }
@@ -3798,7 +3990,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Профиль соревнования скрит на етом устройстве. Fud AI повторит удаление удалённого профиля и еженедельних результатов, когда появится интернет."
+            "value": "Fud AI зберіг лише захищені облікові дані для видалення й повторить спробу видалити ваші віддалені дані змагання, коли ви будете онлайн."
           }
         },
         "zh-Hans": {
@@ -3811,6 +4003,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fud AI yalnızca güvenli silme kimlik bilgisini tuttu ve çevrimiçi olduğunuzda uzak yarışma verilerinizi kaldırmayı yeniden deneyecek."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI si ponechala jen zabezpečený údaj pro smazání a odstranění tvých vzdálených dat výzvy zkusí znovu, až budeš online."
           }
         }
       }
@@ -3924,6 +4122,12 @@
             "state": "translated",
             "value": "@ olmadan kullanıcı adı"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uživatelské jméno bez @"
+          }
         }
       }
     },
@@ -4035,6 +4239,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Puanlar nasıl işler"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jak fungují body"
           }
         }
       }
@@ -4148,6 +4358,12 @@
             "state": "translated",
             "value": "Su"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hydratace"
+          }
         }
       }
     },
@@ -4260,6 +4476,12 @@
             "state": "translated",
             "value": "Topluluk Kurallarını kabul ediyorum"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Souhlasím s Pravidly komunity"
+          }
         }
       }
     },
@@ -4268,19 +4490,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أؤكد أن عمري 18 عامًا أو أكثر. لا يصل Fud AI إلى تاريخ ميلادي ولا يرفعه."
+            "value": "عمري 18 عامًا أو أكثر"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "18 və ya daha böyük yaşda olduğumu təsdiq edirəm. Fud AI doğum tariximə daxil olmur və onu göndərmir."
+            "value": "18 yaşım var və ya daha böyüyəm"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ich bestätige, dass ich mindestens 18 Jahre alt bin. Fud AI greift nicht auf mein Geburtsdatum zu und lädt es nicht hoch."
+            "value": "Ich bin 18 oder älter"
           }
         },
         "en": {
@@ -4298,79 +4520,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je confirme avoir au moins 18 ans. Fud AI n’accède pas à ma date de naissance et ne l’envoie pas."
+            "value": "J’ai 18 ans ou plus"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "मैं पुष्टि करता/करती हूँ कि मेरी उम्र 18 वर्ष या अधिक है। Fud AI मेरी जन्मतिथि को ऐक्सेस या अपलोड नहीं करता।"
+            "value": "मेरी उम्र 18 वर्ष या उससे अधिक है"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confermo di avere almeno 18 anni. Fud AI non accede né carica la mia data di nascita."
+            "value": "Ho almeno 18 anni"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "18歳以上であることを確認します。Fud AI は生年月日にアクセスしたりアップロードしたりしません。"
+            "value": "18歳以上です"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "만 18세 이상임을 확인합니다. Fud AI는 생년월일에 접근하거나 업로드하지 않습니다."
+            "value": "18세 이상입니다"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ik bevestig dat ik 18 jaar of ouder ben. Fud AI opent of uploadt mijn geboortedatum niet."
+            "value": "Ik ben 18 jaar of ouder"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mam ukończone 18 lat"
+            "value": "Mam co najmniej 18 lat"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmo que tenho 18 anos ou mais. O Fud AI não acessa nem envia minha data de nascimento."
+            "value": "Tenho 18 anos ou mais"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirm că am cel puțin 18 ani. Fud AI nu accesează și nu încarcă data mea de naștere."
+            "value": "Am cel puțin 18 ani"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Я подтверждаю, что мне не менее 18 лет. Fud AI не получает и не отправляет мою дату рождения."
+            "value": "Мне 18 лет или больше"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Я подтверждаю, что мне не менее 18 лет. Fud AI не получает и не отправляет мою дату рождения."
+            "value": "Мені 18 років або більше"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "我确认已年满 18 岁。Fud AI 不会访问或上传我的出生日期。"
+            "value": "我已年满 18 岁"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "18 yaşında veya daha büyüğüm"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je mi 18 let nebo víc"
           }
         }
       }
@@ -4484,6 +4712,12 @@
             "state": "translated",
             "value": "Taklit"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vydávání se za jinou osobu"
+          }
         }
       }
     },
@@ -4595,6 +4829,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uygunsuz ad"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nevhodné jméno"
           }
         }
       }
@@ -4708,6 +4948,12 @@
             "state": "translated",
             "value": "Katıl"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připojit se"
+          }
         }
       }
     },
@@ -4820,6 +5066,12 @@
             "state": "translated",
             "value": "Haftalık Yarışmaya Katıl"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připojit se k týdenní výzvě"
+          }
         }
       }
     },
@@ -4828,19 +5080,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "انضم اختياريًا لمقارنة إنجازات النشاط والتغذية والاستمرارية والترطيب الأسبوعية. تظل شاشة التقدم الخاصة متاحة دون الانضمام."
+            "value": "انضم إلى لوحة صدارة اختيارية تراعي الخصوصية وتعتمد على العادات الأسبوعية الصحية — لا على وزن الجسم. يجب أن يكون عمرك 18 عامًا أو أكثر."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Həftəlik fəaliyyət, qidalanma, ardıcıllıq və su qəbulu nailiyyətlərini müqayisə etmək üçün istəyə bağlı qoşulun. Şəxsi İrəliləyiş ekranınız qoşulmadan da əlçatan qalır."
+            "value": "Bədən çəkisinə deyil, sağlam həftəlik vərdişlərə əsaslanan, məxfiliyi önə çəkən istəyə bağlı reytinqə qoşulun. 18 yaşınız olmalıdır."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nimm freiwillig teil und vergleiche wöchentliche Meilensteine für Aktivität, Ernährung, Regelmäßigkeit und Flüssigkeitszufuhr. Dein privater Fortschritt bleibt auch ohne Teilnahme verfügbar."
+            "value": "Tritt einer optionalen, datenschutzfreundlichen Rangliste bei, die auf gesunden Wochengewohnheiten basiert – nicht auf dem Körpergewicht. Du musst mindestens 18 Jahre alt sein."
           }
         },
         "en": {
@@ -4852,85 +5104,91 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Participa voluntariamente para comparar logros semanales de actividad, nutrición, constancia e hidratación. Tu pantalla privada de Progreso seguirá disponible sin participar."
+            "value": "Únete a una clasificación opcional y centrada en la privacidad, basada en hábitos semanales saludables, no en el peso corporal. Debes tener 18 años o más."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Participez volontairement pour comparer vos objectifs hebdomadaires d’activité, de nutrition, de régularité et d’hydratation. Votre écran Progression privé reste accessible sans participer."
+            "value": "Rejoignez un classement facultatif, respectueux de la vie privée, fondé sur des habitudes hebdomadaires saines — et non sur le poids. Vous devez avoir 18 ans ou plus."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साप्ताहिक गतिविधि, पोषण, निरंतरता और जल सेवन के लक्ष्य की तुलना करने के लिए स्वेच्छा से जुड़ें। बिना जुड़े भी आपकी निजी प्रगति स्क्रीन उपलब्ध रहती है।"
+            "value": "एक वैकल्पिक, प्राइवेसी-फ़र्स्ट लीडरबोर्ड से जुड़ें जो शरीर के वज़न पर नहीं, बल्कि हफ़्ते की सेहतमंद आदतों पर आधारित है। आपकी उम्र 18 वर्ष या उससे अधिक होनी चाहिए।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Partecipa facoltativamente per confrontare i traguardi settimanali di attività, alimentazione, costanza e idratazione. La schermata privata dei Progressi resta disponibile senza partecipare."
+            "value": "Partecipa a una classifica facoltativa e attenta alla privacy, basata su abitudini settimanali sane, non sul peso corporeo. Devi avere almeno 18 anni."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "任意で参加し、運動、栄養、継続、水分補給の週間目標を比較できます。参加しなくても非公開の進捗画面は引き続き利用できます。"
+            "value": "体重ではなく、毎週の健康的な習慣に基づく、プライバシー重視の任意参加ランキングに参加しましょう。18歳以上である必要があります。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "선택적으로 참여하여 주간 활동, 영양, 꾸준함, 수분 섭취 목표를 비교하세요. 참여하지 않아도 비공개 진행 상황 화면은 계속 이용할 수 있습니다."
+            "value": "체중이 아닌 건강한 주간 습관을 기준으로 하는 개인정보 보호 중심의 선택형 순위표에 참여하세요. 18세 이상이어야 합니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doe vrijwillig mee en vergelijk wekelijkse mijlpalen voor activiteit, voeding, regelmaat en hydratatie. Je persoonlijke Voortgang blijft beschikbaar zonder deelname."
+            "value": "Doe mee aan een optionele, privacyvriendelijke ranglijst op basis van gezonde weekgewoonten — niet op lichaamsgewicht. Je moet 18 jaar of ouder zijn."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dołącz do opcjonalnej tabeli liderów opartej na prywatności, opartej na zdrowych nawykach tygodniowych - a nie na wadze ciała. Musisz mieć ukończone 18 lat."
+            "value": "Dołącz do opcjonalnego rankingu, który dba o prywatność i opiera się na zdrowych tygodniowych nawykach — nie na masie ciała. Musisz mieć co najmniej 18 lat."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Participe opcionalmente para comparar metas semanais de atividade, nutrição, consistência e hidratação. Sua tela privada de Progresso continua disponível sem participar."
+            "value": "Participe de uma classificação opcional e focada em privacidade, baseada em hábitos semanais saudáveis — não no peso corporal. É preciso ter 18 anos ou mais."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Participă opțional pentru a compara obiectivele săptămânale de activitate, nutriție, consecvență și hidratare. Ecranul privat Progres rămâne disponibil fără participare."
+            "value": "Alătură-te unui clasament opțional, axat pe confidențialitate, bazat pe obiceiuri săptămânale sănătoase — nu pe greutatea corporală. Trebuie să ai cel puțin 18 ani."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "По желанию присоединитесь, чтобы сравнивать еженедельные достижения в активности, питании, регулярности и питьевом режиме. Личный экран прогресса доступен и без участия."
+            "value": "Присоединяйтесь к необязательному рейтингу с заботой о конфиденциальности, основанному на здоровых недельных привычках, а не на весе тела. Вам должно быть 18 лет или больше."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "По желанию присоединитесь, чтоби сравнивать еженедельние достижения в активности, питании, регулярности и питьевом режиме. Личний екран прогресса доступен и без участия."
+            "value": "Приєднуйтеся до необов’язкового рейтингу з турботою про приватність, що базується на здорових тижневих звичках, а не на вазі тіла. Вам має бути 18 років або більше."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "可自愿加入，比较每周活动、营养、坚持和饮水目标。即使不加入，也可以继续使用私密的进度页面。"
+            "value": "加入一个可选、注重隐私的排行榜，依据健康的每周习惯而非体重来排名。你必须年满 18 岁。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Vücut ağırlığına değil, sağlıklı haftalık alışkanlıklara dayalı isteğe bağlı, gizlilik odaklı bir sıralamaya katılın. 18 yaşında veya daha büyük olmalısınız."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připoj se k dobrovolnému žebříčku, který chrání soukromí a hodnotí zdravé týdenní návyky — ne tělesnou váhu. Musí ti být alespoň 18 let."
           }
         }
       }
@@ -5030,7 +5288,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Последнее обновление"
+            "value": "Останнє оновлення"
           }
         },
         "zh-Hans": {
@@ -5043,6 +5301,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Son güncelleme"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naposledy aktualizováno"
           }
         }
       }
@@ -5142,7 +5406,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Последнее обновление: %1$@"
+            "value": "Останнє оновлення: %1$@"
           }
         },
         "zh-Hans": {
@@ -5156,6 +5420,12 @@
             "state": "translated",
             "value": "Son güncelleme %1$@"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naposledy aktualizováno %1$@"
+          }
         }
       }
     },
@@ -5164,19 +5434,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا يظهر للمشاركين سوى اسم العرض، وحساب واحد اختياري على X أو Instagram. لا يتم ترتيب الوزن أو فقدان الوزن أبدًا."
+            "value": "لا تظهر نتائج لوحة الصدارة إلا للمنضمين. يمكنك المغادرة وحذف بيانات التحدي البعيدة في أي وقت."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "İştirakçılara yalnız ekran adınız və istəyə bağlı bir X və ya Instagram istifadəçi adı görünür. Çəki və çəki itkisi heç vaxt sıralanmır."
+            "value": "Reytinq nəticələrini yalnız qoşulanlar görür. İstənilən vaxt çıxıb uzaq serverdəki çağırış məlumatlarınızı silə bilərsiniz."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nur dein Anzeigename und optional genau ein X- oder Instagram-Handle sind für Teilnehmende sichtbar. Gewicht und Gewichtsverlust werden nie bewertet."
+            "value": "Ranglistenergebnisse sind nur für Teilnehmende sichtbar. Du kannst jederzeit austreten und deine Remote-Challenge-Daten löschen."
           }
         },
         "en": {
@@ -5188,85 +5458,91 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo los participantes ven tu nombre público y, opcionalmente, un único usuario de X o Instagram. El peso y la pérdida de peso nunca se clasifican."
+            "value": "Solo quienes participan pueden ver los resultados de la clasificación. Puedes salir y borrar tus datos remotos del reto en cualquier momento."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seuls votre nom d’affichage et, si vous le souhaitez, un unique identifiant X ou Instagram sont visibles des participants. Le poids et la perte de poids ne font jamais l’objet d’un classement."
+            "value": "Les résultats du classement ne sont visibles que par les participants. Vous pouvez quitter et supprimer vos données de défi en ligne à tout moment."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "प्रतिभागियों को केवल आपका डिस्प्ले नाम और वैकल्पिक रूप से X या Instagram का कोई एक यूज़रनेम दिखाई देता है। वज़न और वज़न घटाने की कभी रैंकिंग नहीं होती।"
+            "value": "लीडरबोर्ड के नतीजे केवल शामिल होने वालों को दिखते हैं। आप कभी भी छोड़कर अपना रिमोट चुनौती डेटा हटा सकते हैं।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo il nome visualizzato e, facoltativamente, un unico profilo X o Instagram sono visibili ai partecipanti. Il peso e la perdita di peso non entrano mai in classifica."
+            "value": "I risultati della classifica sono visibili solo a chi partecipa. Puoi uscire ed eliminare i dati remoti della sfida in qualsiasi momento."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "参加者に表示されるのは表示名と、任意で選択した X または Instagram のどちらか1つのユーザー名だけです。体重や減量を順位付けすることはありません。"
+            "value": "ランキングの結果は参加者だけが見られます。いつでも退出して、サーバー上のチャレンジデータを削除できます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "표시 이름과 선택한 X 또는 Instagram 사용자 이름 하나만 참가자에게 공개됩니다. 체중과 체중 감량은 순위에 사용되지 않습니다."
+            "value": "순위표 결과는 참여한 사람에게만 보입니다. 언제든지 나가서 서버에 있는 챌린지 데이터를 삭제할 수 있습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alleen je weergavenaam en eventueel één X- of Instagram-gebruikersnaam zijn zichtbaar voor deelnemers. Gewicht en gewichtsverlies krijgen nooit een rang."
+            "value": "Ranglijstresultaten zijn alleen zichtbaar voor deelnemers. Je kunt op elk moment stoppen en je externe uitdagingsgegevens verwijderen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wyniki rankingu są widoczne tylko dla osób, które dołączają. W każdej chwili możesz opuścić i usunąć dane zdalnego wyzwania."
+            "value": "Wyniki rankingu widzą tylko uczestnicy. W każdej chwili możesz odejść i usunąć swoje zdalne dane wyzwania."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Somente seu nome de exibição e, opcionalmente, um único perfil do X ou Instagram ficam visíveis para os participantes. Peso e perda de peso nunca entram no ranking."
+            "value": "Os resultados da classificação ficam visíveis só para quem participa. Você pode sair e apagar seus dados remotos do desafio a qualquer momento."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Doar numele afișat și, opțional, un singur identificator X sau Instagram sunt vizibile participanților. Greutatea și scăderea în greutate nu sunt clasificate niciodată."
+            "value": "Rezultatele clasamentului sunt vizibile doar participanților. Poți ieși și șterge oricând datele provocării de pe server."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Участникам видны только ваше отображаемое имя и, по желанию, одна ссылка на X или Instagram. Вес и снижение веса никогда не оцениваются."
+            "value": "Результаты рейтинга видны только участникам. Вы можете в любой момент выйти и удалить свои данные соревнования на сервере."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Участникам видни только ваше отображаемое имя и, по желанию, одна ссилка на X или Instagram. Вес и снижение веса никогда не оцениваются."
+            "value": "Результати рейтингу бачать лише учасники. Ви можете будь-коли вийти й видалити свої дані змагання на сервері."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "参与者只能看到您的显示名称，以及可选的一个 X 或 Instagram 用户名。体重和减重情况绝不会用于排名。"
+            "value": "排行榜结果仅对加入者可见。你可以随时退出并删除服务器上的挑战数据。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Sıralama sonuçları yalnızca katılan kişilere görünür. İstediğiniz zaman ayrılabilir ve uzak yarışma verilerinizi silebilirsiniz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Výsledky žebříčku vidí jen ti, kdo se připojí. Kdykoli můžeš odejít a smazat svá vzdálená data výzvy."
           }
         }
       }
@@ -5366,7 +5642,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вийти и видалити"
+            "value": "Вийти й видалити віддалені дані"
           }
         },
         "zh-Hans": {
@@ -5379,6 +5655,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayrıl ve Uzak Verileri Sil"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odejít a smazat vzdálená data"
           }
         }
       }
@@ -5492,6 +5774,12 @@
             "state": "translated",
             "value": "Yarışmadan Ayrıl"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opustit výzvu"
+          }
         }
       }
     },
@@ -5590,7 +5878,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вийти из соревнования?"
+            "value": "Вийти з щотижневого змагання?"
           }
         },
         "zh-Hans": {
@@ -5604,6 +5892,12 @@
             "state": "translated",
             "value": "Haftalık Yarışmadan ayrılınsın mı?"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opustit týdenní výzvu?"
+          }
         }
       }
     },
@@ -5612,19 +5906,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الترتيب"
+            "value": "جارٍ تحميل لوحة الصدارة"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reytinq"
+            "value": "Reytinq yüklənir"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rangliste"
+            "value": "Rangliste wird geladen"
           }
         },
         "en": {
@@ -5642,79 +5936,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Classement"
+            "value": "Chargement du classement"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "रैंकिंग"
+            "value": "लीडरबोर्ड लोड हो रहा है"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Classifica"
+            "value": "Caricamento della classifica"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ランキング"
+            "value": "ランキングを読み込み中"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "순위"
+            "value": "순위표 불러오는 중"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klassement"
+            "value": "Ranglijst laden"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ładowanie tabeli liderów"
+            "value": "Wczytywanie rankingu"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ranking"
+            "value": "Carregando classificação"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clasament"
+            "value": "Se încarcă clasamentul"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Рейтинг"
+            "value": "Загрузка рейтинга"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Рейтинг"
+            "value": "Завантаження рейтингу"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "排名"
+            "value": "正在加载排行榜"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Sıralama yükleniyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Načítám žebříček"
           }
         }
       }
@@ -5814,7 +6114,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Управление блокировками"
+            "value": "Керувати заблокованими учасниками"
           }
         },
         "zh-Hans": {
@@ -5827,6 +6127,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Engellenen Katılımcıları Yönet"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spravovat blokované účastníky"
           }
         }
       }
@@ -5926,7 +6232,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Другие действия для %1$@"
+            "value": "Інші дії для %1$@"
           }
         },
         "zh-Hans": {
@@ -5939,6 +6245,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ için daha fazla işlem"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Další akce pro %1$@"
           }
         }
       }
@@ -6038,7 +6350,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Моя позиция"
+            "value": "Моя позиція"
           }
         },
         "zh-Hans": {
@@ -6051,6 +6363,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Konumum"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moje pozice"
           }
         }
       }
@@ -6164,6 +6482,12 @@
             "state": "translated",
             "value": "İlerlemem"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Můj pokrok"
+          }
         }
       }
     },
@@ -6270,6 +6594,18 @@
             "state": "translated",
             "value": "下一页"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Další"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki"
+          }
         }
       }
     },
@@ -6368,7 +6704,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ви никого не заблокировали."
+            "value": "Немає заблокованих учасників"
           }
         },
         "zh-Hans": {
@@ -6381,6 +6717,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Engellenen Katılımcı Yok"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Žádní blokovaní účastníci"
           }
         }
       }
@@ -6480,7 +6822,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Других участников в рейтинге пока нет. Потяните вниз, чтоби обновить."
+            "value": "Результатів рейтингу поки немає."
           }
         },
         "zh-Hans": {
@@ -6493,6 +6835,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Henüz sıralama sonucu yok."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatím nejsou k dispozici žádné výsledky žebříčku."
           }
         }
       }
@@ -6592,7 +6940,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Других участников в рейтинге пока нет. Потяните вниз, чтоби обновить."
+            "value": "Інших учасників у рейтингу поки немає."
           }
         },
         "zh-Hans": {
@@ -6605,6 +6953,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Henüz sıralanmış başka katılımcı yok."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatím nejsou zařazeni žádní další účastníci."
           }
         }
       }
@@ -6718,6 +7072,12 @@
             "state": "translated",
             "value": "Sosyal bağlantı yok"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bez sociální sítě"
+          }
         }
       }
     },
@@ -6829,6 +7189,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beslenme"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutriční hodnoty"
           }
         }
       }
@@ -6942,6 +7308,12 @@
             "state": "translated",
             "value": "Tamam"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
         }
       }
     },
@@ -7040,7 +7412,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нет подключения · показан последний сохранённий рейтинг"
+            "value": "Офлайн — показано збережені результати"
           }
         },
         "zh-Hans": {
@@ -7053,6 +7425,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çevrimdışı — kaydedilen sonuçlar gösteriliyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline — zobrazují se uložené výsledky"
           }
         }
       }
@@ -7152,7 +7530,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нет подключения · показан последний сохранённий рейтинг · Последнее обновление: %1$@"
+            "value": "Офлайн — показано збережені результати · Останнє оновлення: %1$@"
           }
         },
         "zh-Hans": {
@@ -7166,6 +7544,12 @@
             "state": "translated",
             "value": "Çevrimdışı — kaydedilen sonuçlar gösteriliyor · Son güncelleme %1$@"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline — zobrazují se uložené výsledky · Naposledy aktualizováno %1$@"
+          }
         }
       }
     },
@@ -7174,19 +7558,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذا الأسبوع"
+            "value": "لا تغادر جهازك سوى الإجماليات الأسبوعية"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu həftə"
+            "value": "Cihazınızdan yalnız həftəlik cəmlər çıxır"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Woche"
+            "value": "Nur Wochensummen verlassen dein Gerät"
           }
         },
         "en": {
@@ -7204,79 +7588,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette semaine"
+            "value": "Seuls les totaux hebdomadaires quittent votre appareil"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इस सप्ताह"
+            "value": "आपके डिवाइस से केवल साप्ताहिक कुल आँकड़े बाहर जाते हैं"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa settimana"
+            "value": "Solo i totali settimanali lasciano il tuo dispositivo"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "今週"
+            "value": "デバイスから送信されるのは週間合計だけです"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이번 주"
+            "value": "기기 밖으로 나가는 것은 주간 합계뿐입니다"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze week"
+            "value": "Alleen weektotalen verlaten je apparaat"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tylko tygodniowe sumy opuszczają Twoje urządzenie"
+            "value": "Z urządzenia wychodzą tylko sumy tygodniowe"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta semana"
+            "value": "Só os totais semanais saem do seu dispositivo"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Săptămâna aceasta"
+            "value": "Doar totalurile săptămânale părăsesc dispozitivul tău"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта неделя"
+            "value": "С устройства передаются только недельные итоги"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Цього тижня"
+            "value": "З пристрою передаються лише тижневі підсумки"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本周"
+            "value": "只有每周总数会离开你的设备"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Yalnızca haftalık toplamlar cihazınızdan çıkar"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zařízení opouštějí jen týdenní souhrny"
           }
         }
       }
@@ -7390,6 +7780,12 @@
             "state": "translated",
             "value": "%2$@'de @%1$@'i aç"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otevřít @%1$@ na %2$@"
+          }
         }
       }
     },
@@ -7398,19 +7794,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الانضمام إلى التحدي"
+            "value": "يفتح الملف الشخصي العام الاختياري ونموذج الموافقة."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çağırışa qoşul"
+            "value": "İstəyə bağlı açıq profili və razılıq formasını açır."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Challenge beitreten"
+            "value": "Öffnet das optionale öffentliche Profil und das Einwilligungsformular."
           }
         },
         "en": {
@@ -7428,37 +7824,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rejoindre le défi"
+            "value": "Ouvre le profil public facultatif et le formulaire de consentement."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "चुनौती में शामिल हों"
+            "value": "वैकल्पिक सार्वजनिक प्रोफ़ाइल और सहमति फ़ॉर्म खोलता है।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Partecipa alla sfida"
+            "value": "Apre il profilo pubblico facoltativo e il modulo di consenso."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "チャレンジに参加"
+            "value": "任意の公開プロフィールと同意フォームを開きます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "챌린지 참여"
+            "value": "선택 사항인 공개 프로필과 동의 양식을 엽니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Meedoen aan uitdaging"
+            "value": "Opent het optionele openbare profiel en het toestemmingsformulier."
           }
         },
         "pl": {
@@ -7470,37 +7866,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Participar do desafio"
+            "value": "Abre o perfil público opcional e o formulário de consentimento."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Participă la provocare"
+            "value": "Deschide profilul public opțional și formularul de consimțământ."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Присоединиться"
+            "value": "Открывает необязательный публичный профиль и форму согласия."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Присоединиться"
+            "value": "Відкриває необов’язковий публічний профіль і форму згоди."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "加入挑战"
+            "value": "打开可选的公开资料和同意表单。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "İsteğe bağlı genel profil ve onay formunu açar."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otevře volitelný veřejný profil a formulář souhlasu."
           }
         }
       }
@@ -7614,6 +8016,12 @@
             "state": "translated",
             "value": "İsteğe bağlı ayrıntılar"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volitelné podrobnosti"
+          }
         }
       }
     },
@@ -7725,6 +8133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "İsteğe bağlı şikayet ayrıntıları"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volitelné podrobnosti nahlášení"
           }
         }
       }
@@ -7838,6 +8252,12 @@
             "state": "translated",
             "value": "Diğer"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jiné"
+          }
         }
       }
     },
@@ -7950,6 +8370,12 @@
             "state": "translated",
             "value": "Genel"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Celkem"
+          }
         }
       }
     },
@@ -7958,19 +8384,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مركزي"
+            "value": "مشارك"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mövqeyim"
+            "value": "İştirakçı"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Meine Position"
+            "value": "Teilnehmer"
           }
         },
         "en": {
@@ -7988,37 +8414,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ma position"
+            "value": "Participant"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "मेरी स्थिति"
+            "value": "प्रतिभागी"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La mia posizione"
+            "value": "Partecipante"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "自分の順位"
+            "value": "参加者"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "내 순위"
+            "value": "참가자"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mijn positie"
+            "value": "Deelnemer"
           }
         },
         "pl": {
@@ -8030,37 +8456,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Minha posição"
+            "value": "Participante"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Poziția mea"
+            "value": "Participant"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Моя позиция"
+            "value": "Участник"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Моя позиция"
+            "value": "Учасник"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "我的排名"
+            "value": "参与者"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Katılımcı"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Účastník"
           }
         }
       }
@@ -8167,6 +8599,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "上一页"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Předchozí"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki"
           }
         }
       }
@@ -8280,6 +8724,12 @@
             "state": "translated",
             "value": "İlerleme görünümü"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zobrazení pokroku"
+          }
         }
       }
     },
@@ -8288,19 +8738,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعديل الملف"
+            "value": "الملف الشخصي العام"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profili redaktə et"
+            "value": "Açıq profil"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profil bearbeiten"
+            "value": "Öffentliches Profil"
           }
         },
         "en": {
@@ -8312,43 +8762,43 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Editar perfil"
+            "value": "Perfil público"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifier le profil"
+            "value": "Profil public"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "प्रोफ़ाइल बदलें"
+            "value": "सार्वजनिक प्रोफ़ाइल"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifica profilo"
+            "value": "Profilo pubblico"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "プロフィールを編集"
+            "value": "公開プロフィール"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "프로필 수정"
+            "value": "공개 프로필"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profiel bewerken"
+            "value": "Openbaar profiel"
           }
         },
         "pl": {
@@ -8360,37 +8810,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Editar perfil"
+            "value": "Perfil público"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Editează profilul"
+            "value": "Profil public"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменить профиль"
+            "value": "Публичный профиль"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменить профиль"
+            "value": "Публічний профіль"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "编辑个人资料"
+            "value": "公开资料"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Genel Profil"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veřejný profil"
           }
         }
       }
@@ -8498,6 +8954,18 @@
             "state": "translated",
             "value": "排名"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Žebříček"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıralamalar"
+          }
         }
       }
     },
@@ -8506,19 +8974,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أوافق على قواعد المجتمع وسأستخدم ملفًا محترمًا لا ينتحل شخصية أحد."
+            "value": "قراءة قواعد المجتمع"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "İcma Qaydalarını qəbul edirəm və heç kimi təqlid etməyən hörmətli profil istifadə edəcəyəm."
+            "value": "İcma qaydalarını oxu"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ich akzeptiere die Community-Regeln und verwende ein respektvolles Profil, das niemanden imitiert."
+            "value": "Community-Regeln lesen"
           }
         },
         "en": {
@@ -8536,61 +9004,61 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "J’accepte les Règles de la communauté et utiliserai un profil respectueux, sans usurpation d’identité."
+            "value": "Lire les Règles de la communauté"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "मैं कम्युनिटी नियम स्वीकार करता/करती हूँ और किसी की नकल न करने वाली सम्मानजनक प्रोफ़ाइल का उपयोग करूँगा/करूँगी।"
+            "value": "कम्युनिटी नियम पढ़ें"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accetto le Regole della community e userò un profilo rispettoso che non imiti altre persone."
+            "value": "Leggi le Regole della community"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "コミュニティルールに同意し、他人になりすまさない礼儀正しいプロフィールを使用します。"
+            "value": "コミュニティルールを読む"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "커뮤니티 규칙에 동의하며 다른 사람을 사칭하지 않는 정중한 프로필을 사용하겠습니다."
+            "value": "커뮤니티 규칙 읽기"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ik accepteer de Communityregels en gebruik een respectvol profiel waarmee ik me niet als iemand anders voordoe."
+            "value": "Communityregels lezen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Przeczytaj zasady społeczności"
+            "value": "Przeczytaj Zasady społeczności"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aceito as Regras da comunidade e usarei um perfil respeitoso, sem fingir ser outra pessoa."
+            "value": "Ler as Regras da comunidade"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accept Regulile comunității și voi folosi un profil respectuos, fără uzurparea identității."
+            "value": "Citește Regulile comunității"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Я принимаю Правила сообщества и буду использовать уважительный профиль, не выдавая себя за других."
+            "value": "Прочитать Правила сообщества"
           }
         },
         "uk": {
@@ -8602,13 +9070,19 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "我接受社区规则，并会使用尊重他人且不冒充他人的个人资料。"
+            "value": "阅读社区规则"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Topluluk Kurallarını Oku"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přečíst Pravidla komunity"
           }
         }
       }
@@ -8618,19 +9092,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تفاصيل اختيارية"
+            "value": "السبب"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "İstəyə bağlı təfərrüatlar"
+            "value": "Səbəb"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Optionale Details"
+            "value": "Grund"
           }
         },
         "en": {
@@ -8648,37 +9122,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Détails facultatifs"
+            "value": "Motif"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "वैकल्पिक विवरण"
+            "value": "कारण"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dettagli facoltativi"
+            "value": "Motivo"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "任意の詳細"
+            "value": "理由"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "선택적 세부 정보"
+            "value": "사유"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Optionele details"
+            "value": "Reden"
           }
         },
         "pl": {
@@ -8690,37 +9164,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Detalhes opcionais"
+            "value": "Motivo"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Detalii opționale"
+            "value": "Motiv"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Необязательные сведения"
+            "value": "Причина"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Необов'язкові деталі"
+            "value": "Причина"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "可选详情"
+            "value": "原因"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Neden"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Důvod"
           }
         }
       }
@@ -8730,19 +9210,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم إخفاء ملف التحدي على هذا الجهاز. سيعيد Fud AI محاولة حذف الملف البعيد والنتائج الأسبوعية عند الاتصال بالإنترنت."
+            "value": "لم تُحذف بيانات التحدي البعيدة. تحقق من اتصالك وحاول مرة أخرى."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çağırış profiliniz bu cihazda gizlədilib. Onlayn olduqda Fud AI uzaq profili və həftəlik xalları yenidən silməyə çalışacaq."
+            "value": "Uzaq serverdəki çağırış məlumatları silinmədi. Bağlantınızı yoxlayıb yenidən cəhd edin."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Challenge-Profil ist auf diesem Gerät ausgeblendet. Fud AI versucht erneut, das Remote-Profil und die Wochenergebnisse zu löschen, sobald du online bist."
+            "value": "Die Remote-Challenge-Daten wurden nicht gelöscht. Prüfe deine Verbindung und versuche es erneut."
           }
         },
         "en": {
@@ -8760,79 +9240,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre profil du défi est masqué sur cet appareil. Fud AI réessaiera de supprimer le profil distant et les scores hebdomadaires lorsque vous serez en ligne."
+            "value": "Les données du défi en ligne n’ont pas été supprimées. Vérifiez votre connexion et réessayez."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इस डिवाइस पर आपकी चुनौती प्रोफ़ाइल छिपा दी गई है। ऑनलाइन होने पर Fud AI रिमोट प्रोफ़ाइल और साप्ताहिक स्कोर डिलीट करने की फिर कोशिश करेगा।"
+            "value": "रिमोट चुनौती डेटा नहीं हटाया गया। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo profilo della sfida è nascosto su questo dispositivo. Fud AI riproverà a eliminare il profilo remoto e i punteggi settimanali quando sarai online."
+            "value": "I dati remoti della sfida non sono stati eliminati. Controlla la connessione e riprova."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "この端末ではチャレンジプロフィールを非表示にしました。オンラインになったとき、Fud AI がリモートプロフィールと週間スコアの削除を再試行します。"
+            "value": "サーバー上のチャレンジデータは削除されませんでした。接続を確認して、もう一度お試しください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 기기에서 챌린지 프로필을 숨겼습니다. 온라인 상태가 되면 Fud AI가 원격 프로필과 주간 점수 삭제를 다시 시도합니다."
+            "value": "서버의 챌린지 데이터가 삭제되지 않았습니다. 연결을 확인한 후 다시 시도하세요."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je uitdagingsprofiel is verborgen op dit apparaat. Fud AI probeert het externe profiel en de weekscores opnieuw te verwijderen wanneer je online bent."
+            "value": "De externe uitdagingsgegevens zijn niet verwijderd. Controleer je verbinding en probeer het opnieuw."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dane zdalnego wyzwania nie zostały usunięte. Sprawdź połączenie i spróbuj ponownie."
+            "value": "Zdalne dane wyzwania nie zostały usunięte. Sprawdź połączenie i spróbuj ponownie."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seu perfil do desafio está oculto neste dispositivo. O Fud AI tentará excluir novamente o perfil remoto e as pontuações semanais quando você estiver on-line."
+            "value": "Os dados remotos do desafio não foram apagados. Verifique sua conexão e tente novamente."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profilul provocării este ascuns pe acest dispozitiv. Fud AI va încerca din nou să șteargă profilul la distanță și scorurile săptămânale când ești online."
+            "value": "Datele provocării de pe server nu au fost șterse. Verifică-ți conexiunea și încearcă din nou."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Профиль соревнования скрыт на этом устройстве. Fud AI повторит удаление удалённого профиля и еженедельных результатов, когда появится интернет."
+            "value": "Данные соревнования на сервере не удалены. Проверьте подключение и повторите попытку."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Профиль соревнования скрит на етом устройстве. Fud AI повторит удаление удалённого профиля и еженедельних результатов, когда появится интернет."
+            "value": "Дані змагання на сервері не видалено. Перевірте з’єднання та спробуйте ще раз."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "此设备上已隐藏您的挑战个人资料。联网后，Fud AI 将再次尝试删除远程个人资料和每周得分。"
+            "value": "服务器上的挑战数据未被删除。请检查网络连接后重试。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Uzak yarışma verileri silinmedi. Bağlantınızı kontrol edip tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vzdálená data výzvy nebyla smazána. Zkontroluj připojení a zkus to znovu."
           }
         }
       }
@@ -8946,6 +9432,12 @@
             "state": "translated",
             "value": "Şikayet Et"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásit"
+          }
         }
       }
     },
@@ -8954,19 +9446,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الإبلاغ عن"
+            "value": "الإبلاغ عن مشارك"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "barədə şikayət et"
+            "value": "İştirakçını şikayət et"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "melden"
+            "value": "Teilnehmer melden"
           }
         },
         "en": {
@@ -8984,37 +9476,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signaler"
+            "value": "Signaler le participant"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "को रिपोर्ट करें"
+            "value": "प्रतिभागी की रिपोर्ट करें"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Segnala"
+            "value": "Segnala partecipante"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "を報告"
+            "value": "参加者を報告"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "신고"
+            "value": "참가자 신고"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "rapporteren"
+            "value": "Deelnemer melden"
           }
         },
         "pl": {
@@ -9026,37 +9518,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denunciar"
+            "value": "Denunciar participante"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Raportează"
+            "value": "Raportează participantul"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пожаловаться на"
+            "value": "Пожаловаться на участника"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пожаловаться на"
+            "value": "Поскаржитися на учасника"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "举报"
+            "value": "举报参与者"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Katılımcıyı Şikayet Et"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásit účastníka"
           }
         }
       }
@@ -9170,6 +9668,12 @@
             "state": "translated",
             "value": "Şikayet Gönderildi"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlášení odesláno"
+          }
         }
       }
     },
@@ -9178,19 +9682,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الإبلاغ عن"
+            "value": "سبب البلاغ"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "barədə şikayət et"
+            "value": "Şikayətin səbəbi"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "melden"
+            "value": "Meldegrund"
           }
         },
         "en": {
@@ -9208,37 +9712,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signaler"
+            "value": "Motif du signalement"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "को रिपोर्ट करें"
+            "value": "रिपोर्ट का कारण"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Segnala"
+            "value": "Motivo della segnalazione"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "を報告"
+            "value": "報告の理由"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "신고"
+            "value": "신고 사유"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "rapporteren"
+            "value": "Reden van melding"
           }
         },
         "pl": {
@@ -9250,37 +9754,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denunciar"
+            "value": "Motivo da denúncia"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Raportează"
+            "value": "Motivul raportării"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пожаловаться на"
+            "value": "Причина жалобы"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пожаловаться на"
+            "value": "Причина скарги"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "举报"
+            "value": "举报原因"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Şikayet nedeni"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Důvod nahlášení"
           }
         }
       }
@@ -9380,7 +9890,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Жалоба содержит только ID участника, вибранную причину и необязательние сведения — ваши данние о здоровье не включаются."
+            "value": "Скарги містять лише ID учасника, вибрану причину та необов’язкові деталі, які ви введете. Жодних даних про здоров’я чи їжу."
           }
         },
         "zh-Hans": {
@@ -9394,6 +9904,12 @@
             "state": "translated",
             "value": "Şikayetler yalnızca katılımcı kimliğini, seçilen nedeni ve yazdığınız isteğe bağlı ayrıntıları içerir. Sağlık veya yiyecek verisi dahil edilmez."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlášení obsahuje jen ID účastníka, zvolený důvod a volitelné podrobnosti, které napíšeš. Žádná data o zdraví ani jídle nejsou zahrnuta."
+          }
         }
       }
     },
@@ -9402,19 +9918,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الحذف بانتظار الاتصال"
+            "value": "إعادة محاولة الحذف"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Silmə bağlantını gözləyir"
+            "value": "Silməni yenidən cəhd et"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Löschung wartet auf eine Verbindung"
+            "value": "Löschen erneut versuchen"
           }
         },
         "en": {
@@ -9432,79 +9948,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suppression en attente de connexion"
+            "value": "Réessayer la suppression"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "डिलीट करने के लिए कनेक्शन की प्रतीक्षा"
+            "value": "हटाने की फिर से कोशिश करें"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eliminazione in attesa di connessione"
+            "value": "Riprova eliminazione"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "接続後に削除します"
+            "value": "削除を再試行"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "연결되면 삭제 예정"
+            "value": "삭제 다시 시도"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verwijdering wacht op verbinding"
+            "value": "Verwijderen opnieuw proberen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ponów usunięcie"
+            "value": "Ponów usuwanie"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exclusão aguardando conexão"
+            "value": "Tentar apagar novamente"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ștergerea așteaptă conexiunea"
+            "value": "Reîncearcă ștergerea"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Удаление ожидает подключения"
+            "value": "Повторить удаление"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Удаление ожидает подключения"
+            "value": "Повторити видалення"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "连接后将删除"
+            "value": "重试删除"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Silmeyi Tekrar Dene"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zkusit smazání znovu"
           }
         }
       }
@@ -9618,6 +10140,12 @@
             "state": "translated",
             "value": "Kaydet"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uložit"
+          }
         }
       }
     },
@@ -9626,19 +10154,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعديل الملف"
+            "value": "جارٍ حفظ الملف الشخصي العام"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profili redaktə et"
+            "value": "Açıq profil saxlanılır"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profil bearbeiten"
+            "value": "Öffentliches Profil wird gespeichert"
           }
         },
         "en": {
@@ -9656,37 +10184,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifier le profil"
+            "value": "Enregistrement du profil public"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "प्रोफ़ाइल बदलें"
+            "value": "सार्वजनिक प्रोफ़ाइल सहेजी जा रही है"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifica profilo"
+            "value": "Salvataggio del profilo pubblico"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "プロフィールを編集"
+            "value": "公開プロフィールを保存中"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "프로필 수정"
+            "value": "공개 프로필 저장 중"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Profiel bewerken"
+            "value": "Openbaar profiel bewaren"
           }
         },
         "pl": {
@@ -9698,37 +10226,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Editar perfil"
+            "value": "Salvando perfil público"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Editează profilul"
+            "value": "Se salvează profilul public"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменить профиль"
+            "value": "Сохранение публичного профиля"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменить профиль"
+            "value": "Збереження публічного профілю"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "编辑个人资料"
+            "value": "正在保存公开资料"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Genel profil kaydediliyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukládám veřejný profil"
           }
         }
       }
@@ -9842,6 +10376,12 @@
             "state": "translated",
             "value": "Şikayeti Gönder"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odeslat nahlášení"
+          }
         }
       }
     },
@@ -9850,19 +10390,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هذا الأسبوع"
+            "value": "الإجماليات الأسبوعية المُشاركة"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu həftə"
+            "value": "Paylaşılan həftəlik cəmlər"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Woche"
+            "value": "Geteilte Wochensummen"
           }
         },
         "en": {
@@ -9880,79 +10420,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette semaine"
+            "value": "Totaux hebdomadaires partagés"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "इस सप्ताह"
+            "value": "साझा किए गए साप्ताहिक कुल"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa settimana"
+            "value": "Totali settimanali condivisi"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "今週"
+            "value": "共有される週間合計"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이번 주"
+            "value": "공유되는 주간 합계"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze week"
+            "value": "Gedeelde weektotalen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Udostępnione sumy tygodniowe"
+            "value": "Udostępniane sumy tygodniowe"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta semana"
+            "value": "Totais semanais compartilhados"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Săptămâna aceasta"
+            "value": "Totaluri săptămânale partajate"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта неделя"
+            "value": "Передаваемые недельные итоги"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Цього тижня"
+            "value": "Спільні тижневі підсумки"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本周"
+            "value": "共享的每周总数"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Paylaşılan Haftalık Toplamlar"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sdílené týdenní souhrny"
           }
         }
       }
@@ -10052,7 +10598,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Необязательний профиль в соцсети (виберите один)"
+            "value": "Посилання на соцмережу"
           }
         },
         "zh-Hans": {
@@ -10065,6 +10611,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sosyal bağlantı"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odkaz na sociální síť"
           }
         }
       }
@@ -10178,6 +10730,12 @@
             "state": "translated",
             "value": "Spam"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
         }
       }
     },
@@ -10186,19 +10744,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم إرسال البلاغ"
+            "value": "شكرًا لك. تم إرسال البلاغ للمراجعة."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Şikayət göndərildi"
+            "value": "Təşəkkür edirik. Şikayət yoxlanılmaq üçün göndərildi."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Meldung gesendet"
+            "value": "Danke. Die Meldung wurde zur Prüfung gesendet."
           }
         },
         "en": {
@@ -10216,37 +10774,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signalement envoyé"
+            "value": "Merci. Le signalement a été envoyé pour examen."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "रिपोर्ट भेज दी गई"
+            "value": "धन्यवाद। रिपोर्ट समीक्षा के लिए भेज दी गई है।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Segnalazione inviata"
+            "value": "Grazie. La segnalazione è stata inviata per la revisione."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "報告を送信しました"
+            "value": "ありがとうございます。報告は確認のために送信されました。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "신고 전송됨"
+            "value": "감사합니다. 신고가 검토를 위해 제출되었습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Melding verzonden"
+            "value": "Bedankt. De melding is ter beoordeling verzonden."
           }
         },
         "pl": {
@@ -10258,37 +10816,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denúncia enviada"
+            "value": "Obrigado. A denúncia foi enviada para análise."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Raport trimis"
+            "value": "Mulțumim. Raportul a fost trimis spre analiză."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Жалоба отправлена"
+            "value": "Спасибо. Жалоба отправлена на рассмотрение."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Жалоба отправлена"
+            "value": "Дякуємо. Скаргу надіслано на розгляд."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "举报已发送"
+            "value": "谢谢。举报已提交审核。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Teşekkürler. Şikayet inceleme için gönderildi."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Děkujeme. Nahlášení bylo odesláno ke kontrole."
           }
         }
       }
@@ -10396,6 +10960,18 @@
             "state": "translated",
             "value": "你正在查看的类别优先。如果相同，其他天数决定名次，然后是锻炼卡路里。在活动中，卡路里排在其他天数之前。如果整周仍然相同，先达到这些总数的人排在前面。再次保存相同的总数不会改变这个时间。"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nejdřív rozhoduje kategorie, kterou si prohlížíš. Pokud je shodná, rozhodnou ostatní počty dní. Pak následují kalorie z tréninků, s výjimkou kategorie Aktivita, kde mají kalorie přednost před ostatními dny. Pokud je týden stále stejný, zůstává vpředu ten, kdo těchto hodnot dosáhl dřív. Opětovné uložení stejných hodnot tento čas nemění."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce görüntülediğiniz kategori dikkate alınır. Eşitlik olursa diğer gün sayıları belirler. Ardından antrenman kalorileri gelir; ancak Aktivite'de kaloriler diğer günlerden önce gelir. Hafta hâlâ aynıysa bu toplamlara önce ulaşan kişi önde kalır. Aynı toplamları yeniden kaydetmek bu zamanı değiştirmez."
+          }
         }
       }
     },
@@ -10494,7 +11070,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося обновить еженедельное соревнование. Спробуйте знову позже."
+            "value": "Не вдалося оновити рейтинг. Потягніть вниз, щоб спробувати ще раз."
           }
         },
         "zh-Hans": {
@@ -10508,6 +11084,12 @@
             "state": "translated",
             "value": "Sıralama güncellenemedi. Tekrar denemek için aşağı çekin."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Žebříček se nepodařilo aktualizovat. Stáhni dolů a zkus to znovu."
+          }
         }
       }
     },
@@ -10516,19 +11098,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذر تحديث التحدي الأسبوعي. حاول مرة أخرى بعد قليل."
+            "value": "تعذّر إرسال البلاغ. حاول مرة أخرى."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Həftəlik çağırışı yeniləmək mümkün olmadı. Bir az sonra yenidən cəhd edin."
+            "value": "Şikayət göndərilmədi. Yenidən cəhd edin."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Wochen-Challenge konnte nicht aktualisiert werden. Versuche es gleich noch einmal."
+            "value": "Die Meldung konnte nicht gesendet werden. Versuche es erneut."
           }
         },
         "en": {
@@ -10546,79 +11128,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de mettre à jour le Défi de la semaine. Réessayez bientôt."
+            "value": "Impossible d’envoyer le signalement. Réessayez."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साप्ताहिक चुनौती अपडेट नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।"
+            "value": "रिपोर्ट नहीं भेजी जा सकी। फिर से कोशिश करें।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossibile aggiornare la Sfida settimanale. Riprova tra poco."
+            "value": "Impossibile inviare la segnalazione. Riprova."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "週間チャレンジを更新できませんでした。しばらくしてからもう一度お試しください。"
+            "value": "報告を送信できませんでした。もう一度お試しください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "주간 챌린지를 업데이트할 수 없습니다. 잠시 후 다시 시도하세요."
+            "value": "신고를 보내지 못했습니다. 다시 시도하세요."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De Weekuitdaging kon niet worden bijgewerkt. Probeer het straks opnieuw."
+            "value": "De melding kon niet worden verzonden. Probeer het opnieuw."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie można wysłać raportu. Spróbuj ponownie."
+            "value": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível atualizar o Desafio semanal. Tente novamente em breve."
+            "value": "Não foi possível enviar a denúncia. Tente novamente."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Provocarea săptămânală nu a putut fi actualizată. Încearcă din nou în curând."
+            "value": "Raportul nu a putut fi trimis. Încearcă din nou."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось обновить еженедельное соревнование. Повторите попытку позже."
+            "value": "Не удалось отправить жалобу. Повторите попытку."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося обновить еженедельное соревнование. Спробуйте знову позже."
+            "value": "Не вдалося надіслати скаргу. Спробуйте ще раз."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法更新每周挑战，请稍后重试。"
+            "value": "无法发送举报。请重试。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Şikayet gönderilemedi. Tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlášení se nepodařilo odeslat. Zkus to znovu."
           }
         }
       }
@@ -10732,6 +11320,12 @@
             "state": "translated",
             "value": "Engeli Kaldır"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odblokovat"
+          }
         }
       }
     },
@@ -10740,19 +11334,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "غير مصنّف"
+            "value": "مشارك غير معروف"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sıralanmayıb"
+            "value": "Naməlum iştirakçı"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht platziert"
+            "value": "Unbekannter Teilnehmer"
           }
         },
         "en": {
@@ -10770,37 +11364,37 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non classé"
+            "value": "Participant inconnu"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "रैंक नहीं मिली"
+            "value": "अज्ञात प्रतिभागी"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non in classifica"
+            "value": "Partecipante sconosciuto"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "順位なし"
+            "value": "不明な参加者"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "순위 없음"
+            "value": "알 수 없는 참가자"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niet gerangschikt"
+            "value": "Onbekende deelnemer"
           }
         },
         "pl": {
@@ -10812,37 +11406,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sem classificação"
+            "value": "Participante desconhecido"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neclasat"
+            "value": "Participant necunoscut"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вне рейтинга"
+            "value": "Неизвестный участник"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вне рейтинга"
+            "value": "Невідомий учасник"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "未排名"
+            "value": "未知参与者"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bilinmeyen katılımcı"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neznámý účastník"
           }
         }
       }
@@ -10956,6 +11556,12 @@
             "state": "translated",
             "value": "Güvensiz içerik"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nebezpečný obsah"
+          }
         }
       }
     },
@@ -10964,19 +11570,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الترتيب"
+            "value": "جارٍ تحديث لوحة الصدارة"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reytinq"
+            "value": "Reytinq yenilənir"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rangliste"
+            "value": "Rangliste wird aktualisiert"
           }
         },
         "en": {
@@ -10994,79 +11600,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Classement"
+            "value": "Mise à jour du classement"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "रैंकिंग"
+            "value": "लीडरबोर्ड अपडेट हो रहा है"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Classifica"
+            "value": "Aggiornamento della classifica"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ランキング"
+            "value": "ランキングを更新中"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "순위"
+            "value": "순위표 업데이트 중"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klassement"
+            "value": "Ranglijst bijwerken"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aktualizowanie tabeli liderów"
+            "value": "Aktualizowanie rankingu"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ranking"
+            "value": "Atualizando classificação"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clasament"
+            "value": "Se actualizează clasamentul"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Рейтинг"
+            "value": "Обновление рейтинга"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Рейтинг"
+            "value": "Оновлення рейтингу"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "排名"
+            "value": "正在更新排行榜"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Sıralama güncelleniyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualizuji žebříček"
           }
         }
       }
@@ -11166,7 +11778,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "От 2 до 40 символов: букви, цифри, пробели, точка, подчёркивание, апостроф или дефис"
+            "value": "Використовуйте від 2 до 40 літер або цифр."
           }
         },
         "zh-Hans": {
@@ -11179,6 +11791,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "2 ile 40 arası harf veya rakam kullanın."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Použij 2 až 40 písmen nebo číslic."
           }
         }
       }
@@ -11278,7 +11896,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "От 2 до 40 символов: букви, цифри, пробели, точка, подчёркивание, апостроф или дефис"
+            "value": "Використовуйте 2–40 літер або цифр. Дозволено пробіли, крапки, підкреслення, апострофи та дефіси."
           }
         },
         "zh-Hans": {
@@ -11291,6 +11909,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "2-40 harf veya rakam kullanın. Boşluklar, noktalar, alt çizgiler, kesme işaretleri ve tireler kullanılabilir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Použij 2–40 písmen nebo číslic. Povoleny jsou mezery, tečky, podtržítka, apostrofy a pomlčky."
           }
         }
       }
@@ -11390,7 +12014,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ещё не обновлено"
+            "value": "Очікування першого оновлення"
           }
         },
         "zh-Hans": {
@@ -11403,6 +12027,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "İlk güncelleme bekleniyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Čeká se na první aktualizaci"
           }
         }
       }
@@ -11516,6 +12146,12 @@
             "state": "translated",
             "value": "Haftalık Yarışma"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Týdenní výzva"
+          }
         }
       }
     },
@@ -11622,6 +12258,18 @@
             "state": "translated",
             "value": "你"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ty"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siz"
+          }
         }
       }
     },
@@ -11720,7 +12368,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Участникам видни только ваше отображаемое имя и, по желанию, одна ссилка на X или Instagram. Вес и снижение веса никогда не оцениваются."
+            "value": "Ваше відображуване ім’я та необов’язково одне ім’я в соцмережі бачать учасники, що приєдналися."
           }
         },
         "zh-Hans": {
@@ -11734,6 +12382,12 @@
             "state": "translated",
             "value": "Görünen adınız ve isteğe bağlı tek bir sosyal medya kullanıcı adınız katılan katılımcılara görünür."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tvé zobrazované jméno a volitelně jedno uživatelské jméno ze sociální sítě vidí připojení účastníci."
+          }
         }
       }
     },
@@ -11742,19 +12396,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يبدو أنك غير متصل. لا يزال الترتيب المحفوظ متاحًا."
+            "value": "تُحفظ أحدث إجمالياتك الأسبوعية على هذا الجهاز وستُعاد محاولة إرسالها تلقائيًا."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deyəsən oflaynsınız. Saxlanmış reytinqlər hələ də əlçatandır."
+            "value": "Son həftəlik cəmləriniz bu cihazda saxlanılır və avtomatik olaraq yenidən göndəriləcək."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du scheinst offline zu sein. Gespeicherte Ranglisten sind weiterhin verfügbar."
+            "value": "Deine neuesten Wochensummen sind auf diesem Gerät gespeichert und werden automatisch erneut gesendet."
           }
         },
         "en": {
@@ -11772,79 +12426,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous semblez hors connexion. Le classement enregistré reste disponible."
+            "value": "Vos derniers totaux hebdomadaires sont enregistrés sur cet appareil et seront renvoyés automatiquement."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "लगता है आप ऑफ़लाइन हैं। सहेजी गई रैंकिंग अब भी उपलब्ध है।"
+            "value": "आपके नवीनतम साप्ताहिक कुल इस डिवाइस पर सहेजे गए हैं और अपने-आप फिर से भेजे जाएंगे।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sembra che tu sia offline. Le classifiche salvate sono ancora disponibili."
+            "value": "I tuoi ultimi totali settimanali sono salvati su questo dispositivo e verranno inviati di nuovo automaticamente."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "オフラインのようです。保存済みのランキングは引き続き表示できます。"
+            "value": "最新の週間合計はこのデバイスに保存され、自動的に再送信されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "오프라인 상태인 것 같습니다. 저장된 순위는 계속 볼 수 있습니다."
+            "value": "최신 주간 합계는 이 기기에 저장되며 자동으로 다시 전송됩니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je lijkt offline te zijn. Opgeslagen klassementen blijven beschikbaar."
+            "value": "Je nieuwste weektotalen zijn op dit apparaat bewaard en worden automatisch opnieuw verstuurd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Najnowsze tygodniowe wyniki są zapisane na tym urządzeniu i zostaną automatycznie wysłane ponownie."
+            "value": "Twoje najnowsze sumy tygodniowe są zapisane na tym urządzeniu i zostaną automatycznie wysłane ponownie."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parece que você está off-line. Os rankings salvos ainda estão disponíveis."
+            "value": "Seus totais semanais mais recentes estão salvos neste dispositivo e serão reenviados automaticamente."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se pare că ești offline. Clasamentele salvate sunt încă disponibile."
+            "value": "Cele mai recente totaluri săptămânale sunt salvate pe acest dispozitiv și vor fi retrimise automat."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Похоже, нет подключения. Сохранённый рейтинг по-прежнему доступен."
+            "value": "Ваши последние недельные итоги сохранены на устройстве и будут отправлены повторно автоматически."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Похоже, нет подключения. Сохранённий рейтинг по-прежнему доступен."
+            "value": "Ваші останні тижневі підсумки збережено на цьому пристрої, їх буде автоматично надіслано повторно."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "您似乎处于离线状态，仍可查看已保存的排名。"
+            "value": "你最新的每周总数已保存在此设备上，并将自动重新发送。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Son haftalık toplamlarınız bu cihazda kaydedildi ve otomatik olarak yeniden denenecek."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tvé nejnovější týdenní souhrny jsou uložené v tomto zařízení a odeslání se automaticky zopakuje."
           }
         }
       }
@@ -11854,19 +12514,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذر تحديث التحدي الأسبوعي. حاول مرة أخرى بعد قليل."
+            "value": "تعذّر تحديث ملفك الشخصي العام في التحدي."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Həftəlik çağırışı yeniləmək mümkün olmadı. Bir az sonra yenidən cəhd edin."
+            "value": "Açıq çağırış profiliniz yenilənmədi."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Wochen-Challenge konnte nicht aktualisiert werden. Versuche es gleich noch einmal."
+            "value": "Dein öffentliches Challenge-Profil konnte nicht aktualisiert werden."
           }
         },
         "en": {
@@ -11884,79 +12544,85 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de mettre à jour le Défi de la semaine. Réessayez bientôt."
+            "value": "Impossible de mettre à jour votre profil public du défi."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "साप्ताहिक चुनौती अपडेट नहीं हो सकी। थोड़ी देर बाद फिर कोशिश करें।"
+            "value": "आपकी सार्वजनिक चुनौती प्रोफ़ाइल अपडेट नहीं हो सकी।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossibile aggiornare la Sfida settimanale. Riprova tra poco."
+            "value": "Impossibile aggiornare il tuo profilo pubblico della sfida."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "週間チャレンジを更新できませんでした。しばらくしてからもう一度お試しください。"
+            "value": "チャレンジの公開プロフィールを更新できませんでした。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "주간 챌린지를 업데이트할 수 없습니다. 잠시 후 다시 시도하세요."
+            "value": "공개 챌린지 프로필을 업데이트하지 못했습니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De Weekuitdaging kon niet worden bijgewerkt. Probeer het straks opnieuw."
+            "value": "Je openbare uitdagingsprofiel kon niet worden bijgewerkt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie można zaktualizować Twojego publicznego profilu wyzwania."
+            "value": "Nie udało się zaktualizować Twojego publicznego profilu wyzwania."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível atualizar o Desafio semanal. Tente novamente em breve."
+            "value": "Não foi possível atualizar seu perfil público do desafio."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Provocarea săptămânală nu a putut fi actualizată. Încearcă din nou în curând."
+            "value": "Profilul tău public al provocării nu a putut fi actualizat."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не удалось обновить еженедельное соревнование. Повторите попытку позже."
+            "value": "Не удалось обновить ваш публичный профиль соревнования."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося обновить еженедельное соревнование. Спробуйте знову позже."
+            "value": "Не вдалося оновити ваш публічний профіль змагання."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无法更新每周挑战，请稍后重试。"
+            "value": "无法更新你的公开挑战资料。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Genel yarışma profiliniz güncellenemedi."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tvůj veřejný profil výzvy se nepodařilo aktualizovat."
           }
         }
       }
@@ -12056,7 +12722,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Удалённий профиль соревнования и все еженедельние результати будут видалені. Личние данние о еде, весе, тренировках и Apple Health останутся на устройстве."
+            "value": "Ваш публічний профіль, тижневі результати та скарги змагання буде видалено з Fud AI. Ваша приватна історія їжі, води й тренувань залишиться на цьому пристрої."
           }
         },
         "zh-Hans": {
@@ -12069,6 +12735,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Genel profiliniz, haftalık puanlarınız ve yarışma raporlarınız Fud AI'dan silinecek. Özel yiyecek, su ve antrenman geçmişiniz bu cihazda kalır."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tvůj veřejný profil, týdenní skóre a nahlášení výzvy budou z Fud AI smazány. Tvá soukromá historie jídla, vody a tréninků zůstane v tomto zařízení."
           }
         }
       }
@@ -12168,7 +12840,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "из дней"
+            "value": "днів"
           }
         },
         "zh-Hans": {
@@ -12181,6 +12853,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "gün"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dny"
           }
         }
       }
@@ -12294,6 +12972,12 @@
             "state": "translated",
             "value": "kcal"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kcal"
+          }
         }
       }
     },
@@ -12392,7 +13076,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "из баллов"
+            "value": "балів"
           }
         },
         "zh-Hans": {
@@ -12406,6 +13090,12 @@
             "state": "translated",
             "value": "puan"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "body"
+          }
         }
       }
     },
@@ -12414,19 +13104,19 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "فتح ‎@ على"
+            "value": "الملف الشخصي لـ"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "də @ profilini aç"
+            "value": "profili:"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "@ auf öffnen"
+            "value": "Profil für"
           }
         },
         "en": {
@@ -12438,43 +13128,43 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir @ en"
+            "value": "perfil de"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrir @ sur"
+            "value": "profil de"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "पर @ खोलें"
+            "value": "की प्रोफ़ाइल"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri @ su"
+            "value": "profilo di"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "で@を開く"
+            "value": "のプロフィール"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "에서 @ 열기"
+            "value": "프로필:"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "@ openen op"
+            "value": "profiel van"
           }
         },
         "pl": {
@@ -12486,37 +13176,43 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir @ no"
+            "value": "perfil de"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deschide @ pe"
+            "value": "profil pentru"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открыть @ в"
+            "value": "профиль для"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открить @ в"
+            "value": "профіль для"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 上打开 @"
+            "value": "的资料"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "profili:"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "profil pro"
           }
         }
       }

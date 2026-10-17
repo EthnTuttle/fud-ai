@@ -216,7 +216,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI зберігає фото страв в медiatеку, когда ви нажимаете «Зберегти»."
+            "value": "Fud AI зберігає фото страв у медіатеку, коли ви торкаєтеся «Зберегти»."
           }
         },
         "zh-Hans": {
@@ -229,6 +229,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaydet'e dokunduğunuzda Fud AI, öğün fotoğraflarını foto galerinize kaydeder."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI po klepnutí na Uložit uloží fotky jídel do tvé knihovny fotek."
           }
         }
       }

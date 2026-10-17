@@ -110,6 +110,12 @@
             "state": "translated",
             "value": "İptal"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zrušit"
+          }
         }
       }
     },
@@ -221,6 +227,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sil"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smazat"
           }
         }
       }
@@ -334,6 +346,12 @@
             "state": "translated",
             "value": "Modeli Sil"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smazat model"
+          }
         }
       }
     },
@@ -445,6 +463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "İndir"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stáhnout"
           }
         }
       }
@@ -558,6 +582,12 @@
             "state": "translated",
             "value": "İndirildi"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staženo"
+          }
         }
       }
     },
@@ -669,6 +699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kullanımda"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Používá se"
           }
         }
       }
@@ -782,6 +818,12 @@
             "state": "translated",
             "value": "Dikkat gerekiyor"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vyžaduje pozornost"
+          }
         }
       }
     },
@@ -893,6 +935,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "İndirilmedi"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nestaženo"
           }
         }
       }
@@ -1006,6 +1054,12 @@
             "state": "translated",
             "value": "Hazırla"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připravit"
+          }
         }
       }
     },
@@ -1117,6 +1171,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hazırlanıyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připravuji"
           }
         }
       }
@@ -1230,6 +1290,12 @@
             "state": "translated",
             "value": "Hazır"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připraveno"
+          }
         }
       }
     },
@@ -1342,6 +1408,12 @@
             "state": "translated",
             "value": "Doğrulanıyor"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ověřuji"
+          }
         }
       }
     },
@@ -1450,6 +1522,12 @@
           }
         },
         "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 E2B"
+          }
+        },
+        "cs": {
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4 E2B"
@@ -1566,6 +1644,12 @@
             "state": "translated",
             "value": "Gemma 4 E2B (Cihaz Üzerinde)"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 E2B (v zařízení)"
+          }
         }
       }
     },
@@ -1677,6 +1761,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4 indirme ilerlemesi"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Průběh stahování Gemma 4"
           }
         }
       }
@@ -1790,6 +1880,12 @@
             "state": "translated",
             "value": "Gemma 4 indirmesi doğrulanıyor"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ověřuji stažený Gemma 4"
+          }
         }
       }
     },
@@ -1901,6 +1997,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Model kaynağı"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdroj modelu"
           }
         }
       }
@@ -2014,6 +2116,12 @@
             "state": "translated",
             "value": "Gemma 4 silinsin mi?"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smazat Gemma 4?"
+          }
         }
       }
     },
@@ -2112,7 +2220,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завантаженная модель и её скомпільований кеш будут видалені з цього iPhone. Позже модель можно будет загрузить снова."
+            "value": "Завантажену модель і її скомпільований кеш буде видалено з цього iPhone. Пізніше її можна буде завантажити знову."
           }
         },
         "zh-Hans": {
@@ -2125,6 +2233,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "İndirilen model ve derlenmiş önbelleği bu iPhone'dan kaldırılacak. Daha sonra tekrar indirebilirsiniz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stažený model a jeho zkompilovaná mezipaměť budou z tohoto iPhonu odstraněny. Později ho můžeš stáhnout znovu."
           }
         }
       }
@@ -2238,6 +2352,12 @@
             "state": "translated",
             "value": "8 GB RAM'li bir cihaz gerekir"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vyžaduje zařízení s 8 GB RAM"
+          }
         }
       }
     },
@@ -2336,7 +2456,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ета локальна модель для изображений и текста доступна на iPhone как минимум с 8 ГБ физической пам'яті."
+            "value": "Ця локальна модель для зображень і тексту доступна на iPhone щонайменше з 8 ГБ фізичної пам’яті."
           }
         },
         "zh-Hans": {
@@ -2349,6 +2469,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu cihaz üzerindeki görsel ve metin modeli, en az 8 GB fiziksel belleğe sahip iPhone'larda kullanılabilir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento obrazový a textový model v zařízení je dostupný na iPhonech s alespoň 8 GB fyzické paměti."
           }
         }
       }
@@ -2448,7 +2574,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Розмір завантаження — 2,59 ГБ. Fud AI перевірет наличие ещё 1 ГБ вільного місця для установки."
+            "value": "Розмір завантаження — 2,59 ГБ. Fud AI перевіряє наявність ще 1 ГБ вільного місця для встановлення."
           }
         },
         "zh-Hans": {
@@ -2461,6 +2587,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "2,59 GB indirme. Fud AI, ek 1 GB boş kurulum alanı olup olmadığını kontrol eder."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stahuje se 2,59 GB. Fud AI zkontroluje dalších 1 GB volného místa pro instalaci."
           }
         }
       }
@@ -2560,7 +2692,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Перевірено та збережено локально (%@). Натисніть «Підготувати» сейчас, иначе модель завантажиться під час першого використання."
+            "value": "Перевірено та збережено локально (%@). Торкніться «Підготувати» зараз, інакше модель завантажиться під час першого використання."
           }
         },
         "zh-Hans": {
@@ -2573,6 +2705,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Doğrulandı ve yerel olarak depolandı (%@). Şimdi Hazırla'ya dokunun, yoksa ilk kullanımda yüklenir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ověřeno a uloženo lokálně (%@). Klepni na Připravit teď, jinak se načte při prvním použití."
           }
         }
       }
@@ -2672,7 +2810,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Перевірено та збережено локально. Натисніть «Підготувати» сейчас, иначе модель завантажиться під час першого використання."
+            "value": "Перевірено та збережено локально. Торкніться «Підготувати» зараз, інакше модель завантажиться під час першого використання."
           }
         },
         "zh-Hans": {
@@ -2685,6 +2823,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Doğrulandı ve yerel olarak depolandı. Şimdi Hazırla'ya dokunun, yoksa ilk kullanımda yüklenir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ověřeno a uloženo lokálně. Klepni na Připravit teď, jinak se načte při prvním použití."
           }
         }
       }
@@ -2798,6 +2942,12 @@
             "state": "translated",
             "value": "Sabitlenmiş Gemma 4 modeli indiriliyor… Bitene kadar Fud AI'yı açık tutun."
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stahuji určený model Gemma 4… Nech Fud AI otevřenou, dokud stahování neskončí."
+          }
         }
       }
     },
@@ -2896,7 +3046,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Перевірка точного размера файла и SHA-256 перед встановленням…"
+            "value": "Перевірка точного розміру файлу та SHA-256 перед встановленням…"
           }
         },
         "zh-Hans": {
@@ -2909,6 +3059,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kurulumdan önce tam dosya boyutu ve SHA-256 kontrol ediliyor…"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Před instalací kontroluji přesnou velikost souboru a SHA-256…"
           }
         }
       }
@@ -3008,7 +3164,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Компіляція и завантаження середовища виконання LiteRT-LM Metal…"
+            "value": "Компіляція та завантаження середовища виконання LiteRT-LM Metal…"
           }
         },
         "zh-Hans": {
@@ -3021,6 +3177,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "LiteRT-LM Metal çalışma zamanı derleniyor ve yükleniyor…"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kompiluji a načítám běhové prostředí LiteRT-LM Metal…"
           }
         }
       }
@@ -3120,7 +3282,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Готово к конфіденційної офлайн-обробці зображень їжі и текста."
+            "value": "Готово до конфіденційної офлайн-обробки зображень їжі та тексту."
           }
         },
         "zh-Hans": {
@@ -3133,6 +3295,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Özel, çevrimdışı yiyecek görselleri ve metinleri için hazır."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Připraveno pro soukromé offline zpracování fotek jídla a textu."
           }
         }
       }
@@ -3246,6 +3414,12 @@
             "state": "translated",
             "value": "Bu iPhone'da yerel olarak oluşturuluyor…"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generuji lokálně na tomto iPhonu…"
+          }
         }
       }
     },
@@ -3344,7 +3518,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Для Gemma 4 потрібен iPhone как минимум с 8 ГБ пам'яті."
+            "value": "Для Gemma 4 потрібен iPhone щонайменше з 8 ГБ пам’яті."
           }
         },
         "zh-Hans": {
@@ -3357,6 +3531,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4, en az 8 GB belleğe sahip bir iPhone gerektirir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 vyžaduje iPhone s alespoň 8 GB paměti."
           }
         }
       }
@@ -3456,7 +3636,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gemma 4 не завантажена. Загрузите её в разделе «Налаштування → Провайдери ШІ»."
+            "value": "Gemma 4 не завантажено. Завантажте її в розділі «Налаштування → Провайдери ШІ»."
           }
         },
         "zh-Hans": {
@@ -3469,6 +3649,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4 indirilmedi. Ayarlar → Yapay Zeka Sağlayıcıları'ndan indirin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 není stažený. Stáhni ho v Nastavení → Poskytovatelé AI."
           }
         }
       }
@@ -3568,7 +3754,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gemma 4 уже зайнята. Зачекайте завершения текущей операции."
+            "value": "Gemma 4 вже зайнята. Зачекайте завершення поточної операції."
           }
         },
         "zh-Hans": {
@@ -3581,6 +3767,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4 zaten meşgul. Lütfen mevcut işlemin bitmesini bekleyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 je zaneprázdněný. Počkej, než se dokončí aktuální operace."
           }
         }
       }
@@ -3680,7 +3872,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Для Gemma 4 потрібен %@ вільного місця с учётом запаса для установки. Сейчас на цьому iPhone доступно %@."
+            "value": "Для Gemma 4 потрібно %@ вільного місця з урахуванням запасу для встановлення. Зараз на цьому iPhone доступно %@."
           }
         },
         "zh-Hans": {
@@ -3693,6 +3885,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4, kurulum alanı dahil %@ boş alana ihtiyaç duyar. Bu iPhone'da şu anda %@ kullanılabilir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 potřebuje %@ volného místa včetně rezervy pro instalaci. Tento iPhone má momentálně k dispozici %@."
           }
         }
       }
@@ -3792,7 +3990,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося проверить доступное хранилище, поетому завантаження большой модели не била начата."
+            "value": "Не вдалося перевірити доступне сховище, тому завантаження великої моделі не розпочалося."
           }
         },
         "zh-Hans": {
@@ -3805,6 +4003,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kullanılabilir depolama kontrol edilemedi, bu yüzden büyük model indirmesi başlatılmadı."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostupné úložiště se nepodařilo zkontrolovat, proto se stahování velkého modelu nespustilo."
           }
         }
       }
@@ -3904,7 +4108,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося проверить загрузку Gemma 4 (%@). Спробуйте знову."
+            "value": "Не вдалося перевірити завантаження Gemma 4 (%@). Спробуйте ще раз."
           }
         },
         "zh-Hans": {
@@ -3917,6 +4121,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4 indirmesi doğrulanamadı (%@). Lütfen tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stažený Gemma 4 se nepodařilo ověřit (%@). Zkus to prosím znovu."
           }
         }
       }
@@ -4016,7 +4226,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gemma 4 вернула пустой ответ. Спробуйте знову."
+            "value": "Gemma 4 повернула порожню відповідь. Спробуйте ще раз."
           }
         },
         "zh-Hans": {
@@ -4029,6 +4239,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gemma 4 boş bir yanıt döndürdü. Lütfen tekrar deneyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemma 4 vrátil prázdnou odpověď. Zkus to prosím znovu."
           }
         }
       }
@@ -4128,7 +4344,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "ожидалось %@ байт, получено %@"
+            "value": "очікувалося %@ байтів, отримано %@"
           }
         },
         "zh-Hans": {
@@ -4141,6 +4357,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "beklenen %@ bayt, alınan %@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "očekáváno %@ bajtů, přijato %@"
           }
         }
       }
@@ -4240,7 +4462,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Несовпадение SHA-256"
+            "value": "Невідповідність SHA-256"
           }
         },
         "zh-Hans": {
@@ -4253,6 +4475,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "SHA-256 uyuşmazlığı"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neshoda SHA-256"
           }
         }
       }
@@ -4352,7 +4580,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сервер модели вернул недопустимий ответ."
+            "value": "Сервер моделі повернув недійсну відповідь."
           }
         },
         "zh-Hans": {
@@ -4365,6 +4593,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Model sunucusu geçersiz bir yanıt döndürdü."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server modelu vrátil neplatnou odpověď."
           }
         }
       }
@@ -4464,7 +4698,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сервер модели вернул HTTP %@."
+            "value": "Сервер моделі повернув HTTP %@."
           }
         },
         "zh-Hans": {
@@ -4477,6 +4711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Model sunucusu HTTP %@ döndürdü."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server modelu vrátil HTTP %@."
           }
         }
       }
@@ -4576,7 +4816,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завантаження модели завершилась без файла."
+            "value": "Завантаження моделі завершилося без файлу."
           }
         },
         "zh-Hans": {
@@ -4589,6 +4829,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Model indirmesi dosyasız tamamlandı."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stahování modelu skončilo bez souboru."
           }
         }
       }
@@ -4698,6 +4944,12 @@
           }
         },
         "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper Base"
+          }
+        },
+        "cs": {
           "stringUnit": {
             "state": "translated",
             "value": "Whisper Base"
@@ -4814,6 +5066,12 @@
             "state": "translated",
             "value": "Whisper Base (Cihaz Üzerinde)"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper Base (v zařízení)"
+          }
         }
       }
     },
@@ -4912,7 +5170,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Многоязичний Whisper Base полностью работает на цьому iPhone. Загрузите его один раз для конфіденційної офлайн-транскрипции."
+            "value": "Багатомовний Whisper Base працює повністю на цьому iPhone. Завантажте його один раз для конфіденційного офлайн-розпізнавання."
           }
         },
         "zh-Hans": {
@@ -4925,6 +5183,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tamamen bu iPhone'da çalışan çok dilli Whisper Base. Özel çevrimdışı deşifre için bir kez indirin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vícejazyčný Whisper Base běžící celý na tomto iPhonu. Stáhni ho jednou pro soukromý offline přepis."
           }
         }
       }
@@ -5038,6 +5302,12 @@
             "state": "translated",
             "value": "Whisper Base indirme ilerlemesi"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Průběh stahování Whisper Base"
+          }
         }
       }
     },
@@ -5150,6 +5420,12 @@
             "state": "translated",
             "value": "Whisper Base silinsin mi?"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smazat Whisper Base?"
+          }
         }
       }
     },
@@ -5248,7 +5524,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завантаженная модель будет удалена з цього iPhone. Позже её можно будет загрузить снова."
+            "value": "Завантажену модель буде видалено з цього iPhone. Пізніше її можна буде завантажити знову."
           }
         },
         "zh-Hans": {
@@ -5261,6 +5537,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "İndirilen model bu iPhone'dan kaldırılacak. Daha sonra tekrar indirebilirsiniz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stažený model bude z tohoto iPhonu odstraněn. Později ho můžeš stáhnout znovu."
           }
         }
       }
@@ -5360,7 +5642,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Около 147 МБ. После загрузки полностью работает на устройстве."
+            "value": "Близько 147 МБ. Після завантаження працює повністю на пристрої."
           }
         },
         "zh-Hans": {
@@ -5373,6 +5655,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yaklaşık 147 MB. İndirmeden sonra tamamen cihaz üzerinde çalışır."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asi 147 MB. Po stažení běží zcela v zařízení."
           }
         }
       }
@@ -5472,7 +5760,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сохранено локально (%@). Аудио не покидает етот iPhone."
+            "value": "Збережено локально (%@). Жоден звук не залишає цей iPhone."
           }
         },
         "zh-Hans": {
@@ -5485,6 +5773,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yerel olarak depolandı (%@). Ses bu iPhone'dan çıkmaz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uloženo lokálně (%@). Žádný zvuk neopustí tento iPhone."
           }
         }
       }
@@ -5584,7 +5878,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сохранено локально. Аудио не покидает етот iPhone."
+            "value": "Збережено локально. Жоден звук не залишає цей iPhone."
           }
         },
         "zh-Hans": {
@@ -5597,6 +5891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yerel olarak depolandı. Ses bu iPhone'dan çıkmaz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uloženo lokálně. Žádný zvuk neopustí tento iPhone."
           }
         }
       }
@@ -5696,7 +5996,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Завантаження многоязичной модели Core ML…"
+            "value": "Завантаження багатомовної моделі Core ML…"
           }
         },
         "zh-Hans": {
@@ -5709,6 +6009,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çok dilli Core ML modeli indiriliyor…"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stahuji vícejazyčný model Core ML…"
           }
         }
       }
@@ -5808,7 +6114,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Оптимизация модели для цього iPhone…"
+            "value": "Оптимізація моделі для цього iPhone…"
           }
         },
         "zh-Hans": {
@@ -5821,6 +6127,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Model bu iPhone için optimize ediliyor…"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimalizuji model pro tento iPhone…"
           }
         }
       }
@@ -5920,7 +6232,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Локальна транскрипция…"
+            "value": "Локальне розшифрування…"
           }
         },
         "zh-Hans": {
@@ -5933,6 +6245,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yerel olarak deşifre ediliyor…"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přepisuji lokálně…"
           }
         }
       }
@@ -6032,7 +6350,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whisper Base не завантажен. Загрузите его в разделе «Налаштування → Распознавание речи»."
+            "value": "Whisper Base не завантажено. Завантажте його в розділі «Налаштування → Розпізнавання мовлення»."
           }
         },
         "zh-Hans": {
@@ -6045,6 +6363,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whisper Base indirilmedi. Ayarlar → Konuşmadan Metne'den indirin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper Base není stažený. Stáhni ho v Nastavení → Převod řeči na text."
           }
         }
       }
@@ -6144,7 +6468,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whisper Base уже занят. Зачекайте завершения текущей операции."
+            "value": "Whisper Base вже зайнятий. Зачекайте завершення поточної операції."
           }
         },
         "zh-Hans": {
@@ -6157,6 +6481,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whisper Base zaten meşgul. Lütfen mevcut işlemin bitmesini bekleyin."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper Base je zaneprázdněný. Počkej, než se dokončí aktuální operace."
           }
         }
       }
@@ -6256,7 +6586,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Whisper Base не обнаружил речь в етой записи."
+            "value": "Whisper Base не виявив мовлення в цьому записі."
           }
         },
         "zh-Hans": {
@@ -6269,6 +6599,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whisper Base bu kayıtta herhangi bir konuşma algılayamadı."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whisper Base v této nahrávce nerozpoznal žádnou řeč."
           }
         }
       }
@@ -6382,6 +6718,12 @@
             "state": "translated",
             "value": "Bildirimler yükleniyor…"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Načítám upozornění…"
+          }
         }
       }
     },
@@ -6494,6 +6836,12 @@
             "state": "translated",
             "value": "LiteRT-LM üçüncü taraf bildirimleri"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornění třetích stran pro LiteRT-LM"
+          }
         }
       }
     },
@@ -6592,7 +6940,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Уведомления недоступни"
+            "value": "Примітки недоступні"
           }
         },
         "zh-Hans": {
@@ -6605,6 +6953,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bildirimler Kullanılamıyor"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornění nejsou k dispozici"
           }
         }
       }
@@ -6704,7 +7058,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Уведомления LiteRT-LM"
+            "value": "Примітки LiteRT-LM"
           }
         },
         "zh-Hans": {
@@ -6717,6 +7071,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "LiteRT-LM Bildirimleri"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornění LiteRT-LM"
           }
         }
       }
@@ -6816,7 +7176,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося найти встроенний файл уведомлений."
+            "value": "Не вдалося знайти вбудований файл приміток."
           }
         },
         "zh-Hans": {
@@ -6829,6 +7189,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paketlenmiş bildirim dosyası bulunamadı."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přiložený soubor s upozorněními nebyl nalezen."
           }
         }
       }
@@ -6928,7 +7294,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося открить встроенний файл уведомлений."
+            "value": "Не вдалося відкрити вбудований файл приміток."
           }
         },
         "zh-Hans": {
@@ -6941,6 +7307,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paketlenmiş bildirim dosyası açılamadı."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přiložený soubor s upozorněními nelze otevřít."
           }
         }
       }
@@ -7054,6 +7426,12 @@
             "state": "translated",
             "value": "LiteRT-LM Üçüncü Taraf Bildirimleri"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upozornění třetích stran pro LiteRT-LM"
+          }
         }
       }
     },
@@ -7152,7 +7530,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Модель на устройстве"
+            "value": "Модель на пристрої"
           }
         },
         "zh-Hans": {
@@ -7165,6 +7543,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cihaz Üzerindeki Model"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model v zařízení"
           }
         }
       }
