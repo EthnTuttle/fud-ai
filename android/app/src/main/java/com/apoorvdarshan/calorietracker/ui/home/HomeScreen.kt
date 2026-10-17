@@ -180,6 +180,9 @@ import com.apoorvdarshan.calorietracker.models.WaterEntry
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.ui.components.FullScreenImageViewer
 import com.apoorvdarshan.calorietracker.ui.components.rememberFoodThumbnailCandidate
 import com.apoorvdarshan.calorietracker.ui.components.foodPhotoViewerInitialIndex
@@ -1663,7 +1666,10 @@ private fun CalorieHero(
     burnSummary: HomeBurnSummary? = null
 ) {
     val ratio = if (goal > 0) (current.toFloat() / goal).coerceIn(0f, 1f) else 0f
-    val formattedCurrent = current.formattedWholeNumber()
+    val energyUnit = LocalEnergyUnit.current
+    val shownCurrent = energyUnit.displayValue(current)
+    val shownGoal = energyUnit.displayValue(goal)
+    val formattedCurrent = shownCurrent.formattedWholeNumber()
     // Fill-from-zero on app open. lastEpoch is saveable so it survives tab switches
     // (where Home leaves/re-enters composition) — only a real app-open (new epoch)
     // replays the sweep; tab returns snap to the current value.
@@ -1682,8 +1688,11 @@ private fun CalorieHero(
     }
     val statusText = when {
         goal <= 0 -> stringResource(R.string.home_macro_no_goal)
-        current < goal -> stringResource(R.string.home_kcal_left_format, (goal - current).formattedWholeNumber())
-        current > goal -> stringResource(R.string.home_macro_over_format, (current - goal).formattedWholeNumber())
+        current < goal -> stringResource(
+            energyUnit.pick(R.string.home_kcal_left_format, R.string.home_kj_left_format),
+            (shownGoal - shownCurrent).formattedWholeNumber()
+        )
+        current > goal -> stringResource(R.string.home_macro_over_format, (shownCurrent - shownGoal).formattedWholeNumber())
         else -> stringResource(R.string.home_macro_goal_reached)
     }
     val gradientColors = listOf(AppColors.CalorieStart, AppColors.CalorieEnd)
@@ -1734,8 +1743,11 @@ private fun CalorieHero(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
+            // The dome's numbers carry no unit, so its heading names the unit in use.
             Text(
-                stringResource(R.string.widget_calories).uppercase(LocalConfiguration.current.locales[0]),
+                stringResource(
+                    if (energyUnit == EnergyUnit.KJ) R.string.home_kilojoules else R.string.widget_calories
+                ).uppercase(LocalConfiguration.current.locales[0]),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.5.sp,
@@ -1784,19 +1796,21 @@ private fun CalorieHero(
 
 @Composable
 private fun homeBurnLineText(summary: HomeBurnSummary): String {
-    val burned = summary.burnedCalories.formattedWholeNumber()
+    val energyUnit = LocalEnergyUnit.current
+    val burned = energyUnit.displayValue(summary.burnedCalories).formattedWholeNumber()
+    val difference = energyUnit.displayValue(summary.differenceCalories).formattedWholeNumber()
     return when (summary.direction) {
         com.apoorvdarshan.calorietracker.services.CalorieBalanceDirection.DEFICIT ->
             stringResource(
                 R.string.home_burn_deficit,
                 burned,
-                summary.differenceCalories.formattedWholeNumber()
+                difference
             )
         com.apoorvdarshan.calorietracker.services.CalorieBalanceDirection.SURPLUS ->
             stringResource(
                 R.string.home_burn_surplus,
                 burned,
-                summary.differenceCalories.formattedWholeNumber()
+                difference
             )
         com.apoorvdarshan.calorietracker.services.CalorieBalanceDirection.BALANCED ->
             stringResource(R.string.home_burn_balanced, burned)
@@ -1944,7 +1958,7 @@ private fun MealSectionHeader(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    "${totalCalories.formattedWholeNumber()} kcal",
+                    energyText(totalCalories),
                     fontSize = 15.sp,
                     lineHeight = 18.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -2609,7 +2623,7 @@ private fun FoodRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    "${entry.calories.formattedWholeNumber()} kcal",
+                    energyText(entry.calories),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.Calorie
@@ -3000,7 +3014,7 @@ private fun AnalysisResultDialog(
         FudGlassSurface(modifier = Modifier.fillMaxWidth(), cornerRadius = 20.dp, padding = 16.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    "${analysis.calories.formattedWholeNumber()} kcal",
+                    energyText(analysis.calories),
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                     color = AppColors.Calorie
@@ -3086,6 +3100,8 @@ internal fun ManualEntryDialog(
     var mealMenuExpanded by remember { mutableStateOf(false) }
     var isSubmitting by remember { mutableStateOf(false) }
     val submissionGate = remember { FoodSubmissionGate() }
+    // Calories are typed in the energy unit in use and stored as kcal.
+    val energyUnit = LocalEnergyUnit.current
 
     val canSave = name.isNotBlank() && calories.toIntOrNull() != null && !isSubmitting
 
@@ -3101,7 +3117,7 @@ internal fun ManualEntryDialog(
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    NumberField(stringResource(R.string.manual_calories), calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f).testTag("manual.calories"))
+                    NumberField(stringResource(if (energyUnit == EnergyUnit.KJ) R.string.home_kilojoules else R.string.manual_calories), calories, { calories = it.filter(Char::isDigit) }, Modifier.weight(1f).testTag("manual.calories"))
                     NumberField(stringResource(R.string.manual_protein), protein, { protein = filterDecimalInput(it) }, Modifier.weight(1f), decimal = true)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -3172,7 +3188,7 @@ internal fun ManualEntryDialog(
                         isSubmitting = true
                         onSave(
                             name.trim(),
-                            calories.toIntOrNull() ?: 0,
+                            energyUnit.parseToKcal(calories) ?: 0,
                             ServingUnitOption.parseQuantity(protein) ?: 0.0,
                             ServingUnitOption.parseQuantity(carbs) ?: 0.0,
                             ServingUnitOption.parseQuantity(fat) ?: 0.0,

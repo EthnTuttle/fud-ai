@@ -11,6 +11,8 @@ struct WidgetSnapshot: Codable, Equatable {
     let carbsGoal: Int
     let fat: Double
     let fatGoal: Int
+    /// Energy display unit ("kcal" or "kj"); nil in older snapshots (kcal).
+    var energyUnitRaw: String? = nil
 
     static var appGroupID: String {
         Bundle.main.object(forInfoDictionaryKey: "AppGroupIdentifier") as? String
@@ -38,7 +40,8 @@ struct WidgetSnapshot: Codable, Equatable {
                 calories: 0, calorieGoal: snapshot.calorieGoal,
                 protein: 0, proteinGoal: snapshot.proteinGoal,
                 carbs: 0, carbsGoal: snapshot.carbsGoal,
-                fat: 0, fatGoal: snapshot.fatGoal
+                fat: 0, fatGoal: snapshot.fatGoal,
+                energyUnitRaw: snapshot.energyUnitRaw
             )
         }
         return snapshot
@@ -69,6 +72,17 @@ struct WidgetSnapshot: Codable, Equatable {
     }
 
     var caloriesRemaining: Int { max(0, calorieGoal - calories) }
+    var usesKilojoules: Bool { energyUnitRaw == "kj" }
+    /// Complications show the unit symbol unlocalized, like the macro "g".
+    var energyUnitSymbol: String { usesKilojoules ? "kJ" : "kcal" }
+    /// Whole display units for a stored kcal amount (1 kcal = 4.184 kJ).
+    func energyValue(_ kcal: Int) -> Int {
+        usesKilojoules ? Int((Double(kcal) * 4.184).rounded()) : kcal
+    }
+    var displayCalories: Int { energyValue(calories) }
+    var displayCalorieGoal: Int { energyValue(calorieGoal) }
+    /// Goal minus eaten in display units, so "eaten / goal · left" always adds up.
+    var displayCaloriesRemaining: Int { max(0, displayCalorieGoal - displayCalories) }
     var proteinRemaining: Double { max(0, Double(proteinGoal) - protein) }
 
     var calorieProgress: Double {

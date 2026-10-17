@@ -277,7 +277,14 @@ class NotificationManager {
 
     // MARK: - Daily Summary (one-shot, rescheduled on foreground/log)
 
-    func scheduleDailySummary(enabled: Bool, hour: Int, minute: Int, todayCalories: Int, calorieGoal: Int) {
+    func scheduleDailySummary(
+        enabled: Bool,
+        hour: Int,
+        minute: Int,
+        todayCalories: Int,
+        calorieGoal: Int,
+        energyUnit: EnergyUnit = .current
+    ) {
         PendingNotificationRequests.remove(["smart.summary"])
 
         guard enabled else { return }
@@ -288,13 +295,9 @@ class NotificationManager {
             bySettingHour: hour, minute: minute, second: 0, of: now
         ), fireDate > now else { return }
 
-        let remaining = max(0, calorieGoal - todayCalories)
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Daily Summary", comment: "Title of the evening daily summary notification.")
-        content.body = String(
-            localized: "You ate \(todayCalories) of \(calorieGoal) kcal today. \(remaining) remaining!",
-            comment: "Body of the daily summary notification: calories eaten, the daily calorie goal, and calories left. kcal is an abbreviation that does not change with the number; vary the remaining count by plural where the language needs it."
-        )
+        content.body = Self.dailySummaryBody(todayCalories: todayCalories, calorieGoal: calorieGoal, energyUnit: energyUnit)
         content.sound = .default
 
         var dateComponents = DateComponents()
@@ -304,6 +307,27 @@ class NotificationManager {
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(identifier: "smart.summary", content: content, trigger: trigger)
         PendingNotificationRequests.add(request)
+    }
+
+    /// Daily summary text in the user's energy unit. kJ has its own sentence so
+    /// languages keep their plural agreement for the remaining amount.
+    nonisolated static func dailySummaryBody(todayCalories: Int, calorieGoal: Int, energyUnit: EnergyUnit) -> String {
+        switch energyUnit {
+        case .kcal:
+            let remaining = max(0, calorieGoal - todayCalories)
+            return String(
+                localized: "You ate \(todayCalories) of \(calorieGoal) kcal today. \(remaining) remaining!",
+                comment: "Body of the daily summary notification: calories eaten, the daily calorie goal, and calories left. kcal is an abbreviation that does not change with the number; vary the remaining count by plural where the language needs it."
+            )
+        case .kj:
+            let eaten = energyUnit.displayValue(kcal: todayCalories)
+            let goal = energyUnit.displayValue(kcal: calorieGoal)
+            let remaining = max(0, goal - eaten)
+            return String(
+                localized: "You ate \(eaten) of \(goal) kJ today. \(remaining) remaining!",
+                comment: "Body of the daily summary notification for users who track energy in kilojoules: kJ eaten, the daily kJ goal, and kJ left. kJ is an abbreviation that does not change with the number; vary the remaining count by plural where the language needs it."
+            )
+        }
     }
 
     // MARK: - Weight Log Reminder (one-shot, rescheduled on foreground/log)

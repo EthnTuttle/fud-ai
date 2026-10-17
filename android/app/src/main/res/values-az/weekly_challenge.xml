@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d/28 xal</string>
     <string name="challenge_days_format">%1$d/7 gün</string>
     <string name="challenge_days_kcal_format">%1$d/7 gün · %2$d kkal</string>
+    <string name="challenge_days_kj_format">%1$d/7 gün · %2$d kJ</string>
     <string name="challenge_weekly_breakdown">Bu həftə</string>
     <string name="challenge_edit_profile">Profili redaktə et</string>
     <string name="challenge_leave_action">Ayrıl</string>

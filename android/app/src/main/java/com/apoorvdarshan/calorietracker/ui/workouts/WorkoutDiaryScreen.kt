@@ -133,6 +133,8 @@ import com.apoorvdarshan.calorietracker.models.WorkoutSetInput
 import com.apoorvdarshan.calorietracker.models.PlannedSet
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialog
+import com.apoorvdarshan.calorietracker.ui.components.energyText
+import com.apoorvdarshan.calorietracker.ui.components.energyUnitLabel
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassTextButton
 import com.apoorvdarshan.calorietracker.ui.home.OutdoorActivityDurationSheet
@@ -717,7 +719,7 @@ private fun WorkoutBurnHero(
                 MetricDivider()
                 WorkoutMetric(
                     label = "Burn",
-                    value = state.caloriesBurned?.let { "${it.formattedWholeNumber()} kcal" } ?: "-- kcal",
+                    value = state.caloriesBurned?.let { energyText(it) } ?: "-- ${energyUnitLabel()}",
                     icon = Icons.Filled.LocalFireDepartment,
                     active = state.caloriesBurned != null,
                     modifier = Modifier.weight(1f)

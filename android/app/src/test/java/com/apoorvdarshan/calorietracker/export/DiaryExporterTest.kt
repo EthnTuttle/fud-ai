@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.export
 
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.MealType
@@ -14,6 +15,39 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 class DiaryExporterTest {
+    @Test fun exportsStayInKilocaloriesAndTellKilojouleUsersSo() {
+        val day = LocalDate.of(2026, 9, 2)
+        val water = com.apoorvdarshan.calorietracker.models.WaterEntry(
+            date = day.atTime(9, 0).atZone(ZoneId.systemDefault()).toInstant(), milliliters = 300)
+        fun export(format: DiaryFormat, unit: EnergyUnit) = requireNotNull(DiaryExporter.build(
+            entries = emptyList(), start = day, end = day, format = format,
+            profile = UserProfile(customCalories = 2_000), mealDisplay = { it.name },
+            waterEntries = listOf(water), energyUnit = unit)).second
+        val note = "Energy values are in kcal (1 kcal = 4.184 kJ)."
+        assertTrue(export(DiaryFormat.MARKDOWN, EnergyUnit.KJ).contains(note))
+        assertTrue(export(DiaryFormat.MARKDOWN, EnergyUnit.KJ).contains("/ 2000 kcal"))
+        assertTrue(!export(DiaryFormat.MARKDOWN, EnergyUnit.KCAL).contains(note))
+        val json = JsonParser.parseString(export(DiaryFormat.JSON, EnergyUnit.KJ)).asJsonObject
+        assertEquals(2_000, json["days"].asJsonArray[0].asJsonObject["targets"].asJsonObject["calories"].asInt)
+    }
+
+    @Test fun csvNamesTheKilocalorieColumnForKilojouleUsers() {
+        val entry = nutrientEntry()
+        val date = entry.timestamp.atZone(ZoneId.systemDefault()).toLocalDate()
+        fun rows(unit: EnergyUnit) = requireNotNull(DiaryExporter.build(
+            entries = listOf(entry), start = date, end = date, format = DiaryFormat.CSV,
+            profile = null, mealDisplay = { it.name }, energyUnit = unit)).second
+            .trimEnd().lines().map { it.split(',') }
+        val kj = rows(EnergyUnit.KJ)
+        val kcal = rows(EnergyUnit.KCAL)
+        // Only the header name changes: same column position, same stored kcal values.
+        assertEquals("calories_kcal", kj[0][5])
+        assertEquals("calories", kcal[0][5])
+        assertEquals(kcal[0].size, kj[0].size)
+        assertEquals("120", kj[1][5])
+        assertEquals(kcal.drop(1), kj.drop(1))
+    }
+
     @Test fun waterOnlyDaysRoundTripAndExportWithoutCalories() {
         val day = LocalDate.of(2026, 9, 1)
         val water = com.apoorvdarshan.calorietracker.models.WaterEntry(

@@ -12,6 +12,7 @@ struct EditFoodEntryView: View {
 
     // Base values (the entry's nutrition at its logged serving size)
     @State private var baseCalories: Int
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var baseProtein: Double
     @State private var baseCarbs: Double
     @State private var baseFat: Double
@@ -451,7 +452,7 @@ struct EditFoodEntryView: View {
                     }
 
                     Section("Nutrition") {
-                        NutritionDisplayRow(label: "Calories", value: "\(scaledCalories)", unit: "kcal")
+                        NutritionDisplayRow(label: "Calories", value: "\(energyUnit.displayValue(kcal: scaledCalories))", unit: energyUnit.symbol)
                         NutritionDisplayRow(label: "Protein", value: MacroValueFormatter.string(scaledProtein), unit: "g")
                         NutritionDisplayRow(label: "Carbs", value: MacroValueFormatter.string(scaledCarbs), unit: "g")
                         NutritionDisplayRow(label: "Fat", value: MacroValueFormatter.string(scaledFat), unit: "g")

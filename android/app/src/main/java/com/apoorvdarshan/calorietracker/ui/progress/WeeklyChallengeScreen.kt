@@ -94,6 +94,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.WeeklyChallengeAggregate
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import com.apoorvdarshan.calorietracker.models.WeeklyChallengeCategory
 import com.apoorvdarshan.calorietracker.models.WeeklyChallengeLeaderboardRow
 import com.apoorvdarshan.calorietracker.models.WeeklyChallengeProfileValidator
@@ -677,8 +678,7 @@ private fun AggregateBreakdown(
             stringResource(R.string.challenge_category_activity),
             viewer?.activityDays ?: aggregate.activityDays,
             emphasized = selected == WeeklyChallengeCategory.ACTIVITY,
-            valueText = stringResource(
-                R.string.challenge_days_kcal_format,
+            valueText = activityDaysText(
                 viewer?.activityDays ?: aggregate.activityDays,
                 viewer?.activityKcal ?: aggregate.activityKcal
             )
@@ -1724,13 +1724,23 @@ private fun scoreText(
     val value = viewer?.let { rowValue(category, it) } ?: aggregate.scoreFor(category)
     return when (category) {
         WeeklyChallengeCategory.OVERALL -> stringResource(R.string.challenge_points_format, value)
-        WeeklyChallengeCategory.ACTIVITY -> stringResource(
-            R.string.challenge_days_kcal_format,
+        WeeklyChallengeCategory.ACTIVITY -> activityDaysText(
             value,
             viewer?.activityKcal ?: aggregate.activityKcal
         )
         else -> stringResource(R.string.challenge_days_format, value)
     }
+}
+
+/** "N / 7 days · X kcal" in the energy unit in use; the aggregate itself stays kcal. */
+@Composable
+private fun activityDaysText(days: Int, burnKcal: Int): String {
+    val energyUnit = LocalEnergyUnit.current
+    return stringResource(
+        energyUnit.pick(R.string.challenge_days_kcal_format, R.string.challenge_days_kj_format),
+        days,
+        energyUnit.displayValue(burnKcal)
+    )
 }
 
 @Composable
@@ -1739,11 +1749,7 @@ private fun leaderboardScoreText(
     row: WeeklyChallengeLeaderboardRow
 ): String = when (category) {
     WeeklyChallengeCategory.OVERALL -> stringResource(R.string.challenge_points_format, row.overallPoints)
-    WeeklyChallengeCategory.ACTIVITY -> stringResource(
-        R.string.challenge_days_kcal_format,
-        row.activityDays,
-        row.activityKcal
-    )
+    WeeklyChallengeCategory.ACTIVITY -> activityDaysText(row.activityDays, row.activityKcal)
     WeeklyChallengeCategory.NUTRITION -> stringResource(R.string.challenge_days_format, row.nutritionDays)
     WeeklyChallengeCategory.CONSISTENCY -> stringResource(R.string.challenge_days_format, row.consistencyDays)
     WeeklyChallengeCategory.HYDRATION -> stringResource(R.string.challenge_days_format, row.hydrationDays)

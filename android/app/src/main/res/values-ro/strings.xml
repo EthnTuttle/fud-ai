@@ -12,6 +12,7 @@
     <string name="widget_carbs">Carbohidrați</string>
     <string name="widget_fat">Grăsimi</string>
     <string name="widget_kcal_left_format">%1$d kcal rămase</string>
+    <string name="widget_kj_left_format">%1$d kJ rămași</string>
     <string name="widget_g_left_format">%1$dg rămase</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">proteine g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d înregistrări noi · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Consum estimat: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">Adaugă %1$d în jurnal · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -334,6 +340,8 @@
     <string name="home_menu_saved_meals">Mese salvate</string>
     <string name="home_kcal_of_format">din %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s rămase</string>
+    <string name="home_kj_left_format">%1$s rămași</string>
+    <string name="home_kilojoules">Kilojouli</string>
     <string name="home_view_more">Vezi mai multe</string>
     <string name="home_todays_food">Mâncarea de azi</string>
     <string name="home_no_foods_logged">Niciun aliment înregistrat</string>
@@ -501,6 +509,7 @@
     <string name="progress_include_today">Include ziua de azi</string>
     <string name="progress_include_today_caption">Graficul caloriilor și mediile nutriționale</string>
     <string name="progress_avg_format">Med.: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Med.: %1$,d kJ</string>
     <string name="progress_no_food">Niciun aliment înregistrat încă</string>
 
     <string name="progress_macro_averages">Medii macronutrienți</string>
@@ -541,7 +550,9 @@
     <string name="settings_recalculate_goals">Recalculează obiectivele</string>
     <string name="settings_estimated_maintenance">Menținere estimată</string>
     <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/zi</string>
+    <string name="settings_maintenance_deficit_format_kj">Deficit: %1$,d kJ/zi</string>
     <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/zi</string>
+    <string name="settings_maintenance_surplus_format_kj">Surplus: %1$,d kJ/zi</string>
     <string name="settings_maintenance_close">Obiectivul este aproape de menținere</string>
     <string name="settings_estimated_maintenance_info">Menținerea estimată reprezintă caloriile pe care le-ai arde într-o zi obișnuită: BMR-ul din profilul tău înmulțit cu nivelul de activitate. Dacă mănânci sub această valoare, ai un deficit pentru a slăbi; dacă mănânci peste, ai un surplus pentru a lua în greutate. Deficitul sau surplusul afișat este obiectivul tău caloric minus această estimare. Este o estimare pe bază de formulă, așa că arderea ta reală poate diferi, iar recalcularea obiectivelor îți poate stabili obiectivul pe baza alimentelor înregistrate, a tendinței greutății sau a energiei arse măsurate. Aceasta nu este o recomandare medicală.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -557,6 +568,9 @@
     <string name="settings_height_unit">Unitate de înălțime</string>
     <string name="settings_weight_unit">Unitate de greutate</string>
     <string name="settings_week_starts">Săptămâna începe în</string>
+    <string name="settings_energy_unit">Unitate de energie</string>
+    <string name="settings_energy_unit_kcal">Kilocalorii (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojouli (kJ)</string>
     <string name="settings_meal_times_customize">Personalizează</string>
     <string name="settings_week_monday">Luni</string>
     <string name="settings_week_sunday">Duminică</string>
@@ -694,6 +708,9 @@
     <string name="notif_streak_text">Menține-ți seria — înregistrează ceva din ziua de azi.</string>
     <string name="notif_summary_title">Rezumatul de azi e gata</string>
     <string name="notif_summary_text">Atinge pentru a vedea cum s-au aliniat macronutrienții de azi.</string>
+    <string name="notif_summary_deficit_kj">Consumat: %1$d kJ · Ars: %2$d kJ · Deficit estimat: %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Consumat: %1$d kJ · Ars: %2$d kJ · Surplus estimat: %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Consumat: %1$d kJ · Ars: %2$d kJ · Echilibru estimat</string>
 
     <string name="onboarding_goal_optional">Țintă (opțional)</string>
     <string name="onboarding_goal_set_later">Poți seta asta mai târziu în Setări.</string>
@@ -723,6 +740,7 @@
     <string name="progress_workout_stat_days">Zile</string>
     <string name="progress_workout_no_range">Nu există consumuri calculate pentru antrenamente în această perioadă</string>
     <string name="progress_workout_chart_description">Graficul consumului din antrenamente de la %1$s la %2$s. Total: %3$d kilocalorii; recent: %4$d kilocalorii.</string>
+    <string name="progress_workout_chart_description_kj">Graficul consumului din antrenamente de la %1$s la %2$s. Total: %3$d kilojouli; recent: %4$d kilojouli.</string>
     <string name="workout_filter_source">Sursă</string>
     <string name="workout_source_dataset">Bază de date</string>
     <string name="workout_source_saved">Salvate</string>

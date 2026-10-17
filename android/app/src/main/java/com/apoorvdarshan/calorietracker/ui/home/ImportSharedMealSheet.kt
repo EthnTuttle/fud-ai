@@ -27,6 +27,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FoodEntry
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlin.math.roundToInt
 
@@ -76,7 +78,7 @@ fun ImportSharedMealSheet(
                         )
                     }
                     Text(
-                        "${meal.calories} kcal",
+                        energyText(meal.calories),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.Calorie,
@@ -100,7 +102,11 @@ fun ImportSharedMealSheet(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    if (meals.size == 1) stringResource(R.string.import_add_to_log) else stringResource(R.string.import_add_to_log_many_format, meals.size, totalCalories),
+                    if (meals.size == 1) stringResource(R.string.import_add_to_log) else stringResource(
+                        LocalEnergyUnit.current.pick(R.string.import_add_to_log_many_format, R.string.import_add_to_log_many_format_kj),
+                        meals.size,
+                        LocalEnergyUnit.current.displayValue(totalCalories)
+                    ),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,

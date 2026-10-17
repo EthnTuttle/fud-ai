@@ -12,6 +12,7 @@
     <string name="widget_carbs">कार्ब्स</string>
     <string name="widget_fat">फैट</string>
     <string name="widget_kcal_left_format">%1$d kcal शेष</string>
+    <string name="widget_kj_left_format">%1$d kJ शेष</string>
     <string name="widget_g_left_format">%1$dg शेष</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">प्रोटीन g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d नए रिकॉर्ड · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">अनुमानित बर्न: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">%1$d लॉग में जोड़ें · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -332,6 +338,8 @@
     <string name="home_menu_saved_meals">सहेजे गए भोजन</string>
     <string name="home_kcal_of_format">%1$s kcal में से</string>
     <string name="home_kcal_left_format">%1$s शेष</string>
+    <string name="home_kj_left_format">%1$s शेष</string>
+    <string name="home_kilojoules">किलोजूल</string>
     <string name="home_view_more">और देखें</string>
     <string name="home_todays_food">आज का भोजन</string>
     <string name="home_no_foods_logged">कोई भोजन लॉग नहीं किया गया</string>
@@ -498,6 +506,7 @@
     <string name="progress_include_today">आज शामिल करें</string>
     <string name="progress_include_today_caption">कैलोरी चार्ट और पोषण औसत</string>
     <string name="progress_avg_format">औसत: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">औसत: %1$,d kJ</string>
     <string name="progress_no_food">अभी तक कोई भोजन लॉग नहीं किया गया</string>
 
     <string name="progress_macro_averages">मैक्रो औसत</string>
@@ -538,7 +547,9 @@
     <string name="settings_recalculate_goals">लक्ष्य पुनः गणना करें</string>
     <string name="settings_estimated_maintenance">अनुमानित मेंटेनेंस कैलोरी</string>
     <string name="settings_maintenance_deficit_format">घाटा: %1$,d kcal/दिन</string>
+    <string name="settings_maintenance_deficit_format_kj">घाटा: %1$,d kJ/दिन</string>
     <string name="settings_maintenance_surplus_format">अधिशेष: %1$,d kcal/दिन</string>
+    <string name="settings_maintenance_surplus_format_kj">अधिशेष: %1$,d kJ/दिन</string>
     <string name="settings_maintenance_close">लक्ष्य मेंटेनेंस के करीब है</string>
     <string name="settings_estimated_maintenance_info">अनुमानित मेंटेनेंस कैलोरी वे कैलोरी हैं जो आप एक सामान्य दिन में जलाते हैं: आपकी प्रोफ़ाइल से BMR को आपके गतिविधि स्तर से गुणा करके। इससे कम खाने पर वज़न घटाने के लिए घाटा होता है; इससे ज़्यादा खाने पर वज़न बढ़ाने के लिए अधिशेष होता है। दिखाया गया घाटा या अधिशेष आपके कैलोरी लक्ष्य में से यह अनुमान घटाकर निकलता है। यह फ़ॉर्मूले पर आधारित अनुमान है, इसलिए आपकी असली खपत अलग हो सकती है, और लक्ष्य की पुनर्गणना आपके लॉग किए गए भोजन, वज़न के रुझान या मापी गई ऊर्जा खपत के आधार पर लक्ष्य तय कर सकती है। यह चिकित्सा सलाह नहीं है।</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -554,6 +565,9 @@
     <string name="settings_height_unit">ऊंचाई की इकाई</string>
     <string name="settings_weight_unit">वज़न की इकाई</string>
     <string name="settings_week_starts">सप्ताह शुरू होता है</string>
+    <string name="settings_energy_unit">ऊर्जा इकाई</string>
+    <string name="settings_energy_unit_kcal">किलोकैलोरी (kcal)</string>
+    <string name="settings_energy_unit_kj">किलोजूल (kJ)</string>
     <string name="settings_meal_times_customize">कस्टमाइज़ करें</string>
     <string name="settings_week_monday">सोमवार</string>
     <string name="settings_week_sunday">रविवार</string>
@@ -691,6 +705,9 @@
     <string name="notif_streak_text">अपनी स्ट्रीक जारी रखें — आज का कुछ लॉग करें।</string>
     <string name="notif_summary_title">आज का सारांश तैयार है</string>
     <string name="notif_summary_text">देखने के लिए टैप करें कि आज के मैक्रो कैसे रहे।</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ खाया · %2$d kJ बर्न · अनुमानित घाटा %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ खाया · %2$d kJ बर्न · अनुमानित अधिशेष %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ खाया · %2$d kJ बर्न · अनुमानित संतुलन</string>
 
     <string name="onboarding_goal_optional">लक्ष्य (वैकल्पिक)</string>
     <string name="onboarding_goal_set_later">आप इसे बाद में सेटिंग्स में सेट कर सकते हैं।</string>
@@ -719,6 +736,7 @@
     <string name="progress_workout_stat_days">दिन</string>
     <string name="progress_workout_no_range">इस अवधि में कोई गणना किया गया वर्कआउट बर्न नहीं है</string>
     <string name="progress_workout_chart_description">%1$s से %2$s तक वर्कआउट बर्न चार्ट। कुल %3$d किलोकैलोरी; नवीनतम %4$d किलोकैलोरी।</string>
+    <string name="progress_workout_chart_description_kj">%1$s से %2$s तक वर्कआउट बर्न चार्ट। कुल %3$d किलोजूल; नवीनतम %4$d किलोजूल।</string>
     <string name="workout_filter_source">स्रोत</string>
     <string name="workout_source_dataset">डेटाबेस</string>
     <string name="workout_source_saved">सहेजे गए</string>

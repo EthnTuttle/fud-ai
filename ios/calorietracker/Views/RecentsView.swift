@@ -195,6 +195,7 @@ private struct SavedMealRow: View {
     let entry: FoodEntry
     let isFavorite: Bool
     var subtitle: String? = nil
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         HStack(spacing: 12) {
@@ -232,7 +233,7 @@ private struct SavedMealRow: View {
                 }
 
                 HStack(spacing: 6) {
-                    Text("\(entry.calories) kcal")
+                    Text(energyUnit.format(kcal: entry.calories))
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(AppColors.calorie)
 

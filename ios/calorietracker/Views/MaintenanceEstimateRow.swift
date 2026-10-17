@@ -6,6 +6,7 @@ struct MaintenanceEstimateRow: View {
     let profile: UserProfile
 
     @State private var showInfo = false
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         let breakdown = profile.maintenanceBreakdown
@@ -24,7 +25,7 @@ struct MaintenanceEstimateRow: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text("\(breakdown.maintenanceCalories.formatted()) kcal")
+                Text(energyUnit.format(kcal: breakdown.maintenanceCalories))
                     .foregroundStyle(.secondary)
                 Image(systemName: "info.circle")
                     .font(.footnote)
@@ -42,12 +43,12 @@ struct MaintenanceEstimateRow: View {
     }
 
     private func balanceText(_ breakdown: MaintenanceBreakdown) -> Text {
-        let amount = abs(breakdown.dailyDifference).formatted()
+        let amount = energyUnit.format(kcal: abs(breakdown.dailyDifference))
         switch breakdown.balance {
         case .deficit:
-            return Text("Deficit: \(amount) kcal/day")
+            return Text("Deficit: \(amount)/day")
         case .surplus:
-            return Text("Surplus: \(amount) kcal/day")
+            return Text("Surplus: \(amount)/day")
         case .maintenance:
             return Text("Target is close to maintenance")
         }

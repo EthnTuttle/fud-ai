@@ -46,9 +46,17 @@ data class WidgetSnapshot(
     val waterTrackingEnabled: Boolean = false,
     val waterCurrentMl: Int = 0,
     val waterGoalMl: Int = 2_000,
-    val waterUnitRaw: String = WaterUnit.Default.storageValue
+    val waterUnitRaw: String = WaterUnit.Default.storageValue,
+    /** Energy display unit. Calorie fields stay kcal; widgets convert. Default keeps old snapshots kcal. */
+    val energyUnitRaw: String = EnergyUnit.Default.storageValue
 ) {
     val caloriesRemaining: Int get() = maxOf(0, calorieGoal - calories)
+    val energyUnit: EnergyUnit get() = EnergyUnit.fromStorage(energyUnitRaw)
+    val usesKilojoules: Boolean get() = energyUnit == EnergyUnit.KJ
+    val displayCalories: Int get() = energyUnit.displayValue(calories)
+    val displayCalorieGoal: Int get() = energyUnit.displayValue(calorieGoal)
+    /** Goal minus eaten in display units, so "eaten / goal · left" always adds up. */
+    val displayCaloriesRemaining: Int get() = maxOf(0, displayCalorieGoal - displayCalories)
     val proteinRemaining: Double get() = maxOf(0.0, proteinGoal.toDouble() - protein)
     val carbsRemaining: Double get() = maxOf(0.0, carbsGoal.toDouble() - carbs)
     val fatRemaining: Double get() = maxOf(0.0, fatGoal.toDouble() - fat)

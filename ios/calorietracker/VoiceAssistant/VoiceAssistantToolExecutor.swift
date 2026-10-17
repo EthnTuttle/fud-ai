@@ -163,6 +163,9 @@ final class VoiceAssistantToolExecutor {
     let settings: VoiceAssistantSettings
     /// Where the app's own settings live (theme, appearance, units, water goal).
     let appDefaults: UserDefaults
+    /// Cards show calories in the user's energy unit; tool arguments and
+    /// results (and the model-facing summaries) stay kcal.
+    private var energyUnit: EnergyUnit { EnergyUnit.current(in: appDefaults) }
     let cards: VoiceAssistantCardStore
     let analyzer: any VoiceAssistantAnalyzing
     let workoutDiaryEnabled: Bool
@@ -603,7 +606,7 @@ final class VoiceAssistantToolExecutor {
             draftID: id,
             isWorkout: false,
             title: base.name,
-            lines: items.map(Self.itemLine),
+            lines: items.map { Self.itemLine($0, energyUnit: energyUnit) },
             calories: base.calories,
             macros: Self.macroLine(protein: base.protein, carbs: base.carbs, fat: base.fat),
             thumbnail: images.first
@@ -618,12 +621,12 @@ final class VoiceAssistantToolExecutor {
         ]
     }
 
-    private static func itemLine(_ item: [String: Any]) -> String {
+    private static func itemLine(_ item: [String: Any], energyUnit: EnergyUnit) -> String {
         let name = item["name"] as? String ?? ""
         let serving = (item["serving"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         let calories = item["calories"] as? Int ?? 0
-        let kcal = String(localized: "\(calories) kcal")
-        return [name, serving, kcal].compactMap { $0 }.joined(separator: " · ")
+        let energy = energyUnit.format(kcal: calories)
+        return [name, serving, energy].compactMap { $0 }.joined(separator: " · ")
     }
 
     private static func macroLine(protein: Double, carbs: Double, fat: Double) -> String {
@@ -796,8 +799,8 @@ final class VoiceAssistantToolExecutor {
         let mealName = meal.displayName
         let change = Change(
             summary: "Log \(entry.name) (\(entry.calories) kcal) as \(meal.rawValue) on \(dayText) at \(VoiceAssistantParsing.clockTime(timestamp, calendar: calendar))",
-            pendingText: String(localized: "Log \(entry.name) · \(entry.calories) kcal · \(mealName)"),
-            doneText: String(localized: "Logged \(entry.name) · \(entry.calories) kcal"),
+            pendingText: String(localized: "Log \(entry.name) · \(energyUnit.format(kcal: entry.calories)) · \(mealName)"),
+            doneText: String(localized: "Logged \(entry.name) · \(energyUnit.format(kcal: entry.calories))"),
             apply: { [self, stores, cards] in
                 if host?.cameraMode == .food { host?.closeCamera() }
                 guard stores.food.addEntry(entry) else {
@@ -875,8 +878,8 @@ final class VoiceAssistantToolExecutor {
 
         let change = Change(
             summary: "Update \(original.name) (\(original.calories) kcal) to \(updated.name), \(updated.calories) kcal, \(updated.mealType.rawValue), \(iso(updated.timestamp)) \(VoiceAssistantParsing.clockTime(updated.timestamp, calendar: calendar))",
-            pendingText: String(localized: "Update \(original.name) · \(updated.calories) kcal"),
-            doneText: String(localized: "Updated \(updated.name) · \(updated.calories) kcal"),
+            pendingText: String(localized: "Update \(original.name) · \(energyUnit.format(kcal: updated.calories))"),
+            doneText: String(localized: "Updated \(updated.name) · \(energyUnit.format(kcal: updated.calories))"),
             apply: { [stores] in
                 guard stores.food.entries.contains(where: { $0.id == original.id }) else {
                     return .failed(Self.failure(.notFound, "That food is no longer in the diary."))
@@ -901,7 +904,7 @@ final class VoiceAssistantToolExecutor {
         }
         let change = Change(
             summary: "Delete \(entry.name) (\(entry.calories) kcal) logged on \(iso(entry.timestamp)) at \(VoiceAssistantParsing.clockTime(entry.timestamp, calendar: calendar))",
-            pendingText: String(localized: "Delete \(entry.name) · \(entry.calories) kcal"),
+            pendingText: String(localized: "Delete \(entry.name) · \(energyUnit.format(kcal: entry.calories))"),
             doneText: "",
             apply: { [stores] in
                 guard let current = stores.food.entries.first(where: { $0.id == entry.id }) else {
@@ -1488,7 +1491,7 @@ final class VoiceAssistantToolExecutor {
             guard !adaptiveGoalsEnabled else {
                 return Self.failure(.unsupported, "Adaptive Goals is on and sets the targets each week. The user can turn it off in Settings → Goals & Nutrition to set their own.")
             }
-            valueText = key == .calorieGoal ? String(localized: "\(value) kcal") : "\(value) g"
+            valueText = key == .calorieGoal ? energyUnit.format(kcal: value) : "\(value) g"
             summaryValue = "\(value)"
             apply = goalSetting(key, value: value)
         case .waterGoal:

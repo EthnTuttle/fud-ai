@@ -13,6 +13,17 @@ enum WeeklyChallengeL10n {
         )
         return String(format: localizedFormat, locale: .current, arguments: arguments)
     }
+
+    /// "N / 7 days" over the week's activity burn, shown in the energy unit in use.
+    /// The aggregate itself stays kcal (it is what the challenge server ranks).
+    static func activityDays(_ days: Int, burnKcal: Int, energyUnit: EnergyUnit) -> String {
+        switch energyUnit {
+        case .kcal:
+            format("%1$@ / 7 days\n%2$@ kcal", days.formatted(), burnKcal.formatted())
+        case .kj:
+            format("%1$@ / 7 days\n%2$@ kJ", days.formatted(), energyUnit.number(kcal: burnKcal))
+        }
+    }
 }
 
 enum ProgressOverviewMode: String, CaseIterable, Identifiable {

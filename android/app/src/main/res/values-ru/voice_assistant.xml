@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Черновик тренировки</string>
     <string name="voice_card_dismiss">Скрыть</string>
     <string name="voice_card_totals">%1$d ккал · Белок: %2$d г · Углеводы: %3$d г · Жиры: %4$d г</string>
+    <string name="voice_card_totals_kj">%1$d кДж · Белок: %2$d г · Углеводы: %3$d г · Жиры: %4$d г</string>
     <string name="voice_card_log">Записать</string>
     <string name="voice_card_logged">Записано</string>
     <string name="voice_card_confirm_title">Подтвердить</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Сохранено</string>
     <string name="voice_card_undo">Отменить</string>
     <string name="voice_kcal">%1$d ккал</string>
+    <string name="voice_kj">%1$d кДж</string>
     <string name="voice_change_log_food">Записать %1$s · %2$d ккал · %3$s</string>
+    <string name="voice_change_log_food_kj">Записать %1$s · %2$d кДж · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d ккал</string>
+    <string name="voice_change_food_kj">%1$s · %2$d кДж</string>
     <string name="voice_change_water">Записать %1$s воды</string>
     <string name="voice_change_start_fast">Начать голодание на %1$d ч</string>
     <string name="voice_change_end_fast">Завершить голодание · %1$s</string>

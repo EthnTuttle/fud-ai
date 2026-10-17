@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Návrh tréninku</string>
     <string name="voice_card_dismiss">Zavřít</string>
     <string name="voice_card_totals">%1$d kcal · Bílkoviny: %2$d g · Sacharidy: %3$d g · Tuky: %4$d g</string>
+    <string name="voice_card_totals_kj">%1$d kJ · Bílkoviny: %2$d g · Sacharidy: %3$d g · Tuky: %4$d g</string>
     <string name="voice_card_log">Zapsat</string>
     <string name="voice_card_logged">Zapsáno</string>
     <string name="voice_card_confirm_title">Potvrdit</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Uloženo</string>
     <string name="voice_card_undo">Zpět</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">Zapsat %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">Zapsat %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">Zapsat %1$s vody</string>
     <string name="voice_change_start_fast">Zahájit půst na %1$d h</string>
     <string name="voice_change_end_fast">Ukončit půst · %1$s</string>

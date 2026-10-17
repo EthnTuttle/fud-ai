@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.apoorvdarshan.calorietracker.AppContainer
@@ -209,7 +210,16 @@ internal fun WorkoutTextSheet(
                 val estimate = remember(draft, bodyWeightKg, unit, rpeScale) {
                     runCatching { WorkoutBurnEstimator.estimate(draft.planned(library), bodyWeightKg, unit, rpeScale) }.getOrNull()
                 }
-                estimate?.let { Text(stringResource(R.string.workout_text_estimate, it.calories), style = MaterialTheme.typography.titleMedium) }
+                val energyUnit = LocalEnergyUnit.current
+                estimate?.let {
+                    Text(
+                        stringResource(
+                            energyUnit.pick(R.string.workout_text_estimate, R.string.workout_text_estimate_kj),
+                            energyUnit.displayValue(it.calories)
+                        ),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
                 Text(stringResource(R.string.workout_text_calories_note), style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedButton(onClick = { draftJson = null; error = null; followUpsJson = "[]"; question = null }, enabled = !saving) { Text(stringResource(R.string.workout_text_edit)) }

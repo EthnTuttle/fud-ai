@@ -648,6 +648,7 @@ private struct WeeklyChallengeViewerCard: View {
     let category: WeeklyChallengeCategory
     let onEditProfile: () -> Void
     let onLeave: () -> Void
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -658,7 +659,7 @@ private struct WeeklyChallengeViewerCard: View {
                         .font(.system(.subheadline, design: .rounded, weight: .bold))
                         .foregroundStyle(AppColors.calorie)
                     WeeklyChallengeParticipantIdentity(participant: participant)
-                    Text(WeeklyChallengeParticipantScore.text(for: participant, category: category))
+                    Text(WeeklyChallengeParticipantScore.text(for: participant, category: category, energyUnit: energyUnit))
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
@@ -678,10 +679,10 @@ private struct WeeklyChallengeViewerCard: View {
                 label: WeeklyChallengeL10n.text("Activity"),
                 days: participant.activityDays,
                 emphasized: category == .activity,
-                value: WeeklyChallengeL10n.format(
-                    "%1$@ / 7 days\n%2$@ kcal",
-                    participant.activityDays.formatted(),
-                    participant.activityKcal.formatted()
+                value: WeeklyChallengeL10n.activityDays(
+                    participant.activityDays,
+                    burnKcal: participant.activityKcal,
+                    energyUnit: energyUnit
                 )
             )
             WeeklyChallengeDayTrack(
@@ -798,6 +799,7 @@ private struct WeeklyChallengePodium: View {
     let category: WeeklyChallengeCategory
     let viewerID: String?
     let onReport: (WeeklyChallengeParticipant) -> Void
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     let onBlock: (WeeklyChallengeParticipant) -> Void
 
     var body: some View {
@@ -858,7 +860,7 @@ private struct WeeklyChallengePodium: View {
                             .lineLimit(1)
                     }
                 }
-                Text(WeeklyChallengeParticipantScore.text(for: participant, category: category))
+                Text(WeeklyChallengeParticipantScore.text(for: participant, category: category, energyUnit: energyUnit))
                     .font(.system(.caption, design: .rounded, weight: .bold))
                     .foregroundStyle(WeeklyChallengeRankBadge.foreground(for: participant.rank))
                     .multilineTextAlignment(.center)
@@ -918,6 +920,7 @@ private struct WeeklyChallengeParticipantRow: View {
     var striped: Bool = false
     let onReport: () -> Void
     let onBlock: () -> Void
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         HStack(spacing: 12) {
@@ -934,7 +937,7 @@ private struct WeeklyChallengeParticipantRow: View {
 
             Spacer(minLength: 4)
 
-            Text(WeeklyChallengeParticipantScore.text(for: participant, category: category))
+            Text(WeeklyChallengeParticipantScore.text(for: participant, category: category, energyUnit: energyUnit))
                 .font(.system(.caption, design: .rounded, weight: .bold))
                 .foregroundStyle(AppColors.calorie)
                 .multilineTextAlignment(.trailing)
@@ -1087,7 +1090,8 @@ private struct WeeklyChallengeParticipantIdentity: View {
 private enum WeeklyChallengeParticipantScore {
     static func text(
         for participant: WeeklyChallengeParticipant,
-        category: WeeklyChallengeCategory
+        category: WeeklyChallengeCategory,
+        energyUnit: EnergyUnit
     ) -> String {
         switch category {
         case .overall:
@@ -1096,10 +1100,10 @@ private enum WeeklyChallengeParticipantScore {
                 participant.overallPoints.formatted()
             )
         case .activity:
-            return WeeklyChallengeL10n.format(
-                "%1$@ / 7 days\n%2$@ kcal",
-                participant.activityDays.formatted(),
-                participant.activityKcal.formatted()
+            return WeeklyChallengeL10n.activityDays(
+                participant.activityDays,
+                burnKcal: participant.activityKcal,
+                energyUnit: energyUnit
             )
         case .nutrition, .consistency, .hydration:
             return WeeklyChallengeL10n.format(

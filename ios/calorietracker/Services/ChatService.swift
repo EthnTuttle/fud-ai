@@ -346,7 +346,8 @@ struct ChatService {
         weightMetric: Bool,
         workoutSessions: [StrengthWorkoutSession] = [],
         workoutPlans: [StrengthWorkoutDayPlan] = [],
-        workoutAccessEnabled: Bool = false
+        workoutAccessEnabled: Bool = false,
+        energyUnit: EnergyUnit = .current
     ) -> [String] {
         let forecast = WeightAnalysisService.compute(weights: weights, foods: foods, profile: profile)
 
@@ -382,6 +383,9 @@ struct ChatService {
         }
         if let goalBF = profile.goalBodyFatPercentage {
             lines.append("- Goal body fat: \(Int(goalBF * 100))%")
+        }
+        if let energyHint = energyUnit.aiReplyInstruction(toolArguments: true) {
+            lines.append("- \(energyHint)")
         }
         lines.append("")
         lines.append("## Formulas in use")

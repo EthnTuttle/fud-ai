@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Ciornă de antrenament</string>
     <string name="voice_card_dismiss">Închide</string>
     <string name="voice_card_totals">%1$d kcal · Proteine: %2$dg · Carbohidrați: %3$dg · Grăsimi: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · Proteine: %2$dg · Carbohidrați: %3$dg · Grăsimi: %4$dg</string>
     <string name="voice_card_log">Înregistrează</string>
     <string name="voice_card_logged">Înregistrat</string>
     <string name="voice_card_confirm_title">Confirmă</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Salvat</string>
     <string name="voice_card_undo">Anulează</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">Înregistrează %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">Înregistrează %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">Înregistrează %1$s de apă</string>
     <string name="voice_change_start_fast">Începe un post de %1$d h</string>
     <string name="voice_change_end_fast">Încheie postul · %1$s</string>

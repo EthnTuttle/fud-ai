@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Trainingsentwurf</string>
     <string name="voice_card_dismiss">Ausblenden</string>
     <string name="voice_card_totals">%1$d kcal · Protein: %2$dg · Kohlenhydrate: %3$dg · Fett: %4$dg</string>
+    <string name="voice_card_totals_kj">%1$d kJ · Protein: %2$dg · Kohlenhydrate: %3$dg · Fett: %4$dg</string>
     <string name="voice_card_log">Eintragen</string>
     <string name="voice_card_logged">Eingetragen</string>
     <string name="voice_card_confirm_title">Bestätigen</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Gespeichert</string>
     <string name="voice_card_undo">Widerrufen</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">%1$s eintragen · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">%1$s eintragen · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">%1$s Wasser eintragen</string>
     <string name="voice_change_start_fast">%1$d-stündiges Fasten starten</string>
     <string name="voice_change_end_fast">Fasten beenden · %1$s</string>

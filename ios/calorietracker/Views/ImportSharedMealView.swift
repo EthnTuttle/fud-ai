@@ -7,6 +7,7 @@ struct ImportSharedMealView: View {
     let meals: [FoodEntry]
     let onAdd: ([FoodEntry]) -> Void
     let onCancel: () -> Void
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     private var totalCalories: Int { meals.reduce(0) { $0 + $1.calories } }
 
@@ -31,7 +32,7 @@ struct ImportSharedMealView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("\(meal.calories) kcal")
+                            Text(energyUnit.format(kcal: meal.calories))
                                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(AppColors.calorie)
                         }
@@ -51,7 +52,7 @@ struct ImportSharedMealView: View {
                 Button {
                     onAdd(meals)
                 } label: {
-                    Text(meals.count == 1 ? "Add to Log" : "Add \(meals.count) to Log · \(totalCalories) kcal")
+                    Text(meals.count == 1 ? "Add to Log" : "Add \(meals.count) to Log · \(energyUnit.format(kcal: totalCalories))")
                         .font(.system(.headline, design: .rounded, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)

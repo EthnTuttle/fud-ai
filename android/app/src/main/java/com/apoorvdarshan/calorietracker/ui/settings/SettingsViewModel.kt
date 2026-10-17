@@ -11,6 +11,7 @@ import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AddMenuConfig
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.CurrentMealSchedule
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.MealSchedule
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.QuickAction
@@ -96,6 +97,7 @@ data class SettingsUiState(
     val appearanceMode: String = "system",
     val appThemeColor: AppThemeColor = AppThemeColor.FUD_PINK,
     val weekStartsOnMonday: Boolean = true,
+    val energyUnit: EnergyUnit = EnergyUnit.Default,
     val mealSchedule: MealSchedule = MealSchedule.Default,
     val workoutSplit: WorkoutSplit = WorkoutSplit.FULL_BODY,
     val workoutRpeScale: WorkoutRpeScale = WorkoutRpeScale.STRENGTH,
@@ -418,6 +420,9 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             prefs.waterUnit.distinctUntilChanged().collect { _ui.value = _ui.value.copy(waterUnit = it) }
         }
+        viewModelScope.launch {
+            prefs.energyUnit.distinctUntilChanged().collect { _ui.value = _ui.value.copy(energyUnit = it) }
+        }
     }
 
     /**
@@ -669,6 +674,14 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.prefs.setWeekStartsOnMonday(monday)
             _ui.value = _ui.value.copy(weekStartsOnMonday = monday)
+        }
+    }
+
+    /** Display/input unit only; widgets pick it up through the snapshot writer. */
+    fun setEnergyUnit(unit: EnergyUnit) {
+        viewModelScope.launch {
+            container.prefs.setEnergyUnit(unit)
+            _ui.value = _ui.value.copy(energyUnit = unit)
         }
     }
 
@@ -1490,7 +1503,8 @@ class SettingsViewModel(val container: AppContainer) : ViewModel() {
                 customCarbs = result.carbs,
                 customFat = result.fat
             )
-            val message = "Updated to ${result.calories} kcal." + (result.reason?.let { " $it" } ?: "")
+            val energy = container.prefs.energyUnit.first().format(container.appContext.resources, result.calories)
+            val message = "Updated to $energy." + (result.reason?.let { " $it" } ?: "")
             container.profileRepository.save(next)
             // Goals are now fresh — capture this input baseline so the recalc nudge clears.
             lastRecalcSignature = next.goalInputSignature

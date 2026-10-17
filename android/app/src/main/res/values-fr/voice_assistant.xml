@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Brouillon d’entraînement</string>
     <string name="voice_card_dismiss">Ignorer</string>
     <string name="voice_card_totals">%1$d kcal · Protéines : %2$d g · Glucides : %3$d g · Lipides : %4$d g</string>
+    <string name="voice_card_totals_kj">%1$d kJ · Protéines : %2$d g · Glucides : %3$d g · Lipides : %4$d g</string>
     <string name="voice_card_log">Enregistrer</string>
     <string name="voice_card_logged">Enregistré</string>
     <string name="voice_card_confirm_title">Confirmer</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Enregistré</string>
     <string name="voice_card_undo">Annuler</string>
     <string name="voice_kcal">%1$d kcal</string>
+    <string name="voice_kj">%1$d kJ</string>
     <string name="voice_change_log_food">Enregistrer %1$s · %2$d kcal · %3$s</string>
+    <string name="voice_change_log_food_kj">Enregistrer %1$s · %2$d kJ · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d kcal</string>
+    <string name="voice_change_food_kj">%1$s · %2$d kJ</string>
     <string name="voice_change_water">Enregistrer %1$s d’eau</string>
     <string name="voice_change_start_fast">Commencer un jeûne de %1$d h</string>
     <string name="voice_change_end_fast">Terminer votre jeûne · %1$s</string>

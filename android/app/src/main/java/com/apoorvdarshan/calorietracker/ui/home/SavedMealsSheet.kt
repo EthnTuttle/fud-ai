@@ -82,6 +82,7 @@ import com.apoorvdarshan.calorietracker.data.FrequentFoodGroup
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
+import com.apoorvdarshan.calorietracker.ui.components.energyText
 import com.apoorvdarshan.calorietracker.ui.components.rememberFoodThumbnail
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.coroutines.launch
@@ -603,7 +604,7 @@ private fun SavedMealRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    "${entry.calories} kcal",
+                    energyText(entry.calories),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.Calorie
