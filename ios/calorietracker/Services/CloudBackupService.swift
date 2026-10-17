@@ -87,20 +87,24 @@ final class CloudBackupService {
         enabled = true
     }
 
-    func snapshotPhotos() -> [String: Data] {
-        var photos: [String: Data] = [:]
+    /// Photo files and sizes only; bytes are read one photo at a time while packing.
+    func snapshotPhotos() -> [String: CloudBackupPhotoFile] {
+        var photos: [String: CloudBackupPhotoFile] = [:]
         for name in FoodImageStore.shared.filenames() {
             guard let safe = CloudBackupPolicy.safePhotoName(name),
-                  let data = FoodImageStore.shared.load(filename: safe)
+                  let url = FoodImageStore.shared.fileURL(for: safe),
+                  let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey]),
+                  values.isRegularFile == true,
+                  let size = values.fileSize
             else { continue }
-            photos[safe] = data
+            photos[safe] = CloudBackupPhotoFile(url: url, size: size)
         }
         return photos
     }
 
-    func restorePhotos(_ photos: [String: Data]) {
+    func restorePhotos(from archive: CloudBackupArchive.Reader) throws {
         FoodImageStore.shared.deleteAll()
-        for (name, data) in photos {
+        try archive.forEachPhoto { name, data in
             _ = FoodImageStore.shared.restore(data: data, filename: name)
         }
     }
@@ -125,14 +129,10 @@ final class CloudBackupService {
         try await checkAccount()
         let values = snapshotValues()
         let photos = snapshotPhotos()
-        let hash = CloudBackupArchive.contentHash(values: values, photos: photos)
+        let hash = CloudBackupArchive.contentHash(values: values, photoSizes: photos.mapValues(\.size))
         if skipIfUnchanged, hash == defaults.string(forKey: Self.lastHashKey) { return }
-        let zip = try CloudBackupArchive.pack(
-            values: values,
-            photos: photos,
-            exportedAt: ISO8601DateFormatter().string(from: Date()),
-            appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-        )
+        let zip = try packToTemporaryFile(values: values, photos: photos)
+        defer { try? FileManager.default.removeItem(at: zip) }
         try await upload(zip: zip, hash: hash)
         let now = ISO8601DateFormatter().string(from: Date())
         defaults.set(now, forKey: Self.lastAtKey)
@@ -150,9 +150,9 @@ final class CloudBackupService {
               let asset = record[assetField] as? CKAsset,
               let url = asset.fileURL
         else { throw CloudBackupError.noBackup }
-        let zip = try Data(contentsOf: url)
-        let (document, photos) = try CloudBackupArchive.unpack(zip)
-        restorePhotos(photos)
+        let archive = try CloudBackupArchive.Reader(url: url)
+        let document = archive.document
+        try restorePhotos(from: archive)
         applyValues(document.payload.values)
         defaults.set(document.contentSha256, forKey: Self.lastHashKey)
         defaults.set(document.exportedAt, forKey: Self.lastAtKey)
@@ -193,13 +193,9 @@ final class CloudBackupService {
             try await checkAccount()
             let values = snapshotValues()
             let photos = snapshotPhotos()
-            let hash = CloudBackupArchive.contentHash(values: values, photos: photos)
-            let zip = try CloudBackupArchive.pack(
-                values: values,
-                photos: photos,
-                exportedAt: ISO8601DateFormatter().string(from: Date()),
-                appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
-            )
+            let hash = CloudBackupArchive.contentHash(values: values, photoSizes: photos.mapValues(\.size))
+            let zip = try packToTemporaryFile(values: values, photos: photos)
+            defer { try? FileManager.default.removeItem(at: zip) }
             try await upload(zip: zip, hash: hash, toRecord: Self.smokeTestRecordName)
             smokeUploaded = true
 
@@ -238,13 +234,32 @@ final class CloudBackupService {
         Self.smokeLogger.error("\(line, privacy: .public)")
     }
 
-    private func upload(zip: Data, hash: String, toRecord named: String? = nil) async throws {
+    /// Packs into a uniquely named temp file; the caller deletes it once CloudKit has saved it.
+    private func packToTemporaryFile(values: [String: CloudBackupValue], photos: [String: CloudBackupPhotoFile]) throws -> URL {
+        let temp = FileManager.default.temporaryDirectory
+        // Older builds left their whole last backup here under a fixed name.
+        try? FileManager.default.removeItem(at: temp.appendingPathComponent("fudai-backup.zip"))
+        let zip = temp.appendingPathComponent("fudai-backup-\(UUID().uuidString).zip")
+        do {
+            try CloudBackupArchive.pack(
+                to: zip,
+                values: values,
+                photos: photos,
+                exportedAt: ISO8601DateFormatter().string(from: Date()),
+                appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: zip)
+            throw error
+        }
+        return zip
+    }
+
+    private func upload(zip: URL, hash: String, toRecord named: String? = nil) async throws {
         let name = named ?? recordName
-        let temp = FileManager.default.temporaryDirectory.appendingPathComponent("fudai-backup.zip")
-        try zip.write(to: temp, options: .atomic)
         let id = CKRecord.ID(recordName: name)
         let record = (try? await fetchRecord(named: name)) ?? CKRecord(recordType: recordType, recordID: id)
-        record[assetField] = CKAsset(fileURL: temp)
+        record[assetField] = CKAsset(fileURL: zip)
         record[shaField] = hash as CKRecordValue
         _ = try await container.privateCloudDatabase.save(record)
     }
@@ -277,8 +292,7 @@ final class CloudBackupService {
         guard let asset = record[assetField] as? CKAsset,
               let url = asset.fileURL
         else { throw CloudBackupError.noBackup }
-        let zip = try Data(contentsOf: url)
-        let (document, _) = try CloudBackupArchive.unpack(zip)
+        let document = try CloudBackupArchive.Reader(url: url).document
         guard document.contentSha256 == expectedHash else { throw CloudBackupError.invalidFormat }
         if let recordSha = record[shaField] as? String, recordSha != expectedHash {
             throw CloudBackupError.invalidFormat
