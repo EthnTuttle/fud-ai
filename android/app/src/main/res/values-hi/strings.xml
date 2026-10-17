@@ -75,6 +75,7 @@
     <string name="product_labels">लेबल</string>
     <string name="product_categories">श्रेणियाँ</string>
     <string name="product_ingredient_label">सामग्री लेबल</string>
+    <string name="product_possible_allergen">संभावित एलर्जेन: %1$s</string>
     <string name="product_info_settings_show">उत्पाद जानकारी दिखाएं</string>
     <string name="product_info_settings_fields">दिखाए जाने वाले विवरण</string>
     <string name="product_info_settings_footer">बारकोड से स्कैन किए गए खाद्य पदार्थों के लिए समीक्षा और संपादन स्क्रीन के अंत में दिखाई देती है। एलर्जेन जांच पर इसका कोई असर नहीं पड़ता और जब आपने एलर्जेन संवेदनशीलताएं सेट की हों, तो वह हमेशा दिखाई देती है।</string>

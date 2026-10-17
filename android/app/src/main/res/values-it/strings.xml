@@ -75,6 +75,7 @@
     <string name="product_labels">Etichette</string>
     <string name="product_categories">Categorie</string>
     <string name="product_ingredient_label">Elenco ingredienti</string>
+    <string name="product_possible_allergen">Possibile allergene: %1$s</string>
     <string name="product_info_settings_show">Mostra informazioni sul prodotto</string>
     <string name="product_info_settings_fields">Dettagli da mostrare</string>
     <string name="product_info_settings_footer">Mostrate alla fine delle schermate di revisione e modifica degli alimenti scansionati con codice a barre. Il controllo allergeni non cambia e compare sempre quando hai impostato delle sensibilità agli allergeni.</string>

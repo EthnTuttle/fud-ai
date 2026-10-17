@@ -75,6 +75,7 @@
     <string name="product_labels">Siegel</string>
     <string name="product_categories">Kategorien</string>
     <string name="product_ingredient_label">Zutatenliste</string>
+    <string name="product_possible_allergen">Mögliches Allergen: %1$s</string>
     <string name="product_info_settings_show">Produktinformationen anzeigen</string>
     <string name="product_info_settings_fields">Angezeigte Details</string>
     <string name="product_info_settings_footer">Wird bei per Barcode gescannten Lebensmitteln am Ende der Prüf- und Bearbeitungsansicht angezeigt. Der Allergen-Check ist davon nicht betroffen und erscheint immer, wenn du Allergen-Empfindlichkeiten festgelegt hast.</string>

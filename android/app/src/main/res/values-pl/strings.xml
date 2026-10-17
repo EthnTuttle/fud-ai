@@ -77,6 +77,7 @@
     <string name="product_labels">Oznaczenia</string>
     <string name="product_categories">Kategorie</string>
     <string name="product_ingredient_label">Skład na etykiecie</string>
+    <string name="product_possible_allergen">Możliwy alergen: %1$s</string>
     <string name="product_info_settings_show">Pokazuj informacje o produkcie</string>
     <string name="product_info_settings_fields">Wyświetlane szczegóły</string>
     <string name="product_info_settings_footer">Wyświetlane na końcu ekranów przeglądu i edycji produktów zeskanowanych kodem kreskowym. Nie wpływa na kontrolę alergenów, która zawsze się pojawia, gdy masz ustawione wrażliwości na alergeny.</string>

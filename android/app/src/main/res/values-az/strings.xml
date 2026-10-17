@@ -75,6 +75,7 @@
     <string name="product_labels">Etiketlər</string>
     <string name="product_categories">Kateqoriyalar</string>
     <string name="product_ingredient_label">Tərkib etiketi</string>
+    <string name="product_possible_allergen">Mümkün allergen: %1$s</string>
     <string name="product_info_settings_show">Məhsul məlumatını göstər</string>
     <string name="product_info_settings_fields">Göstəriləcək məlumatlar</string>
     <string name="product_info_settings_footer">Barkodla skan edilmiş qidalar üçün nəzərdən keçirmə və redaktə ekranlarının sonunda göstərilir. Allergen yoxlamasına təsir etmir və allergen həssaslıqlarınız təyin olunduqda həmişə göstərilir.</string>

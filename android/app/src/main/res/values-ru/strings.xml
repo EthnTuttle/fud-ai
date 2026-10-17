@@ -75,6 +75,7 @@
     <string name="product_labels">Маркировки</string>
     <string name="product_categories">Категории</string>
     <string name="product_ingredient_label">Состав на этикетке</string>
+    <string name="product_possible_allergen">Возможный аллерген: %1$s</string>
     <string name="product_info_settings_show">Показывать информацию о продукте</string>
     <string name="product_info_settings_fields">Отображаемые сведения</string>
     <string name="product_info_settings_footer">Показывается в конце экранов проверки и редактирования продуктов, отсканированных по штрихкоду. Проверка аллергенов от этого не зависит и всегда отображается, если у вас заданы чувствительности к аллергенам.</string>

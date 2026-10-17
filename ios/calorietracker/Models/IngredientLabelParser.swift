@@ -13,6 +13,11 @@ nonisolated struct IngredientLabelItem: Equatable, Sendable {
     let matchesSensitivity: Bool
 
     var text: String { segments.map(\.text).joined() }
+
+    /// Whether VoiceOver announces the entry as a possible allergen: it matches a
+    /// sensitivity, or Open Food Facts flags part of it (shown in bold, which
+    /// VoiceOver does not read).
+    var announcesAllergen: Bool { matchesSensitivity || segments.contains(where: \.isAllergen) }
 }
 
 /// A scanned ingredient label split for display (#428).
@@ -22,6 +27,10 @@ nonisolated struct IngredientLabel: Equatable, Sendable {
     /// Sentences after the ingredient list, such as "May contain traces of nuts.",
     /// kept whole so precautionary statements never read as ingredients.
     var notes: [IngredientLabelItem] = []
+    /// The whole label as one entry when it does not make a useful list, so a
+    /// single-ingredient label or one longer than `maxItems` keeps its
+    /// sensitivity warning. Nil for a list or a blank label.
+    var paragraph: IngredientLabelItem?
 }
 
 /// Turns an Open Food Facts ingredient label into a readable list (#428).
@@ -34,12 +43,17 @@ enum IngredientLabelParser {
 
     /// The label's first sentence split into entries, plus any later sentences
     /// as notes. The entries are empty when that sentence does not make a useful
-    /// list (a single entry, or more than `maxItems`); show `segments(in:)` of
-    /// the whole text instead.
+    /// list (a single entry, or more than `maxItems`); show `paragraph` instead.
     static func parse(_ text: String, sensitivities: [String] = []) -> IngredientLabel {
         let sentences = splitSentences(strippingHeading(from: text))
         let parts = splitTopLevel(sentences.first ?? "")
-        guard parts.count > 1, parts.count <= maxItems else { return IngredientLabel(items: []) }
+        guard parts.count > 1, parts.count <= maxItems else {
+            let whole = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            return IngredientLabel(
+                items: [],
+                paragraph: whole.isEmpty ? nil : item(from: whole, sensitivities: sensitivities)
+            )
+        }
         return IngredientLabel(
             items: parts.map { item(from: $0, sensitivities: sensitivities) },
             notes: sentences.dropFirst()
@@ -140,7 +154,8 @@ enum IngredientLabelParser {
     }
 
     /// Splits at full stops outside brackets that end a sentence: followed by a
-    /// line break, or by a capitalised word ("… acerola. May contain …"). Decimals
+    /// line break, by a capitalised word ("… acerola. May contain …"), or by a
+    /// precautionary statement in any case ("… salt. may contain …"). Decimals
     /// ("8.7%") and abbreviations before a single letter ("vit. C") stay together.
     /// Each sentence keeps its full stop.
     static func splitSentences(_ text: String) -> [String] {
@@ -189,19 +204,31 @@ enum IngredientLabelParser {
         return parts.map(clean).filter { !$0.isEmpty }
     }
 
-    private static let separators: Set<Character> = [",", ";", "，", "；", "、"]
+    private static let separators: Set<Character> = [",", ";", "，", "；", "、", "\u{060C}", "\u{061B}"]
     private static let openers: Set<Character> = ["(", "[", "{", "（", "［", "【"]
     private static let closers: Set<Character> = [")", "]", "}", "）", "］", "】"]
     private static let headingStems = [
         "ingred", "zutaten", "składnik", "skladnik", "slozeni", "icindekiler", "tərkib", "terkib",
         "состав", "склад", "配料", "原材料", "원재료", "المكونات", "सामग्री"
     ]
+    /// Precautionary statements that end the list after a full stop even in lower
+    /// case ("salt. may contain nuts"), compared without case or accents.
+    private static let statementStarts = [
+        "may contain", "contains", "traces", "allergy advice", "allergen advice",
+        "peut contenir", "contient", "kann spuren", "kann enthalten", "enthält",
+        "puede contener", "contiene", "può contenere", "kan sporen", "kan bevatten", "bevat",
+        "może zawierać", "zawiera", "pode conter", "contém", "poate conține", "conține",
+        "может содержать", "содержит", "може містити", "містить", "může obsahovat", "obsahuje",
+        "eser miktarda", "قد يحتوي", "يحتوي"
+    ].map(folded)
 
     private static let allergenSpan = try! NSRegularExpression(
         pattern: #"<span\s+class\s*=\s*["']allergen["']\s*>(.*?)</span\s*>"#,
         options: [.caseInsensitive, .dotMatchesLineSeparators]
     )
-    private static let markerEdgePunctuation: Set<Character> = [":", ";", ",", ".", "：", "；", "，", "、", "。"]
+    private static let markerEdgePunctuation: Set<Character> = [
+        ":", ";", ",", ".", "：", "；", "，", "、", "。", "\u{060C}", "\u{061B}"
+    ]
     private static let spanTag = try! NSRegularExpression(pattern: #"</?span\b[^>]*>"#, options: [.caseInsensitive])
     private static let htmlEntity = try! NSRegularExpression(
         pattern: #"&(#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|amp|lt|gt|quot|apos|nbsp);"#
@@ -221,6 +248,20 @@ enum IngredientLabelParser {
         guard next < characters.count else { return false }
         return lineBreak
             || (characters[next].isUppercase && next + 1 < characters.count && characters[next + 1].isLetter)
+            || startsStatement(characters, at: next)
+    }
+
+    private static func startsStatement(_ characters: [Character], at index: Int) -> Bool {
+        let window = folded(String(characters[index..<min(characters.count, index + 48)]))
+        return statementStarts.contains { phrase in
+            guard window.hasPrefix(phrase) else { return false }
+            return window.dropFirst(phrase.count).first.map { !$0.isLetter } ?? true
+        }
+    }
+
+    /// Lower case without accents, matching Android's NFD folding.
+    private static func folded(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
     }
 
     private static func isMarkerEdge(_ character: Character) -> Bool {
@@ -262,8 +303,9 @@ enum IngredientLabelParser {
         return result
     }
 
+    /// Entities decoded on both sides, so a plain label that still has `&amp;` can match.
     private static func comparable(_ text: String) -> String {
-        collapsingWhitespace(text.replacingOccurrences(of: "_", with: ""))
+        collapsingWhitespace(decodingEntities(text).replacingOccurrences(of: "_", with: ""))
     }
 
     private static func collapsingWhitespace(_ text: String) -> String {

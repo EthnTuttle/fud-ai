@@ -75,6 +75,7 @@
     <string name="product_labels">الملصقات</string>
     <string name="product_categories">الفئات</string>
     <string name="product_ingredient_label">ملصق المكونات</string>
+    <string name="product_possible_allergen">مسبب حساسية محتمل: %1$s</string>
     <string name="product_info_settings_show">إظهار معلومات المنتج</string>
     <string name="product_info_settings_fields">التفاصيل المعروضة</string>
     <string name="product_info_settings_footer">تظهر في نهاية شاشتي المراجعة والتعديل للأطعمة الممسوحة بالباركود. لا يتأثر فحص مسببات الحساسية، ويظهر دائمًا عند تعيين حساسيات تجاه مسببات الحساسية.</string>

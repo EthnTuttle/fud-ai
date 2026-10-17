@@ -15,6 +15,12 @@ data class IngredientLabelItem(
     )
 
     val text: String get() = segments.joinToString("") { it.text }
+
+    /**
+     * Whether screen readers announce the entry as a possible allergen: it matches a sensitivity,
+     * or Open Food Facts flags part of it (shown in bold, which TalkBack does not read).
+     */
+    val announcesAllergen: Boolean get() = matchesSensitivity || segments.any { it.isAllergen }
 }
 
 /** A scanned ingredient label split for display (#428). */
@@ -25,7 +31,13 @@ data class IngredientLabel(
      * Sentences after the ingredient list, such as "May contain traces of nuts.", kept whole so
      * precautionary statements never read as ingredients.
      */
-    val notes: List<IngredientLabelItem> = emptyList()
+    val notes: List<IngredientLabelItem> = emptyList(),
+    /**
+     * The whole label as one entry when it does not make a useful list, so a single-ingredient
+     * label or one longer than [IngredientLabelParser.MAX_ITEMS] keeps its sensitivity warning.
+     * Null for a list or a blank label.
+     */
+    val paragraph: IngredientLabelItem? = null
 )
 
 /**
@@ -37,7 +49,7 @@ object IngredientLabelParser {
     /** Longer labels stay a paragraph so nothing is cut off. */
     const val MAX_ITEMS = 60
 
-    private val separators = setOf(',', ';', '，', '；', '、')
+    private val separators = setOf(',', ';', '，', '；', '、', '\u060C', '\u061B')
     private val openers = setOf('(', '[', '{', '（', '［', '【')
     private val closers = setOf(')', ']', '}', '）', '］', '】')
     private val headingStems = listOf(
@@ -47,13 +59,27 @@ object IngredientLabelParser {
     // Includes no-break spaces, which the JVM's \s leaves out but iOS (ICU) collapses.
     private val whitespace = "[\\s\\u00A0\\u2007\\u202F]+".toRegex()
     private val combiningMarks = "\\p{Mn}+".toRegex()
+
+    /**
+     * Precautionary statements that end the list after a full stop even in lower case
+     * ("salt. may contain nuts"), compared without case or accents.
+     */
+    private val statementStarts = listOf(
+        "may contain", "contains", "traces", "allergy advice", "allergen advice",
+        "peut contenir", "contient", "kann spuren", "kann enthalten", "enthält",
+        "puede contener", "contiene", "può contenere", "kan sporen", "kan bevatten", "bevat",
+        "może zawierać", "zawiera", "pode conter", "contém", "poate conține", "conține",
+        "может содержать", "содержит", "може містити", "містить", "může obsahovat", "obsahuje",
+        "eser miktarda", "قد يحتوي", "يحتوي"
+    ).map(::fold)
     private val allergenSpan = Regex(
         "<span\\s+class\\s*=\\s*[\"']allergen[\"']\\s*>(.*?)</span\\s*>",
         setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
     )
     // The characters Swift's Character.isNewline accepts, so both platforms end sentences alike.
     private val lineBreaks = setOf('\n', '\u000B', '\u000C', '\r', '\u0085', '\u2028', '\u2029')
-    private val markerEdgePunctuation = setOf(':', ';', ',', '.', '：', '；', '，', '、', '。')
+    private val markerEdgePunctuation =
+        setOf(':', ';', ',', '.', '：', '；', '，', '、', '。', '\u060C', '\u061B')
     private val spanTag = Regex("</?span\\b[^>]*>", RegexOption.IGNORE_CASE)
     private val htmlEntity = Regex("&(#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|amp|lt|gt|quot|apos|nbsp);")
     private val namedEntities = mapOf(
@@ -63,12 +89,18 @@ object IngredientLabelParser {
     /**
      * The label's first sentence split into entries, plus any later sentences as notes. The
      * entries are empty when that sentence does not make a useful list (a single entry, or more
-     * than [MAX_ITEMS]); show [segments] of the whole text instead.
+     * than [MAX_ITEMS]); show [IngredientLabel.paragraph] instead.
      */
     fun parse(text: String, sensitivities: List<String> = emptyList()): IngredientLabel {
         val sentences = splitSentences(stripHeading(text))
         val parts = splitTopLevel(sentences.firstOrNull().orEmpty())
-        if (parts.size <= 1 || parts.size > MAX_ITEMS) return IngredientLabel(emptyList())
+        if (parts.size <= 1 || parts.size > MAX_ITEMS) {
+            val whole = text.trim()
+            return IngredientLabel(
+                items = emptyList(),
+                paragraph = whole.takeIf { it.isNotEmpty() }?.let { item(it, sensitivities) }
+            )
+        }
         return IngredientLabel(
             items = parts.map { item(it, sensitivities) },
             notes = sentences.drop(1)
@@ -164,9 +196,10 @@ object IngredientLabelParser {
     }
 
     /**
-     * Splits at full stops outside brackets that end a sentence: followed by a line break, or by
-     * a capitalised word ("… acerola. May contain …"). Decimals ("8.7%") and abbreviations
-     * before a single letter ("vit. C") stay together. Each sentence keeps its full stop.
+     * Splits at full stops outside brackets that end a sentence: followed by a line break, by
+     * a capitalised word ("… acerola. May contain …"), or by a precautionary statement in any
+     * case ("… salt. may contain …"). Decimals ("8.7%") and abbreviations before a single letter
+     * ("vit. C") stay together. Each sentence keeps its full stop.
      */
     fun splitSentences(text: String): List<String> {
         val sentences = mutableListOf<String>()
@@ -217,8 +250,20 @@ object IngredientLabelParser {
         }
         if (next >= text.length) return false
         return lineBreak ||
-            (text[next].isUpperCase() && next + 1 < text.length && text[next + 1].isLetter())
+            (text[next].isUpperCase() && next + 1 < text.length && text[next + 1].isLetter()) ||
+            startsStatement(text, next)
     }
+
+    private fun startsStatement(text: String, index: Int): Boolean {
+        val folded = fold(text.substring(index, minOf(text.length, index + 48)))
+        return statementStarts.any { phrase ->
+            folded.startsWith(phrase) && (folded.length == phrase.length || !folded[phrase.length].isLetter())
+        }
+    }
+
+    /** Lower case without accents, matching iOS's case- and diacritic-insensitive folding. */
+    private fun fold(text: String): String =
+        Normalizer.normalize(text, Normalizer.Form.NFD).replace(combiningMarks, "").lowercase()
 
     private fun isMarkerEdge(char: Char): Boolean = char.isWhitespace() || char in markerEdgePunctuation
 
@@ -236,7 +281,9 @@ object IngredientLabelParser {
         }
     }
 
-    private fun comparable(text: String): String = text.replace("_", "").replace(whitespace, " ").trim()
+    /** Entities decoded on both sides, so a plain label that still has `&amp;` can match. */
+    private fun comparable(text: String): String =
+        decodeEntities(text).replace("_", "").replace(whitespace, " ").trim()
 
     private fun isDecimalComma(text: String, index: Int): Boolean =
         text[index] == ',' && index > 0 && index + 1 < text.length &&

@@ -56,6 +56,7 @@
     <string name="product_labels">Označení</string>
     <string name="product_categories">Kategorie</string>
     <string name="product_ingredient_label">Složení na etiketě</string>
+    <string name="product_possible_allergen">Možný alergen: %1$s</string>
     <string name="product_info_settings_show">Zobrazit informace o produktu</string>
     <string name="product_info_settings_fields">Zobrazené údaje</string>
     <string name="product_info_settings_footer">Zobrazuje se na konci obrazovek kontroly a úprav u potravin naskenovaných čárovým kódem. Kontrola alergenů tím není ovlivněna a zobrazí se vždy, když máte nastavené citlivosti na alergeny.</string>

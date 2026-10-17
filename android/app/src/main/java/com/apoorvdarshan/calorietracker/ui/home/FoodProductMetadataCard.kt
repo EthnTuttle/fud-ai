@@ -32,12 +32,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
-import com.apoorvdarshan.calorietracker.models.AllergenAssessment
 import com.apoorvdarshan.calorietracker.models.FoodProductMetadata
 import com.apoorvdarshan.calorietracker.models.IngredientLabelItem
 import com.apoorvdarshan.calorietracker.models.IngredientLabelParser
 import com.apoorvdarshan.calorietracker.models.ProductInfoField
-import com.apoorvdarshan.calorietracker.models.displayName
 
 /**
  * Open Food Facts details for a barcode log. [fields] comes from
@@ -84,7 +82,8 @@ internal fun FoodProductMetadataCard(
  * The scanned ingredient label as a readable list (#428), display only. Allergens Open Food Facts
  * flags are bold; entries matching the user's allergen sensitivities get a warning icon.
  * Statements after the list ("May contain …") stay sentences below it, and labels that do not
- * split into a list stay a paragraph.
+ * split into a list stay a paragraph with the same warning. TalkBack announces entries with either
+ * kind of allergen emphasis as possible allergens.
  */
 @Composable
 private fun IngredientLabelSection(text: String, sensitivities: List<String>) {
@@ -104,12 +103,9 @@ private fun IngredientLabelSection(text: String, sensitivities: List<String>) {
             modifier = Modifier.semantics { heading() }
         )
         if (label.items.isEmpty()) {
-            Text(
-                ingredientLabelText(IngredientLabelParser.segments(text.trim()), emphasis),
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                color = secondary
-            )
+            label.paragraph?.let { paragraph ->
+                IngredientLabelRow(paragraph, secondary, emphasis, bulleted = false)
+            }
         } else {
             label.items.forEach { item -> IngredientLabelRow(item, secondary, emphasis) }
             label.notes.forEachIndexed { index, note ->
@@ -134,8 +130,8 @@ private fun IngredientLabelRow(
     bulleted: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val description = if (item.matchesSensitivity) {
-        "${AllergenAssessment.POSSIBLE_ALLERGEN.displayName}: ${item.text}"
+    val description = if (item.announcesAllergen) {
+        stringResource(R.string.product_possible_allergen, item.text)
     } else {
         item.text
     }
