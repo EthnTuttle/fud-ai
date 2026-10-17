@@ -38,6 +38,7 @@
     <string name="voice_card_workout_draft">Чернетка тренування</string>
     <string name="voice_card_dismiss">Закрити</string>
     <string name="voice_card_totals">%1$d ккал · Білок: %2$d г · Вуглеводи: %3$d г · Жири: %4$d г</string>
+    <string name="voice_card_totals_kj">%1$d кДж · Білок: %2$d г · Вуглеводи: %3$d г · Жири: %4$d г</string>
     <string name="voice_card_log">Записати</string>
     <string name="voice_card_logged">Записано</string>
     <string name="voice_card_confirm_title">Підтвердити</string>
@@ -46,8 +47,11 @@
     <string name="voice_card_saved">Збережено</string>
     <string name="voice_card_undo">Скасувати</string>
     <string name="voice_kcal">%1$d ккал</string>
+    <string name="voice_kj">%1$d кДж</string>
     <string name="voice_change_log_food">Записати %1$s · %2$d ккал · %3$s</string>
+    <string name="voice_change_log_food_kj">Записати %1$s · %2$d кДж · %3$s</string>
     <string name="voice_change_food">%1$s · %2$d ккал</string>
+    <string name="voice_change_food_kj">%1$s · %2$d кДж</string>
     <string name="voice_change_water">Записати %1$s води</string>
     <string name="voice_change_start_fast">Почати голодування на %1$d год</string>
     <string name="voice_change_end_fast">Завершити голодування · %1$s</string>

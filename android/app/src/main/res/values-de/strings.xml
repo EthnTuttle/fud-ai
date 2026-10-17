@@ -12,6 +12,7 @@
     <string name="widget_carbs">Kohlenhydrate</string>
     <string name="widget_fat">Fett</string>
     <string name="widget_kcal_left_format">%1$d kcal übrig</string>
+    <string name="widget_kj_left_format">%1$d kJ übrig</string>
     <string name="widget_g_left_format">%1$dg übrig</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">Protein g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d neue Einträge · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Geschätzter Verbrauch: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">%1$d zum Protokoll hinzufügen · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -332,6 +338,8 @@
     <string name="home_menu_saved_meals">Gespeicherte Mahlzeiten</string>
     <string name="home_kcal_of_format">von %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s übrig</string>
+    <string name="home_kj_left_format">%1$s übrig</string>
+    <string name="home_kilojoules">Kilojoule</string>
     <string name="home_view_more">Mehr anzeigen</string>
     <string name="home_todays_food">Heutiges Essen</string>
     <string name="home_no_foods_logged">Keine Lebensmittel erfasst</string>
@@ -518,6 +526,7 @@
     <string name="progress_include_today">Heute einbeziehen</string>
     <string name="progress_include_today_caption">Kaloriendiagramm und Nährwert-Durchschnitte</string>
     <string name="progress_avg_format">Ø: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Ø: %1$,d kJ</string>
     <string name="progress_no_food">Noch kein Essen erfasst</string>
 
     <string name="progress_macro_averages">Makro-Durchschnitt</string>
@@ -558,7 +567,9 @@
     <string name="settings_recalculate_goals">Ziele neu berechnen</string>
     <string name="settings_estimated_maintenance">Geschätzter Erhaltungsbedarf</string>
     <string name="settings_maintenance_deficit_format">Defizit: %1$,d kcal/Tag</string>
+    <string name="settings_maintenance_deficit_format_kj">Defizit: %1$,d kJ/Tag</string>
     <string name="settings_maintenance_surplus_format">Überschuss: %1$,d kcal/Tag</string>
+    <string name="settings_maintenance_surplus_format_kj">Überschuss: %1$,d kJ/Tag</string>
     <string name="settings_maintenance_close">Ziel liegt nahe am Erhaltungsbedarf</string>
     <string name="settings_estimated_maintenance_info">Der geschätzte Erhaltungsbedarf ist die Kalorienmenge, die du an einem typischen Tag verbrennst: dein Grundumsatz (BMR) aus deinem Profil multipliziert mit deinem Aktivitätslevel. Isst du weniger, entsteht ein Defizit zum Abnehmen; isst du mehr, ein Überschuss zum Zunehmen. Das angezeigte Defizit bzw. der Überschuss ist dein Kalorienziel minus diese Schätzung. Es ist eine Formelschätzung, dein tatsächlicher Verbrauch kann abweichen, und die Zielberechnung kann dein Ziel stattdessen aus deinen erfassten Mahlzeiten, deinem Gewichtstrend oder deinem gemessenen Energieverbrauch festlegen. Dies ist keine medizinische Beratung.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -574,6 +585,9 @@
     <string name="settings_height_unit">Größeneinheit</string>
     <string name="settings_weight_unit">Gewichtseinheit</string>
     <string name="settings_week_starts">Wochenbeginn</string>
+    <string name="settings_energy_unit">Energieeinheit</string>
+    <string name="settings_energy_unit_kcal">Kilokalorien (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojoule (kJ)</string>
     <string name="settings_meal_times_customize">Anpassen</string>
     <string name="settings_week_monday">Montag</string>
     <string name="settings_week_sunday">Sonntag</string>
@@ -711,6 +725,9 @@
     <string name="notif_streak_text">Halte deine Serie aufrecht — erfasse etwas von heute.</string>
     <string name="notif_summary_title">Die heutige Zusammenfassung ist bereit</string>
     <string name="notif_summary_text">Tippe, um zu sehen, wie deine heutigen Makros aussahen.</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ gegessen · %2$d kJ verbrannt · geschätztes Defizit %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ gegessen · %2$d kJ verbrannt · geschätzter Überschuss %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ gegessen · %2$d kJ verbrannt · geschätzt ausgeglichen</string>
 
     <string name="onboarding_goal_optional">Ziel (optional)</string>
     <string name="onboarding_goal_set_later">Du kannst dies später in den Einstellungen festlegen.</string>
@@ -739,6 +756,7 @@
     <string name="progress_workout_stat_days">Tage</string>
     <string name="progress_workout_no_range">Keine berechneten Trainingsverbräuche in diesem Zeitraum</string>
     <string name="progress_workout_chart_description">Diagramm des Trainingsverbrauchs von %1$s bis %2$s. Gesamt %3$d Kilokalorien; zuletzt %4$d Kilokalorien.</string>
+    <string name="progress_workout_chart_description_kj">Diagramm des Trainingsverbrauchs von %1$s bis %2$s. Gesamt %3$d Kilojoule; zuletzt %4$d Kilojoule.</string>
     <string name="workout_filter_source">Quelle</string>
     <string name="workout_source_dataset">Datenbank</string>
     <string name="workout_source_saved">Gespeichert</string>
@@ -748,6 +766,8 @@
     <string name="workout_exercise_take_photo">Foto aufnehmen</string>
     <string name="workout_exercise_camera_denied_title">Kamerazugriff erforderlich</string>
     <string name="workout_exercise_camera_denied_message">Erlaube Fud AI in den Systemeinstellungen den Kamerazugriff, um Übungsfotos aufzunehmen.</string>
+    <string name="workout_exercise_ai_fill">Mit KI ausfüllen</string>
+    <string name="workout_exercise_ai_fill_hint">„Mit KI ausfüllen“ sendet dieses Foto an deinen KI-Anbieter. Prüfe die vorgeschlagenen Angaben vor dem Speichern.</string>
     <string name="progress_steps_stat_total">Gesamt</string>
     <string name="progress_steps_stat_average">Durchschnitt</string>
     <string name="progress_steps_stat_best_day">Bester Tag</string>

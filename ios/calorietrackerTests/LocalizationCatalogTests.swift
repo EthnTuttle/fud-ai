@@ -20,6 +20,7 @@ struct LocalizationCatalogTests {
         "Fasting Goal Reached", "You reached your %@ fasting goal. End the fast when you're ready.",
         "Don't Break Your %lld-Day Streak!", "Log something before the day ends.",
         "Daily Summary", "You ate %lld of %lld kcal today. %lld remaining!",
+        "You ate %lld of %lld kJ today. %lld remaining!",
         "Time to Weigh In", "Log today's weight to keep your progress chart accurate.",
         "Body Fat Check-In", "Log today's body fat % to track your composition trend.",
         "Update Available", "Fud AI %@ is ready. Tap to update.",
@@ -123,6 +124,31 @@ struct LocalizationCatalogTests {
                 )
             }
         }
+    }
+
+    @Test func kilojouleDailySummaryAgreesWithTheRemainingCount() throws {
+        let key = "You ate %lld of %lld kJ today. %lld remaining!"
+        // кДж (kilojoule) is masculine where ккал is feminine.
+        #expect(try Self.format(key, "ru", 3_766, 8_368, 21).hasSuffix("Остался 21 кДж!"))
+        #expect(try Self.format(key, "ru", 3_766, 8_368, 100).hasSuffix("Осталось 100 кДж!"))
+        #expect(try Self.format(key, "pl", 3_766, 8_368, 3).hasSuffix("Zostały 3 kJ!"))
+        #expect(try Self.format(key, "es", 3_766, 8_368, 1).hasSuffix("¡Te queda 1!"))
+        #expect(try Self.format(key, "de", 3_766, 8_368, 100) == "Du hast heute 3.766 von 8.368 kJ gegessen. Noch 100 übrig!")
+    }
+
+    @Test func energyUnitSettingIsTranslatedInEveryLanguage() throws {
+        let keys = [
+            "Energy Unit", "Kilocalories (kcal)", "Kilojoules (kJ)", "Kilojoules", "kcal", "kJ", "%@ kJ",
+            "%@ left", "%@ over", "Avg: %@", "Deficit: %@/day", "Surplus: %@/day", "Estimated burn: %@",
+        ]
+        for language in Self.appLanguages {
+            let bundle = try Self.languageBundle(language, in: .main)
+            for key in keys {
+                #expect(Self.hasTranslation(key, in: bundle), "\(language) is missing \(key)")
+            }
+        }
+        let russian = try Self.languageBundle("ru", in: .main)
+        #expect(russian.localizedString(forKey: "%@ kJ", value: nil, table: nil) == "%@ кДж")
     }
 
     @Test func shareExtensionAlertIsTranslatedInEveryLanguage() throws {

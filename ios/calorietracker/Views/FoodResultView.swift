@@ -38,6 +38,7 @@ struct FoodResultView: View {
     @State private var quantityFocusRequest = 0
     @State private var isQuantityEditing = false
     @State private var nutritionUnlocked = false
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var editableCalories: Int
     @State private var editableProtein: Double
     @State private var editableCarbs: Double
@@ -291,8 +292,10 @@ struct FoodResultView: View {
         value.map { String(format: "%.1f", $0) } ?? "—"
     }
 
+    /// The field shows the energy unit in use; the entry stores kcal.
     private func updateBaseCalories(from text: String) {
-        editableCalories = Int(round((decimalValue(from: text) ?? 0) / safeInverseScale))
+        let kcal = energyUnit.kcalAmount(fromDisplayed: decimalValue(from: text) ?? 0)
+        editableCalories = Int(round(kcal / safeInverseScale))
     }
 
     private func updateBaseDouble(from text: String, set: (Double) -> Void) {
@@ -550,9 +553,9 @@ struct FoodResultView: View {
                     Section {
                         ReviewNutritionValueRow(
                             label: "Calories",
-                            displayValue: "\(scaledCalories)",
-                            editValue: "\(scaledCalories)",
-                            unit: "kcal",
+                            displayValue: "\(energyUnit.displayValue(kcal: scaledCalories))",
+                            editValue: "\(energyUnit.displayValue(kcal: scaledCalories))",
+                            unit: energyUnit.symbol,
                             isUnlocked: nutritionUnlocked,
                             onEdit: updateBaseCalories
                         )
@@ -849,6 +852,7 @@ struct MealIngredientsSection: View {
     var addMenu: AnyView? = nil
     /// "Servings in recipe" stepper; nil hides it (#458).
     var recipeServings: Binding<Int>? = nil
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         Section {
@@ -879,7 +883,7 @@ struct MealIngredientsSection: View {
                                     .font(.system(.body, design: .rounded, weight: .semibold))
                                     .foregroundStyle(.primary)
                                 Spacer()
-                                Text("\(MacroValueFormatter.string(ingredient.grams))g · \(ingredient.calories) kcal")
+                                Text("\(MacroValueFormatter.string(ingredient.grams))g · \(energyUnit.format(kcal: ingredient.calories))")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                 Image(systemName: "chevron.right")
@@ -950,19 +954,23 @@ struct IngredientEditorSheet: View {
     @State private var protein: String
     @State private var carbs: String
     @State private var fat: String
+    /// Calories here (text and base) are in the energy unit in use; save converts to kcal.
     @State private var nutritionBase: IngredientPortion
+    private let energyUnit: EnergyUnit
 
     init(target: IngredientEditorTarget, onSave: @escaping (MealIngredient) -> Void, onDelete: (() -> Void)?) {
+        let energyUnit = EnergyUnit.current
         self.target = target
         self.onSave = onSave
         self.onDelete = onDelete
+        self.energyUnit = energyUnit
         _nutritionBase = State(initialValue: IngredientPortion(
-            grams: target.ingredient.grams, calories: Double(target.ingredient.calories),
+            grams: target.ingredient.grams, calories: energyUnit.displayAmount(kcal: Double(target.ingredient.calories)),
             protein: target.ingredient.protein, carbs: target.ingredient.carbs, fat: target.ingredient.fat
         ))
         _name = State(initialValue: target.ingredient.name)
         _grams = State(initialValue: MacroValueFormatter.string(target.ingredient.grams))
-        _calories = State(initialValue: String(target.ingredient.calories))
+        _calories = State(initialValue: String(energyUnit.displayValue(kcal: target.ingredient.calories)))
         _protein = State(initialValue: MacroValueFormatter.string(target.ingredient.protein))
         _carbs = State(initialValue: MacroValueFormatter.string(target.ingredient.carbs))
         _fat = State(initialValue: MacroValueFormatter.string(target.ingredient.fat))
@@ -981,7 +989,7 @@ struct IngredientEditorSheet: View {
             id: target.ingredient.id,
             name: trimmedName,
             grams: grams,
-            calories: Int(round(calories)),
+            calories: energyUnit.kcal(fromDisplayed: calories),
             protein: protein,
             carbs: carbs,
             fat: fat,
@@ -997,7 +1005,7 @@ struct IngredientEditorSheet: View {
                 Section("Ingredient") {
                     TextField("Name", text: $name)
                     valueRow("Weight", text: Binding(get: { grams }, set: changeWeight), unit: "g")
-                    valueRow("Calories", text: nutritionBinding($calories), unit: "kcal")
+                    valueRow("Calories", text: nutritionBinding($calories), unit: energyUnit.symbol)
                 }
                 Section("Macros") {
                     valueRow("Protein", text: nutritionBinding($protein), unit: "g")
@@ -1081,6 +1089,7 @@ private struct WhatIfMealImpactSheet: View {
     let weightMetric: Bool
 
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var isLoadingSuggestion = true
     @State private var suggestion: String?
     @State private var suggestionError: String?
@@ -1127,8 +1136,8 @@ private struct WhatIfMealImpactSheet: View {
                 Section {
                     WhatIfImpactRow(
                         label: "Calories",
-                        added: "+\(entry.calories) kcal",
-                        after: "\(afterTotals.calories) / \(goals.calories) kcal",
+                        added: "+\(energyUnit.format(kcal: entry.calories))",
+                        after: "\(energyUnit.number(kcal: afterTotals.calories)) / \(energyUnit.format(kcal: goals.calories))",
                         remaining: remainingCaloriesText,
                         isOver: afterTotals.calories > goals.calories,
                         tint: AppColors.calorie
@@ -1207,11 +1216,11 @@ private struct WhatIfMealImpactSheet: View {
     }
 
     private var remainingCaloriesText: String {
-        let remaining = goals.calories - afterTotals.calories
+        let remaining = energyUnit.displayValue(kcal: goals.calories) - energyUnit.displayValue(kcal: afterTotals.calories)
         if remaining >= 0 {
-            return String(localized: "\(remaining) kcal left")
+            return String(localized: "\(energyUnit.format(displayed: remaining)) left")
         }
-        return String(localized: "\(abs(remaining)) kcal over")
+        return String(localized: "\(energyUnit.format(displayed: abs(remaining))) over")
     }
 
     private func remainingMacroText(_ value: Double, goal: Double) -> String {

@@ -109,6 +109,29 @@
         "remaining" : { "argNum" : 1, "formatSpecifier" : "lld", "variations" : { } }
       }
     },
+    "%lld kJ left" : {
+      "localizations" : {
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ متبقية" } },
+        "az" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ qaldı" } },
+        "cs" : { "stringUnit" : { "state" : "translated", "value" : "Zbývá %lld kJ" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch %lld kJ" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ left" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ restantes" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ restants" } },
+        "hi" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ बाकी" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ rimanenti" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "残り%lld kJ" } },
+        "ko" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ 남음" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nog %lld kJ" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Pozostało %lld kJ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ restantes" } },
+        "ro" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ rămași" } },
+        "ru" : { "stringUnit" : { "state" : "translated", "value" : "Осталось %lld кДж" } },
+        "tr" : { "stringUnit" : { "state" : "translated", "value" : "%lld kJ kaldı" } },
+        "uk" : { "stringUnit" : { "state" : "translated", "value" : "Залишилось %lld кДж" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "剩余 %lld kJ" } }
+      }
+    },
     "1 glass" : {
       "localizations" : {
         "ar" : { "stringUnit" : { "state" : "translated", "value" : "كوب واحد" } },

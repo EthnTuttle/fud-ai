@@ -69,6 +69,9 @@ struct WidgetSnapshot: Codable, Equatable {
     /// written by older builds still decode; consumers fall back to Fud Pink.
     var themeStartHex: UInt?
     var themeEndHex: UInt?
+    /// Energy display unit ("kcal" or "kj"). Calorie fields stay kilocalories;
+    /// views convert for display. Nil in snapshots from older builds (kcal).
+    var energyUnitRaw: String? = nil
 
     private static let productionAppGroupID = "group.com.apoorvdarshan.calorietracker"
     private static let debugAppGroupID = "group.com.apoorvdarshan.calorietracker.debug"
@@ -231,11 +234,21 @@ struct WidgetSnapshot: Codable, Equatable {
             waterGoalMl: waterGoalMl,
             waterUnitRaw: waterUnitRaw,
             themeStartHex: themeStartHex,
-            themeEndHex: themeEndHex
+            themeEndHex: themeEndHex,
+            energyUnitRaw: energyUnitRaw
         )
     }
 
     var caloriesRemaining: Int { max(0, calorieGoal - calories) }
+    var usesKilojoules: Bool { energyUnitRaw == "kj" }
+    /// Whole display units for a stored kcal amount (1 kcal = 4.184 kJ).
+    func energyValue(_ kcal: Int) -> Int {
+        usesKilojoules ? Int((Double(kcal) * 4.184).rounded()) : kcal
+    }
+    var displayCalories: Int { energyValue(calories) }
+    var displayCalorieGoal: Int { energyValue(calorieGoal) }
+    /// Goal minus eaten in display units, so "eaten / goal · left" always adds up.
+    var displayCaloriesRemaining: Int { max(0, displayCalorieGoal - displayCalories) }
     var proteinRemaining: Double { max(0, Double(proteinGoal) - protein) }
     var carbsRemaining: Double { max(0, Double(carbsGoal) - carbs) }
     var fatRemaining: Double { max(0, Double(fatGoal) - fat) }

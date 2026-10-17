@@ -6,6 +6,7 @@ import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
 import com.apoorvdarshan.calorietracker.models.BodyMeasurement
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.FoodEntry
@@ -70,6 +71,7 @@ class ChatService(
         exerciseLibrary: List<ExerciseItem> = emptyList(),
         proposals: CoachProposalCollector? = null
     ): String {
+        val energyUnit = prefs.energyUnit.first()
         val userContext = prefs.userContext.first()
         fun systemPromptFor(proposalCards: Boolean): String {
             val baseSystemPrompt = buildSystemPrompt(
@@ -83,7 +85,8 @@ class ChatService(
                 weightMetric = weightMetric,
                 workoutSessions = workoutSessions,
                 workoutPlans = workoutPlans,
-                canProposeWorkoutChanges = proposalCards
+                canProposeWorkoutChanges = proposalCards,
+                energyUnit = energyUnit
             )
             return if (userContext.isNotBlank())
                 "$baseSystemPrompt\n\n## User-provided context\n$userContext"
@@ -262,7 +265,8 @@ class ChatService(
         weightMetric: Boolean,
         workoutSessions: List<WorkoutSession> = emptyList(),
         workoutPlans: List<WorkoutDayPlan> = emptyList(),
-        canProposeWorkoutChanges: Boolean = false
+        canProposeWorkoutChanges: Boolean = false,
+        energyUnit: EnergyUnit = EnergyUnit.Default
     ): String {
         val zone = ZoneId.systemDefault()
         val currentDate = LocalDate.now(zone).format(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -302,7 +306,8 @@ class ChatService(
                 heightMetric = heightMetric,
                 weightMetric = weightMetric,
                 workoutSessions = workoutSessions,
-                workoutPlans = workoutPlans
+                workoutPlans = workoutPlans,
+                energyUnit = energyUnit
             )
         )
         lines.add("")

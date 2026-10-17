@@ -978,7 +978,8 @@ class VoiceAssistantController(private val container: AppContainer) : VoiceUiBri
                 heightMetric = container.prefs.heightUnit.first() == "cm",
                 weightMetric = weightMetric,
                 workoutSessions = workouts.completedSessions,
-                workoutPlans = workouts.dayPlans.values.toList()
+                workoutPlans = workouts.dayPlans.values.toList(),
+                energyUnit = container.prefs.energyUnit.first()
             )
         }.orEmpty()
         val zone = ZoneId.systemDefault()

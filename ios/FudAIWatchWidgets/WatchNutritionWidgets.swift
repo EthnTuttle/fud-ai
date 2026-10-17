@@ -89,8 +89,8 @@ private struct WatchCaloriesWidgetView: View {
         switch family {
         case .accessoryCircular:
             NutrientCircularView(
-                value: "\(snapshot.calories)",
-                label: "kcal",
+                value: "\(snapshot.displayCalories)",
+                label: snapshot.energyUnitSymbol,
                 progress: snapshot.calorieProgress,
                 color: WatchWidgetPalette.calories,
                 icon: "flame.fill"
@@ -98,18 +98,18 @@ private struct WatchCaloriesWidgetView: View {
         case .accessoryRectangular:
             CaloriesRectangularView(snapshot: snapshot)
         case .accessoryInline:
-            Text("\(snapshot.calories) / \(snapshot.calorieGoal) kcal")
+            Text(verbatim: "\(snapshot.displayCalories) / \(snapshot.displayCalorieGoal) \(snapshot.energyUnitSymbol)")
         case .accessoryCorner:
             CornerValueView(
-                value: "\(snapshot.calories)",
-                unit: "kcal",
+                value: "\(snapshot.displayCalories)",
+                unit: snapshot.energyUnitSymbol,
                 progress: snapshot.calorieProgress,
                 color: WatchWidgetPalette.calories
             )
         default:
             NutrientCircularView(
-                value: "\(snapshot.calories)",
-                label: "kcal",
+                value: "\(snapshot.displayCalories)",
+                label: snapshot.energyUnitSymbol,
                 progress: snapshot.calorieProgress,
                 color: WatchWidgetPalette.calories,
                 icon: "flame.fill"
@@ -187,8 +187,8 @@ private struct CaloriesRectangularView: View {
     var body: some View {
         NutrientRectangularView(
             title: "Calories",
-            value: "\(snapshot.calories)",
-            subtitle: "of \(snapshot.calorieGoal) kcal",
+            value: "\(snapshot.displayCalories)",
+            subtitle: "of \(snapshot.displayCalorieGoal) \(snapshot.energyUnitSymbol)",
             footer: "P\(WatchWidgetFormat.macro(snapshot.protein)) C\(WatchWidgetFormat.macro(snapshot.carbs)) F\(WatchWidgetFormat.macro(snapshot.fat))",
             progress: snapshot.calorieProgress,
             color: WatchWidgetPalette.calories,

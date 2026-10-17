@@ -18,6 +18,7 @@
     <string name="widget_fat">Fat</string>
     <string name="widget_water">Water</string>
     <string name="widget_kcal_left_format">%1$d kcal left</string>
+    <string name="widget_kj_left_format">%1$d kJ left</string>
     <string name="widget_g_left_format">%1$dg left</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">protein g</string>
@@ -51,6 +52,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -61,6 +63,7 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -379,6 +382,8 @@
     <string name="home_menu_saved_meals">Saved Meals</string>
     <string name="home_kcal_of_format">of %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s left</string>
+    <string name="home_kj_left_format">%1$s left</string>
+    <string name="home_kilojoules">Kilojoules</string>
     <string name="home_macro_left_format">%1$s left</string>
     <string name="home_macro_over_format">%1$s over</string>
     <string name="home_macro_no_goal">No goal</string>
@@ -601,6 +606,7 @@
     <string name="progress_workout_stat_days">Days</string>
     <string name="progress_workout_no_range">No calculated workout burns in this range</string>
     <string name="progress_workout_chart_description">Workout burn chart from %1$s to %2$s. Total %3$d kilocalories; latest %4$d kilocalories.</string>
+    <string name="progress_workout_chart_description_kj">Workout burn chart from %1$s to %2$s. Total %3$d kilojoules; latest %4$d kilojoules.</string>
     <string name="progress_steps_stat_total">Total</string>
     <string name="progress_steps_stat_average">Average</string>
     <string name="progress_steps_stat_best_day">Best day</string>
@@ -614,6 +620,7 @@
     <string name="progress_include_today">Include today</string>
     <string name="progress_include_today_caption">Calorie chart and nutrition averages</string>
     <string name="progress_avg_format">Avg: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Avg: %1$,d kJ</string>
     <string name="progress_no_food">No food logged yet</string>
 
     <string name="progress_macro_averages">Macro Averages</string>
@@ -715,7 +722,9 @@
     <string name="settings_recalculate_goals">Recalculate Goals</string>
     <string name="settings_estimated_maintenance">Estimated Maintenance</string>
     <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/day</string>
+    <string name="settings_maintenance_deficit_format_kj">Deficit: %1$,d kJ/day</string>
     <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/day</string>
+    <string name="settings_maintenance_surplus_format_kj">Surplus: %1$,d kJ/day</string>
     <string name="settings_maintenance_close">Target is close to maintenance</string>
     <string name="settings_estimated_maintenance_info">Estimated maintenance is the calories you would burn on a typical day: your BMR from your profile multiplied by your activity level. Eating below it is a deficit for losing weight; eating above it is a surplus for gaining. The deficit or surplus shown is your calorie target minus this estimate. It is a formula estimate, so your real burn can differ, and goal recalculation may set your target from your logged food, weight trend or measured energy burn instead. This is not medical advice.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -759,6 +768,9 @@
     <string name="settings_save_photos_to_gallery">Save to Photos</string>
     <string name="settings_save_photos_to_gallery_subtitle">Also save meal photos to your gallery when logging</string>
     <string name="settings_week_starts">Week Starts On</string>
+    <string name="settings_energy_unit">Energy Unit</string>
+    <string name="settings_energy_unit_kcal">Kilocalories (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojoules (kJ)</string>
     <string name="settings_meal_times">Meal Times</string>
     <string name="settings_meal_times_customize">Customize</string>
     <string name="settings_meal_times_description">Set when automatic meal selection switches to the next meal.</string>
@@ -1029,6 +1041,9 @@
     <string name="notif_summary_deficit">%1$d kcal eaten · %2$d burned · %3$d kcal estimated deficit</string>
     <string name="notif_summary_surplus">%1$d kcal eaten · %2$d burned · %3$d kcal estimated surplus</string>
     <string name="notif_summary_balanced">%1$d kcal eaten · %2$d burned · estimated balance</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ eaten · %2$d kJ burned · %3$d kJ estimated deficit</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ eaten · %2$d kJ burned · %3$d kJ estimated surplus</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ eaten · %2$d kJ burned · estimated balance</string>
 
     <string name="widget_all_metrics_label">Fud AI Today</string>
     <string name="widget_all_metrics_description">See today\'s calories, protein, carbs, and fat in one widget.</string>
@@ -1050,6 +1065,8 @@
     <string name="workout_exercise_take_photo">Take photo</string>
     <string name="workout_exercise_camera_denied_title">Camera access needed</string>
     <string name="workout_exercise_camera_denied_message">Allow Fud AI to use the camera in system settings to take exercise photos.</string>
+    <string name="workout_exercise_ai_fill">Fill with AI</string>
+    <string name="workout_exercise_ai_fill_hint">Fill with AI sends this photo to your AI provider. Review the suggested details before saving.</string>
     <string name="filter_all">All</string>
     <string name="filter_all_count">All %d</string>
     <string name="hide_details">Hide details</string>
@@ -1255,6 +1272,7 @@
     <string name="import_note">Adds to your log with the exact nutrients from the sender. No photo is included.</string>
     <string name="import_add_to_log">Add to Log</string>
     <string name="import_add_to_log_many_format">Add %1$d to Log · %2$d kcal</string>
+    <string name="import_add_to_log_many_format_kj">Add %1$d to Log · %2$d kJ</string>
     <string name="voice_release_to_cancel">Release to cancel</string>
     <string name="voice_slide_to_cancel">‹ slide to cancel</string>
     <string name="camera_error_open">Could not open camera</string>

@@ -12,6 +12,7 @@
     <string name="widget_carbs">Carboidrati</string>
     <string name="widget_fat">Grassi</string>
     <string name="widget_kcal_left_format">%1$d kcal rimaste</string>
+    <string name="widget_kj_left_format">%1$d kJ rimasti</string>
     <string name="widget_g_left_format">%1$dg rimasti</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">proteine g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d nuovi record · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Consumo stimato: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">Aggiungi %1$d al diario · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -333,6 +339,8 @@
     <string name="home_menu_saved_meals">Pasti salvati</string>
     <string name="home_kcal_of_format">di %1$s kcal</string>
     <string name="home_kcal_left_format">%1$s rimaste</string>
+    <string name="home_kj_left_format">%1$s rimasti</string>
+    <string name="home_kilojoules">Kilojoule</string>
     <string name="home_view_more">Vedi di più</string>
     <string name="home_todays_food">Cibo di oggi</string>
     <string name="home_no_foods_logged">Nessun cibo registrato</string>
@@ -519,6 +527,7 @@
     <string name="progress_include_today">Includi oggi</string>
     <string name="progress_include_today_caption">Grafico delle calorie e medie nutrizionali</string>
     <string name="progress_avg_format">Media: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Media: %1$,d kJ</string>
     <string name="progress_no_food">Nessun cibo ancora registrato</string>
 
     <string name="progress_macro_averages">Medie macro</string>
@@ -559,7 +568,9 @@
     <string name="settings_recalculate_goals">Ricalcola obiettivi</string>
     <string name="settings_estimated_maintenance">Mantenimento stimato</string>
     <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/giorno</string>
+    <string name="settings_maintenance_deficit_format_kj">Deficit: %1$,d kJ/giorno</string>
     <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/giorno</string>
+    <string name="settings_maintenance_surplus_format_kj">Surplus: %1$,d kJ/giorno</string>
     <string name="settings_maintenance_close">L’obiettivo è vicino al mantenimento</string>
     <string name="settings_estimated_maintenance_info">Il mantenimento stimato sono le calorie che bruceresti in una giornata tipo: il tuo BMR dal profilo moltiplicato per il tuo livello di attività. Mangiare meno crea un deficit per perdere peso; mangiare di più crea un surplus per aumentarlo. Il deficit o surplus mostrato è il tuo obiettivo calorico meno questa stima. È una stima basata su una formula, quindi il tuo consumo reale può essere diverso, e il ricalcolo degli obiettivi può impostare il tuo obiettivo in base al cibo registrato, all’andamento del peso o al consumo energetico misurato. Questo non è un consiglio medico.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -575,6 +586,9 @@
     <string name="settings_height_unit">Unità di altezza</string>
     <string name="settings_weight_unit">Unità di peso</string>
     <string name="settings_week_starts">La settimana inizia il</string>
+    <string name="settings_energy_unit">Unità di energia</string>
+    <string name="settings_energy_unit_kcal">Chilocalorie (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilojoule (kJ)</string>
     <string name="settings_meal_times_customize">Personalizza</string>
     <string name="settings_week_monday">Lunedì</string>
     <string name="settings_week_sunday">Domenica</string>
@@ -712,6 +726,9 @@
     <string name="notif_streak_text">Mantieni la tua serie — registra qualcosa di oggi.</string>
     <string name="notif_summary_title">Il riepilogo di oggi è pronto</string>
     <string name="notif_summary_text">Tocca per vedere come sono andati i macro di oggi.</string>
+    <string name="notif_summary_deficit_kj">Assunti: %1$d kJ · Consumati: %2$d kJ · Deficit stimato: %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">Assunti: %1$d kJ · Consumati: %2$d kJ · Surplus stimato: %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">Assunti: %1$d kJ · Consumati: %2$d kJ · Bilancio stimato in pari</string>
 
     <string name="onboarding_goal_optional">Obiettivo (facoltativo)</string>
     <string name="onboarding_goal_set_later">Puoi impostarlo più tardi nelle Impostazioni.</string>
@@ -740,6 +757,7 @@
     <string name="progress_workout_stat_days">Giorni</string>
     <string name="progress_workout_no_range">Nessun consumo di allenamento calcolato in questo intervallo</string>
     <string name="progress_workout_chart_description">Grafico del consumo degli allenamenti dal %1$s al %2$s. Totale: %3$d chilocalorie; ultimo: %4$d chilocalorie.</string>
+    <string name="progress_workout_chart_description_kj">Grafico del consumo degli allenamenti dal %1$s al %2$s. Totale: %3$d kilojoule; ultimo: %4$d kilojoule.</string>
     <string name="workout_filter_source">Origine</string>
     <string name="workout_source_dataset">Database</string>
     <string name="workout_source_saved">Salvati</string>
@@ -749,6 +767,8 @@
     <string name="workout_exercise_take_photo">Scatta foto</string>
     <string name="workout_exercise_camera_denied_title">È necessario l’accesso alla fotocamera</string>
     <string name="workout_exercise_camera_denied_message">Consenti a Fud AI di usare la fotocamera nelle impostazioni di sistema per scattare foto degli esercizi.</string>
+    <string name="workout_exercise_ai_fill">Compila con l’IA</string>
+    <string name="workout_exercise_ai_fill_hint">Compila con l’IA invia questa foto al tuo fornitore di IA. Controlla i dettagli suggeriti prima di salvare.</string>
     <string name="progress_steps_stat_total">Totale</string>
     <string name="progress_steps_stat_average">Media</string>
     <string name="progress_steps_stat_best_day">Giorno migliore</string>

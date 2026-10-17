@@ -18,6 +18,7 @@
     <string name="widget_fat">Жири</string>
     <string name="widget_water">Вода</string>
     <string name="widget_kcal_left_format">Залишилося %1$d ккал</string>
+    <string name="widget_kj_left_format">Залишилося %1$d кДж</string>
     <string name="widget_g_left_format">Залишилося %1$d г</string>
     <string name="widget_kcal">ккал</string>
     <string name="widget_protein_g">білок, г</string>
@@ -51,6 +52,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">ккал</string>
+    <string name="unit_kj">кДж</string>
     <string name="unit_g">г</string>
     <string name="unit_mg">мг</string>
     <string name="unit_percent">%</string>
@@ -61,6 +63,9 @@
     <string name="unit_in">дюйми</string>
     <string name="unit_ft_in">фути / дюйми</string>
     <string name="kcal_value_format">%1$d ккал</string>
+    <string name="kj_value_format">%1$,d кДж</string>
+    <string name="health_import_count_kj">Нових записів: %1$d · %2$d кДж</string>
+    <string name="workout_text_estimate_kj">Орієнтовні витрати: %1$d кДж</string>
     <string name="grams_value_format">%1$d г</string>
     <string name="grams_value_decimal_format">%1$.1f г</string>
     <string name="kg_value_format">%1$.1f кг</string>
@@ -374,6 +379,8 @@
     <string name="home_menu_saved_meals">Збережені страви</string>
     <string name="home_kcal_of_format">з %1$s ккал</string>
     <string name="home_kcal_left_format">Залишилося %1$s</string>
+    <string name="home_kj_left_format">Залишилося %1$s</string>
+    <string name="home_kilojoules">Кілоджоулі</string>
     <string name="home_view_more">Переглянути більше</string>
     <string name="home_burn_deficit">%1$s спалено · дефіцит %2$s</string>
     <string name="home_burn_surplus">%1$s спалено · профіцит %2$s</string>
@@ -596,6 +603,7 @@
     <string name="progress_workout_stat_days">Дні</string>
     <string name="progress_workout_no_range">За цей період немає розрахованого спалювання від тренувань</string>
     <string name="progress_workout_chart_description">Графік спалювання від тренувань з %1$s по %2$s. Усього %3$d кілокалорій; останнє значення %4$d кілокалорій.</string>
+    <string name="progress_workout_chart_description_kj">Графік спалювання від тренувань з %1$s по %2$s. Усього %3$d кілоджоулів; останнє значення %4$d кілоджоулів.</string>
     <string name="progress_steps_stat_total">Разом</string>
     <string name="progress_steps_stat_average">Середнє</string>
     <string name="progress_steps_stat_best_day">Найкращий день</string>
@@ -609,6 +617,7 @@
     <string name="progress_include_today">Враховувати сьогодні</string>
     <string name="progress_include_today_caption">Графік калорій і середні показники харчування</string>
     <string name="progress_avg_format">Середнє: %1$d ккал</string>
+    <string name="progress_avg_format_kj">Середнє: %1$d кДж</string>
     <string name="progress_no_food">Їжу ще не зареєстровано</string>
 
     <string name="progress_macro_averages">Середні макроси</string>
@@ -710,7 +719,9 @@
     <string name="settings_recalculate_goals">Перерахувати цілі</string>
     <string name="settings_estimated_maintenance">Орієнтовна норма підтримки</string>
     <string name="settings_maintenance_deficit_format">Дефіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_deficit_format_kj">Дефіцит: %1$,d кДж/день</string>
     <string name="settings_maintenance_surplus_format">Профіцит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format_kj">Профіцит: %1$,d кДж/день</string>
     <string name="settings_maintenance_close">Ціль близька до норми підтримки</string>
     <string name="settings_estimated_maintenance_info">Орієнтовна норма підтримки — це калорії, які ви спалюєте у звичайний день: ваш BMR із профілю, помножений на рівень активності. Якщо їсти менше, виникає дефіцит для схуднення; якщо більше — профіцит для набору ваги. Показаний дефіцит або профіцит — це ваша ціль калорій мінус ця оцінка. Це розрахунок за формулою, тож реальні витрати можуть відрізнятися, а перерахунок цілей може встановити ціль на основі записаної їжі, динаміки ваги або виміряних витрат енергії. Це не медична порада.</string>
     <string name="settings_macro_pinned_format">%1$d г</string>
@@ -751,6 +762,9 @@
     <string name="settings_save_photos_to_gallery">Зберігати в Фото</string>
     <string name="settings_save_photos_to_gallery_subtitle">Також зберігати фото їжі в галерею під час запису</string>
     <string name="settings_week_starts">Тиждень починається з</string>
+    <string name="settings_energy_unit">Одиниця енергії</string>
+    <string name="settings_energy_unit_kcal">Кілокалорії (ккал)</string>
+    <string name="settings_energy_unit_kj">Кілоджоулі (кДж)</string>
     <string name="settings_meal_times">Час прийомів їжі</string>
     <string name="settings_meal_times_customize">Налаштувати</string>
     <string name="settings_meal_times_description">Встановіть, коли автоматичний вибір прийому їжі перемикатиметься на наступний.</string>
@@ -1012,6 +1026,9 @@
     <string name="notif_summary_deficit">Спожито %1$d ккал · Спалено %2$d · Розрахунковий дефіцит %3$d ккал</string>
     <string name="notif_summary_surplus">Спожито %1$d ккал · Спалено %2$d · Розрахунковий профіцит %3$d ккал</string>
     <string name="notif_summary_balanced">Спожито %1$d ккал · Спалено %2$d · Розрахунковий баланс</string>
+    <string name="notif_summary_deficit_kj">Спожито %1$d кДж · Спалено %2$d кДж · Розрахунковий дефіцит %3$d кДж</string>
+    <string name="notif_summary_surplus_kj">Спожито %1$d кДж · Спалено %2$d кДж · Розрахунковий профіцит %3$d кДж</string>
+    <string name="notif_summary_balanced_kj">Спожито %1$d кДж · Спалено %2$d кДж · Розрахунковий баланс</string>
 
     <string name="widget_all_metrics_label">Fud AI Сьогодні</string>
     <string name="widget_all_metrics_description">Переглядайте сьогоднішні калорії, білки, вуглеводи та жири в одному віджеті.</string>
@@ -1033,6 +1050,8 @@
     <string name="workout_exercise_take_photo">Зробити знімок</string>
     <string name="workout_exercise_camera_denied_title">Потрібен доступ до камери</string>
     <string name="workout_exercise_camera_denied_message">Щоб фотографувати вправи, дозвольте Fud AI використовувати камеру в системних налаштуваннях.</string>
+    <string name="workout_exercise_ai_fill">Заповнити за допомогою ШІ</string>
+    <string name="workout_exercise_ai_fill_hint">Функція «Заповнити за допомогою ШІ» надсилає це фото вашому провайдеру ШІ. Перевірте запропоновані дані перед збереженням.</string>
     <string name="filter_all">Усі</string>
     <string name="filter_all_count">Усі %d</string>
     <string name="hide_details">Сховати деталі</string>
@@ -1241,6 +1260,7 @@
     <string name="import_note">Додає до вашого журналу з точними нутрієнтами від відправника. Фотографія не включається.</string>
     <string name="import_add_to_log">Додати до журналу</string>
     <string name="import_add_to_log_many_format">Додати %1$d до журналу · %2$d ккал</string>
+    <string name="import_add_to_log_many_format_kj">Додати %1$d до журналу · %2$d кДж</string>
     <string name="voice_release_to_cancel">Відпустіть, щоб скасувати</string>
     <string name="voice_slide_to_cancel">‹ проведіть для скасування</string>
     <string name="camera_error_open">Не вдалося відкрити камеру</string>

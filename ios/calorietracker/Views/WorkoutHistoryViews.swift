@@ -53,6 +53,7 @@ struct WorkoutHistoryView: View {
     let onDelete: (StrengthWorkoutSession) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @State private var pendingDeletion: StrengthWorkoutSession?
     @State private var visibleSessions: [StrengthWorkoutSession] = []
 
@@ -62,7 +63,7 @@ struct WorkoutHistoryView: View {
                 ForEach(visibleSessions) { session in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\((session.caloriesBurned ?? 0).formatted()) kcal")
+                            Text(energyUnit.format(kcal: session.caloriesBurned ?? 0))
                                 .font(.system(.body, design: .rounded, weight: .medium))
                             Text(workoutHistoryFormatter.string(from: session.calendarDiaryDate))
                                 .font(.system(.caption, design: .rounded))
@@ -112,7 +113,7 @@ struct WorkoutHistoryView: View {
             }
         } message: {
             if let session = pendingDeletion {
-                Text("Remove \(workoutHistoryFormatter.string(from: session.calendarDiaryDate))'s entry of \((session.caloriesBurned ?? 0).formatted()) kcal? This also deletes the matching sample from Apple Health. The dated workout plan stays in your diary.")
+                Text("Remove \(workoutHistoryFormatter.string(from: session.calendarDiaryDate))'s entry of \(energyUnit.format(kcal: session.caloriesBurned ?? 0))? This also deletes the matching sample from Apple Health. The dated workout plan stays in your diary.")
             }
         }
     }
@@ -164,6 +165,7 @@ struct ImportedHealthWorkoutDaySection: View {
 
 struct ImportedHealthWorkoutRow: View {
     let workout: ImportedHealthWorkout
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     private var timeRangeText: String {
         let formatter = DateFormatter()
@@ -179,7 +181,7 @@ struct ImportedHealthWorkoutRow: View {
                     .font(.system(.body, design: .rounded, weight: .medium))
                 Spacer()
                 if let calories = workout.totalEnergyBurned, calories > 0 {
-                    Text("\(calories.formatted()) kcal")
+                    Text(energyUnit.format(kcal: calories))
                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                         .foregroundStyle(AppColors.calorie)
                 }

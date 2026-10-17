@@ -149,6 +149,7 @@ fun ExportDiarySheet(
                             val result = DiaryExporter.build(
                                 entries = entries, start = lo, end = hi, format = format,
                                 waterEntries = water, profile = profile, mealDisplay = { mealNames[it] ?: it.name },
+                                energyUnit = container.prefs.energyUnit.first(),
                             )
                             if (result == null) {
                                 status = emptyDiaryMessage

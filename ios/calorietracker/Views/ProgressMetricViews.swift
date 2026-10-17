@@ -179,6 +179,7 @@ struct WorkoutBurnChartSection: View {
     let dateRange: ClosedRange<Date>
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     private var days: [WorkoutBurnDay] {
         WorkoutBurnAggregation.daily(sessions: sessions, in: dateRange)
@@ -201,7 +202,7 @@ struct WorkoutBurnChartSection: View {
                 Chart(days) { day in
                     BarMark(
                         x: .value("Date", day.date, unit: .day),
-                        y: .value("Calculated calories burned", day.calories)
+                        y: .value("Calculated calories burned", energyUnit.displayValue(kcal: day.calories))
                     )
                     .foregroundStyle(
                         LinearGradient(
@@ -263,9 +264,9 @@ struct WorkoutBurnChartSection: View {
 
     @ViewBuilder
     private var workoutStatBadgeContent: some View {
-        StatBadge(label: "Total", value: "\(total.formatted()) kcal")
-        StatBadge(label: "Average", value: "\(average.formatted()) kcal")
-        StatBadge(label: "Latest", value: "\(latest.formatted()) kcal")
+        StatBadge(label: "Total", value: energyUnit.format(kcal: total))
+        StatBadge(label: "Average", value: energyUnit.format(kcal: average))
+        StatBadge(label: "Latest", value: energyUnit.format(kcal: latest))
         StatBadge(label: "Days", value: days.count.formatted())
     }
 }
@@ -304,6 +305,7 @@ struct ImportedHealthWorkoutChartSection: View {
     let dateRange: ClosedRange<Date>
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     private var days: [ImportedHealthWorkoutDay] {
         ImportedHealthWorkoutAggregation.daily(workouts: workouts, in: dateRange)
@@ -394,8 +396,8 @@ struct ImportedHealthWorkoutChartSection: View {
     @ViewBuilder
     private var workoutStatBadgeContent: some View {
         StatBadge(label: "Sessions", value: totalSessions.formatted())
-        StatBadge(label: "Calories", value: "\(totalCalories.formatted()) kcal")
-        StatBadge(label: "Average", value: "\(averageCalories.formatted()) kcal")
+        StatBadge(label: "Calories", value: energyUnit.format(kcal: totalCalories))
+        StatBadge(label: "Average", value: energyUnit.format(kcal: averageCalories))
         StatBadge(label: "Days", value: days.count.formatted())
     }
 }

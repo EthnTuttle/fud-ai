@@ -372,6 +372,7 @@ private struct VoiceAssistantCardStack: View {
 private struct VoiceAssistantCardView: View {
     let controller: VoiceAssistantController
     let card: VoiceAssistantCard
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     var body: some View {
         Group {
@@ -431,7 +432,7 @@ private struct VoiceAssistantCardView: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 1) {
                     if let calories = draft.calories {
-                        Text(draft.isWorkout ? String(localized: "≈ \(calories) kcal burned") : String(localized: "\(calories) kcal"))
+                        Text(draft.isWorkout ? String(localized: "≈ \(energyUnit.format(kcal: calories)) burned") : energyUnit.format(kcal: calories))
                             .font(.system(.subheadline, design: .rounded, weight: .bold))
                             .foregroundStyle(AppColors.calorie)
                     }

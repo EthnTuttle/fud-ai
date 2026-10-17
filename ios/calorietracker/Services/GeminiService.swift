@@ -261,13 +261,15 @@ struct GeminiService {
             ? String(format: "%.1f kg", profile.weightKg)
             : String(format: "%.1f lb", profile.weightKg * 2.20462)
         let bodyFat = profile.bodyFatPercentage.map { "\(Int(($0 * 100).rounded()))%" } ?? "not set"
+        // Empty for kcal users, so their prompt is unchanged.
+        let energyHint = EnergyUnit.current.aiReplyInstruction().map { "\n\($0)" } ?? ""
 
         let prompt = """
         You are a concise nutrition coach inside Fud AI. The user is reviewing a meal before logging it.
         Analyze this what-if scenario only. Do not say the meal has already been logged. Do not change the user's goals.
 
         Return 2-4 short plain-English sentences, no markdown and no bullets.
-        Say whether logging this meal as-is fits the remaining daily targets. If it does not fit well, suggest one practical action: reduce quantity, replace an item, add a protein/fiber source, or balance the next meal. Be specific with calories/macros from the data below.
+        Say whether logging this meal as-is fits the remaining daily targets. If it does not fit well, suggest one practical action: reduce quantity, replace an item, add a protein/fiber source, or balance the next meal. Be specific with calories/macros from the data below.\(energyHint)
 
         User:
         - Goal: \(profile.goal.displayName)
@@ -492,6 +494,18 @@ struct GeminiService {
         return try await runWithHostedQuota(.allergensLab) {
             let text = try await callAI(prompt: prompt, images: images)
             return try parseAllergensFromLabReport(from: text)
+        }
+    }
+
+    /// Identifies the exercise in a custom-exercise photo. Metadata is limited to
+    /// `options`; the result only prefills the editor and is never saved here.
+    static func suggestUserExercise(
+        image: UIImage,
+        options: UserExerciseAIFill.Options
+    ) async throws -> UserExerciseAIFill.Suggestion {
+        try await runWithHostedQuota(.workoutAI) {
+            let text = try await callAI(prompt: UserExerciseAIFill.prompt(options: options), image: image)
+            return try UserExerciseAIFill.parse(text, options: options)
         }
     }
 
@@ -733,12 +747,14 @@ struct GeminiService {
             lines.append("- NOTE: predicted and observed trends differ by >0.3 kg/week (possibly under-logging food).")
         }
 
+        // Empty for kcal users, so their prompt is unchanged.
+        let energyHint = EnergyUnit.current.aiReplyInstruction().map { "\n\($0)" } ?? ""
         let prompt = """
         You are a nutrition coach analyzing a user's weight trend. Write 3–4 short sentences (plain English, no bullets, no markdown, no bold) that:
         1. State the predicted weight in \(unit) 30 days out and whether they're on track for their goal.
         2. Give one or two specific, actionable suggestions (e.g. calorie target, protein amount, activity change) grounded in the numbers below.
         3. If predicted and observed trends disagree, mention possible under-logging briefly.
-        Be direct, factual, and encouraging. Do not exceed 100 words.
+        Be direct, factual, and encouraging. Do not exceed 100 words.\(energyHint)
 
         \(lines.joined(separator: "\n"))
         """
@@ -1370,7 +1386,7 @@ struct GeminiService {
 
     // MARK: - Parsing (unchanged)
 
-    private static func extractJSON(from text: String) -> String {
+    static func extractJSON(from text: String) -> String {
         var cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let openFence = cleaned.range(of: "```json", options: .caseInsensitive)

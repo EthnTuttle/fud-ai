@@ -662,7 +662,8 @@ class AppContainer(app: FudAIApp) {
                 profile = next,
                 changed = true,
                 updatedCalories = result.calories,
-                message = "Updated to ${result.calories} kcal from your latest data." + (result.reason?.let { " $it" } ?: "")
+                message = "Updated to ${prefs.energyUnit.first().format(appContext.resources, result.calories)} from your latest data." +
+                    (result.reason?.let { " $it" } ?: "")
             )
         } finally {
             adaptiveGoalsRefreshInFlight = false

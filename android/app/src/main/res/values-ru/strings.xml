@@ -12,6 +12,7 @@
     <string name="widget_carbs">Углеводы</string>
     <string name="widget_fat">Жиры</string>
     <string name="widget_kcal_left_format">осталось %1$d ккал</string>
+    <string name="widget_kj_left_format">осталось %1$d кДж</string>
     <string name="widget_g_left_format">осталось %1$d г</string>
     <string name="widget_kcal">ккал</string>
     <string name="widget_protein_g">белок g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">ккал</string>
+    <string name="unit_kj">кДж</string>
     <string name="unit_g">г</string>
     <string name="unit_mg">мг</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,9 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d ккал</string>
+    <string name="kj_value_format">%1$,d кДж</string>
+    <string name="health_import_count_kj">Новых записей: %1$d · %2$d кДж</string>
+    <string name="workout_text_estimate_kj">Расчётный расход: %1$d кДж</string>
     <string name="grams_value_format">%1$d г</string>
     <string name="grams_value_decimal_format">%1$.1f г</string>
     <string name="kg_value_format">%1$.1f кг</string>
@@ -335,6 +340,8 @@
     <string name="home_menu_saved_meals">Сохранённые блюда</string>
     <string name="home_kcal_of_format">из %1$s ккал</string>
     <string name="home_kcal_left_format">осталось %1$s</string>
+    <string name="home_kj_left_format">осталось %1$s</string>
+    <string name="home_kilojoules">Килоджоули</string>
     <string name="home_view_more">Показать больше</string>
     <string name="home_todays_food">Еда за сегодня</string>
     <string name="home_no_foods_logged">Нет записей о еде</string>
@@ -523,6 +530,7 @@
     <string name="progress_include_today">Учитывать сегодня</string>
     <string name="progress_include_today_caption">График калорий и средние значения питания</string>
     <string name="progress_avg_format">Сред.: %1$,d ккал</string>
+    <string name="progress_avg_format_kj">Сред.: %1$,d кДж</string>
     <string name="progress_no_food">Пока нет записей о еде</string>
 
     <string name="progress_macro_averages">Средние макросы</string>
@@ -563,7 +571,9 @@
     <string name="settings_recalculate_goals">Пересчитать цели</string>
     <string name="settings_estimated_maintenance">Оценочная норма поддержания</string>
     <string name="settings_maintenance_deficit_format">Дефицит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_deficit_format_kj">Дефицит: %1$,d кДж/день</string>
     <string name="settings_maintenance_surplus_format">Профицит: %1$,d ккал/день</string>
+    <string name="settings_maintenance_surplus_format_kj">Профицит: %1$,d кДж/день</string>
     <string name="settings_maintenance_close">Цель близка к норме поддержания</string>
     <string name="settings_estimated_maintenance_info">Оценочная норма поддержания — это калории, которые вы сжигаете в обычный день: ваш BMR из профиля, умноженный на уровень активности. Если есть меньше, получается дефицит для снижения веса; если больше — профицит для набора. Показанный дефицит или профицит — это ваша цель по калориям минус эта оценка. Это расчёт по формуле, поэтому реальный расход может отличаться, а пересчёт целей может задать цель на основе записанной еды, динамики веса или измеренного расхода энергии. Это не медицинская рекомендация.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -579,6 +589,9 @@
     <string name="settings_height_unit">Единица роста</string>
     <string name="settings_weight_unit">Единица веса</string>
     <string name="settings_week_starts">Начало недели</string>
+    <string name="settings_energy_unit">Единица энергии</string>
+    <string name="settings_energy_unit_kcal">Килокалории (ккал)</string>
+    <string name="settings_energy_unit_kj">Килоджоули (кДж)</string>
     <string name="settings_meal_times_customize">Настроить</string>
     <string name="settings_week_monday">Понедельник</string>
     <string name="settings_week_sunday">Воскресенье</string>
@@ -716,6 +729,9 @@
     <string name="notif_streak_text">Поддержите свою серию — добавьте запись за сегодня.</string>
     <string name="notif_summary_title">Сводка за сегодня готова</string>
     <string name="notif_summary_text">Коснитесь, чтобы увидеть, как сложились макросы за день.</string>
+    <string name="notif_summary_deficit_kj">Съедено %1$d кДж · сожжено %2$d кДж · расчётный дефицит %3$d кДж</string>
+    <string name="notif_summary_surplus_kj">Съедено %1$d кДж · сожжено %2$d кДж · расчётный профицит %3$d кДж</string>
+    <string name="notif_summary_balanced_kj">Съедено %1$d кДж · сожжено %2$d кДж · расчётный баланс</string>
 
     <string name="onboarding_goal_optional">Цель (необязательно)</string>
     <string name="onboarding_goal_set_later">Можно настроить позже в Настройках.</string>
@@ -746,6 +762,7 @@
     <string name="progress_workout_stat_days">Дни</string>
     <string name="progress_workout_no_range">За этот период нет рассчитанного расхода тренировок</string>
     <string name="progress_workout_chart_description">График расхода тренировок с %1$s по %2$s. Всего %3$d килокалорий; последнее значение %4$d килокалорий.</string>
+    <string name="progress_workout_chart_description_kj">График расхода тренировок с %1$s по %2$s. Всего %3$d килоджоулей; последнее значение %4$d килоджоулей.</string>
     <string name="progress_steps_stat_total">Итого</string>
     <string name="progress_steps_stat_average">Среднее</string>
     <string name="progress_steps_stat_best_day">Лучший день</string>
@@ -885,6 +902,8 @@
     <string name="workout_exercise_take_photo">Сделать снимок</string>
     <string name="workout_exercise_camera_denied_title">Нужен доступ к камере</string>
     <string name="workout_exercise_camera_denied_message">Чтобы фотографировать упражнения, разрешите Fud AI использовать камеру в системных настройках.</string>
+    <string name="workout_exercise_ai_fill">Заполнить с помощью ИИ</string>
+    <string name="workout_exercise_ai_fill_hint">Функция «Заполнить с помощью ИИ» отправляет это фото вашему провайдеру ИИ. Проверьте предложенные данные перед сохранением.</string>
     <string name="filter_all">Все</string>
     <string name="filter_all_count">Все %d</string>
     <string name="hide_details">Скрыть детали</string>
@@ -1046,6 +1065,7 @@
     <string name="import_note">Добавит в журнал точные нутриенты от отправителя. Фото не передаётся.</string>
     <string name="import_add_to_log">Добавить в журнал</string>
     <string name="import_add_to_log_many_format">Добавить %1$d · %2$d ккал</string>
+    <string name="import_add_to_log_many_format_kj">Добавить %1$d · %2$d кДж</string>
     <string name="voice_release_to_cancel">Отпустите, чтобы отменить</string>
     <string name="voice_slide_to_cancel">‹ смахните, чтобы отменить</string>
     <string name="camera_error_open">Не удалось открыть камеру</string>

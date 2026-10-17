@@ -186,6 +186,7 @@ import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightDisplayFormatter
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
 import com.apoorvdarshan.calorietracker.models.WorkoutSplit
@@ -206,6 +207,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import com.apoorvdarshan.calorietracker.ui.components.DecimalWheelPicker
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyText
+import com.apoorvdarshan.calorietracker.ui.components.energyUnitLabel
 import com.apoorvdarshan.calorietracker.ui.components.DateWheelPicker
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialog
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassDialogActions
@@ -246,8 +250,11 @@ private enum class SettingsSheet {
     SPEECH_FALLBACK_PROVIDER, SPEECH_FALLBACK_LANGUAGE, SPEECH_FALLBACK_KEY,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
     CALORIES, PROTEIN, CARBS, FAT, OPTIONAL_NUTRIENTS,
-    APPEARANCE, APP_LANGUAGE, WEEK_START, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE
+    APPEARANCE, APP_LANGUAGE, WEEK_START, ENERGY_UNIT, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE
 }
+
+private fun energyUnitTitleRes(unit: EnergyUnit): Int =
+    if (unit == EnergyUnit.KJ) R.string.settings_energy_unit_kj else R.string.settings_energy_unit_kcal
 
 /** First tag from the AndroidX per-app locale list, or null to follow the system. */
 private fun currentAppLanguageTag(): String? =
@@ -839,7 +846,7 @@ fun SettingsScreen(
                     }
                     LockableGoalRow(
                         label = stringResource(R.string.settings_calories),
-                        value = stringResource(R.string.kcal_value_format, p.effectiveCalories),
+                        value = energyText(p.effectiveCalories),
                         icon = Icons.Outlined.LocalFireDepartment,
                         locked = p.caloriesLocked,
                         lockEnabled = lockEnabled,
@@ -1005,6 +1012,12 @@ fun SettingsScreen(
                     if (ui.weekStartsOnMonday) stringResource(R.string.settings_week_monday) else stringResource(R.string.settings_week_sunday),
                     icon = Icons.Outlined.CalendarToday
                 ) { sheet = SettingsSheet.WEEK_START }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_energy_unit),
+                    stringResource(energyUnitTitleRes(ui.energyUnit)),
+                    icon = Icons.Outlined.LocalFireDepartment
+                ) { sheet = SettingsSheet.ENERGY_UNIT }
                 HorizontalDivider()
                 SettingRow(
                     stringResource(R.string.settings_quick_actions),
@@ -3235,6 +3248,13 @@ private fun SettingsSheets(
                     selected = { it.first == ui.weekStartsOnMonday },
                     onSelect = { vm.setWeekStartsOnMonday(it.first); onDismiss() }
                 )
+                SettingsSheet.ENERGY_UNIT -> ListSheet(
+                    title = stringResource(R.string.settings_energy_unit),
+                    items = EnergyUnit.entries,
+                    label = { stringResource(energyUnitTitleRes(it)) },
+                    selected = { it == ui.energyUnit },
+                    onSelect = { vm.setEnergyUnit(it); onDismiss() }
+                )
                 SettingsSheet.MEAL_TIMES -> MealTimesSheet(
                     current = ui.mealSchedule,
                     onSave = {
@@ -3278,18 +3298,22 @@ private fun SettingsSheets(
                         onDismiss()
                     }
                 )
-                SettingsSheet.CALORIES -> NutritionPickerSheet(
-                    label = stringResource(R.string.macro_calories), unit = stringResource(R.string.unit_kcal),
-                    currentValue = ui.profile?.effectiveCalories ?: 2000,
-                    range = 800..6000, step = 50,
-                    onSave = { v ->
-                        vm.editCaloriesGoal(v)
-                        onDismiss()
-                    },
-                    onResetToAuto = if (ui.profile?.caloriesLocked == true) {
-                        { vm.resetCaloriesLock(); onDismiss() }
-                    } else null
-                )
+                SettingsSheet.CALORIES -> {
+                    val energyUnit = LocalEnergyUnit.current
+                    val currentKcal = ui.profile?.effectiveCalories ?: 2000
+                    NutritionPickerSheet(
+                        label = stringResource(R.string.macro_calories), unit = energyUnitLabel(),
+                        currentValue = energyUnit.displayValue(currentKcal),
+                        range = energyUnit.goalPickerRange, step = energyUnit.goalPickerStep,
+                        onSave = { v ->
+                            vm.editCaloriesGoal(energyUnit.goalKcal(v, currentKcal))
+                            onDismiss()
+                        },
+                        onResetToAuto = if (ui.profile?.caloriesLocked == true) {
+                            { vm.resetCaloriesLock(); onDismiss() }
+                        } else null
+                    )
+                }
                 SettingsSheet.PROTEIN -> NutritionPickerSheet(
                     label = stringResource(R.string.macro_protein), unit = stringResource(R.string.unit_g),
                     currentValue = ui.profile?.effectiveProtein ?: 0,
@@ -4568,10 +4592,17 @@ private fun MaintenanceEstimateRow(
     breakdown: MaintenanceBreakdown,
     onClick: () -> Unit
 ) {
-    val amount = abs(breakdown.dailyDifference)
+    val energyUnit = LocalEnergyUnit.current
+    val amount = energyUnit.displayValue(abs(breakdown.dailyDifference))
     val balanceText = when (breakdown.balance) {
-        MaintenanceBreakdown.Balance.DEFICIT -> stringResource(R.string.settings_maintenance_deficit_format, amount)
-        MaintenanceBreakdown.Balance.SURPLUS -> stringResource(R.string.settings_maintenance_surplus_format, amount)
+        MaintenanceBreakdown.Balance.DEFICIT -> stringResource(
+            energyUnit.pick(R.string.settings_maintenance_deficit_format, R.string.settings_maintenance_deficit_format_kj),
+            amount
+        )
+        MaintenanceBreakdown.Balance.SURPLUS -> stringResource(
+            energyUnit.pick(R.string.settings_maintenance_surplus_format, R.string.settings_maintenance_surplus_format_kj),
+            amount
+        )
         MaintenanceBreakdown.Balance.MAINTENANCE -> stringResource(R.string.settings_maintenance_close)
     }
     Row(
@@ -4595,7 +4626,7 @@ private fun MaintenanceEstimateRow(
             )
         }
         Text(
-            stringResource(R.string.kcal_value_format, breakdown.maintenanceCalories),
+            energyText(breakdown.maintenanceCalories),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(start = 12.dp)

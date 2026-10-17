@@ -12,6 +12,7 @@
     <string name="widget_carbs">Karbohidrat</string>
     <string name="widget_fat">Yağ</string>
     <string name="widget_kcal_left_format">%1$d kkal qalıb</string>
+    <string name="widget_kj_left_format">%1$d kJ qalıb</string>
     <string name="widget_g_left_format">%1$dq qalıb</string>
     <string name="widget_kcal">kkal</string>
     <string name="widget_protein_g">protein q</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">%1$d yeni qeyd · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">Təxmini yandırılan: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">Jurnala %1$d əlavə et · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -332,6 +338,8 @@
     <string name="home_menu_saved_meals">Saxlanılmış Yeməklər</string>
     <string name="home_kcal_of_format">%1$s kcal-dan</string>
     <string name="home_kcal_left_format">%1$s qalıb</string>
+    <string name="home_kj_left_format">%1$s qalıb</string>
+    <string name="home_kilojoules">Kilocoullar</string>
     <string name="home_view_more">Daha Çoxuna Bax</string>
     <string name="home_todays_food">Bu günün yeməyi</string>
     <string name="home_no_foods_logged">Heç bir yemək qeyd edilməyib</string>
@@ -518,6 +526,7 @@
     <string name="progress_include_today">Bu günü daxil et</string>
     <string name="progress_include_today_caption">Kalori qrafiki və qidalanma ortalamaları</string>
     <string name="progress_avg_format">Orta: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">Orta: %1$,d kJ</string>
     <string name="progress_no_food">Hələ yemək qeyd edilməyib</string>
 
     <string name="progress_macro_averages">Makro Ortalamaları</string>
@@ -558,7 +567,9 @@
     <string name="settings_recalculate_goals">Hədəfləri Yenidən Hesabla</string>
     <string name="settings_estimated_maintenance">Təxmini saxlama kalorisi</string>
     <string name="settings_maintenance_deficit_format">Kəsir: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_deficit_format_kj">Kəsir: %1$,d kJ/gün</string>
     <string name="settings_maintenance_surplus_format">Artıq kalori: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_surplus_format_kj">Artıq kalori: %1$,d kJ/gün</string>
     <string name="settings_maintenance_close">Hədəf saxlama kalorisinə yaxındır</string>
     <string name="settings_estimated_maintenance_info">Təxmini saxlama kalorisi adi bir gündə yandırdığınız kaloridir: profilinizdəki BMR aktivlik səviyyənizə vurulur. Bundan az yemək arıqlamaq üçün kəsir, çox yemək isə çəki almaq üçün artıq kalori yaradır. Göstərilən kəsir və ya artıq kalori hədəf kalorinizdən bu təxminin çıxılmasıdır. Bu düstur əsaslı təxmindir, ona görə real sərfiniz fərqlənə bilər və hədəflərin yenidən hesablanması hədəfinizi qeyd etdiyiniz qida, çəki meyli və ya ölçülmüş enerji sərfi əsasında təyin edə bilər. Bu tibbi məsləhət deyil.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -574,6 +585,9 @@
     <string name="settings_height_unit">Boy vahidi</string>
     <string name="settings_weight_unit">Çəki vahidi</string>
     <string name="settings_week_starts">Həftənin Başlanğıc Günü</string>
+    <string name="settings_energy_unit">Enerji Vahidi</string>
+    <string name="settings_energy_unit_kcal">Kilokalori (kcal)</string>
+    <string name="settings_energy_unit_kj">Kilocoul (kJ)</string>
     <string name="settings_meal_times_customize">Fərdiləşdir</string>
     <string name="settings_week_monday">Bazar ertəsi</string>
     <string name="settings_week_sunday">Bazar</string>
@@ -711,6 +725,9 @@
     <string name="notif_streak_text">Silsilənizi davam etdirin — bu gündən nəsə qeyd edin.</string>
     <string name="notif_summary_title">Bu günün xülasəsi hazırdır</string>
     <string name="notif_summary_text">Bu günün makrolarının necə düzüldüyünü görmək üçün toxunun.</string>
+    <string name="notif_summary_deficit_kj">%1$d kJ qəbul edildi · %2$d kJ yandırıldı · təxmini kəsir %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">%1$d kJ qəbul edildi · %2$d kJ yandırıldı · təxmini artıq %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">%1$d kJ qəbul edildi · %2$d kJ yandırıldı · təxmini balans</string>
 
     <string name="onboarding_goal_optional">Hədəf (isteğe bağlı)</string>
     <string name="onboarding_goal_set_later">Bunu sonra Tənzimləmələrdə təyin edə bilərsiniz.</string>
@@ -739,6 +756,7 @@
     <string name="progress_workout_stat_days">Gün</string>
     <string name="progress_workout_no_range">Bu aralıqda hesablanmış məşq sərfiyyatı yoxdur</string>
     <string name="progress_workout_chart_description">Məşq sərfiyyatı qrafiki: %1$s–%2$s. Cəmi %3$d kkal; son %4$d kkal.</string>
+    <string name="progress_workout_chart_description_kj">Məşq sərfiyyatı qrafiki: %1$s–%2$s. Cəmi %3$d kJ; son %4$d kJ.</string>
     <string name="workout_filter_source">Mənbə</string>
     <string name="workout_source_dataset">Verilənlər bazası</string>
     <string name="workout_source_saved">Saxlanılan</string>
@@ -748,6 +766,8 @@
     <string name="workout_exercise_take_photo">Şəkil çək</string>
     <string name="workout_exercise_camera_denied_title">Kameraya giriş lazımdır</string>
     <string name="workout_exercise_camera_denied_message">Məşq şəkilləri çəkmək üçün sistem ayarlarında Fud AI tətbiqinə kameradan istifadə icazəsi ver.</string>
+    <string name="workout_exercise_ai_fill">Sİ ilə doldur</string>
+    <string name="workout_exercise_ai_fill_hint">«Sİ ilə doldur» bu şəkli Sİ provayderinə göndərir. Yadda saxlamazdan əvvəl təklif olunan məlumatları yoxla.</string>
     <string name="progress_steps_stat_total">Cəmi</string>
     <string name="progress_steps_stat_average">Orta</string>
     <string name="progress_steps_stat_best_day">Ən yaxşı gün</string>

@@ -12,6 +12,7 @@
     <string name="widget_carbs">炭水化物</string>
     <string name="widget_fat">脂質</string>
     <string name="widget_kcal_left_format">残り %1$d kcal</string>
+    <string name="widget_kj_left_format">残り %1$d kJ</string>
     <string name="widget_g_left_format">残り %1$dg</string>
     <string name="widget_kcal">kcal</string>
     <string name="widget_protein_g">タンパク質 g</string>
@@ -39,6 +40,7 @@
 
     <!-- Generic units / labels -->
     <string name="unit_kcal">kcal</string>
+    <string name="unit_kj">kJ</string>
     <string name="unit_g">g</string>
     <string name="unit_mg">mg</string>
     <string name="unit_percent">%</string>
@@ -49,6 +51,10 @@
     <string name="unit_in">in</string>
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
+    <string name="kj_value_format">%1$,d kJ</string>
+    <string name="health_import_count_kj">新しい記録 %1$d件 · %2$d kJ</string>
+    <string name="workout_text_estimate_kj">推定消費: %1$d kJ</string>
+    <string name="import_add_to_log_many_format_kj">%1$d件をログに追加 · %2$d kJ</string>
     <string name="grams_value_format">%1$dg</string>
     <string name="grams_value_decimal_format">%1$.1fg</string>
     <string name="kg_value_format">%1$.1f kg</string>
@@ -331,6 +337,8 @@
     <string name="home_menu_saved_meals">保存した食事</string>
     <string name="home_kcal_of_format">/ %1$s kcal</string>
     <string name="home_kcal_left_format">残り %1$s</string>
+    <string name="home_kj_left_format">残り %1$s</string>
+    <string name="home_kilojoules">キロジュール</string>
     <string name="home_view_more">もっと見る</string>
     <string name="home_todays_food">今日の食事</string>
     <string name="home_no_foods_logged">記録された食事はありません</string>
@@ -517,6 +525,7 @@
     <string name="progress_include_today">今日を含める</string>
     <string name="progress_include_today_caption">カロリーグラフと栄養の平均</string>
     <string name="progress_avg_format">平均: %1$,d kcal</string>
+    <string name="progress_avg_format_kj">平均: %1$,d kJ</string>
     <string name="progress_no_food">まだ食事が記録されていません</string>
 
     <string name="progress_macro_averages">マクロ平均</string>
@@ -557,7 +566,9 @@
     <string name="settings_recalculate_goals">目標を再計算</string>
     <string name="settings_estimated_maintenance">推定維持カロリー</string>
     <string name="settings_maintenance_deficit_format">カロリー不足: %1$,d kcal/日</string>
+    <string name="settings_maintenance_deficit_format_kj">カロリー不足: %1$,d kJ/日</string>
     <string name="settings_maintenance_surplus_format">カロリー余剰: %1$,d kcal/日</string>
+    <string name="settings_maintenance_surplus_format_kj">カロリー余剰: %1$,d kJ/日</string>
     <string name="settings_maintenance_close">目標は維持カロリーに近い値です</string>
     <string name="settings_estimated_maintenance_info">推定維持カロリーは、普段の1日に消費するカロリーの目安です。プロフィールのBMR（基礎代謝）に活動レベルを掛けて算出します。これより少なく食べると減量のためのカロリー不足、多く食べると増量のためのカロリー余剰になります。表示される不足・余剰は、カロリー目標からこの推定値を引いたものです。計算式による推定のため実際の消費量とは異なる場合があり、目標の再計算では記録した食事、体重の傾向、または測定された消費エネルギーから目標が設定されることもあります。これは医療上のアドバイスではありません。</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
@@ -573,6 +584,9 @@
     <string name="settings_height_unit">身長の単位</string>
     <string name="settings_weight_unit">体重の単位</string>
     <string name="settings_week_starts">週の始まり</string>
+    <string name="settings_energy_unit">エネルギーの単位</string>
+    <string name="settings_energy_unit_kcal">キロカロリー (kcal)</string>
+    <string name="settings_energy_unit_kj">キロジュール (kJ)</string>
     <string name="settings_meal_times_customize">カスタマイズ</string>
     <string name="settings_week_monday">月曜日</string>
     <string name="settings_week_sunday">日曜日</string>
@@ -710,6 +724,9 @@
     <string name="notif_streak_text">連続記録を続けましょう — 今日のものを記録してください。</string>
     <string name="notif_summary_title">今日のサマリーが準備できました</string>
     <string name="notif_summary_text">タップして今日のマクロの状況を確認。</string>
+    <string name="notif_summary_deficit_kj">摂取 %1$d kJ · 消費 %2$d kJ · 推定不足 %3$d kJ</string>
+    <string name="notif_summary_surplus_kj">摂取 %1$d kJ · 消費 %2$d kJ · 推定余剰 %3$d kJ</string>
+    <string name="notif_summary_balanced_kj">摂取 %1$d kJ · 消費 %2$d kJ · 推定バランス</string>
 
     <string name="onboarding_goal_optional">目標(任意)</string>
     <string name="onboarding_goal_set_later">後で設定から変更できます。</string>
@@ -738,6 +755,7 @@
     <string name="progress_workout_stat_days">日数</string>
     <string name="progress_workout_no_range">この期間に計算済みのワークアウト消費はありません</string>
     <string name="progress_workout_chart_description">%1$sから%2$sまでのワークアウト消費グラフ。合計%3$dキロカロリー、最新%4$dキロカロリー。</string>
+    <string name="progress_workout_chart_description_kj">%1$sから%2$sまでのワークアウト消費グラフ。合計%3$dキロジュール、最新%4$dキロジュール。</string>
     <string name="workout_filter_source">作成元</string>
     <string name="workout_source_dataset">データベース</string>
     <string name="workout_source_saved">保存済み</string>
@@ -747,6 +765,8 @@
     <string name="workout_exercise_take_photo">写真を撮る</string>
     <string name="workout_exercise_camera_denied_title">カメラへのアクセスが必要です</string>
     <string name="workout_exercise_camera_denied_message">種目の写真を撮るには、システム設定でFud AIによるカメラの使用を許可してください。</string>
+    <string name="workout_exercise_ai_fill">AIで入力</string>
+    <string name="workout_exercise_ai_fill_hint">「AIで入力」はこの写真をご利用のAIプロバイダに送信します。保存する前に、提案された内容を確認してください。</string>
     <string name="progress_steps_stat_total">合計</string>
     <string name="progress_steps_stat_average">平均</string>
     <string name="progress_steps_stat_best_day">最高の日</string>
