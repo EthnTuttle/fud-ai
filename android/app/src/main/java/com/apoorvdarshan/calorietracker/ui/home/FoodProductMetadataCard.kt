@@ -17,13 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FoodProductMetadata
-import com.apoorvdarshan.calorietracker.models.AllergenAnalysis
 
 @Composable
-internal fun FoodProductMetadataCard(
-    metadata: FoodProductMetadata,
-    allergenAnalysis: AllergenAnalysis? = null
-) {
+internal fun FoodProductMetadataCard(metadata: FoodProductMetadata) {
     val rows = buildList {
         add(ProductMetadataItem(stringResource(R.string.product_barcode), metadata.barcode))
         metadata.packageQuantity?.let {
@@ -55,9 +51,6 @@ internal fun FoodProductMetadataCard(
                     stacked = true
                 )
             )
-        }
-        allergenAnalysis?.let {
-            add(ProductMetadataItem(stringResource(R.string.product_allergen_check), it.summary, stacked = true))
         }
         metadata.labels.takeIf { it.isNotEmpty() }?.let {
             add(

@@ -541,28 +541,9 @@ fun FoodResultSheet(
                 }
             }
 
-            analysis.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
-                item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                item {
-                    val previewEntry = FoodEntry(
-                        name = name,
-                        calories = analysis.calories,
-                        protein = analysis.protein,
-                        carbs = analysis.carbs,
-                        fat = analysis.fat,
-                        source = source,
-                        ingredients = analysis.ingredients,
-                        productMetadata = analysis.productMetadata
-                    )
-                    FoodProductMetadataCard(
-                        metadata,
-                        previewEntry.allergenAnalysis(profile?.allergenSensitivities.orEmpty())
-                    )
-                }
-            }
-            if (analysis.productMetadata?.hasDisplayDetails != true &&
-                profile?.allergenSensitivities?.isNotEmpty() == true
-            ) {
+            // Allergen safety stays near the top for configured sensitivities;
+            // the longer product details sit at the end of the sheet (#426).
+            if (profile?.allergenSensitivities?.isNotEmpty() == true) {
                 item { SheetSectionHeader(stringResource(R.string.product_allergen_check)) }
                 item {
                     val previewEntry = FoodEntry(
@@ -828,6 +809,11 @@ fun FoodResultSheet(
                         showTimePicker = true
                     }
                 )
+            }
+
+            analysis.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
+                item { SheetSectionHeader(stringResource(R.string.product_information)) }
+                item { FoodProductMetadataCard(metadata) }
             }
         }
     }

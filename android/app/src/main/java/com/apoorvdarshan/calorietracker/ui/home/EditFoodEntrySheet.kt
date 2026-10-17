@@ -498,18 +498,9 @@ fun EditFoodEntrySheet(
                 }
             }
 
-            currentBaseEntry.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
-                item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                item {
-                    FoodProductMetadataCard(
-                        metadata,
-                        currentBaseEntry.allergenAnalysis(profile?.allergenSensitivities.orEmpty())
-                    )
-                }
-            }
-            if (currentBaseEntry.productMetadata?.hasDisplayDetails != true &&
-                profile?.allergenSensitivities?.isNotEmpty() == true
-            ) {
+            // Allergen safety stays near the top for configured sensitivities;
+            // the longer product details sit at the end of the sheet (#426).
+            if (profile?.allergenSensitivities?.isNotEmpty() == true) {
                 item { SheetSectionHeader(stringResource(R.string.product_allergen_check)) }
                 item {
                     SheetPillCard {
@@ -706,6 +697,11 @@ fun EditFoodEntrySheet(
                         showTimePicker = true
                     }
                 )
+            }
+
+            currentBaseEntry.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
+                item { SheetSectionHeader(stringResource(R.string.product_information)) }
+                item { FoodProductMetadataCard(metadata) }
             }
 
             item { SheetSectionHeader("Actions") }
