@@ -3,8 +3,10 @@
 package com.apoorvdarshan.calorietracker.ui.workouts
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -58,6 +60,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.apoorvdarshan.calorietracker.R
@@ -68,6 +71,7 @@ import com.apoorvdarshan.calorietracker.models.UserExercise
 import com.apoorvdarshan.calorietracker.models.UserExerciseDraft
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.ui.components.InAppCameraCaptureDialog
+import com.apoorvdarshan.calorietracker.ui.hosted.findActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -120,8 +124,18 @@ fun UserExerciseEditorSheet(
     val hasCamera = remember(context) {
         context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
     }
+    var showCameraSettingsPrompt by remember { mutableStateOf(false) }
+    val activity = remember(context) { context.findActivity() }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) showCamera = true
+        if (granted) {
+            showCamera = true
+        } else if (activity != null &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+        ) {
+            // Android stops showing the prompt after repeated denials, so "Take photo"
+            // would otherwise do nothing; point to the system setting instead.
+            showCameraSettingsPrompt = true
+        }
     }
 
     fun openCamera() {
@@ -170,6 +184,32 @@ fun UserExerciseEditorSheet(
                 isPhotoLoading = false
             },
             onDismiss = { showCamera = false }
+        )
+    }
+
+    if (showCameraSettingsPrompt) {
+        AlertDialog(
+            onDismissRequest = { showCameraSettingsPrompt = false },
+            title = { Text(stringResource(R.string.workout_exercise_camera_denied_title)) },
+            text = { Text(stringResource(R.string.workout_exercise_camera_denied_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCameraSettingsPrompt = false
+                    runCatching {
+                        context.startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
+                }) {
+                    Text(stringResource(R.string.voice_action_open_settings), color = colors.accent)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCameraSettingsPrompt = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
         )
     }
 

@@ -679,6 +679,8 @@
     <string name="workout_mine_empty_title">Brak własnych ćwiczeń</string>
     <string name="workout_mine_empty_subtitle">Utworzone przez Ciebie ćwiczenia pojawią się tutaj.</string>
     <string name="workout_exercise_take_photo">Zrób zdjęcie</string>
+    <string name="workout_exercise_camera_denied_title">Potrzebny dostęp do aparatu</string>
+    <string name="workout_exercise_camera_denied_message">Aby robić zdjęcia ćwiczeń, zezwól Fud AI na korzystanie z aparatu w ustawieniach systemowych.</string>
     <string name="progress_log_body_fat">Dodaj pomiar tkanki tłuszczowej</string>
     <string name="progress_log_first_body_fat">Dodaj pierwszy pomiar % tkanki tłuszczowej, aby zobaczyć trendy</string>
     <string name="progress_log_body_fat_title">Dodaj pomiar tkanki tłuszczowej</string>

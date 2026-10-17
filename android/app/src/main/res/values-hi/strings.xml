@@ -671,6 +671,8 @@
     <string name="workout_mine_empty_title">अभी तक कोई कस्टम व्यायाम नहीं</string>
     <string name="workout_mine_empty_subtitle">आपके बनाए व्यायाम यहाँ दिखेंगे।</string>
     <string name="workout_exercise_take_photo">फ़ोटो लें</string>
+    <string name="workout_exercise_camera_denied_title">कैमरा की अनुमति चाहिए</string>
+    <string name="workout_exercise_camera_denied_message">व्यायाम की फ़ोटो लेने के लिए सिस्टम सेटिंग में Fud AI को कैमरा इस्तेमाल करने की अनुमति दें।</string>
     <string name="progress_log_body_fat">बॉडी फैट दर्ज करें</string>
     <string name="progress_log_first_body_fat">रुझान देखने के लिए अपना पहला बॉडी फैट % दर्ज करें</string>
     <string name="progress_log_body_fat_title">बॉडी फैट दर्ज करें</string>

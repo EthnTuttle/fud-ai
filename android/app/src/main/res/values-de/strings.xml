@@ -671,6 +671,8 @@
     <string name="workout_mine_empty_title">Noch keine eigenen Übungen</string>
     <string name="workout_mine_empty_subtitle">Von dir erstellte Übungen erscheinen hier.</string>
     <string name="workout_exercise_take_photo">Foto aufnehmen</string>
+    <string name="workout_exercise_camera_denied_title">Kamerazugriff erforderlich</string>
+    <string name="workout_exercise_camera_denied_message">Erlaube Fud AI in den Systemeinstellungen den Kamerazugriff, um Übungsfotos aufzunehmen.</string>
     <string name="progress_log_body_fat">Körperfett protokollieren</string>
     <string name="progress_log_first_body_fat">Erfasse deinen ersten Körperfettwert, um Trends zu sehen</string>
     <string name="progress_log_body_fat_title">Körperfett protokollieren</string>

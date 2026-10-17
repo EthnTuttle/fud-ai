@@ -671,6 +671,8 @@
     <string name="workout_mine_empty_title">Nog geen eigen oefeningen</string>
     <string name="workout_mine_empty_subtitle">Oefeningen die je maakt, verschijnen hier.</string>
     <string name="workout_exercise_take_photo">Maak foto</string>
+    <string name="workout_exercise_camera_denied_title">Toegang tot de camera nodig</string>
+    <string name="workout_exercise_camera_denied_message">Geef Fud AI in de systeeminstellingen toegang tot de camera om foto’s van oefeningen te maken.</string>
     <string name="progress_log_body_fat">Vetpercentage loggen</string>
     <string name="progress_log_first_body_fat">Log je eerste vetpercentage om trends te zien</string>
     <string name="progress_log_body_fat_title">Vetpercentage loggen</string>

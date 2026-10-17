@@ -670,6 +670,8 @@
     <string name="workout_mine_empty_title">아직 직접 만든 운동이 없습니다</string>
     <string name="workout_mine_empty_subtitle">직접 만든 운동이 여기에 표시됩니다.</string>
     <string name="workout_exercise_take_photo">사진 찍기</string>
+    <string name="workout_exercise_camera_denied_title">카메라 접근 권한이 필요합니다</string>
+    <string name="workout_exercise_camera_denied_message">운동 사진을 찍으려면 시스템 설정에서 Fud AI의 카메라 사용을 허용하세요.</string>
     <string name="progress_log_body_fat">체지방 기록</string>
     <string name="progress_log_first_body_fat">추이를 보려면 첫 체지방률을 기록하세요</string>
     <string name="progress_log_body_fat_title">체지방 기록</string>

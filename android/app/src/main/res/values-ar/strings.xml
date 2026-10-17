@@ -687,6 +687,8 @@
     <string name="workout_mine_empty_title">لا توجد تمارين مخصصة بعد</string>
     <string name="workout_mine_empty_subtitle">تظهر هنا التمارين التي تنشئها.</string>
     <string name="workout_exercise_take_photo">التقاط صورة</string>
+    <string name="workout_exercise_camera_denied_title">يلزم السماح بالوصول إلى الكاميرا</string>
+    <string name="workout_exercise_camera_denied_message">اسمح لـ Fud AI باستخدام الكاميرا في إعدادات النظام لالتقاط صور التمارين.</string>
     <string name="progress_log_body_fat">تسجيل نسبة الدهون</string>
     <string name="progress_log_first_body_fat">سجّل أول قياس لنسبة الدهون لرؤية الاتجاهات</string>
     <string name="progress_log_body_fat_title">تسجيل نسبة الدهون</string>

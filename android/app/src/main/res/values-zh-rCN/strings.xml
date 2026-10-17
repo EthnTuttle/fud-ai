@@ -670,6 +670,8 @@
     <string name="workout_mine_empty_title">还没有自定义动作</string>
     <string name="workout_mine_empty_subtitle">你创建的动作会显示在这里。</string>
     <string name="workout_exercise_take_photo">拍照</string>
+    <string name="workout_exercise_camera_denied_title">需要相机权限</string>
+    <string name="workout_exercise_camera_denied_message">请在系统设置中允许 Fud AI 使用相机，以便为动作拍照。</string>
     <string name="progress_log_body_fat">记录体脂</string>
     <string name="progress_log_first_body_fat">记录你的第一个体脂百分比以查看趋势</string>
     <string name="progress_log_body_fat_title">记录体脂</string>

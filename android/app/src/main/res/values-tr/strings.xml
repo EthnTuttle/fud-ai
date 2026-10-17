@@ -973,6 +973,8 @@
     <string name="workout_mine_empty_title">Henüz özel egzersiz yok</string>
     <string name="workout_mine_empty_subtitle">Oluşturduğunuz egzersizler burada görünür.</string>
     <string name="workout_exercise_take_photo">Fotoğraf çek</string>
+    <string name="workout_exercise_camera_denied_title">Kamera erişimi gerekli</string>
+    <string name="workout_exercise_camera_denied_message">Egzersiz fotoğrafı çekmek için sistem ayarlarından Fud AI\'nın kamerayı kullanmasına izin verin.</string>
     <string name="filter_all">Tümü</string>
     <string name="filter_all_count">Tümü %d</string>
     <string name="hide_details">Detayları gizle</string>

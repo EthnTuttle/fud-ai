@@ -985,6 +985,8 @@
     <string name="workout_mine_empty_title">No custom exercises yet</string>
     <string name="workout_mine_empty_subtitle">Exercises you create show up here.</string>
     <string name="workout_exercise_take_photo">Take photo</string>
+    <string name="workout_exercise_camera_denied_title">Camera access needed</string>
+    <string name="workout_exercise_camera_denied_message">Allow Fud AI to use the camera in system settings to take exercise photos.</string>
     <string name="filter_all">All</string>
     <string name="filter_all_count">All %d</string>
     <string name="hide_details">Hide details</string>
