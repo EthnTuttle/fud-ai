@@ -28,7 +28,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.WorkoutRestTimer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -81,7 +80,7 @@ class WorkoutRestTimerBarTest {
             val layout = textLayout(clock)
             assertEquals("$next clock", "0:00", layout.layoutInput.text.text)
             assertEquals("$next clock lines", 1, layout.lineCount)
-            assertFalse("$next clock is cut off", layout.hasVisualOverflow)
+            assertTrue("$next clock is cut off", layout.showsWholeLine())
 
             val bar = compose.onNodeWithTag("bar").fetchSemanticsNode().boundsInRoot
             val add = compose.onNodeWithContentDescription(addDescription).assertIsDisplayed()
@@ -103,7 +102,7 @@ class WorkoutRestTimerBarTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         for (label in listOf(R.string.workout_rest_add_15, R.string.workout_rest_skip)) {
             val text = compose.onNodeWithText(context.getString(label), useUnmergedTree = true).fetchSemanticsNode()
-            assertFalse(context.getString(label), textLayout(text).hasVisualOverflow)
+            assertTrue(context.getString(label), textLayout(text).showsWholeLine())
         }
     }
 
@@ -112,6 +111,15 @@ class WorkoutRestTimerBarTest {
         node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
         return results.single()
     }
+
+    /**
+     * Whether the text shows on one line in full. The semantics rebuild this layout at the
+     * width the parent offered rather than the width the text took, so its hasVisualOverflow
+     * reports any text with room to spare as overflowing; the text's measured width against
+     * the width its line needs is what tells a cut-off text apart.
+     */
+    private fun TextLayoutResult.showsWholeLine(): Boolean =
+        lineCount == 1 && !isLineEllipsized(0) && size.width >= multiParagraph.maxIntrinsicWidth
 
     private fun localized(case: Case) = InstrumentationRegistry.getInstrumentation().targetContext.let { base ->
         base.createConfigurationContext(configuration(base.resources.configuration, case))
