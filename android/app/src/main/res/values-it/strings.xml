@@ -540,6 +540,7 @@
     <string name="settings_height_unit">Unità di altezza</string>
     <string name="settings_weight_unit">Unità di peso</string>
     <string name="settings_week_starts">La settimana inizia il</string>
+    <string name="settings_meal_times_customize">Personalizza</string>
     <string name="settings_week_monday">Lunedì</string>
     <string name="settings_week_sunday">Domenica</string>
     <string name="settings_notifications">Notifiche</string>

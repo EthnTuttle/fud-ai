@@ -545,6 +545,7 @@
     <string name="settings_height_unit">Jednostka wzrostu</string>
     <string name="settings_weight_unit">Jednostka wagi</string>
     <string name="settings_week_starts">Tydzień zaczyna się od</string>
+    <string name="settings_meal_times_customize">Dostosuj</string>
     <string name="settings_week_monday">Poniedziałek</string>
     <string name="settings_week_sunday">Niedziela</string>
     <string name="settings_notifications">Powiadomienia</string>

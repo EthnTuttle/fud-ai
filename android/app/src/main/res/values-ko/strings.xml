@@ -538,6 +538,7 @@
     <string name="settings_height_unit">키 단위</string>
     <string name="settings_weight_unit">체중 단위</string>
     <string name="settings_week_starts">주 시작 요일</string>
+    <string name="settings_meal_times_customize">사용자 지정</string>
     <string name="settings_week_monday">월요일</string>
     <string name="settings_week_sunday">일요일</string>
     <string name="settings_notifications">알림</string>

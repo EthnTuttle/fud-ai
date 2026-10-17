@@ -539,6 +539,7 @@
     <string name="settings_height_unit">Boy vahidi</string>
     <string name="settings_weight_unit">Çəki vahidi</string>
     <string name="settings_week_starts">Həftənin Başlanğıc Günü</string>
+    <string name="settings_meal_times_customize">Fərdiləşdir</string>
     <string name="settings_week_monday">Bazar ertəsi</string>
     <string name="settings_week_sunday">Bazar</string>
     <string name="settings_notifications">Bildirişlər</string>
