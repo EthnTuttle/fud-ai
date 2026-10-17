@@ -5,8 +5,6 @@ import android.content.Context
 import android.os.Build
 import android.os.StatFs
 import java.io.File
-import java.io.FileOutputStream
-import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +13,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +21,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.OkHttpClient
-import okhttp3.Request
 
 sealed interface LocalModelInstallStatus {
     data object NotInstalled : LocalModelInstallStatus
@@ -45,9 +41,10 @@ data class LocalModelState(
 /** Owns verified model artifacts in no-backup app storage. */
 class LocalModelManager(
     context: Context,
-    private val client: OkHttpClient
+    client: OkHttpClient
 ) {
     private val appContext = context.applicationContext
+    private val downloader = ModelDownloader(client)
     private val modelDir = File(appContext.noBackupFilesDir, "local-models").apply { mkdirs() }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobs = ConcurrentHashMap<LocalModelId, Job>()
@@ -80,8 +77,17 @@ class LocalModelManager(
     val states: StateFlow<Map<LocalModelId, LocalModelState>> = _states.asStateFlow()
 
     init {
-        modelDir.listFiles { file -> file.name.endsWith(".part") }
-            ?.forEach { it.delete() }
+        // A partial that still matches its pinned artifact resumes on the next download, even
+        // after a restart; every other partial left in the directory is stale.
+        val resumable = LocalModelCatalog.all
+            .filter { state(it.id).status != LocalModelInstallStatus.Installed }
+            .map { descriptor -> partialFile(descriptor) to descriptor }
+            .filter { (part, descriptor) -> ModelDownloader.isResumable(part, descriptor) }
+            .flatMap { (part, _) -> listOf(part.name, ModelDownloader.sourceFile(part).name) }
+            .toSet()
+        modelDir.listFiles { file ->
+            (file.name.endsWith(".part") || file.name.endsWith(".part.source")) && file.name !in resumable
+        }?.forEach { it.delete() }
     }
 
     fun state(id: LocalModelId): LocalModelState = checkNotNull(_states.value[id])
@@ -119,7 +125,7 @@ class LocalModelManager(
             withContext(Dispatchers.IO) {
                 val descriptor = LocalModelCatalog.descriptor(id)
                 modelFile(id).delete()
-                partialFile(descriptor).delete()
+                ModelDownloader.discardPartial(partialFile(descriptor))
                 markerFile(descriptor).delete()
             }
             update(id, LocalModelInstallStatus.NotInstalled)
@@ -134,52 +140,24 @@ class LocalModelManager(
         try {
             val available = StatFs(modelDir.absolutePath).availableBytes
             val reserve = maxOf(256L * 1024L * 1024L, descriptor.expectedBytes / 10L)
-            require(available >= descriptor.expectedBytes + reserve) {
+            // Bytes kept from an interrupted attempt already occupy their share of the space.
+            val kept = if (ModelDownloader.isResumable(part, descriptor)) part.length() else 0L
+            require(available >= descriptor.expectedBytes - kept + reserve) {
                 "Not enough free storage for ${descriptor.displayName}."
             }
-            part.delete()
-            val request = Request.Builder().url(descriptor.downloadUrl).get().build()
-            val digest = MessageDigest.getInstance("SHA-256")
-            val call = client.newCall(request)
-            activeCalls[id] = call
-            currentCoroutineContext().ensureActive()
-            call.execute().use { response ->
-                if (!response.isSuccessful) error("Download failed (HTTP ${response.code}).")
-                val body = response.body ?: error("The download response was empty.")
-                val declaredLength = body.contentLength()
-                if (declaredLength >= 0L && declaredLength != descriptor.expectedBytes) {
-                    error("The model download size did not match the published artifact.")
+            downloader.download(
+                descriptor = descriptor,
+                part = part,
+                onCall = { call -> activeCalls[id] = call },
+                onProgress = { bytes ->
+                    update(id, LocalModelInstallStatus.Downloading(bytes, descriptor.expectedBytes))
                 }
-                var copied = 0L
-                var lastPublished = 0L
-                FileOutputStream(part).use { output ->
-                    body.byteStream().use { input ->
-                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE * 4)
-                        while (true) {
-                            currentCoroutineContext().ensureActive()
-                            val count = input.read(buffer)
-                            if (count < 0) break
-                            output.write(buffer, 0, count)
-                            digest.update(buffer, 0, count)
-                            copied += count
-                            if (copied - lastPublished >= 1L * 1024L * 1024L) {
-                                lastPublished = copied
-                                update(id, LocalModelInstallStatus.Downloading(copied, descriptor.expectedBytes))
-                            }
-                        }
-                    }
-                    output.fd.sync()
-                }
-                if (copied != descriptor.expectedBytes) error("The model download was incomplete.")
-                val actualHash = digest.digest().joinToString("") { "%02x".format(it) }
-                if (!actualHash.equals(descriptor.sha256, ignoreCase = true)) {
-                    error("The model download failed integrity verification.")
-                }
-            }
+            )
 
             val destination = modelFile(id)
             destination.delete()
             check(part.renameTo(destination)) { "The verified model could not be installed." }
+            ModelDownloader.sourceFile(part).delete()
             val marker = markerFile(descriptor)
             val markerPart = File(marker.parentFile, "${marker.name}.part")
             markerPart.writeText(descriptor.sha256)
@@ -187,15 +165,18 @@ class LocalModelManager(
             check(markerPart.renameTo(marker)) { "The verification marker could not be installed." }
             update(id, LocalModelInstallStatus.Installed)
         } catch (cancelled: CancellationException) {
-            part.delete()
+            // Only the user's Cancel/Delete cancels a download, so its partial goes too.
+            ModelDownloader.discardPartial(part)
             update(id, LocalModelInstallStatus.NotInstalled)
             throw cancelled
         } catch (error: Throwable) {
-            part.delete()
             if (!currentCoroutineContext().isActive) {
+                ModelDownloader.discardPartial(part)
                 update(id, LocalModelInstallStatus.NotInstalled)
                 throw CancellationException("Model download cancelled.").also { it.initCause(error) }
             }
+            // The partial stays so the next Download resumes it. The downloader already deleted
+            // it if the bytes failed verification.
             update(id, LocalModelInstallStatus.Failed(error.message ?: "Model download failed."))
         } finally {
             activeCalls.remove(id)
