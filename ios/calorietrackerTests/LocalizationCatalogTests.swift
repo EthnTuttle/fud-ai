@@ -101,10 +101,12 @@ struct LocalizationCatalogTests {
 
     /// Every label and error on a Coach exercise proposal card, with its format arguments.
     static let coachProposalKeys = [
-        "New custom exercise", "Add to workout", "Add", "Dismiss", "Added", "Dismissed",
+        "New custom exercise", "Add to workout", "Add", "coach.proposal.dismiss", "Added", "Dismissed",
         "Category: %@", "Equipment: %@", "Primary muscles: %@", "Secondary muscles: %@",
         "Date: %@", "Sets: %lld", "Reps: %lld", "Duration: %lld min",
-        "This exercise is no longer in your library.", "Couldn't save this change. Try again.",
+        "Add %@ to your exercise library", "Add %@ to your workout diary", "Dismiss the suggestion for %@",
+        "This exercise is no longer in your library.", "An exercise with this name is already in your library.",
+        "Couldn't save this change. Try again.",
     ]
 
     @Test func coachProposalCardIsTranslatedInEveryLanguage() throws {

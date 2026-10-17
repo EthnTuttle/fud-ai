@@ -1110,11 +1110,17 @@ private struct CoachProposalCard: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(AppColors.calorie)
+                // VoiceOver hears which exercise each card's button acts on; Voice Control still
+                // answers to the visible word.
+                .accessibilityLabel(addAccessibilityLabel)
+                .accessibilityInputLabels([Text("Add"), addAccessibilityLabel])
 
                 Button(action: onDismiss) {
-                    Text("Dismiss").frame(maxWidth: .infinity)
+                    Text(Self.dismissTitle).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
+                .accessibilityLabel(dismissAccessibilityLabel)
+                .accessibilityInputLabels([Text(Self.dismissTitle), dismissAccessibilityLabel])
             }
             .controlSize(.large)
             .font(.system(.subheadline, design: .rounded, weight: .semibold))
@@ -1131,6 +1137,35 @@ private struct CoachProposalCard: View {
             .font(.system(.subheadline, design: .rounded, weight: .semibold))
             .foregroundStyle(.secondary)
         }
+    }
+
+    /// Its own key: the shared "Dismiss" closes things elsewhere, and most languages translate
+    /// it as "Close", which reads wrongly for declining a suggestion.
+    private static var dismissTitle: String {
+        String(
+            localized: "coach.proposal.dismiss",
+            defaultValue: "Dismiss",
+            comment: "Button on a Coach chat card that declines the proposed workout change without saving it."
+        )
+    }
+
+    private var addAccessibilityLabel: Text {
+        switch proposal.kind {
+        case .customExercise:
+            return Text(
+                "Add \(proposal.name) to your exercise library",
+                comment: "VoiceOver label for Add on a Coach chat card proposing a new custom exercise; the argument is the exercise name."
+            )
+        case .addToDay:
+            return Text("Add \(proposal.name) to your workout diary")
+        }
+    }
+
+    private var dismissAccessibilityLabel: Text {
+        Text(
+            "Dismiss the suggestion for \(proposal.name)",
+            comment: "VoiceOver label for Dismiss on a Coach chat card; the argument is the exercise name."
+        )
     }
 
     private var detailLines: [String] {

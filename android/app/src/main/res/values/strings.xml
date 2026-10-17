@@ -541,6 +541,10 @@
     <string name="coach_proposal_duration">Duration: %1$d min</string>
     <string name="coach_proposal_exercise_missing">This exercise is no longer in your library.</string>
     <string name="coach_proposal_save_failed">Couldn\'t save this change. Try again.</string>
+    <string name="coach_proposal_add_custom_description">Add %1$s to your exercise library</string>
+    <string name="coach_proposal_add_to_day_description">Add %1$s to your workout diary</string>
+    <string name="coach_proposal_dismiss_description">Dismiss the suggestion for %1$s</string>
+    <string name="coach_proposal_name_taken">An exercise with this name is already in your library.</string>
 
     <string name="coach_chip_predict_30_days">What\'s my expected weight in 30 days?</string>
     <string name="coach_chip_lose_faster">How do I lose weight faster safely?</string>

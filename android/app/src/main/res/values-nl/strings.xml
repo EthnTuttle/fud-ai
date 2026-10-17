@@ -459,7 +459,7 @@
     <string name="coach_proposal_custom_title">Nieuwe eigen oefening</string>
     <string name="coach_proposal_add_title">Toevoegen aan training</string>
     <string name="coach_proposal_add">Voeg toe</string>
-    <string name="coach_proposal_dismiss">Sluit</string>
+    <string name="coach_proposal_dismiss">Negeer</string>
     <string name="coach_proposal_added">Toegevoegd</string>
     <string name="coach_proposal_dismissed">Genegeerd</string>
     <string name="coach_proposal_category">Categorie: %1$s</string>
@@ -472,6 +472,10 @@
     <string name="coach_proposal_duration">Duur: %1$d min</string>
     <string name="coach_proposal_exercise_missing">Deze oefening staat niet meer in je bibliotheek.</string>
     <string name="coach_proposal_save_failed">Deze wijziging kon niet worden opgeslagen. Probeer het opnieuw.</string>
+    <string name="coach_proposal_add_custom_description">%1$s toevoegen aan je oefeningenbibliotheek</string>
+    <string name="coach_proposal_add_to_day_description">%1$s toevoegen aan je trainingsdagboek</string>
+    <string name="coach_proposal_dismiss_description">Suggestie voor %1$s negeren</string>
+    <string name="coach_proposal_name_taken">Er staat al een oefening met deze naam in je bibliotheek.</string>
 
     <string name="coach_chip_predict_30_days">Wat is mijn verwachte gewicht over 30 dagen?</string>
     <string name="coach_chip_lose_faster">Hoe val ik veilig sneller af?</string>

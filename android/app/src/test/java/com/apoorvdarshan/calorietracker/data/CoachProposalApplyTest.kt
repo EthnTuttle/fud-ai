@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.data
 import com.apoorvdarshan.calorietracker.models.ChatMessage
 import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
+import com.apoorvdarshan.calorietracker.models.UserExerciseDraft
 import com.apoorvdarshan.calorietracker.models.WorkoutPersistedState
 import com.apoorvdarshan.calorietracker.models.resolvingProposal
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
@@ -13,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -123,6 +125,41 @@ class CoachProposalApplyTest {
         assertEquals(listOf("Middle Back"), saved.primaryMuscles)
         assertEquals(listOf("Biceps"), saved.secondaryMuscles)
         assertEquals(listOf("Pull."), saved.instructions)
+    }
+
+    @Test
+    fun aCustomExerciseNameSavedWhileTheCardWaitedIsRefused() = runBlocking {
+        val repository = WorkoutRepository(MemoryStore())
+        // Each reply proposes against the library as it was, so two cards can share a name.
+        val row = mapOf("name" to "Iso-Lateral Row", "primary_muscles" to listOf("middle back"))
+        val earlier = propose("propose_custom_exercise", row)
+        val later = propose("propose_custom_exercise", row)
+        assertNotEquals(earlier.itemId, later.itemId)
+
+        assertEquals(CoachProposalApplier.Outcome.APPLIED, CoachProposalApplier.apply(later, repository, imageStore, library))
+        assertEquals(CoachProposalApplier.Outcome.NAME_TAKEN, CoachProposalApplier.apply(earlier, repository, imageStore, library))
+        // The card that saved still retries as a no-op.
+        assertEquals(CoachProposalApplier.Outcome.APPLIED, CoachProposalApplier.apply(later, repository, imageStore, library))
+        assertEquals(listOf(later.itemId), repository.snapshot().userExercises.map { it.itemId })
+
+        // An exercise the user made by hand, in another letter case, also blocks a waiting card,
+        // and that card stays pending so the user can still dismiss it.
+        val waiting = propose("propose_custom_exercise", mapOf("name" to "Cable Pullover", "primary_muscles" to listOf("lats")))
+        repository.saveUserExercise(UserExerciseDraft(name = " cable pullover", primaryMuscles = listOf("Lats")), imageStore)
+        val message = ChatMessage(role = ChatMessage.Role.ASSISTANT, content = "Try this.", proposals = listOf(waiting))
+        assertNull(
+            listOf(message).resolvingProposal(message.id, waiting.id, CoachExerciseProposal.Status.ADDED) {
+                CoachProposalApplier.apply(it, repository, imageStore, library) == CoachProposalApplier.Outcome.APPLIED
+            }
+        )
+        assertEquals(2, repository.snapshot().userExercises.size)
+        assertTrue(repository.snapshot().userExercises.none { it.itemId == waiting.itemId })
+
+        // So does a catalog exercise that reached the library after the card was made.
+        val squat = propose("propose_custom_exercise", mapOf("name" to "Hack Squat", "primary_muscles" to listOf("quadriceps")))
+        val updatedCatalog = library + item("Hack_Squat", "Hack Squat", "Strength", listOf("Quadriceps"))
+        assertEquals(CoachProposalApplier.Outcome.NAME_TAKEN, CoachProposalApplier.apply(squat, repository, imageStore, updatedCatalog))
+        assertEquals(2, repository.snapshot().userExercises.size)
     }
 
     @Test

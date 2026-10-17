@@ -281,6 +281,46 @@ struct CoachExerciseProposalTests {
         }
     }
 
+    @Test func aCustomExerciseNameSavedWhileTheCardWaitedIsRefused() throws {
+        try ProposalFixture.withStore { store, defaults in
+            // Each reply proposes against the library as it was, so two cards can share a name.
+            @MainActor func propose(_ name: String) throws -> CoachExerciseProposal {
+                let collector = CoachExerciseProposalCollector()
+                _ = ProposalFixture.tools(collector, library: store.exerciseLibrary.exercises).execute(
+                    name: "propose_custom_exercise", arguments: ["name": name, "primary_muscles": ["middle back"]]
+                )
+                return try #require(collector.proposals.first)
+            }
+            let earlier = try propose("Iso-Lateral Row")
+            let later = try propose("Iso-Lateral Row")
+            #expect(earlier.itemID != later.itemID)
+
+            try CoachExerciseProposalApplier.apply(later, to: store)
+            #expect(throws: CoachExerciseProposalApplier.ApplyError.nameTaken) {
+                try CoachExerciseProposalApplier.apply(earlier, to: store)
+            }
+            // The card that saved still retries as a no-op.
+            try CoachExerciseProposalApplier.apply(later, to: store)
+            #expect(store.userExercises.count == 1)
+
+            // An exercise the user made by hand, in another letter case, also blocks a waiting
+            // card, and that card stays pending so the user can still dismiss it.
+            let waiting = try propose("Cable Pullover")
+            #expect(store.saveUserExercise(UserExerciseDraft(name: " cable pullover", primaryMuscles: ["Lats"])) != nil)
+            let chatStore = ChatStore(defaults: defaults)
+            let message = ChatMessage(role: .assistant, content: "Try this.", exerciseProposals: [waiting])
+            chatStore.append(message)
+            #expect(throws: CoachExerciseProposalApplier.ApplyError.nameTaken) {
+                try chatStore.addExerciseProposal(waiting.id, in: message.id) { pending in
+                    try CoachExerciseProposalApplier.apply(pending, to: store)
+                }
+            }
+            #expect(chatStore.exerciseProposal(waiting.id, in: message.id)?.status == .pending)
+            #expect(store.userExercises.count == 2)
+            #expect(store.userExerciseTemplate(for: waiting.itemID) == nil)
+        }
+    }
+
     @Test func applyingAProposalForADeletedExerciseFailsWithoutWriting() throws {
         try ProposalFixture.withStore { store, _ in
             let collector = CoachExerciseProposalCollector()

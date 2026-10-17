@@ -16,9 +16,12 @@ import java.util.UUID
  * Mirrors iOS CoachExerciseProposalApplier.
  */
 object CoachProposalApplier {
-    enum class Outcome { APPLIED, EXERCISE_MISSING, SAVE_FAILED }
+    enum class Outcome { APPLIED, EXERCISE_MISSING, NAME_TAKEN, SAVE_FAILED }
 
-    /** [library] is the merged catalog and custom exercises an add-to-day proposal is looked up in. */
+    /**
+     * [library] is the merged catalog and custom exercises: an add-to-day proposal is looked up in
+     * it, and a custom exercise is refused when its name is already there.
+     */
     suspend fun apply(
         proposal: CoachExerciseProposal,
         workouts: WorkoutRepository,
@@ -26,18 +29,27 @@ object CoachProposalApplier {
         library: List<ExerciseItem>
     ): Outcome = when (proposal.kind) {
         CoachExerciseProposal.Kind.CUSTOM_EXERCISE -> {
-            if (workouts.snapshot().userExercises.any { it.itemId == proposal.itemId }) {
-                Outcome.APPLIED
-            } else {
-                val draft = UserExerciseDraft(
-                    name = proposal.name,
-                    instructions = proposal.instructions.joinToString("\n"),
-                    category = proposal.category ?: "Strength",
-                    equipment = proposal.equipment ?: "Unspecified",
-                    primaryMuscles = proposal.primaryMuscles,
-                    secondaryMuscles = proposal.secondaryMuscles
-                )
-                if (workouts.saveUserExercise(draft, imageStore, proposal.itemId) != null) Outcome.APPLIED else Outcome.SAVE_FAILED
+            val state = workouts.snapshot()
+            when {
+                // Already saved under the card's own id, so a repeated Add is a no-op.
+                state.userExercises.any { it.itemId == proposal.itemId } -> Outcome.APPLIED
+                // The name was free when Coach proposed it, but another card or the user may have
+                // saved it while this card waited.
+                nameTaken(
+                    proposal.name,
+                    library.map { it.name } + (state.userExercises + state.customActivities).map { it.name }
+                ) -> Outcome.NAME_TAKEN
+                else -> {
+                    val draft = UserExerciseDraft(
+                        name = proposal.name,
+                        instructions = proposal.instructions.joinToString("\n"),
+                        category = proposal.category ?: "Strength",
+                        equipment = proposal.equipment ?: "Unspecified",
+                        primaryMuscles = proposal.primaryMuscles,
+                        secondaryMuscles = proposal.secondaryMuscles
+                    )
+                    if (workouts.saveUserExercise(draft, imageStore, proposal.itemId) != null) Outcome.APPLIED else Outcome.SAVE_FAILED
+                }
             }
         }
         CoachExerciseProposal.Kind.ADD_TO_DAY -> {
@@ -53,6 +65,12 @@ object CoachProposalApplier {
                 }
             }
         }
+    }
+
+    /** The same case-insensitive match CoachTools uses when the proposal is made. */
+    private fun nameTaken(name: String, names: List<String>): Boolean {
+        val wanted = name.trim()
+        return names.any { it.trim().equals(wanted, ignoreCase = true) }
     }
 
     /**

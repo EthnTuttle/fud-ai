@@ -416,7 +416,7 @@
     <string name="coach_proposal_custom_title">Nový vlastní cvik</string>
     <string name="coach_proposal_add_title">Přidat do tréninku</string>
     <string name="coach_proposal_add">Přidat</string>
-    <string name="coach_proposal_dismiss">Zavřít</string>
+    <string name="coach_proposal_dismiss">Zamítnout</string>
     <string name="coach_proposal_added">Přidáno</string>
     <string name="coach_proposal_dismissed">Zamítnuto</string>
     <string name="coach_proposal_category">Kategorie: %1$s</string>
@@ -429,6 +429,10 @@
     <string name="coach_proposal_duration">Doba trvání: %1$d min</string>
     <string name="coach_proposal_exercise_missing">Tento cvik už ve tvé knihovně není.</string>
     <string name="coach_proposal_save_failed">Změnu se nepodařilo uložit. Zkus to znovu.</string>
+    <string name="coach_proposal_add_custom_description">Přidat %1$s do knihovny cviků</string>
+    <string name="coach_proposal_add_to_day_description">Přidat %1$s do deníku tréninků</string>
+    <string name="coach_proposal_dismiss_description">Zamítnout návrh: %1$s</string>
+    <string name="coach_proposal_name_taken">Cvik s tímto názvem už ve tvé knihovně je.</string>
 
     <string name="coach_chip_predict_30_days">Jaká bude moje váha za 30 dní?</string>
     <string name="coach_chip_lose_faster">Jak zhubnout rychleji a bezpečně?</string>

@@ -459,7 +459,7 @@
     <string name="coach_proposal_custom_title">Neue eigene Übung</string>
     <string name="coach_proposal_add_title">Zum Training hinzufügen</string>
     <string name="coach_proposal_add">Hinzufügen</string>
-    <string name="coach_proposal_dismiss">Ausblenden</string>
+    <string name="coach_proposal_dismiss">Verwerfen</string>
     <string name="coach_proposal_added">Hinzugefügt</string>
     <string name="coach_proposal_dismissed">Verworfen</string>
     <string name="coach_proposal_category">Kategorie: %1$s</string>
@@ -472,6 +472,10 @@
     <string name="coach_proposal_duration">Dauer: %1$d Min.</string>
     <string name="coach_proposal_exercise_missing">Diese Übung ist nicht mehr in deiner Bibliothek.</string>
     <string name="coach_proposal_save_failed">Die Änderung konnte nicht gespeichert werden. Versuch es noch einmal.</string>
+    <string name="coach_proposal_add_custom_description">%1$s zu deiner Übungsbibliothek hinzufügen</string>
+    <string name="coach_proposal_add_to_day_description">%1$s zu deinem Trainingstagebuch hinzufügen</string>
+    <string name="coach_proposal_dismiss_description">Vorschlag für %1$s verwerfen</string>
+    <string name="coach_proposal_name_taken">Eine Übung mit diesem Namen ist bereits in deiner Bibliothek.</string>
 
     <string name="coach_chip_predict_30_days">Wie viel werde ich in 30 Tagen wiegen?</string>
     <string name="coach_chip_lose_faster">Wie nehme ich schneller und sicher ab?</string>

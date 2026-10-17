@@ -462,7 +462,7 @@
     <string name="coach_proposal_custom_title">Новое своё упражнение</string>
     <string name="coach_proposal_add_title">Добавить в тренировку</string>
     <string name="coach_proposal_add">Добавить</string>
-    <string name="coach_proposal_dismiss">Скрыть</string>
+    <string name="coach_proposal_dismiss">Отклонить</string>
     <string name="coach_proposal_added">Добавлено</string>
     <string name="coach_proposal_dismissed">Отклонено</string>
     <string name="coach_proposal_category">Категория: %1$s</string>
@@ -475,6 +475,10 @@
     <string name="coach_proposal_duration">Длительность: %1$d мин</string>
     <string name="coach_proposal_exercise_missing">Этого упражнения больше нет в вашей библиотеке.</string>
     <string name="coach_proposal_save_failed">Не удалось сохранить изменение. Попробуйте ещё раз.</string>
+    <string name="coach_proposal_add_custom_description">Добавить %1$s в библиотеку упражнений</string>
+    <string name="coach_proposal_add_to_day_description">Добавить %1$s в дневник тренировок</string>
+    <string name="coach_proposal_dismiss_description">Отклонить предложение: %1$s</string>
+    <string name="coach_proposal_name_taken">Упражнение с таким названием уже есть в вашей библиотеке.</string>
 
     <string name="coach_chip_predict_30_days">Какой у меня будет вес через 30 дней?</string>
     <string name="coach_chip_lose_faster">Как безопасно похудеть быстрее?</string>

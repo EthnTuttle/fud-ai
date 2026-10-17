@@ -520,7 +520,7 @@
     <string name="coach_proposal_custom_title">Yeni özel egzersiz</string>
     <string name="coach_proposal_add_title">Antrenmana ekle</string>
     <string name="coach_proposal_add">Ekle</string>
-    <string name="coach_proposal_dismiss">Kapat</string>
+    <string name="coach_proposal_dismiss">Reddet</string>
     <string name="coach_proposal_added">Eklendi</string>
     <string name="coach_proposal_dismissed">Reddedildi</string>
     <string name="coach_proposal_category">Kategori: %1$s</string>
@@ -533,6 +533,10 @@
     <string name="coach_proposal_duration">Süre: %1$d dk</string>
     <string name="coach_proposal_exercise_missing">Bu egzersiz artık kitaplığınızda yok.</string>
     <string name="coach_proposal_save_failed">Bu değişiklik kaydedilemedi. Tekrar deneyin.</string>
+    <string name="coach_proposal_add_custom_description">%1$s egzersiz kitaplığınıza ekleyin</string>
+    <string name="coach_proposal_add_to_day_description">%1$s antrenman günlüğünüze ekleyin</string>
+    <string name="coach_proposal_dismiss_description">%1$s önerisini reddet</string>
+    <string name="coach_proposal_name_taken">Bu adda bir egzersiz zaten kitaplığınızda var.</string>
 
     <string name="coach_chip_predict_30_days">30 gün içindeki beklenen kilom ne olacak?</string>
     <string name="coach_chip_lose_faster">Nasıl daha hızlı ve güvenli kilo verebilirim?</string>

@@ -465,7 +465,7 @@
     <string name="coach_proposal_custom_title">Nowe własne ćwiczenie</string>
     <string name="coach_proposal_add_title">Dodaj do treningu</string>
     <string name="coach_proposal_add">Dodaj</string>
-    <string name="coach_proposal_dismiss">Zamknij</string>
+    <string name="coach_proposal_dismiss">Odrzuć</string>
     <string name="coach_proposal_added">Dodany</string>
     <string name="coach_proposal_dismissed">Odrzucono</string>
     <string name="coach_proposal_category">Kategoria: %1$s</string>
@@ -478,6 +478,10 @@
     <string name="coach_proposal_duration">Czas trwania: %1$d min</string>
     <string name="coach_proposal_exercise_missing">Tego ćwiczenia nie ma już w Twojej bibliotece.</string>
     <string name="coach_proposal_save_failed">Nie udało się zapisać tej zmiany. Spróbuj ponownie.</string>
+    <string name="coach_proposal_add_custom_description">Dodaj %1$s do biblioteki ćwiczeń</string>
+    <string name="coach_proposal_add_to_day_description">Dodaj %1$s do dziennika treningów</string>
+    <string name="coach_proposal_dismiss_description">Odrzuć sugestię: %1$s</string>
+    <string name="coach_proposal_name_taken">Ćwiczenie o tej nazwie jest już w Twojej bibliotece.</string>
 
     <string name="coach_chip_predict_30_days">Jaka będzie moja przewidywana waga za 30 dni?</string>
     <string name="coach_chip_lose_faster">Jak bezpiecznie szybciej schudnąć?</string>

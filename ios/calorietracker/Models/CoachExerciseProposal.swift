@@ -117,6 +117,7 @@ final class CoachExerciseProposalCollector {
 enum CoachExerciseProposalApplier {
     enum ApplyError: LocalizedError, Equatable {
         case exerciseMissing
+        case nameTaken
         case saveFailed
 
         var errorDescription: String? {
@@ -125,6 +126,11 @@ enum CoachExerciseProposalApplier {
                 return String(
                     localized: "This exercise is no longer in your library.",
                     comment: "Coach chat error when the user taps Add on a suggested workout entry whose exercise was deleted."
+                )
+            case .nameTaken:
+                return String(
+                    localized: "An exercise with this name is already in your library.",
+                    comment: "Coach chat error when the user taps Add on a suggested custom exercise whose name was saved to the library after Coach suggested it."
                 )
             case .saveFailed:
                 return String(
@@ -138,7 +144,14 @@ enum CoachExerciseProposalApplier {
     static func apply(_ proposal: CoachExerciseProposal, to store: StrengthWorkoutStore) throws {
         switch proposal.kind {
         case .customExercise:
+            // Already saved under the card's own id, so a repeated Add is a no-op.
             guard store.userExerciseTemplate(for: proposal.itemID) == nil else { return }
+            // The name was free when Coach proposed it, but another card or the user may have
+            // saved it while this card waited. Same match CoachTools uses when proposing.
+            let name = proposal.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !store.exerciseLibrary.exercises.contains(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(name) == .orderedSame
+            }) else { throw ApplyError.nameTaken }
             let draft = UserExerciseDraft(
                 name: proposal.name,
                 instructions: proposal.instructions.joined(separator: "\n"),

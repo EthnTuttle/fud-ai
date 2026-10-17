@@ -117,6 +117,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder
 import com.apoorvdarshan.calorietracker.R
 import androidx.compose.ui.unit.Dp
@@ -763,16 +765,28 @@ private fun ProposalCard(
         Spacer(Modifier.height(4.dp))
         when (proposal.status) {
             CoachExerciseProposal.Status.PENDING -> Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // TalkBack hears which exercise each card's button acts on, not just "Add".
+                val addDescription = stringResource(
+                    if (isCustom) R.string.coach_proposal_add_custom_description else R.string.coach_proposal_add_to_day_description,
+                    proposal.name
+                )
+                val dismissDescription = stringResource(R.string.coach_proposal_dismiss_description, proposal.name)
                 Button(
                     onClick = onAdd,
                     enabled = !busy,
                     colors = ButtonDefaults.buttonColors(containerColor = AppColors.Calorie, contentColor = Color.White),
-                    modifier = Modifier.weight(1f).heightIn(min = 44.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp)
+                        .semantics { contentDescription = addDescription }
                 ) { Text(stringResource(R.string.coach_proposal_add), fontWeight = FontWeight.SemiBold) }
                 OutlinedButton(
                     onClick = onDismiss,
                     enabled = !busy,
-                    modifier = Modifier.weight(1f).heightIn(min = 44.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp)
+                        .semantics { contentDescription = dismissDescription }
                 ) { Text(stringResource(R.string.coach_proposal_dismiss), fontWeight = FontWeight.SemiBold) }
             }
             CoachExerciseProposal.Status.ADDED -> ProposalOutcome(

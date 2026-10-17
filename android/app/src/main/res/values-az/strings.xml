@@ -459,7 +459,7 @@
     <string name="coach_proposal_custom_title">Yeni fərdi məşq</string>
     <string name="coach_proposal_add_title">Məşqə əlavə et</string>
     <string name="coach_proposal_add">Əlavə et</string>
-    <string name="coach_proposal_dismiss">Bağla</string>
+    <string name="coach_proposal_dismiss">Rədd et</string>
     <string name="coach_proposal_added">Əlavə edildi</string>
     <string name="coach_proposal_dismissed">Rədd edildi</string>
     <string name="coach_proposal_category">Kateqoriya: %1$s</string>
@@ -472,6 +472,10 @@
     <string name="coach_proposal_duration">Müddət: %1$d dəq</string>
     <string name="coach_proposal_exercise_missing">Bu məşq artıq kitabxananızda deyil.</string>
     <string name="coach_proposal_save_failed">Bu dəyişiklik yadda saxlanmadı. Yenidən cəhd edin.</string>
+    <string name="coach_proposal_add_custom_description">%1$s məşq kitabxananıza əlavə edin</string>
+    <string name="coach_proposal_add_to_day_description">%1$s məşq gündəliyinizə əlavə edin</string>
+    <string name="coach_proposal_dismiss_description">%1$s təklifini rədd edin</string>
+    <string name="coach_proposal_name_taken">Bu adda məşq artıq kitabxananızda var.</string>
 
     <string name="coach_chip_predict_30_days">30 gün sonra gözlənilən çəkim nə qədər olacaq?</string>
     <string name="coach_chip_lose_faster">Təhlükəsiz şəkildə necə daha tez arıqlaya bilərəm?</string>

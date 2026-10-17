@@ -9,7 +9,6 @@ import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.ExerciseItem
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.models.ChatMessage
-import com.apoorvdarshan.calorietracker.models.CoachExerciseProposal
 import com.apoorvdarshan.calorietracker.models.CoachProposalCollector
 import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
@@ -178,11 +177,14 @@ class CoachViewModel(private val container: AppContainer) : ViewModel() {
     fun addProposal(messageId: UUID, proposalId: String) = resolveProposal(proposalId) {
         var failure: Int? = null
         container.chatRepository.addProposal(messageId, proposalId) { proposal ->
-            val library = if (proposal.kind == CoachExerciseProposal.Kind.ADD_TO_DAY) currentExerciseLibrary() else emptyList()
-            when (CoachProposalApplier.apply(proposal, container.workoutRepository, container.imageStore, library)) {
+            when (CoachProposalApplier.apply(proposal, container.workoutRepository, container.imageStore, currentExerciseLibrary())) {
                 CoachProposalApplier.Outcome.APPLIED -> true
                 CoachProposalApplier.Outcome.EXERCISE_MISSING -> {
                     failure = R.string.coach_proposal_exercise_missing
+                    false
+                }
+                CoachProposalApplier.Outcome.NAME_TAKEN -> {
+                    failure = R.string.coach_proposal_name_taken
                     false
                 }
                 CoachProposalApplier.Outcome.SAVE_FAILED -> {
