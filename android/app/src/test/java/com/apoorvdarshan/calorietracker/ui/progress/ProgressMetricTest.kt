@@ -23,6 +23,31 @@ class ProgressMetricTest {
     }
 
     @Test
+    fun stepsMetricOnlyAppearsWithHealthConnectAndComesLast() {
+        assertEquals(
+            listOf(
+                ProgressMetric.WEIGHT,
+                ProgressMetric.BODY_FAT,
+                ProgressMetric.WORKOUTS,
+                ProgressMetric.STEPS
+            ),
+            availableProgressMetrics(
+                bodyFatAvailable = true,
+                workoutHistoryAvailable = true,
+                stepsAvailable = true
+            )
+        )
+        assertEquals(
+            listOf(ProgressMetric.WEIGHT, ProgressMetric.STEPS),
+            availableProgressMetrics(
+                bodyFatAvailable = false,
+                workoutHistoryAvailable = false,
+                stepsAvailable = true
+            )
+        )
+    }
+
+    @Test
     fun progressStatsSwitchToTwoRowsAtAccessibilityFontScale() {
         assertFalse(shouldUseTwoRowProgressStats(1.0f))
         assertFalse(shouldUseTwoRowProgressStats(1.19f))

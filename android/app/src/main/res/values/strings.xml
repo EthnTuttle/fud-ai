@@ -269,6 +269,7 @@
     <string name="progress_metric_weight">Weight</string>
     <string name="progress_metric_body_fat">Body Fat</string>
     <string name="progress_metric_workouts">Workouts</string>
+    <string name="progress_metric_steps">Steps</string>
     <string name="progress_log_body_fat">Log Body Fat</string>
     <string name="progress_log_first_body_fat">Log your first body fat % to see trends</string>
     <string name="progress_log_body_fat_title">Log Body Fat</string>
@@ -547,6 +548,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1Y</string>
     <string name="progress_range_all">All</string>
+    <string name="progress_previous_period">Previous period</string>
+    <string name="progress_next_period">Next period</string>
 
     <string name="progress_weight_section">Weight</string>
     <string name="progress_log_weight">Log Weight</string>
@@ -578,8 +581,18 @@
     <string name="progress_workout_stat_days">Days</string>
     <string name="progress_workout_no_range">No calculated workout burns in this range</string>
     <string name="progress_workout_chart_description">Workout burn chart from %1$s to %2$s. Total %3$d kilocalories; latest %4$d kilocalories.</string>
+    <string name="progress_steps_stat_total">Total</string>
+    <string name="progress_steps_stat_average">Average</string>
+    <string name="progress_steps_stat_best_day">Best day</string>
+    <string name="progress_steps_no_range">No step data in this range</string>
+    <string name="progress_steps_footnote">Daily step totals from Health Connect.</string>
+    <string name="progress_steps_weekly_note">Bars show the average daily steps for each week.</string>
+    <string name="progress_steps_history_note">Health Connect only shares steps from about 30 days before you connected Fud AI, so older days may be missing.</string>
+    <string name="progress_steps_chart_description">Step chart from %1$s to %2$s. Total %3$s steps; best day %4$s steps.</string>
 
     <string name="progress_calories_section">Calories</string>
+    <string name="progress_include_today">Include today</string>
+    <string name="progress_include_today_caption">Calorie chart and nutrition averages</string>
     <string name="progress_avg_format">Avg: %1$,d kcal</string>
     <string name="progress_no_food">No food logged yet</string>
 

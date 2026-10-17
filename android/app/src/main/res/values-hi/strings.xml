@@ -477,6 +477,8 @@
     <string name="progress_range_6m">6म</string>
     <string name="progress_range_year">1व</string>
     <string name="progress_range_all">सभी</string>
+    <string name="progress_previous_period">पिछली अवधि</string>
+    <string name="progress_next_period">अगली अवधि</string>
 
     <string name="progress_weight_section">वज़न</string>
     <string name="progress_log_weight">वज़न लॉग करें</string>
@@ -492,6 +494,8 @@
     </plurals>
 
     <string name="progress_calories_section">कैलोरी</string>
+    <string name="progress_include_today">आज शामिल करें</string>
+    <string name="progress_include_today_caption">कैलोरी चार्ट और पोषण औसत</string>
     <string name="progress_avg_format">औसत: %1$,d kcal</string>
     <string name="progress_no_food">अभी तक कोई भोजन लॉग नहीं किया गया</string>
 
@@ -694,6 +698,7 @@
     <string name="progress_metric_weight">वज़न</string>
     <string name="progress_metric_body_fat">बॉडी फैट</string>
     <string name="progress_metric_workouts">वर्कआउट</string>
+    <string name="progress_metric_steps">कदम</string>
     <string name="progress_workout_history">वर्कआउट इतिहास</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d गणना किया गया बर्न · देखने या हटाने के लिए टैप करें</item>
@@ -709,6 +714,14 @@
     <string name="progress_workout_stat_days">दिन</string>
     <string name="progress_workout_no_range">इस अवधि में कोई गणना किया गया वर्कआउट बर्न नहीं है</string>
     <string name="progress_workout_chart_description">%1$s से %2$s तक वर्कआउट बर्न चार्ट। कुल %3$d किलोकैलोरी; नवीनतम %4$d किलोकैलोरी।</string>
+    <string name="progress_steps_stat_total">कुल</string>
+    <string name="progress_steps_stat_average">औसत</string>
+    <string name="progress_steps_stat_best_day">सबसे अच्छा दिन</string>
+    <string name="progress_steps_no_range">इस अवधि में कदमों का कोई डेटा नहीं है</string>
+    <string name="progress_steps_footnote">Health Connect से रोज़ के कुल कदम।</string>
+    <string name="progress_steps_weekly_note">बार हर हफ़्ते के औसत दैनिक कदम दिखाते हैं।</string>
+    <string name="progress_steps_history_note">Health Connect, Fud AI कनेक्ट करने से लगभग 30 दिन पहले से ही कदम साझा करता है, इसलिए पुराने दिन गायब हो सकते हैं।</string>
+    <string name="progress_steps_chart_description">%1$s से %2$s तक का कदम चार्ट। कुल %3$s कदम; सबसे अच्छा दिन %4$s कदम।</string>
     <string name="progress_log_body_fat">बॉडी फैट दर्ज करें</string>
     <string name="progress_log_first_body_fat">रुझान देखने के लिए अपना पहला बॉडी फैट % दर्ज करें</string>
     <string name="progress_log_body_fat_title">बॉडी फैट दर्ज करें</string>

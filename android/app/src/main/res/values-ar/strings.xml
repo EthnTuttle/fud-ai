@@ -485,6 +485,8 @@
     <string name="progress_range_6m">6ش</string>
     <string name="progress_range_year">1س</string>
     <string name="progress_range_all">الكل</string>
+    <string name="progress_previous_period">الفترة السابقة</string>
+    <string name="progress_next_period">الفترة التالية</string>
 
     <string name="progress_weight_section">الوزن</string>
     <string name="progress_log_weight">تسجيل الوزن</string>
@@ -504,6 +506,8 @@
     </plurals>
 
     <string name="progress_calories_section">السعرات الحرارية</string>
+    <string name="progress_include_today">تضمين اليوم</string>
+    <string name="progress_include_today_caption">مخطط السعرات ومتوسطات التغذية</string>
     <string name="progress_avg_format">المتوسط: %1$,d kcal</string>
     <string name="progress_no_food">لم يتم تسجيل أي طعام بعد</string>
 
@@ -706,6 +710,7 @@
     <string name="progress_metric_weight">الوزن</string>
     <string name="progress_metric_body_fat">نسبة الدهون</string>
     <string name="progress_metric_workouts">التمارين</string>
+    <string name="progress_metric_steps">الخطوات</string>
     <string name="progress_workout_history">سجل التمارين</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="zero">%1$d عملية حرق محسوبة · اضغط للعرض أو الحذف</item>
@@ -725,6 +730,14 @@
     <string name="progress_workout_stat_days">أيام</string>
     <string name="progress_workout_no_range">لا توجد عمليات حرق تمارين محسوبة في هذه الفترة</string>
     <string name="progress_workout_chart_description">مخطط حرق التمارين من %1$s إلى %2$s. الإجمالي %3$d سعرة حرارية؛ الأحدث %4$d سعرة حرارية.</string>
+    <string name="progress_steps_stat_total">الإجمالي</string>
+    <string name="progress_steps_stat_average">المتوسط</string>
+    <string name="progress_steps_stat_best_day">أفضل يوم</string>
+    <string name="progress_steps_no_range">لا توجد بيانات خطوات في هذه الفترة</string>
+    <string name="progress_steps_footnote">إجمالي الخطوات اليومية من Health Connect.</string>
+    <string name="progress_steps_weekly_note">تعرض الأعمدة متوسط الخطوات اليومية لكل أسبوع.</string>
+    <string name="progress_steps_history_note">يشارك Health Connect الخطوات بدءًا من نحو 30 يومًا قبل ربط Fud AI فقط، لذا قد تكون الأيام الأقدم مفقودة.</string>
+    <string name="progress_steps_chart_description">مخطط الخطوات من %1$s إلى %2$s. الإجمالي %3$s خطوة؛ أفضل يوم %4$s خطوة.</string>
     <string name="progress_log_body_fat">تسجيل نسبة الدهون</string>
     <string name="progress_log_first_body_fat">سجّل أول قياس لنسبة الدهون لرؤية الاتجاهات</string>
     <string name="progress_log_body_fat_title">تسجيل نسبة الدهون</string>

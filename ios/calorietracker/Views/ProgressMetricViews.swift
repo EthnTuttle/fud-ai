@@ -11,6 +11,7 @@ enum ProgressMetric: String, CaseIterable, Identifiable, Equatable {
     case weight
     case bodyFat
     case workouts
+    case steps
 
     var id: String { rawValue }
 
@@ -19,6 +20,7 @@ enum ProgressMetric: String, CaseIterable, Identifiable, Equatable {
         case .weight: String(localized: "Weight")
         case .bodyFat: String(localized: "Body Fat")
         case .workouts: String(localized: "Workouts")
+        case .steps: String(localized: "Steps")
         }
     }
 
@@ -27,17 +29,20 @@ enum ProgressMetric: String, CaseIterable, Identifiable, Equatable {
         case .weight: "scalemass.fill"
         case .bodyFat: "percent"
         case .workouts: "dumbbell.fill"
+        case .steps: "figure.walk"
         }
     }
 
     static func available(
         bodyFatAvailable: Bool,
         workoutBurnAvailable: Bool,
-        importedWorkoutsAvailable: Bool = false
+        importedWorkoutsAvailable: Bool = false,
+        stepsAvailable: Bool = false
     ) -> [ProgressMetric] {
         var metrics: [ProgressMetric] = [.weight]
         if bodyFatAvailable { metrics.append(.bodyFat) }
         if workoutBurnAvailable || importedWorkoutsAvailable { metrics.append(.workouts) }
+        if stepsAvailable { metrics.append(.steps) }
         return metrics
     }
 }
@@ -392,6 +397,153 @@ struct ImportedHealthWorkoutChartSection: View {
         StatBadge(label: "Calories", value: "\(totalCalories.formatted()) kcal")
         StatBadge(label: "Average", value: "\(averageCalories.formatted()) kcal")
         StatBadge(label: "Days", value: days.count.formatted())
+    }
+}
+
+struct StepDay: Identifiable, Equatable {
+    let date: Date
+    let steps: Int
+    var id: Date { date }
+}
+
+enum StepsAggregation {
+    /// Longer ranges chart one bar per week so 6M / 1Y / All stay readable.
+    static let dailyBarLimit = 90
+
+    struct Summary: Equatable {
+        let total: Int
+        let average: Int
+        let best: StepDay?
+    }
+
+    /// Total, mean over the days Health has steps for (a day without data
+    /// would otherwise read as a zero-step day), and the best single day.
+    static func summary(_ days: [StepDay]) -> Summary {
+        let total = days.reduce(0) { $0 + $1.steps }
+        let average = days.isEmpty ? 0 : Int((Double(total) / Double(days.count)).rounded())
+        return Summary(total: total, average: average, best: days.max { $0.steps < $1.steps })
+    }
+
+    /// Daily bars, or each calendar week's average daily steps when `weekly`
+    /// (dated at the week's first day), oldest first.
+    static func chartBars(_ days: [StepDay], weekly: Bool, calendar: Calendar = .current) -> [StepDay] {
+        guard weekly else { return days.sorted { $0.date < $1.date } }
+        var weeks: [Date: (total: Int, count: Int)] = [:]
+        for day in days {
+            let week = calendar.dateInterval(of: .weekOfYear, for: day.date)?.start ?? day.date
+            var bucket = weeks[week] ?? (0, 0)
+            bucket.total += day.steps
+            bucket.count += 1
+            weeks[week] = bucket
+        }
+        return weeks.keys.sorted().map { week in
+            let bucket = weeks[week]!
+            return StepDay(date: week, steps: Int((Double(bucket.total) / Double(bucket.count)).rounded()))
+        }
+    }
+}
+
+struct StepsChartSection: View {
+    /// nil while Apple Health is still answering.
+    let days: [StepDay]?
+    let dateRange: ClosedRange<Date>
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var showsWeeklyBars: Bool {
+        let span = Calendar.current.dateComponents([.day], from: dateRange.lowerBound, to: dateRange.upperBound).day ?? 0
+        return span + 1 > StepsAggregation.dailyBarLimit
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Steps", systemImage: "figure.walk")
+                .font(.system(.headline, design: .rounded, weight: .semibold))
+
+            if let days {
+                if days.isEmpty {
+                    ProgressMetricEmptyState("No step data in this range")
+                } else {
+                    stepStatBadges(StepsAggregation.summary(days))
+                    stepsChart(StepsAggregation.chartBars(days, weekly: showsWeeklyBars))
+                    if showsWeeklyBars {
+                        Text("Bars show the average daily steps for each week.")
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else {
+                ProgressView()
+                    .tint(AppColors.calorie)
+                    .frame(maxWidth: .infinity, minHeight: 80)
+            }
+
+            Text("Daily step totals from Apple Health.")
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .progressMetricCardStyle()
+    }
+
+    private func stepsChart(_ bars: [StepDay]) -> some View {
+        Chart(bars) { bar in
+            BarMark(
+                x: .value("Date", bar.date, unit: showsWeeklyBars ? .weekOfYear : .day),
+                y: .value("Steps", bar.steps)
+            )
+            .foregroundStyle(
+                LinearGradient(
+                    colors: AppColors.calorieGradient,
+                    startPoint: .bottom,
+                    endPoint: .top
+                )
+            )
+            .clipShape(.rect(cornerRadius: 4))
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.6, dash: [3, 4]))
+                    .foregroundStyle(Color.primary.opacity(0.11))
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .trailing, values: .automatic(desiredCount: 5)) {
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.6))
+                    .foregroundStyle(Color.primary.opacity(0.10))
+                AxisValueLabel()
+                    .foregroundStyle(Color.secondary)
+            }
+        }
+        .chartPlotStyle { plotArea in
+            plotArea.background(
+                AppColors.calorie.opacity(0.025),
+                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+            )
+        }
+        .frame(height: 190)
+    }
+
+    @ViewBuilder
+    private func stepStatBadges(_ summary: StepsAggregation.Summary) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(spacing: 8) {
+                stepStatBadgeContent(summary)
+            }
+        } else {
+            HStack(spacing: 8) {
+                stepStatBadgeContent(summary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func stepStatBadgeContent(_ summary: StepsAggregation.Summary) -> some View {
+        StatBadge(label: "Total", value: summary.total.formatted())
+        StatBadge(label: "Average", value: summary.average.formatted())
+        StatBadge(label: "Best Day", value: (summary.best?.steps ?? 0).formatted())
     }
 }
 

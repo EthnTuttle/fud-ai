@@ -269,6 +269,7 @@
     <string name="progress_metric_weight">Kilo</string>
     <string name="progress_metric_body_fat">Vücut Yağı</string>
     <string name="progress_metric_workouts">Antrenmanlar</string>
+    <string name="progress_metric_steps">Adımlar</string>
     <string name="progress_log_body_fat">Vücut Yağı Kaydet</string>
     <string name="progress_log_first_body_fat">Trendleri görmek için ilk vücut yağ oranınızı kaydedin</string>
     <string name="progress_log_body_fat_title">Vücut Yağı Kaydet</string>
@@ -539,6 +540,8 @@
     <string name="progress_range_6m">6A</string>
     <string name="progress_range_year">1Y</string>
     <string name="progress_range_all">Tümü</string>
+    <string name="progress_previous_period">Önceki dönem</string>
+    <string name="progress_next_period">Sonraki dönem</string>
 
     <string name="progress_weight_section">Kilo</string>
     <string name="progress_log_weight">Kilo Kaydet</string>
@@ -570,9 +573,19 @@
     <string name="progress_workout_stat_days">Gün</string>
     <string name="progress_workout_no_range">Bu aralıkta hesaplanan antrenman yakımı yok</string>
     <string name="progress_workout_chart_description">%1$s ile %2$s arasındaki antrenman yakım grafiği. Toplam %3$d kilokalori; en son %4$d kilokalori.</string>
+    <string name="progress_steps_stat_total">Toplam</string>
+    <string name="progress_steps_stat_average">Ortalama</string>
+    <string name="progress_steps_stat_best_day">En iyi gün</string>
+    <string name="progress_steps_no_range">Bu aralıkta adım verisi yok</string>
+    <string name="progress_steps_footnote">Health Connect\'ten günlük adım toplamları.</string>
+    <string name="progress_steps_weekly_note">Çubuklar her haftanın günlük ortalama adım sayısını gösterir.</string>
+    <string name="progress_steps_history_note">Health Connect, adımları yalnızca Fud AI\'ı bağlamanızdan yaklaşık 30 gün öncesinden itibaren paylaşır; bu yüzden daha eski günler eksik olabilir.</string>
+    <string name="progress_steps_chart_description">%1$s – %2$s adım grafiği. Toplam %3$s adım; en iyi gün %4$s adım.</string>
 
 
     <string name="progress_calories_section">Kalori</string>
+    <string name="progress_include_today">Bugünü dahil et</string>
+    <string name="progress_include_today_caption">Kalori grafiği ve besin ortalamaları</string>
     <string name="progress_avg_format">Ort: %1$,d kcal</string>
     <string name="progress_no_food">Henüz yiyecek kaydedilmedi</string>
 

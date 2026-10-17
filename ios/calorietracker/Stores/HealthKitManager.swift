@@ -1179,6 +1179,52 @@ class HealthKitManager {
         }
     }
 
+    /// Step totals for each local day from `start` through `endDay`, oldest first,
+    /// skipping days without steps. Uses HealthKit's daily statistics, which merge
+    /// iPhone and Apple Watch samples without double counting — never a sum of
+    /// raw samples.
+    func fetchDailySteps(from start: Date, through endDay: Date) async -> [StepDay] {
+        guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return [] }
+        let calendar = Calendar.current
+        let anchor = calendar.startOfDay(for: start)
+        guard let dayAfterEnd = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDay)) else {
+            return []
+        }
+        let end = min(dayAfterEnd, Date())
+        guard end > anchor else { return [] }
+
+        let type = HKQuantityType(.stepCount)
+        let predicate = HKQuery.predicateForSamples(withStart: anchor, end: end, options: .strictStartDate)
+        var interval = DateComponents()
+        interval.day = 1
+
+        let totals: [(date: Date, steps: Int)] = await withCheckedContinuation { continuation in
+            let query = HKStatisticsCollectionQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: anchor,
+                intervalComponents: interval
+            )
+            query.initialResultsHandler = { _, collection, error in
+                guard error == nil, let collection else {
+                    continuation.resume(returning: [])
+                    return
+                }
+                var totals: [(date: Date, steps: Int)] = []
+                collection.enumerateStatistics(from: anchor, to: end) { statistics, _ in
+                    let steps = statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0
+                    if steps >= 1 {
+                        totals.append((calendar.startOfDay(for: statistics.startDate), Int(steps.rounded())))
+                    }
+                }
+                continuation.resume(returning: totals)
+            }
+            healthStore.execute(query)
+        }
+        return totals.map { StepDay(date: $0.date, steps: $0.steps) }
+    }
+
     /// Dated measured energy for adaptive-goal evidence. This uses the same active-energy
     /// query as `fetchRecentEnergySummary`, including the predicate that removes every
     /// Fud-AI-tagged workout estimate. Returned days are oldest-first and contain no zero rows.
