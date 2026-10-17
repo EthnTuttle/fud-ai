@@ -40,6 +40,20 @@ enum WeeklyRecapHighlight: Hashable {
     case moreLoggedDays(Int)
 }
 
+/// The recap's energy figures as shown, in the user's unit (#520). Totals, the
+/// ±10% target window and the comparisons all stay kcal; only these convert.
+struct WeeklyRecapEnergyFigures: Equatable {
+    /// Unitless average, e.g. "1,850" or "7,740"; nil when nothing was logged.
+    let averageCalories: String?
+    /// Unitless calorie target for the average's caption.
+    let calorieGoal: String
+    /// Active burn with its unit, e.g. "350 kcal" or "1,464 kJ".
+    let activeBurn: String
+    /// Change between the two weeks' shown burns in display units. Converting
+    /// keeps the order, so its sign always matches the kcal comparison.
+    let activeBurnChange: Int
+}
+
 /// The Progress tab's recap of one completed week, compared with the week
 /// before it (#431). Pure, so it can be computed for any week in the past.
 struct WeeklyRecap: Equatable {
@@ -250,6 +264,24 @@ struct WeeklyRecap: Equatable {
             guard performed || burn != nil else { return nil }
             return WeeklyRecapWorkoutDay(date: date, calories: burn)
         }
+    }
+
+    /// The recap's energy amounts in `unit`. The burn change is the difference
+    /// of the two shown values, so "1,464 kJ" after "1,255 kJ" reads "+209".
+    static func energyFigures(
+        current: WeeklyRecapWeekStats,
+        previous: WeeklyRecapWeekStats,
+        calorieGoal: Int,
+        unit: EnergyUnit,
+        locale: Locale = .current
+    ) -> WeeklyRecapEnergyFigures {
+        WeeklyRecapEnergyFigures(
+            averageCalories: current.averageCalories.map { unit.number(kcal: $0, locale: locale) },
+            calorieGoal: unit.number(kcal: calorieGoal, locale: locale),
+            activeBurn: unit.format(kcal: current.activeBurnCalories, locale: locale),
+            activeBurnChange: unit.displayValue(kcal: current.activeBurnCalories)
+                - unit.displayValue(kcal: previous.activeBurnCalories)
+        )
     }
 
     /// "+2", "−1" or "0" for the small change line under a recap stat.

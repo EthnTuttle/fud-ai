@@ -54,6 +54,8 @@ import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WorkoutDayPlan
 import com.apoorvdarshan.calorietracker.models.WorkoutSession
 import com.apoorvdarshan.calorietracker.ui.components.FudGlassSurface
+import com.apoorvdarshan.calorietracker.ui.components.LocalEnergyUnit
+import com.apoorvdarshan.calorietracker.ui.components.energyTextDisplayed
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import java.text.NumberFormat
 import java.time.DayOfWeek
@@ -180,6 +182,8 @@ private fun WeeklyRecapStats(
     val numbers = remember { NumberFormat.getIntegerInstance() }
     val dayCount = { days: Int -> "${numbers.format(days)}/${numbers.format(7)}" }
     val change = { now: Int, before: Int -> RecapTileDetail(WeeklyRecapCalculator.signedChange(now - before), now > before) }
+    // Energy shows in the chosen unit (#520); the comparisons stay kcal.
+    val energy = WeeklyRecapCalculator.energyFigures(current, previous, calorieGoal, LocalEnergyUnit.current)
     val tiles = listOf(
         RecapTile(
             dayCount(current.loggedDays),
@@ -197,9 +201,9 @@ private fun WeeklyRecapStats(
             change(current.proteinGoalDays, previous.proteinGoalDays)
         ),
         RecapTile(
-            current.averageCalories?.let { numbers.format(it) } ?: "–",
+            energy.averageCalories ?: "–",
             stringResource(R.string.weekly_recap_avg_calories),
-            RecapTileDetail(stringResource(R.string.weekly_recap_target_format, numbers.format(calorieGoal)), false)
+            RecapTileDetail(stringResource(R.string.weekly_recap_target_format, energy.calorieGoal), false)
         ),
         RecapTile(
             numbers.format(current.workouts),
@@ -207,9 +211,9 @@ private fun WeeklyRecapStats(
             change(current.workouts, previous.workouts)
         ),
         RecapTile(
-            stringResource(R.string.kcal_value_format, current.activeBurnCalories),
+            energyTextDisplayed(energy.activeBurn),
             stringResource(R.string.weekly_recap_active_burn),
-            change(current.activeBurnCalories, previous.activeBurnCalories)
+            RecapTileDetail(energy.activeBurnChange, current.activeBurnCalories > previous.activeBurnCalories)
         )
     )
     // Large text gets two tiles per row, like the other Progress stat rows.

@@ -324,6 +324,49 @@ struct WeeklyRecapTests {
         #expect(WeeklyRecap.signedChange(1_234, locale: locale) == "+1,234")
     }
 
+    @Test func energyFiguresInKilocaloriesAreUnchanged() {
+        let english = Locale(identifier: "en_US")
+        let current = WeeklyRecapWeekStats(loggedDays: 3, averageCalories: 1_850, activeBurnCalories: 350)
+        let previous = WeeklyRecapWeekStats(loggedDays: 2, averageCalories: 2_400, activeBurnCalories: 300)
+
+        let figures = WeeklyRecap.energyFigures(
+            current: current, previous: previous, calorieGoal: 2_000, unit: .kcal, locale: english
+        )
+        #expect(figures == WeeklyRecapEnergyFigures(
+            averageCalories: "1,850", calorieGoal: "2,000", activeBurn: "350 kcal", activeBurnChange: 50
+        ))
+    }
+
+    @Test func energyFiguresConvertToKilojoules() {
+        let english = Locale(identifier: "en_US")
+        let current = WeeklyRecapWeekStats(loggedDays: 3, averageCalories: 1_850, activeBurnCalories: 350)
+        var previous = WeeklyRecapWeekStats(activeBurnCalories: 300)
+
+        // 1,850 kcal = 7,740 kJ, 2,000 = 8,368, 350 = 1,464 and 300 = 1,255.
+        let figures = WeeklyRecap.energyFigures(
+            current: current, previous: previous, calorieGoal: 2_000, unit: .kj, locale: english
+        )
+        #expect(figures == WeeklyRecapEnergyFigures(
+            averageCalories: "7,740", calorieGoal: "8,368", activeBurn: "1,464 kJ", activeBurnChange: 209
+        ))
+
+        // The change is between the shown values (1,464 − 1,674), not −50 kcal converted (−209).
+        previous.activeBurnCalories = 400
+        let lower = WeeklyRecap.energyFigures(
+            current: current, previous: previous, calorieGoal: 2_000, unit: .kj, locale: english
+        )
+        #expect(lower.activeBurnChange == -210)
+
+        // Locale grouping still applies, and an empty week has no average.
+        let german = WeeklyRecap.energyFigures(
+            current: WeeklyRecapWeekStats(), previous: WeeklyRecapWeekStats(),
+            calorieGoal: 2_000, unit: .kj, locale: Locale(identifier: "de_DE")
+        )
+        #expect(german.averageCalories == nil)
+        #expect(german.calorieGoal == "8.368")
+        #expect(german.activeBurnChange == 0)
+    }
+
     // MARK: - Helpers
 
     private func calendar(firstWeekday: Int) -> Calendar {

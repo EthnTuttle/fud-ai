@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.progress
 
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.ExerciseTimer
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
@@ -333,6 +334,56 @@ class WeeklyRecapTest {
         assertEquals("−1", WeeklyRecapCalculator.signedChange(-1, Locale.US))
         assertEquals("0", WeeklyRecapCalculator.signedChange(0, Locale.US))
         assertEquals("+1,234", WeeklyRecapCalculator.signedChange(1_234, Locale.US))
+    }
+
+    @Test
+    fun energyFiguresInKilocaloriesAreUnchanged() {
+        val current = WeeklyRecapWeekStats(loggedDays = 3, averageCalories = 1_850, activeBurnCalories = 350)
+        val previous = WeeklyRecapWeekStats(loggedDays = 2, averageCalories = 2_400, activeBurnCalories = 300)
+
+        assertEquals(
+            WeeklyRecapEnergyFigures(averageCalories = "1,850", calorieGoal = "2,000", activeBurn = 350, activeBurnChange = "+50"),
+            WeeklyRecapCalculator.energyFigures(current, previous, 2_000, EnergyUnit.KCAL, Locale.US)
+        )
+    }
+
+    @Test
+    fun energyFiguresConvertToKilojoules() {
+        val current = WeeklyRecapWeekStats(loggedDays = 3, averageCalories = 1_850, activeBurnCalories = 350)
+
+        // 1,850 kcal = 7,740 kJ, 2,000 = 8,368, 350 = 1,464 and 300 = 1,255.
+        assertEquals(
+            WeeklyRecapEnergyFigures(averageCalories = "7,740", calorieGoal = "8,368", activeBurn = 1_464, activeBurnChange = "+209"),
+            WeeklyRecapCalculator.energyFigures(current, WeeklyRecapWeekStats(activeBurnCalories = 300), 2_000, EnergyUnit.KJ, Locale.US)
+        )
+        // The change is between the shown values (1,464 − 1,674), not −50 kcal converted (−209).
+        val more = WeeklyRecapCalculator.energyFigures(current, WeeklyRecapWeekStats(activeBurnCalories = 400), 2_000, EnergyUnit.KJ, Locale.US)
+        assertEquals("−210", more.activeBurnChange)
+        // Locale grouping still applies, and an empty week has no average.
+        val german = WeeklyRecapCalculator.energyFigures(WeeklyRecapWeekStats(), WeeklyRecapWeekStats(), 2_000, EnergyUnit.KJ, Locale.GERMANY)
+        assertNull(german.averageCalories)
+        assertEquals("8.368", german.calorieGoal)
+        assertEquals("0", german.activeBurnChange)
+    }
+
+    @Test
+    fun theCalorieTargetWindowStaysInKilocalories() {
+        // 1,850 kcal is within ±10% of 2,000 kcal whatever unit the card shows it in.
+        val recap = WeeklyRecapCalculator.compute(
+            foods = (5..7).map { day -> food(1_850, protein = 0.0, at = "2026-10-0${day}T12:00") },
+            workouts = emptyList(),
+            weights = emptyList(),
+            calorieGoal = 2_000,
+            proteinGoal = 0,
+            today = LocalDate.parse("2026-10-17"),
+            offset = 0,
+            firstDayOfWeek = DayOfWeek.MONDAY,
+            zone = zone
+        )
+        assertEquals(3, recap.current.calorieTargetDays)
+        assertEquals(1_850, recap.current.averageCalories)
+        assertTrue(WeeklyRecapHighlight.AverageCaloriesOnTarget in recap.highlights)
+        assertEquals("7,740", WeeklyRecapCalculator.energyFigures(recap.current, recap.previous, 2_000, EnergyUnit.KJ, Locale.US).averageCalories)
     }
 
     // Helpers

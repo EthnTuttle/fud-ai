@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.progress
 
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WorkoutDate
@@ -50,6 +51,19 @@ internal sealed interface WeeklyRecapHighlight {
     data object AverageCaloriesOnTarget : WeeklyRecapHighlight
     data class MoreLoggedDays(val count: Int) : WeeklyRecapHighlight
 }
+
+/** The recap's energy figures as shown, in the user's display unit (#520). Totals, the
+ *  ±10% target window and the comparisons all stay kcal; only these convert. */
+internal data class WeeklyRecapEnergyFigures(
+    /** Unitless average, e.g. "1,850" or "7,740"; null when nothing was logged. */
+    val averageCalories: String?,
+    /** Unitless calorie target for the average's caption. */
+    val calorieGoal: String,
+    /** Active burn in display units, shown with the unit label. */
+    val activeBurn: Int,
+    /** Change between the two weeks' shown burns, e.g. "+209". */
+    val activeBurnChange: String
+)
 
 /** The Progress tab's recap of one completed week, compared with the week before it
  *  (#431). Mirrors ios/calorietracker/Models/WeeklyRecap.swift. */
@@ -231,6 +245,24 @@ internal object WeeklyRecapCalculator {
                 if (performed || burn != null) WeeklyRecapWorkoutDay(day, burn) else null
             }
             .toList()
+    }
+
+    /** The recap's energy amounts in [unit]. The burn change is the difference of the two
+     *  shown values, so "1,464 kJ" after "1,255 kJ" reads "+209". */
+    fun energyFigures(
+        current: WeeklyRecapWeekStats,
+        previous: WeeklyRecapWeekStats,
+        calorieGoal: Int,
+        unit: EnergyUnit,
+        locale: Locale = Locale.getDefault()
+    ): WeeklyRecapEnergyFigures {
+        val burn = unit.displayValue(current.activeBurnCalories)
+        return WeeklyRecapEnergyFigures(
+            averageCalories = current.averageCalories?.let { unit.number(it, locale) },
+            calorieGoal = unit.number(calorieGoal, locale),
+            activeBurn = burn,
+            activeBurnChange = signedChange(burn - unit.displayValue(previous.activeBurnCalories), locale)
+        )
     }
 
     /** "+2", "−1" or "0" for the small change line under a recap stat. */

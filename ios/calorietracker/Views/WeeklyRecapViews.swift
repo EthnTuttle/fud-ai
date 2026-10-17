@@ -9,6 +9,7 @@ struct WeeklyRecapCard: View {
     @Environment(StrengthWorkoutStore.self) private var strengthWorkoutStore
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = true
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     /// Weeks stepped back from the most recent completed one; session-only.
@@ -107,6 +108,13 @@ struct WeeklyRecapCard: View {
 
     private func stats(_ current: WeeklyRecapWeekStats, previous: WeeklyRecapWeekStats) -> some View {
         let columns = dynamicTypeSize.isAccessibilitySize ? 2 : 3
+        // Energy shows in the chosen unit (#520); the comparisons stay kcal.
+        let energy = WeeklyRecap.energyFigures(
+            current: current,
+            previous: previous,
+            calorieGoal: profileStore.profile.effectiveCalories,
+            unit: energyUnit
+        )
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
             WeeklyRecapStatTile(
                 value: dayCount(current.loggedDays),
@@ -124,9 +132,9 @@ struct WeeklyRecapCard: View {
                 change: current.proteinGoalDays - previous.proteinGoalDays
             )
             WeeklyRecapStatTile(
-                value: current.averageCalories?.formatted() ?? "–",
+                value: energy.averageCalories ?? "–",
                 label: "Avg calories",
-                caption: String(localized: "Target \(profileStore.profile.effectiveCalories.formatted())")
+                caption: String(localized: "Target \(energy.calorieGoal)")
             )
             WeeklyRecapStatTile(
                 value: current.workouts.formatted(),
@@ -134,9 +142,9 @@ struct WeeklyRecapCard: View {
                 change: current.workouts - previous.workouts
             )
             WeeklyRecapStatTile(
-                value: "\(current.activeBurnCalories.formatted()) kcal",
+                value: energy.activeBurn,
                 label: "Active burn",
-                change: current.activeBurnCalories - previous.activeBurnCalories
+                change: energy.activeBurnChange
             )
         }
     }
