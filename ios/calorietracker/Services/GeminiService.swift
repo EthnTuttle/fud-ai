@@ -224,7 +224,7 @@ struct GeminiService {
     """
 
     private static let ingredientBreakdownInstruction = """
-    ingredients is required. For a meal with multiple meaningful foods, return each food once using this exact object shape: {"name":"...","grams":0.0,"calories":0,"protein":0.0,"carbs":0.0,"fat":0.0}. Ingredient grams and macros must describe the analyzed amount and add up approximately to the meal totals. Return [] for a nutrition label, a single simple food, or when a reliable breakdown is not possible.
+    ingredients is required. For a meal with multiple meaningful foods, return each food once using this exact object shape: {"name":"...","grams":0.0,"calories":0,"protein":0.0,"carbs":0.0,"fat":0.0}. Ingredient grams and macros must describe the analyzed amount and add up approximately to the meal totals. Return [] for a nutrition label, a single simple food, or when a reliable breakdown is not possible. Every ingredient must have a positive grams estimate even when no weight is shown. For screenshots or photos of menus, recipes, meal plans, or food-logging apps that list several dishes, return each listed dish as its own ingredient using its listed calories/macros.
     """
 
     // MARK: - Public API (unchanged interface)
@@ -1431,28 +1431,11 @@ struct GeminiService {
         let supplementalNutrients = Dictionary(uniqueKeysWithValues: SupplementalNutrient.allCases.compactMap { nutrient in
             double(nutrient.jsonKey).map { (nutrient.rawValue, $0) }
         })
-        let ingredients = (json["ingredients"] as? [[String: Any]] ?? [])
-            .prefix(20)
-            .compactMap { item -> MealIngredient? in
-                guard let name = (item["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
-                      !name.isEmpty,
-                      let grams = (item["grams"] as? NSNumber)?.doubleValue,
-                      grams > 0,
-                      let calories = (item["calories"] as? NSNumber)?.doubleValue,
-                      let protein = (item["protein"] as? NSNumber)?.doubleValue,
-                      let carbs = (item["carbs"] as? NSNumber)?.doubleValue,
-                      let fat = (item["fat"] as? NSNumber)?.doubleValue,
-                      [calories, protein, carbs, fat].allSatisfy({ $0 >= 0 })
-                else { return nil }
-                return MealIngredient(
-                    name: name,
-                    grams: grams,
-                    calories: Int(round(calories)),
-                    protein: protein,
-                    carbs: carbs,
-                    fat: fat
-                )
-            }
+        let ingredients = parseIngredientBreakdown(
+            json["ingredients"],
+            mealCalories: calories,
+            mealGrams: responseServingSizeGrams
+        )
         return FoodAnalysis(
             name: name, calories: calories, protein: protein, carbs: carbs, fat: fat,
             servingSizeGrams: servingSizeGrams,
@@ -1488,6 +1471,82 @@ struct GeminiService {
             requiresServingUnitFallback: parsedUnitOptions.requiresFallback,
             ingredients: ingredients
         ).withIngredientMacroTotals()
+    }
+
+    private static let maxIngredientCount = 20
+    /// Pure fat; a repaired weight that implies more energy per gram is not a real food.
+    private static let maxIngredientCaloriesPerGram = 9.0
+    /// A list covering less than this share of the meal calories is missing dishes.
+    private static let minIngredientCalorieCoverage = 0.5
+
+    /// The breakdown replaces the meal macros, so it must be complete or absent (#343):
+    /// any entry that cannot be kept or repaired drops the whole list and the model's
+    /// meal totals stay. Missing ingredient weights (common for screenshots of meal lists
+    /// that only show calories) are estimated from the meal weight instead of dropping the dish.
+    private static func parseIngredientBreakdown(
+        _ raw: Any?,
+        mealCalories: Int,
+        mealGrams: Double?
+    ) -> [MealIngredient] {
+        guard let items = raw as? [Any], !items.isEmpty, items.count <= maxIngredientCount else { return [] }
+        struct Draft {
+            var name: String
+            var grams: Double?
+            var calories: Double
+            var protein: Double
+            var carbs: Double
+            var fat: Double
+        }
+        func number(_ value: Any?) -> Double? {
+            guard let value = (value as? NSNumber)?.doubleValue, value.isFinite else { return nil }
+            return value
+        }
+        var drafts: [Draft] = []
+        for item in items {
+            guard let item = item as? [String: Any],
+                  let name = (item["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !name.isEmpty,
+                  let calories = number(item["calories"]),
+                  let protein = number(item["protein"]),
+                  let carbs = number(item["carbs"]),
+                  let fat = number(item["fat"]),
+                  [calories, protein, carbs, fat].allSatisfy({ $0 >= 0 })
+            else { return [] }
+            let grams = number(item["grams"]).flatMap { $0 > 0 ? $0 : nil }
+            // Without a weight or calories there is nothing to estimate the weight from.
+            if grams == nil && calories <= 0 { return [] }
+            drafts.append(Draft(name: name, grams: grams, calories: calories, protein: protein, carbs: carbs, fat: fat))
+        }
+
+        var gramsPerMissingCalorie = 0.0
+        let missingCalories = drafts.filter { $0.grams == nil }.reduce(0) { $0 + $1.calories }
+        if missingCalories > 0 {
+            guard let mealGrams, mealGrams > 0 else { return [] }
+            let remainingGrams = mealGrams - drafts.compactMap(\.grams).reduce(0, +)
+            if remainingGrams > 0, missingCalories / remainingGrams <= maxIngredientCaloriesPerGram {
+                gramsPerMissingCalorie = remainingGrams / missingCalories
+            } else if mealCalories > 0 {
+                gramsPerMissingCalorie = mealGrams / Double(mealCalories)
+            } else {
+                return []
+            }
+        }
+
+        let ingredients = drafts.map { draft in
+            MealIngredient(
+                name: draft.name,
+                grams: draft.grams ?? (draft.calories * gramsPerMissingCalorie * 10).rounded() / 10,
+                calories: Int(round(draft.calories)),
+                protein: draft.protein,
+                carbs: draft.carbs,
+                fat: draft.fat
+            )
+        }
+        if mealCalories > 0,
+           Double(ingredients.ingredientTotals.calories) < Double(mealCalories) * minIngredientCalorieCoverage {
+            return []
+        }
+        return ingredients
     }
 
     static func parseAllergensFromLabReport(from text: String) throws -> [String] {
