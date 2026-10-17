@@ -652,6 +652,7 @@
     <string name="progress_metric_weight">体重</string>
     <string name="progress_metric_body_fat">体脂肪</string>
     <string name="progress_metric_workouts">ワークアウト</string>
+    <string name="progress_metric_steps">歩数</string>
     <string name="progress_workout_history">ワークアウト履歴</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">計算済み消費 %1$d 件 · タップして表示または削除</item>
@@ -667,6 +668,14 @@
     <string name="progress_workout_stat_days">日数</string>
     <string name="progress_workout_no_range">この期間に計算済みのワークアウト消費はありません</string>
     <string name="progress_workout_chart_description">%1$sから%2$sまでのワークアウト消費グラフ。合計%3$dキロカロリー、最新%4$dキロカロリー。</string>
+    <string name="progress_steps_stat_total">合計</string>
+    <string name="progress_steps_stat_average">平均</string>
+    <string name="progress_steps_stat_best_day">最高の日</string>
+    <string name="progress_steps_no_range">この期間の歩数データはありません</string>
+    <string name="progress_steps_footnote">Health Connect の1日の歩数合計です。</string>
+    <string name="progress_steps_weekly_note">棒は各週の1日あたりの平均歩数を示します。</string>
+    <string name="progress_steps_history_note">Health Connect が共有する歩数は Fud AI を接続する約30日前以降のものだけのため、それより前の日は表示されない場合があります。</string>
+    <string name="progress_steps_chart_description">%1$s〜%2$s の歩数グラフ。合計 %3$s 歩、最高の日は %4$s 歩。</string>
     <string name="progress_log_body_fat">体脂肪を記録</string>
     <string name="progress_log_first_body_fat">傾向を見るには、最初の体脂肪率を記録してください</string>
     <string name="progress_log_body_fat_title">体脂肪を記録</string>

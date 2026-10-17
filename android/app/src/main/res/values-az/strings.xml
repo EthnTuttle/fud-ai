@@ -653,6 +653,7 @@
     <string name="progress_metric_weight">Çəki</string>
     <string name="progress_metric_body_fat">Bədən yağı</string>
     <string name="progress_metric_workouts">Məşqlər</string>
+    <string name="progress_metric_steps">Addımlar</string>
     <string name="progress_workout_history">Məşq tarixçəsi</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d hesablanmış sərfiyyat · baxmaq və ya silmək üçün toxunun</item>
@@ -668,6 +669,14 @@
     <string name="progress_workout_stat_days">Gün</string>
     <string name="progress_workout_no_range">Bu aralıqda hesablanmış məşq sərfiyyatı yoxdur</string>
     <string name="progress_workout_chart_description">Məşq sərfiyyatı qrafiki: %1$s–%2$s. Cəmi %3$d kkal; son %4$d kkal.</string>
+    <string name="progress_steps_stat_total">Cəmi</string>
+    <string name="progress_steps_stat_average">Orta</string>
+    <string name="progress_steps_stat_best_day">Ən yaxşı gün</string>
+    <string name="progress_steps_no_range">Bu aralıqda addım məlumatı yoxdur</string>
+    <string name="progress_steps_footnote">Health Connect-dən gündəlik addım cəmi.</string>
+    <string name="progress_steps_weekly_note">Sütunlar hər həftə üçün orta gündəlik addım sayını göstərir.</string>
+    <string name="progress_steps_history_note">Health Connect yalnız Fud AI-ı qoşmazdan təxminən 30 gün əvvəldən olan addımları paylaşır, buna görə köhnə günlər görünməyə bilər.</string>
+    <string name="progress_steps_chart_description">%1$s – %2$s addım qrafiki. Cəmi %3$s addım; ən yaxşı gün %4$s addım.</string>
     <string name="progress_log_body_fat">Bədən yağını qeyd et</string>
     <string name="progress_log_first_body_fat">Trendləri görmək üçün ilk bədən yağı %-ni qeyd edin</string>
     <string name="progress_log_body_fat_title">Bədən yağını qeyd et</string>

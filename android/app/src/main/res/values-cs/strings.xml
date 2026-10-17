@@ -415,6 +415,7 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1R</string>
     <string name="progress_range_all">Vše</string>
+    <string name="progress_metric_steps">Kroky</string>
     <string name="progress_previous_period">Předchozí období</string>
     <string name="progress_next_period">Další období</string>
 
@@ -436,6 +437,14 @@
     </plurals>
 
     <string name="progress_calories_section">Kalorie</string>
+    <string name="progress_steps_stat_total">Celkem</string>
+    <string name="progress_steps_stat_average">Průměr</string>
+    <string name="progress_steps_stat_best_day">Nejlepší den</string>
+    <string name="progress_steps_no_range">V tomto období nejsou žádná data o krocích</string>
+    <string name="progress_steps_footnote">Denní součty kroků z Health Connect.</string>
+    <string name="progress_steps_weekly_note">Sloupce ukazují průměrný denní počet kroků za každý týden.</string>
+    <string name="progress_steps_history_note">Health Connect sdílí kroky jen zhruba od 30 dnů před připojením Fud AI, takže starší dny mohou chybět.</string>
+    <string name="progress_steps_chart_description">Graf kroků od %1$s do %2$s. Celkem %3$s kroků; nejlepší den %4$s kroků.</string>
     <string name="progress_include_today">Zahrnout dnešek</string>
     <string name="progress_include_today_caption">Graf kalorií a průměry živin</string>
     <string name="progress_avg_format">Průměr: %1$d kcal</string>

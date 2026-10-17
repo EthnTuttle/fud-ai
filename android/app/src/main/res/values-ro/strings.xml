@@ -656,6 +656,7 @@
     <string name="progress_metric_weight">Greutate</string>
     <string name="progress_metric_body_fat">Grăsime corporală</string>
     <string name="progress_metric_workouts">Antrenamente</string>
+    <string name="progress_metric_steps">Pași</string>
     <string name="progress_workout_history">Istoric antrenamente</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d consum calculat · atinge pentru a vedea sau șterge</item>
@@ -672,6 +673,14 @@
     <string name="progress_workout_stat_days">Zile</string>
     <string name="progress_workout_no_range">Nu există consumuri calculate pentru antrenamente în această perioadă</string>
     <string name="progress_workout_chart_description">Graficul consumului din antrenamente de la %1$s la %2$s. Total: %3$d kilocalorii; recent: %4$d kilocalorii.</string>
+    <string name="progress_steps_stat_total">Total</string>
+    <string name="progress_steps_stat_average">Medie</string>
+    <string name="progress_steps_stat_best_day">Cea mai bună zi</string>
+    <string name="progress_steps_no_range">Nu există date despre pași în această perioadă</string>
+    <string name="progress_steps_footnote">Totalurile zilnice de pași din Health Connect.</string>
+    <string name="progress_steps_weekly_note">Barele arată media zilnică de pași pentru fiecare săptămână.</string>
+    <string name="progress_steps_history_note">Health Connect partajează pașii doar începând cu aproximativ 30 de zile înainte de conectarea Fud AI, așa că zilele mai vechi pot lipsi.</string>
+    <string name="progress_steps_chart_description">Grafic al pașilor din %1$s până în %2$s. Total %3$s pași; cea mai bună zi %4$s pași.</string>
     <string name="progress_log_body_fat">Înregistrează grăsimea corporală</string>
     <string name="progress_log_first_body_fat">Înregistrează primul tău % de grăsime corporală pentru a vedea tendințele</string>
     <string name="progress_log_body_fat_title">Înregistrează grăsimea corporală</string>

@@ -659,6 +659,7 @@
     <string name="progress_metric_weight">Вес</string>
     <string name="progress_metric_body_fat">Жир тела</string>
     <string name="progress_metric_workouts">Тренировки</string>
+    <string name="progress_metric_steps">Шаги</string>
     <string name="progress_workout_history">История тренировок</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d расчёт расхода · коснитесь, чтобы посмотреть или удалить</item>
@@ -676,6 +677,14 @@
     <string name="progress_workout_stat_days">Дни</string>
     <string name="progress_workout_no_range">За этот период нет рассчитанного расхода тренировок</string>
     <string name="progress_workout_chart_description">График расхода тренировок с %1$s по %2$s. Всего %3$d килокалорий; последнее значение %4$d килокалорий.</string>
+    <string name="progress_steps_stat_total">Итого</string>
+    <string name="progress_steps_stat_average">Среднее</string>
+    <string name="progress_steps_stat_best_day">Лучший день</string>
+    <string name="progress_steps_no_range">Нет данных о шагах за этот период</string>
+    <string name="progress_steps_footnote">Суммы шагов за день из Health Connect.</string>
+    <string name="progress_steps_weekly_note">Столбцы показывают среднее число шагов в день за каждую неделю.</string>
+    <string name="progress_steps_history_note">Health Connect передаёт шаги только примерно с 30 дней до подключения Fud AI, поэтому более ранние дни могут отсутствовать.</string>
+    <string name="progress_steps_chart_description">График шагов с %1$s по %2$s. Всего %3$s шагов; лучший день — %4$s шагов.</string>
     <string name="progress_log_body_fat">Записать жир</string>
     <string name="progress_log_first_body_fat">Запишите первое измерение жира, чтобы увидеть динамику</string>
     <string name="progress_log_body_fat_title">Записать жир</string>

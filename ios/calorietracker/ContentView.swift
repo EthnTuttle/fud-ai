@@ -4088,7 +4088,9 @@ struct ProgressTabView: View {
     @Environment(ProfileStore.self) private var profileStore
     @Environment(StrengthWorkoutStore.self) private var strengthWorkoutStore
     @Environment(ImportedHealthWorkoutStore.self) private var importedHealthWorkoutStore
+    @Environment(HealthKitManager.self) private var healthKitManager
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
+    @AppStorage("healthKitEnabled") private var healthKitEnabled = false
     /// Off ends the calorie chart and nutrition averages yesterday (#514).
     @AppStorage("progressIncludeToday") private var includeToday = true
     @State private var timeRange: TimeRange = .week
@@ -4106,6 +4108,8 @@ struct ProgressTabView: View {
     @State private var progressOverviewMode: ProgressOverviewMode = .myProgress
     @State private var foodRangeStats: ProgressFoodRangeStats?
     @State private var isLoadingFoodRangeStats = false
+    /// Daily steps for the selected window; nil while loading.
+    @State private var stepDays: [StepDay]?
 
     private var userProfile: UserProfile { profileStore.profile }
 
@@ -4163,8 +4167,13 @@ struct ProgressTabView: View {
         ProgressMetric.available(
             bodyFatAvailable: showsBodyFatSection,
             workoutBurnAvailable: !workoutCalorieSessions.isEmpty,
-            importedWorkoutsAvailable: !importedHealthWorkouts.isEmpty
+            importedWorkoutsAvailable: !importedHealthWorkouts.isEmpty,
+            stepsAvailable: healthKitEnabled
         )
+    }
+
+    private var stepsTaskKey: String {
+        "\(progressMetric == .steps)|\(healthKitEnabled)|\(timeRange.rawValue)|\(periodOffset)"
     }
 
     /// Show the Body Fat section to anyone who has either logged a reading,
@@ -4246,6 +4255,8 @@ struct ProgressTabView: View {
                                     dateRange: dateRange
                                 )
                             }
+                        case .steps:
+                            StepsChartSection(days: stepDays, dateRange: dateRange)
                         }
                     }
                     .padding(.horizontal)
@@ -4279,6 +4290,8 @@ struct ProgressTabView: View {
                                     onTap: { showImportedHealthWorkoutHistory = true }
                                 )
                             }
+                        case .steps:
+                            EmptyView()
                         }
                     }
                     .padding(.horizontal)
@@ -4360,6 +4373,19 @@ struct ProgressTabView: View {
                 guard !Task.isCancelled else { return }
                 foodRangeStats = stats
                 isLoadingFoodRangeStats = false
+            }
+            .task(id: stepsTaskKey) {
+                // Steps come from Apple Health on demand, only while the Steps
+                // metric is showing; range / period changes cancel a stale read.
+                guard progressMetric == .steps, healthKitEnabled else {
+                    stepDays = nil
+                    return
+                }
+                stepDays = nil
+                let window = dateRange
+                let days = await healthKitManager.fetchDailySteps(from: window.lowerBound, through: window.upperBound)
+                guard !Task.isCancelled else { return }
+                stepDays = days
             }
             .onChange(of: availableProgressMetrics, initial: true) { _, metrics in
                 if !metrics.contains(progressMetric) {

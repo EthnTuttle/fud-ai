@@ -653,6 +653,7 @@
     <string name="progress_metric_weight">Gewicht</string>
     <string name="progress_metric_body_fat">Körperfett</string>
     <string name="progress_metric_workouts">Training</string>
+    <string name="progress_metric_steps">Schritte</string>
     <string name="progress_workout_history">Trainingsverlauf</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d berechneter Verbrauch · zum Anzeigen oder Löschen tippen</item>
@@ -668,6 +669,14 @@
     <string name="progress_workout_stat_days">Tage</string>
     <string name="progress_workout_no_range">Keine berechneten Trainingsverbräuche in diesem Zeitraum</string>
     <string name="progress_workout_chart_description">Diagramm des Trainingsverbrauchs von %1$s bis %2$s. Gesamt %3$d Kilokalorien; zuletzt %4$d Kilokalorien.</string>
+    <string name="progress_steps_stat_total">Gesamt</string>
+    <string name="progress_steps_stat_average">Durchschnitt</string>
+    <string name="progress_steps_stat_best_day">Bester Tag</string>
+    <string name="progress_steps_no_range">Keine Schrittdaten in diesem Zeitraum</string>
+    <string name="progress_steps_footnote">Tägliche Schrittsummen aus Health Connect.</string>
+    <string name="progress_steps_weekly_note">Die Balken zeigen die durchschnittlichen täglichen Schritte pro Woche.</string>
+    <string name="progress_steps_history_note">Health Connect teilt Schritte nur ab etwa 30 Tagen vor der Verbindung mit Fud AI, daher können ältere Tage fehlen.</string>
+    <string name="progress_steps_chart_description">Schrittdiagramm von %1$s bis %2$s. Insgesamt %3$s Schritte; bester Tag %4$s Schritte.</string>
     <string name="progress_log_body_fat">Körperfett protokollieren</string>
     <string name="progress_log_first_body_fat">Erfasse deinen ersten Körperfettwert, um Trends zu sehen</string>
     <string name="progress_log_body_fat_title">Körperfett protokollieren</string>

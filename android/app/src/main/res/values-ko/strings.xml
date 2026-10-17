@@ -652,6 +652,7 @@
     <string name="progress_metric_weight">체중</string>
     <string name="progress_metric_body_fat">체지방</string>
     <string name="progress_metric_workouts">운동</string>
+    <string name="progress_metric_steps">걸음 수</string>
     <string name="progress_workout_history">운동 기록</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">계산된 소모량 %1$d개 · 탭하여 보기 또는 삭제</item>
@@ -667,6 +668,14 @@
     <string name="progress_workout_stat_days">일수</string>
     <string name="progress_workout_no_range">이 기간에 계산된 운동 소모량이 없습니다</string>
     <string name="progress_workout_chart_description">%1$s부터 %2$s까지의 운동 소모 차트. 총 %3$d킬로칼로리, 최근 %4$d킬로칼로리.</string>
+    <string name="progress_steps_stat_total">합계</string>
+    <string name="progress_steps_stat_average">평균</string>
+    <string name="progress_steps_stat_best_day">최고 기록일</string>
+    <string name="progress_steps_no_range">이 기간의 걸음 수 데이터가 없습니다</string>
+    <string name="progress_steps_footnote">Health Connect의 일일 걸음 수 합계입니다.</string>
+    <string name="progress_steps_weekly_note">막대는 주별 하루 평균 걸음 수를 보여줍니다.</string>
+    <string name="progress_steps_history_note">Health Connect는 Fud AI를 연결하기 약 30일 전부터의 걸음 수만 공유하므로 그 이전 날짜는 빠질 수 있습니다.</string>
+    <string name="progress_steps_chart_description">%1$s~%2$s 걸음 수 차트. 합계 %3$s보, 최고 기록일 %4$s보.</string>
     <string name="progress_log_body_fat">체지방 기록</string>
     <string name="progress_log_first_body_fat">추이를 보려면 첫 체지방률을 기록하세요</string>
     <string name="progress_log_body_fat_title">체지방 기록</string>

@@ -20,6 +20,7 @@ import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.records.metadata.Metadata
+import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -31,6 +32,7 @@ import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import java.time.Instant
 import java.time.LocalDate
+import java.time.Period
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.UUID
@@ -196,6 +198,12 @@ class HealthConnectManager(
             setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY) else emptySet()
 
     suspend fun hasNutritionHistory(): Boolean = supportsNutritionHistory() &&
+        HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted()
+
+    /** Whether reads may reach past ~30 days before Fud AI was first granted access.
+     *  Only inspects an existing grant (the nutrition import is the one flow that asks
+     *  for it) — never requests anything. */
+    suspend fun hasHealthDataHistory(): Boolean =
         HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY in granted()
 
     /**
@@ -742,6 +750,43 @@ class HealthConnectManager(
         val end = minOf(date.plusDays(1).atStartOfDay(zone).toInstant(), Instant.now())
         if (!end.isAfter(start)) return null
         return readDailySteps(start, end)
+    }
+
+    /**
+     * Step totals for each local day from [start] through [end], oldest first, skipping
+     * days without steps. Uses Health Connect's per-day aggregation, which de-duplicates
+     * phone and watch sources — never a sum of raw StepsRecords. Empty when steps can't
+     * be read.
+     */
+    suspend fun readDailyStepTotals(start: LocalDate, end: LocalDate): List<Pair<LocalDate, Int>> {
+        if (!hasStepsRead()) return emptyList()
+        val c = client ?: return emptyList()
+        val lastDay = minOf(end, LocalDate.now())
+        if (lastDay < start) return emptyList()
+        return runCatching {
+            buildList {
+                // A year of daily buckets per request keeps 1Y / All reads bounded.
+                var chunkStart = start
+                while (!chunkStart.isAfter(lastDay)) {
+                    val chunkEnd = minOf(chunkStart.plusDays(364), lastDay)
+                    c.aggregateGroupByPeriod(
+                        AggregateGroupByPeriodRequest(
+                            metrics = setOf(StepsRecord.COUNT_TOTAL),
+                            timeRangeFilter = TimeRangeFilter.between(
+                                chunkStart.atStartOfDay(),
+                                chunkEnd.plusDays(1).atStartOfDay()
+                            ),
+                            timeRangeSlicer = Period.ofDays(1)
+                        )
+                    ).forEach { group ->
+                        val steps = group.result[StepsRecord.COUNT_TOTAL] ?: 0L
+                        if (steps > 0L) add(group.startTime.toLocalDate() to steps.toInt())
+                    }
+                    chunkStart = chunkEnd.plusDays(1)
+                }
+            }
+        }.onFailure { Log.w(TAG, "Health Connect daily steps read failed", it) }
+            .getOrDefault(emptyList())
     }
 
     private suspend fun readDailySteps(start: Instant, end: Instant): Int? {

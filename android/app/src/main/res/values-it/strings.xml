@@ -654,6 +654,7 @@
     <string name="progress_metric_weight">Peso</string>
     <string name="progress_metric_body_fat">Grasso corporeo</string>
     <string name="progress_metric_workouts">Allenamenti</string>
+    <string name="progress_metric_steps">Passi</string>
     <string name="progress_workout_history">Cronologia allenamenti</string>
     <plurals name="progress_workout_history_count_format">
         <item quantity="one">%1$d consumo calcolato · tocca per vedere o eliminare</item>
@@ -669,6 +670,14 @@
     <string name="progress_workout_stat_days">Giorni</string>
     <string name="progress_workout_no_range">Nessun consumo di allenamento calcolato in questo intervallo</string>
     <string name="progress_workout_chart_description">Grafico del consumo degli allenamenti dal %1$s al %2$s. Totale: %3$d chilocalorie; ultimo: %4$d chilocalorie.</string>
+    <string name="progress_steps_stat_total">Totale</string>
+    <string name="progress_steps_stat_average">Media</string>
+    <string name="progress_steps_stat_best_day">Giorno migliore</string>
+    <string name="progress_steps_no_range">Nessun dato sui passi in questo intervallo</string>
+    <string name="progress_steps_footnote">Totali giornalieri dei passi da Health Connect.</string>
+    <string name="progress_steps_weekly_note">Le barre mostrano la media dei passi giornalieri di ogni settimana.</string>
+    <string name="progress_steps_history_note">Health Connect condivide i passi solo da circa 30 giorni prima del collegamento di Fud AI, quindi i giorni precedenti potrebbero mancare.</string>
+    <string name="progress_steps_chart_description">Grafico dei passi dal %1$s al %2$s. Totale %3$s passi; giorno migliore %4$s passi.</string>
     <string name="progress_log_body_fat">Registra grasso corporeo</string>
     <string name="progress_log_first_body_fat">Registra il tuo primo % di grasso corporeo per vedere le tendenze</string>
     <string name="progress_log_body_fat_title">Registra grasso corporeo</string>

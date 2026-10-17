@@ -217,6 +217,8 @@ private fun MyProgressContent(container: AppContainer) {
         initial = OptionalNutrientGoals.Default
     )
     val includeToday by container.prefs.progressIncludeToday.collectAsState(initial = true)
+    // null until DataStore answers, so a restored Steps selection isn't reset early.
+    val healthConnectEnabled by container.prefs.healthConnectEnabled.collectAsState(initial = null)
     val prefsScope = rememberCoroutineScope()
     val weightMetric = weightUnit == "kg"
 
@@ -263,10 +265,28 @@ private fun MyProgressContent(container: AppContainer) {
         || ui.profile?.goalBodyFatPercentage != null
     val availableMetrics = availableProgressMetrics(
         bodyFatAvailable = bodyFatAvailable,
-        workoutHistoryAvailable = reliableWorkoutBurnSessions.isNotEmpty()
+        workoutHistoryAvailable = reliableWorkoutBurnSessions.isNotEmpty(),
+        stepsAvailable = healthConnectEnabled == true
     )
-    LaunchedEffect(availableMetrics, selectedMetric) {
-        if (selectedMetric !in availableMetrics) selectedMetric = ProgressMetric.WEIGHT
+    LaunchedEffect(availableMetrics, selectedMetric, healthConnectEnabled) {
+        if (healthConnectEnabled != null && selectedMetric !in availableMetrics) {
+            selectedMetric = ProgressMetric.WEIGHT
+        }
+    }
+
+    // Steps are read from Health Connect on demand, only while the Steps metric is
+    // showing; changing the window cancels a stale read.
+    var stepDays by remember { mutableStateOf<List<Pair<LocalDate, Int>>?>(null) }
+    var stepsHistoryLimited by remember { mutableStateOf(false) }
+    LaunchedEffect(selectedMetric, healthConnectEnabled, rangeStartDate, rangeEndDate) {
+        stepDays = null
+        if (selectedMetric != ProgressMetric.STEPS || healthConnectEnabled != true) return@LaunchedEffect
+        stepsHistoryLimited = stepsHistoryMayBeMissing(
+            start = rangeStartDate,
+            today = LocalDate.now(),
+            hasHistoryAccess = container.health.hasHealthDataHistory()
+        )
+        stepDays = container.health.readDailyStepTotals(rangeStartDate, rangeEndDate)
     }
 
     // Nutrition aggregates load on a background dispatcher. Changing `range`
@@ -345,6 +365,11 @@ private fun MyProgressContent(container: AppContainer) {
                             onLogBodyFat = { showAddBodyFatDialog = true }
                         )
                         ProgressMetric.WORKOUTS -> WorkoutProgressSection(filteredWorkouts)
+                        ProgressMetric.STEPS -> StepsProgressSection(
+                            days = stepDays,
+                            weekly = showsWeeklyStepBars(rangeStartDate, rangeEndDate),
+                            historyMayBeMissing = stepsHistoryLimited
+                        )
                     }
                 }
             }
@@ -363,6 +388,7 @@ private fun MyProgressContent(container: AppContainer) {
                         WorkoutHistoryLink(reliableWorkoutBurnSessions.size) { showAllWorkouts = true }
                     }
                 }
+                ProgressMetric.STEPS -> Unit
             }
 
             item {
@@ -2059,7 +2085,8 @@ private fun ProgressMetricSelector(
     val labels = mapOf(
         ProgressMetric.WEIGHT to stringResource(R.string.progress_metric_weight),
         ProgressMetric.BODY_FAT to stringResource(R.string.progress_metric_body_fat),
-        ProgressMetric.WORKOUTS to stringResource(R.string.progress_metric_workouts)
+        ProgressMetric.WORKOUTS to stringResource(R.string.progress_metric_workouts),
+        ProgressMetric.STEPS to stringResource(R.string.progress_metric_steps)
     )
     IosStyleSegmentedControl(
         options = metrics,
