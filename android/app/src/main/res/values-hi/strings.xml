@@ -481,6 +481,42 @@
     <string name="progress_previous_period">पिछली अवधि</string>
     <string name="progress_next_period">अगली अवधि</string>
 
+    <string name="weekly_recap_title">साप्ताहिक सारांश</string>
+    <string name="weekly_recap_previous_week">पिछला सप्ताह</string>
+    <string name="weekly_recap_next_week">अगला सप्ताह</string>
+    <string name="weekly_recap_days_logged">लॉग किए गए दिन</string>
+    <string name="weekly_recap_calorie_target_days">लक्ष्य में कैलोरी</string>
+    <string name="weekly_recap_protein_goal_days">प्रोटीन लक्ष्य पूरा</string>
+    <string name="weekly_recap_avg_calories">औसत कैलोरी</string>
+    <string name="weekly_recap_workouts">वर्कआउट</string>
+    <string name="weekly_recap_active_burn">सक्रिय बर्न</string>
+    <string name="weekly_recap_weight_change">वज़न में बदलाव</string>
+    <string name="weekly_recap_target_format">लक्ष्य %1$s</string>
+    <string name="weekly_recap_comparison_note">बदलावों की तुलना पिछले सप्ताह से की गई है।</string>
+    <string name="weekly_recap_empty">इस सप्ताह कुछ भी लॉग नहीं किया गया</string>
+    <string name="weekly_recap_highlight_every_day">हर दिन लॉग किया</string>
+    <string name="weekly_recap_highlight_average_on_target">औसत कैलोरी लक्ष्य में</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">सबसे लंबी स्ट्रीक: लगातार %1$d दिन</item>
+        <item quantity="other">सबसे लंबी स्ट्रीक: लगातार %1$d दिन</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">पिछले सप्ताह से +%1$d वर्कआउट</item>
+        <item quantity="other">पिछले सप्ताह से +%1$d वर्कआउट</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">पिछले सप्ताह से कैलोरी लक्ष्य में +%1$d दिन</item>
+        <item quantity="other">पिछले सप्ताह से कैलोरी लक्ष्य में +%1$d दिन</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">पिछले सप्ताह से प्रोटीन लक्ष्य वाले +%1$d दिन</item>
+        <item quantity="other">पिछले सप्ताह से प्रोटीन लक्ष्य वाले +%1$d दिन</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">पिछले सप्ताह से +%1$d लॉग किया गया दिन</item>
+        <item quantity="other">पिछले सप्ताह से +%1$d लॉग किए गए दिन</item>
+    </plurals>
+
     <string name="progress_weight_section">वज़न</string>
     <string name="progress_log_weight">वज़न लॉग करें</string>
     <string name="progress_stat_current">वर्तमान</string>

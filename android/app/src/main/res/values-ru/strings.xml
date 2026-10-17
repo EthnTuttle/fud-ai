@@ -484,6 +484,52 @@
     <string name="progress_previous_period">Предыдущий период</string>
     <string name="progress_next_period">Следующий период</string>
 
+    <string name="weekly_recap_title">Итоги недели</string>
+    <string name="weekly_recap_previous_week">Предыдущая неделя</string>
+    <string name="weekly_recap_next_week">Следующая неделя</string>
+    <string name="weekly_recap_days_logged">Дни с записями</string>
+    <string name="weekly_recap_calorie_target_days">Калории в цели</string>
+    <string name="weekly_recap_protein_goal_days">Цель по белку</string>
+    <string name="weekly_recap_avg_calories">Ср. калории</string>
+    <string name="weekly_recap_workouts">Тренировки</string>
+    <string name="weekly_recap_active_burn">Активный расход</string>
+    <string name="weekly_recap_weight_change">Изменение веса</string>
+    <string name="weekly_recap_target_format">Цель %1$s</string>
+    <string name="weekly_recap_comparison_note">Изменения указаны по сравнению с предыдущей неделей.</string>
+    <string name="weekly_recap_empty">На этой неделе нет записей</string>
+    <string name="weekly_recap_highlight_every_day">Записи каждый день</string>
+    <string name="weekly_recap_highlight_average_on_target">Средние калории в цели</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Лучшая серия: %1$d день подряд</item>
+        <item quantity="few">Лучшая серия: %1$d дня подряд</item>
+        <item quantity="many">Лучшая серия: %1$d дней подряд</item>
+        <item quantity="other">Лучшая серия: %1$d дня подряд</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d тренировка к предыдущей неделе</item>
+        <item quantity="few">+%1$d тренировки к предыдущей неделе</item>
+        <item quantity="many">+%1$d тренировок к предыдущей неделе</item>
+        <item quantity="other">+%1$d тренировки к предыдущей неделе</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d день в цели по калориям к предыдущей неделе</item>
+        <item quantity="few">+%1$d дня в цели по калориям к предыдущей неделе</item>
+        <item quantity="many">+%1$d дней в цели по калориям к предыдущей неделе</item>
+        <item quantity="other">+%1$d дня в цели по калориям к предыдущей неделе</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d день с целью по белку к предыдущей неделе</item>
+        <item quantity="few">+%1$d дня с целью по белку к предыдущей неделе</item>
+        <item quantity="many">+%1$d дней с целью по белку к предыдущей неделе</item>
+        <item quantity="other">+%1$d дня с целью по белку к предыдущей неделе</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d день с записями к предыдущей неделе</item>
+        <item quantity="few">+%1$d дня с записями к предыдущей неделе</item>
+        <item quantity="many">+%1$d дней с записями к предыдущей неделе</item>
+        <item quantity="other">+%1$d дня с записями к предыдущей неделе</item>
+    </plurals>
+
     <string name="progress_weight_section">Вес</string>
     <string name="progress_log_weight">Записать вес</string>
     <string name="progress_stat_current">Текущий</string>

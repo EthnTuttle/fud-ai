@@ -439,6 +439,52 @@
     <string name="progress_previous_period">Předchozí období</string>
     <string name="progress_next_period">Další období</string>
 
+    <string name="weekly_recap_title">Týdenní souhrn</string>
+    <string name="weekly_recap_previous_week">Předchozí týden</string>
+    <string name="weekly_recap_next_week">Další týden</string>
+    <string name="weekly_recap_days_logged">Zaznamenané dny</string>
+    <string name="weekly_recap_calorie_target_days">Kalorie v cíli</string>
+    <string name="weekly_recap_protein_goal_days">Cíl bílkovin splněn</string>
+    <string name="weekly_recap_avg_calories">Prům. kalorie</string>
+    <string name="weekly_recap_workouts">Tréninky</string>
+    <string name="weekly_recap_active_burn">Aktivní výdej</string>
+    <string name="weekly_recap_weight_change">Změna hmotnosti</string>
+    <string name="weekly_recap_target_format">Cíl %1$s</string>
+    <string name="weekly_recap_comparison_note">Změny jsou porovnány s předchozím týdnem.</string>
+    <string name="weekly_recap_empty">Tento týden nic nezaznamenáno</string>
+    <string name="weekly_recap_highlight_every_day">Zaznamenáno každý den</string>
+    <string name="weekly_recap_highlight_average_on_target">Průměrné kalorie v cíli</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Nejlepší série: %1$d den v řadě</item>
+        <item quantity="few">Nejlepší série: %1$d dny v řadě</item>
+        <item quantity="many">Nejlepší série: %1$d dne v řadě</item>
+        <item quantity="other">Nejlepší série: %1$d dní v řadě</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d trénink oproti předchozímu týdnu</item>
+        <item quantity="few">+%1$d tréninky oproti předchozímu týdnu</item>
+        <item quantity="many">+%1$d tréninku oproti předchozímu týdnu</item>
+        <item quantity="other">+%1$d tréninků oproti předchozímu týdnu</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d den v kalorickém cíli oproti předchozímu týdnu</item>
+        <item quantity="few">+%1$d dny v kalorickém cíli oproti předchozímu týdnu</item>
+        <item quantity="many">+%1$d dne v kalorickém cíli oproti předchozímu týdnu</item>
+        <item quantity="other">+%1$d dní v kalorickém cíli oproti předchozímu týdnu</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d den se splněným cílem bílkovin oproti předchozímu týdnu</item>
+        <item quantity="few">+%1$d dny se splněným cílem bílkovin oproti předchozímu týdnu</item>
+        <item quantity="many">+%1$d dne se splněným cílem bílkovin oproti předchozímu týdnu</item>
+        <item quantity="other">+%1$d dní se splněným cílem bílkovin oproti předchozímu týdnu</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d zaznamenaný den oproti předchozímu týdnu</item>
+        <item quantity="few">+%1$d zaznamenané dny oproti předchozímu týdnu</item>
+        <item quantity="many">+%1$d zaznamenaného dne oproti předchozímu týdnu</item>
+        <item quantity="other">+%1$d zaznamenaných dní oproti předchozímu týdnu</item>
+    </plurals>
+
     <string name="progress_weight_section">Váha</string>
     <string name="progress_log_weight">Zapsat váhu</string>
     <string name="progress_stat_current">Aktuální</string>

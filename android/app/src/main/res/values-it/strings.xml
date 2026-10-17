@@ -482,6 +482,42 @@
     <string name="progress_previous_period">Periodo precedente</string>
     <string name="progress_next_period">Periodo successivo</string>
 
+    <string name="weekly_recap_title">Riepilogo settimanale</string>
+    <string name="weekly_recap_previous_week">Settimana precedente</string>
+    <string name="weekly_recap_next_week">Settimana successiva</string>
+    <string name="weekly_recap_days_logged">Giorni registrati</string>
+    <string name="weekly_recap_calorie_target_days">Calorie nell’obiettivo</string>
+    <string name="weekly_recap_protein_goal_days">Obiettivo proteine raggiunto</string>
+    <string name="weekly_recap_avg_calories">Calorie medie</string>
+    <string name="weekly_recap_workouts">Allenamenti</string>
+    <string name="weekly_recap_active_burn">Consumo attivo</string>
+    <string name="weekly_recap_weight_change">Variazione di peso</string>
+    <string name="weekly_recap_target_format">Obiettivo %1$s</string>
+    <string name="weekly_recap_comparison_note">Le variazioni sono confrontate con la settimana precedente.</string>
+    <string name="weekly_recap_empty">Nessuna registrazione questa settimana</string>
+    <string name="weekly_recap_highlight_every_day">Registrato ogni giorno</string>
+    <string name="weekly_recap_highlight_average_on_target">Calorie medie nell’obiettivo</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Serie migliore: %1$d giorno di fila</item>
+        <item quantity="other">Serie migliore: %1$d giorni di fila</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d allenamento rispetto alla settimana precedente</item>
+        <item quantity="other">+%1$d allenamenti rispetto alla settimana precedente</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d giorno nell’obiettivo calorie rispetto alla settimana precedente</item>
+        <item quantity="other">+%1$d giorni nell’obiettivo calorie rispetto alla settimana precedente</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d giorno con obiettivo proteine rispetto alla settimana precedente</item>
+        <item quantity="other">+%1$d giorni con obiettivo proteine rispetto alla settimana precedente</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d giorno registrato rispetto alla settimana precedente</item>
+        <item quantity="other">+%1$d giorni registrati rispetto alla settimana precedente</item>
+    </plurals>
+
     <string name="progress_weight_section">Peso</string>
     <string name="progress_log_weight">Registra peso</string>
     <string name="progress_stat_current">Attuale</string>

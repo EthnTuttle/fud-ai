@@ -489,6 +489,62 @@
     <string name="progress_previous_period">الفترة السابقة</string>
     <string name="progress_next_period">الفترة التالية</string>
 
+    <string name="weekly_recap_title">الملخص الأسبوعي</string>
+    <string name="weekly_recap_previous_week">الأسبوع السابق</string>
+    <string name="weekly_recap_next_week">الأسبوع التالي</string>
+    <string name="weekly_recap_days_logged">أيام التسجيل</string>
+    <string name="weekly_recap_calorie_target_days">سعرات ضمن الهدف</string>
+    <string name="weekly_recap_protein_goal_days">تحقيق هدف البروتين</string>
+    <string name="weekly_recap_avg_calories">متوسط السعرات</string>
+    <string name="weekly_recap_workouts">التمارين</string>
+    <string name="weekly_recap_active_burn">الحرق النشط</string>
+    <string name="weekly_recap_weight_change">تغيّر الوزن</string>
+    <string name="weekly_recap_target_format">الهدف %1$s</string>
+    <string name="weekly_recap_comparison_note">التغييرات مقارنةً بالأسبوع السابق.</string>
+    <string name="weekly_recap_empty">لم يُسجَّل شيء هذا الأسبوع</string>
+    <string name="weekly_recap_highlight_every_day">سجّلت كل يوم</string>
+    <string name="weekly_recap_highlight_average_on_target">متوسط السعرات ضمن الهدف</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="zero">أفضل سلسلة: %1$d يوم على التوالي</item>
+        <item quantity="one">أفضل سلسلة: %1$d يوم على التوالي</item>
+        <item quantity="two">أفضل سلسلة: %1$d يومان على التوالي</item>
+        <item quantity="few">أفضل سلسلة: %1$d أيام على التوالي</item>
+        <item quantity="many">أفضل سلسلة: %1$d يومًا على التوالي</item>
+        <item quantity="other">أفضل سلسلة: %1$d يوم على التوالي</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="zero">+%1$d تمرين مقارنةً بالأسبوع السابق</item>
+        <item quantity="one">+%1$d تمرين مقارنةً بالأسبوع السابق</item>
+        <item quantity="two">+%1$d تمرينان مقارنةً بالأسبوع السابق</item>
+        <item quantity="few">+%1$d تمارين مقارنةً بالأسبوع السابق</item>
+        <item quantity="many">+%1$d تمرينًا مقارنةً بالأسبوع السابق</item>
+        <item quantity="other">+%1$d تمرين مقارنةً بالأسبوع السابق</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="zero">+%1$d يوم ضمن هدف السعرات مقارنةً بالأسبوع السابق</item>
+        <item quantity="one">+%1$d يوم ضمن هدف السعرات مقارنةً بالأسبوع السابق</item>
+        <item quantity="two">+%1$d يومان ضمن هدف السعرات مقارنةً بالأسبوع السابق</item>
+        <item quantity="few">+%1$d أيام ضمن هدف السعرات مقارنةً بالأسبوع السابق</item>
+        <item quantity="many">+%1$d يومًا ضمن هدف السعرات مقارنةً بالأسبوع السابق</item>
+        <item quantity="other">+%1$d يوم ضمن هدف السعرات مقارنةً بالأسبوع السابق</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="zero">+%1$d يوم بتحقيق هدف البروتين مقارنةً بالأسبوع السابق</item>
+        <item quantity="one">+%1$d يوم بتحقيق هدف البروتين مقارنةً بالأسبوع السابق</item>
+        <item quantity="two">+%1$d يومان بتحقيق هدف البروتين مقارنةً بالأسبوع السابق</item>
+        <item quantity="few">+%1$d أيام بتحقيق هدف البروتين مقارنةً بالأسبوع السابق</item>
+        <item quantity="many">+%1$d يومًا بتحقيق هدف البروتين مقارنةً بالأسبوع السابق</item>
+        <item quantity="other">+%1$d يوم بتحقيق هدف البروتين مقارنةً بالأسبوع السابق</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="zero">+%1$d يوم مسجّل مقارنةً بالأسبوع السابق</item>
+        <item quantity="one">+%1$d يوم مسجّل مقارنةً بالأسبوع السابق</item>
+        <item quantity="two">+%1$d يومان مسجّلان مقارنةً بالأسبوع السابق</item>
+        <item quantity="few">+%1$d أيام مسجّلة مقارنةً بالأسبوع السابق</item>
+        <item quantity="many">+%1$d يومًا مسجّلًا مقارنةً بالأسبوع السابق</item>
+        <item quantity="other">+%1$d يوم مسجّل مقارنةً بالأسبوع السابق</item>
+    </plurals>
+
     <string name="progress_weight_section">الوزن</string>
     <string name="progress_log_weight">تسجيل الوزن</string>
     <string name="progress_stat_current">الحالي</string>

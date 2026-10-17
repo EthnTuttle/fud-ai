@@ -481,6 +481,42 @@
     <string name="progress_previous_period">Vorige periode</string>
     <string name="progress_next_period">Volgende periode</string>
 
+    <string name="weekly_recap_title">Weekoverzicht</string>
+    <string name="weekly_recap_previous_week">Vorige week</string>
+    <string name="weekly_recap_next_week">Volgende week</string>
+    <string name="weekly_recap_days_logged">Gelogde dagen</string>
+    <string name="weekly_recap_calorie_target_days">Calorieën op doel</string>
+    <string name="weekly_recap_protein_goal_days">Eiwitdoel gehaald</string>
+    <string name="weekly_recap_avg_calories">Gem. calorieën</string>
+    <string name="weekly_recap_workouts">Trainingen</string>
+    <string name="weekly_recap_active_burn">Actieve verbranding</string>
+    <string name="weekly_recap_weight_change">Gewichtsverandering</string>
+    <string name="weekly_recap_target_format">Doel %1$s</string>
+    <string name="weekly_recap_comparison_note">Veranderingen worden vergeleken met de vorige week.</string>
+    <string name="weekly_recap_empty">Deze week niets gelogd</string>
+    <string name="weekly_recap_highlight_every_day">Elke dag gelogd</string>
+    <string name="weekly_recap_highlight_average_on_target">Gemiddelde calorieën op doel</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Beste reeks: %1$d dag op rij</item>
+        <item quantity="other">Beste reeks: %1$d dagen op rij</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d training t.o.v. vorige week</item>
+        <item quantity="other">+%1$d trainingen t.o.v. vorige week</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d dag op caloriedoel t.o.v. vorige week</item>
+        <item quantity="other">+%1$d dagen op caloriedoel t.o.v. vorige week</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d dag met eiwitdoel t.o.v. vorige week</item>
+        <item quantity="other">+%1$d dagen met eiwitdoel t.o.v. vorige week</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d gelogde dag t.o.v. vorige week</item>
+        <item quantity="other">+%1$d gelogde dagen t.o.v. vorige week</item>
+    </plurals>
+
     <string name="progress_weight_section">Gewicht</string>
     <string name="progress_log_weight">Gewicht loggen</string>
     <string name="progress_stat_current">Huidig</string>

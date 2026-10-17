@@ -487,6 +487,52 @@
     <string name="progress_previous_period">Poprzedni okres</string>
     <string name="progress_next_period">Następny okres</string>
 
+    <string name="weekly_recap_title">Podsumowanie tygodnia</string>
+    <string name="weekly_recap_previous_week">Poprzedni tydzień</string>
+    <string name="weekly_recap_next_week">Następny tydzień</string>
+    <string name="weekly_recap_days_logged">Dni z wpisami</string>
+    <string name="weekly_recap_calorie_target_days">Kalorie w celu</string>
+    <string name="weekly_recap_protein_goal_days">Cel białka osiągnięty</string>
+    <string name="weekly_recap_avg_calories">Śr. kalorie</string>
+    <string name="weekly_recap_workouts">Treningi</string>
+    <string name="weekly_recap_active_burn">Aktywne spalanie</string>
+    <string name="weekly_recap_weight_change">Zmiana wagi</string>
+    <string name="weekly_recap_target_format">Cel %1$s</string>
+    <string name="weekly_recap_comparison_note">Zmiany porównano z poprzednim tygodniem.</string>
+    <string name="weekly_recap_empty">W tym tygodniu nic nie zapisano</string>
+    <string name="weekly_recap_highlight_every_day">Zapisy każdego dnia</string>
+    <string name="weekly_recap_highlight_average_on_target">Średnie kalorie w celu</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Najlepsza seria: %1$d dzień z rzędu</item>
+        <item quantity="few">Najlepsza seria: %1$d dni z rzędu</item>
+        <item quantity="many">Najlepsza seria: %1$d dni z rzędu</item>
+        <item quantity="other">Najlepsza seria: %1$d dnia z rzędu</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d trening względem poprzedniego tygodnia</item>
+        <item quantity="few">+%1$d treningi względem poprzedniego tygodnia</item>
+        <item quantity="many">+%1$d treningów względem poprzedniego tygodnia</item>
+        <item quantity="other">+%1$d treningu względem poprzedniego tygodnia</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d dzień w celu kalorycznym względem poprzedniego tygodnia</item>
+        <item quantity="few">+%1$d dni w celu kalorycznym względem poprzedniego tygodnia</item>
+        <item quantity="many">+%1$d dni w celu kalorycznym względem poprzedniego tygodnia</item>
+        <item quantity="other">+%1$d dnia w celu kalorycznym względem poprzedniego tygodnia</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d dzień z celem białka względem poprzedniego tygodnia</item>
+        <item quantity="few">+%1$d dni z celem białka względem poprzedniego tygodnia</item>
+        <item quantity="many">+%1$d dni z celem białka względem poprzedniego tygodnia</item>
+        <item quantity="other">+%1$d dnia z celem białka względem poprzedniego tygodnia</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d dzień z wpisami względem poprzedniego tygodnia</item>
+        <item quantity="few">+%1$d dni z wpisami względem poprzedniego tygodnia</item>
+        <item quantity="many">+%1$d dni z wpisami względem poprzedniego tygodnia</item>
+        <item quantity="other">+%1$d dnia z wpisami względem poprzedniego tygodnia</item>
+    </plurals>
+
     <string name="progress_weight_section">Waga</string>
     <string name="progress_log_weight">Dodaj wagę</string>
     <string name="progress_stat_current">Aktualna</string>

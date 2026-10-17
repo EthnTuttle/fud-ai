@@ -543,6 +543,42 @@
     <string name="progress_previous_period">Önceki dönem</string>
     <string name="progress_next_period">Sonraki dönem</string>
 
+    <string name="weekly_recap_title">Haftalık Özet</string>
+    <string name="weekly_recap_previous_week">Önceki hafta</string>
+    <string name="weekly_recap_next_week">Sonraki hafta</string>
+    <string name="weekly_recap_days_logged">Kayıtlı günler</string>
+    <string name="weekly_recap_calorie_target_days">Hedefte kalori</string>
+    <string name="weekly_recap_protein_goal_days">Protein hedefine ulaşıldı</string>
+    <string name="weekly_recap_avg_calories">Ort. kalori</string>
+    <string name="weekly_recap_workouts">Antrenmanlar</string>
+    <string name="weekly_recap_active_burn">Aktif yakım</string>
+    <string name="weekly_recap_weight_change">Kilo değişimi</string>
+    <string name="weekly_recap_target_format">Hedef %1$s</string>
+    <string name="weekly_recap_comparison_note">Değişiklikler önceki haftayla karşılaştırılır.</string>
+    <string name="weekly_recap_empty">Bu hafta kayıt yok</string>
+    <string name="weekly_recap_highlight_every_day">Her gün kayıt yapıldı</string>
+    <string name="weekly_recap_highlight_average_on_target">Ortalama kalori hedefte</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">En iyi seri: art arda %1$d gün</item>
+        <item quantity="other">En iyi seri: art arda %1$d gün</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">Önceki haftaya göre +%1$d antrenman</item>
+        <item quantity="other">Önceki haftaya göre +%1$d antrenman</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">Önceki haftaya göre kalori hedefinde +%1$d gün</item>
+        <item quantity="other">Önceki haftaya göre kalori hedefinde +%1$d gün</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">Önceki haftaya göre protein hedefine ulaşılan +%1$d gün</item>
+        <item quantity="other">Önceki haftaya göre protein hedefine ulaşılan +%1$d gün</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">Önceki haftaya göre +%1$d kayıtlı gün</item>
+        <item quantity="other">Önceki haftaya göre +%1$d kayıtlı gün</item>
+    </plurals>
+
     <string name="progress_weight_section">Kilo</string>
     <string name="progress_log_weight">Kilo Kaydet</string>
     <string name="progress_stat_current">Mevcut</string>
