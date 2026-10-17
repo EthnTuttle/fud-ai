@@ -58,6 +58,22 @@ struct FoodEntryThumbnailTests {
         #expect(entry.thumbnailPhotoCandidates.first?.id == .filename("final.jpg"))
     }
 
+    @Test func ingredientOnlyMealStillGetsAPrimaryPhotoWhenSaved() throws {
+        let suite = "FoodEntryThumbnailTests.\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let ingredient = try #require(FoodImageStore.shared.store(data: imageData(.green), for: UUID()))
+        defer { FoodImageStore.shared.delete(filename: ingredient) }
+        var entry = meal()
+        entry.ingredients = [MealIngredient(name: "Rice", grams: 100, calories: 100, protein: 2, carbs: 20, fat: 1, imageFilename: ingredient)]
+        let store = FoodStore(observesExternalChanges: false, defaults: defaults)
+        store.replaceAllEntries([entry])
+        let saved = try #require(store.entries.first)
+        #expect(saved.imageFilename == ingredient)
+        #expect(saved.additionalImageFilenames.isEmpty)
+        #expect(saved.thumbnailPhotoCandidates.map(\.id) == [.filename(ingredient)])
+    }
+
     @Test func inMemoryProgressivePhotosUseFinalImageAndOpenItsGalleryPage() async throws {
         var entry = meal()
         entry.imageData = imageData(.red)

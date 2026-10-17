@@ -640,7 +640,9 @@ class FoodStore {
         var seen = Set<String>()
         let parentFilenames = ((entry.imageFilename.map { [$0] } ?? []) + entry.additionalImageFilenames)
             .filter { seen.insert($0).inserted }
-        if entry.imageFilename == nil { entry.imageFilename = parentFilenames.first }
+        if entry.imageFilename == nil {
+            entry.imageFilename = parentFilenames.first ?? entry.ingredients.flatMap(\.allImageFilenames).first
+        }
         entry.additionalImageFilenames = parentFilenames.filter { $0 != entry.imageFilename }
     }
 
