@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">제품 정보</string>
+    <string name="product_barcode">바코드</string>
+    <string name="product_package">내용량</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA 그룹</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">알레르기 유발 성분</string>
+    <string name="product_may_contain">함유 가능</string>
+    <string name="product_allergen_check">알레르기 성분 확인</string>
+    <string name="product_labels">라벨</string>
+    <string name="product_categories">카테고리</string>
+    <string name="product_ingredient_label">원재료 표시</string>
+    <string name="product_possible_allergen">알레르기 유발 가능 성분: %1$s</string>
+    <string name="product_info_settings_show">제품 정보 표시</string>
+    <string name="product_info_settings_fields">표시할 항목</string>
+    <string name="product_info_settings_footer">바코드로 스캔한 음식의 검토 및 편집 화면 맨 아래에 표시됩니다. 알레르기 성분 확인은 영향을 받지 않으며, 알레르기 민감 항목을 설정한 경우 항상 표시됩니다.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">단백질</string>
     <string name="macro_carbs">탄수화물</string>
@@ -526,6 +544,7 @@
     <string name="settings_height_unit">키 단위</string>
     <string name="settings_weight_unit">체중 단위</string>
     <string name="settings_week_starts">주 시작 요일</string>
+    <string name="settings_meal_times_customize">사용자 지정</string>
     <string name="settings_week_monday">월요일</string>
     <string name="settings_week_sunday">일요일</string>
     <string name="settings_notifications">알림</string>

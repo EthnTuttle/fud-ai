@@ -439,16 +439,9 @@ struct FoodResultView: View {
                         }
                     }
 
-                    if let productMetadata, productMetadata.hasDisplayDetails {
-                        FoodProductMetadataSection(
-                            metadata: productMetadata,
-                            allergenAnalysis: makeFoodEntry(includeImage: false).allergenAnalysis(
-                                for: profile.configuredAllergenSensitivities
-                            )
-                        )
-                    }
-                    if !(productMetadata?.hasDisplayDetails ?? false),
-                       !profile.configuredAllergenSensitivities.isEmpty {
+                    // Allergen safety stays near the top for configured sensitivities;
+                    // the longer product details sit at the end of the form (#426).
+                    if !profile.configuredAllergenSensitivities.isEmpty {
                         Section("Allergen Check") {
                             Text(
                                 makeFoodEntry(includeImage: false).allergenAnalysis(
@@ -625,6 +618,13 @@ struct FoodResultView: View {
                             .tint(AppColors.calorie)
                         DatePicker("Time", selection: $loggedAt, displayedComponents: .hourAndMinute)
                             .tint(AppColors.calorie)
+                    }
+
+                    if let productMetadata, productMetadata.hasDisplayDetails {
+                        FoodProductMetadataSection(
+                            metadata: productMetadata,
+                            allergenSensitivities: profile.configuredAllergenSensitivities
+                        )
                     }
 
                 }

@@ -37,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +73,7 @@ import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
 import com.apoorvdarshan.calorietracker.models.MealMicronutrientSnapshot
+import com.apoorvdarshan.calorietracker.models.ProductInfoField
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
@@ -191,6 +193,8 @@ fun FoodResultSheet(
     var showTimePicker by remember { mutableStateOf(false) }
     var moreNutritionExpanded by rememberSaveable { mutableStateOf(false) }
     var nutritionUnlocked by rememberSaveable { mutableStateOf(false) }
+    val productInfoShown by container.prefs.productInfoShown.collectAsState(initial = false)
+    val productInfoHiddenFields by container.prefs.productInfoHiddenFields.collectAsState(initial = emptySet())
     val reviewMacros = remember(analysis) { analysis.withIngredientMacroTotals() }
     var editableCalories by rememberSaveable(analysis) { mutableStateOf(reviewMacros.calories) }
     var editableProtein by rememberSaveable(analysis) { mutableStateOf(reviewMacros.protein) }
@@ -541,28 +545,9 @@ fun FoodResultSheet(
                 }
             }
 
-            analysis.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
-                item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                item {
-                    val previewEntry = FoodEntry(
-                        name = name,
-                        calories = analysis.calories,
-                        protein = analysis.protein,
-                        carbs = analysis.carbs,
-                        fat = analysis.fat,
-                        source = source,
-                        ingredients = analysis.ingredients,
-                        productMetadata = analysis.productMetadata
-                    )
-                    FoodProductMetadataCard(
-                        metadata,
-                        previewEntry.allergenAnalysis(profile?.allergenSensitivities.orEmpty())
-                    )
-                }
-            }
-            if (analysis.productMetadata?.hasDisplayDetails != true &&
-                profile?.allergenSensitivities?.isNotEmpty() == true
-            ) {
+            // Allergen safety stays near the top for configured sensitivities;
+            // the longer product details sit at the end of the sheet (#426).
+            if (profile?.allergenSensitivities?.isNotEmpty() == true) {
                 item { SheetSectionHeader(stringResource(R.string.product_allergen_check)) }
                 item {
                     val previewEntry = FoodEntry(
@@ -828,6 +813,20 @@ fun FoodResultSheet(
                         showTimePicker = true
                     }
                 )
+            }
+
+            analysis.productMetadata?.let { metadata ->
+                val productInfoFields = ProductInfoField.visibleFields(metadata, productInfoShown, productInfoHiddenFields)
+                if (productInfoFields.isNotEmpty()) {
+                    item { SheetSectionHeader(stringResource(R.string.product_information)) }
+                    item {
+                        FoodProductMetadataCard(
+                            metadata,
+                            productInfoFields,
+                            profile?.allergenSensitivities.orEmpty()
+                        )
+                    }
+                }
             }
         }
     }

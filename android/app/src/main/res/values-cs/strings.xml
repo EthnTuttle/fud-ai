@@ -41,6 +41,24 @@
     <string name="kg_per_week_format">%1$.2f kg/týd.</string>
     <string name="lbs_per_week_format">%1$.2f lbs/týd.</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informace o produktu</string>
+    <string name="product_barcode">Čárový kód</string>
+    <string name="product_package">Balení</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Skupina NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Alergeny</string>
+    <string name="product_may_contain">Může obsahovat</string>
+    <string name="product_allergen_check">Kontrola alergenů</string>
+    <string name="product_labels">Označení</string>
+    <string name="product_categories">Kategorie</string>
+    <string name="product_ingredient_label">Složení na etiketě</string>
+    <string name="product_possible_allergen">Možný alergen: %1$s</string>
+    <string name="product_info_settings_show">Zobrazit informace o produktu</string>
+    <string name="product_info_settings_fields">Zobrazené údaje</string>
+    <string name="product_info_settings_footer">Zobrazuje se na konci obrazovek kontroly a úprav u potravin naskenovaných čárovým kódem. Kontrola alergenů tím není ovlivněna a zobrazí se vždy, když máte nastavené citlivosti na alergeny.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Bílkoviny</string>
     <string name="macro_carbs">Sacharidy</string>

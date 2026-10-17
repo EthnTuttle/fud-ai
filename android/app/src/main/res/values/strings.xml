@@ -87,6 +87,10 @@
     <string name="product_labels">Labels</string>
     <string name="product_categories">Categories</string>
     <string name="product_ingredient_label">Ingredient label</string>
+    <string name="product_possible_allergen">Possible allergen: %1$s</string>
+    <string name="product_info_settings_show">Show product information</string>
+    <string name="product_info_settings_fields">Details to show</string>
+    <string name="product_info_settings_footer">Shown at the end of the review and edit screens for barcode-scanned foods. Allergen check is not affected and always appears when you have allergen sensitivities set.</string>
 
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protein</string>

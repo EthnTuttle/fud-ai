@@ -46,6 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -74,6 +75,7 @@ import com.apoorvdarshan.calorietracker.services.MealShare
 import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
+import com.apoorvdarshan.calorietracker.models.ProductInfoField
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
@@ -119,6 +121,8 @@ fun EditFoodEntrySheet(
         confirmValueChange = { it != SheetValue.Hidden }
     )
     var currentBaseEntry by remember(entry) { mutableStateOf(entry) }
+    val productInfoShown by container.prefs.productInfoShown.collectAsState(initial = false)
+    val productInfoHiddenFields by container.prefs.productInfoHiddenFields.collectAsState(initial = emptySet())
     // Stage removals separately so tapping × does not reset the other editor fields.
     var removedImageFilenames by remember(entry) { mutableStateOf(emptySet<String>()) }
     var previewPhotoIndex by remember { mutableStateOf<Int?>(null) }
@@ -498,18 +502,9 @@ fun EditFoodEntrySheet(
                 }
             }
 
-            currentBaseEntry.productMetadata?.takeIf { it.hasDisplayDetails }?.let { metadata ->
-                item { SheetSectionHeader(stringResource(R.string.product_information)) }
-                item {
-                    FoodProductMetadataCard(
-                        metadata,
-                        currentBaseEntry.allergenAnalysis(profile?.allergenSensitivities.orEmpty())
-                    )
-                }
-            }
-            if (currentBaseEntry.productMetadata?.hasDisplayDetails != true &&
-                profile?.allergenSensitivities?.isNotEmpty() == true
-            ) {
+            // Allergen safety stays near the top for configured sensitivities;
+            // the longer product details sit at the end of the sheet (#426).
+            if (profile?.allergenSensitivities?.isNotEmpty() == true) {
                 item { SheetSectionHeader(stringResource(R.string.product_allergen_check)) }
                 item {
                     SheetPillCard {
@@ -706,6 +701,20 @@ fun EditFoodEntrySheet(
                         showTimePicker = true
                     }
                 )
+            }
+
+            currentBaseEntry.productMetadata?.let { metadata ->
+                val productInfoFields = ProductInfoField.visibleFields(metadata, productInfoShown, productInfoHiddenFields)
+                if (productInfoFields.isNotEmpty()) {
+                    item { SheetSectionHeader(stringResource(R.string.product_information)) }
+                    item {
+                        FoodProductMetadataCard(
+                            metadata,
+                            productInfoFields,
+                            profile?.allergenSensitivities.orEmpty()
+                        )
+                    }
+                }
             }
 
             item { SheetSectionHeader("Actions") }

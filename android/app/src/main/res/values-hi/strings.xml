@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">उत्पाद जानकारी</string>
+    <string name="product_barcode">बारकोड</string>
+    <string name="product_package">पैकेज</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA समूह</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">एलर्जेन</string>
+    <string name="product_may_contain">इसमें हो सकता है</string>
+    <string name="product_allergen_check">एलर्जेन जांच</string>
+    <string name="product_labels">लेबल</string>
+    <string name="product_categories">श्रेणियाँ</string>
+    <string name="product_ingredient_label">सामग्री लेबल</string>
+    <string name="product_possible_allergen">संभावित एलर्जेन: %1$s</string>
+    <string name="product_info_settings_show">उत्पाद जानकारी दिखाएं</string>
+    <string name="product_info_settings_fields">दिखाए जाने वाले विवरण</string>
+    <string name="product_info_settings_footer">बारकोड से स्कैन किए गए खाद्य पदार्थों के लिए समीक्षा और संपादन स्क्रीन के अंत में दिखाई देती है। एलर्जेन जांच पर इसका कोई असर नहीं पड़ता और जब आपने एलर्जेन संवेदनशीलताएं सेट की हों, तो वह हमेशा दिखाई देती है।</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">प्रोटीन</string>
     <string name="macro_carbs">कार्ब्स</string>
@@ -527,6 +545,7 @@
     <string name="settings_height_unit">ऊंचाई की इकाई</string>
     <string name="settings_weight_unit">वज़न की इकाई</string>
     <string name="settings_week_starts">सप्ताह शुरू होता है</string>
+    <string name="settings_meal_times_customize">कस्टमाइज़ करें</string>
     <string name="settings_week_monday">सोमवार</string>
     <string name="settings_week_sunday">रविवार</string>
     <string name="settings_notifications">सूचनाएँ</string>

@@ -87,6 +87,10 @@
     <string name="product_labels">Etiketler</string>
     <string name="product_categories">Kategoriler</string>
     <string name="product_ingredient_label">İçindekiler etiketi</string>
+    <string name="product_possible_allergen">Olası alerjen: %1$s</string>
+    <string name="product_info_settings_show">Ürün bilgisini göster</string>
+    <string name="product_info_settings_fields">Gösterilecek ayrıntılar</string>
+    <string name="product_info_settings_footer">Barkodla taranan yiyeceklerde inceleme ve düzenleme ekranlarının sonunda gösterilir. Alerjen kontrolü bundan etkilenmez ve alerjen hassasiyetleri ayarladığınızda her zaman görünür.</string>
 
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protein</string>

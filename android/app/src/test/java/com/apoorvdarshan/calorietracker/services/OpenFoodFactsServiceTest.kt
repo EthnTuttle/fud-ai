@@ -124,6 +124,7 @@ class OpenFoodFactsServiceTest {
                     "brands":"Acme",
                     "quantity":"250 g",
                     "ingredients_text":"Oats, milk",
+                    "ingredients_text_with_allergens":"Oats, <span class=\"allergen\">milk</span>",
                     "allergens_tags":["en:milk"],
                     "traces_tags":["en:nuts"],
                     "nutriscore_grade":"a",
@@ -162,7 +163,7 @@ class OpenFoodFactsServiceTest {
         assertEquals(listOf("serving", "package"), result.servingUnitOptions.map { it.unit })
         assertEquals("0012345678905", result.productMetadata?.barcode)
         assertEquals("250 g", result.productMetadata?.packageQuantity)
-        assertEquals("Oats, milk", result.productMetadata?.ingredientsText)
+        assertEquals("Oats, _milk_", result.productMetadata?.ingredientsText)
         assertEquals(listOf("Milk"), result.productMetadata?.allergens)
         assertEquals(listOf("Nuts"), result.productMetadata?.traces)
         assertEquals("A", result.productMetadata?.nutriScore)
@@ -177,7 +178,8 @@ class OpenFoodFactsServiceTest {
         assertEquals(
             "product_name,generic_name,brands,quantity,product_quantity,product_quantity_unit," +
                 "serving_size,serving_quantity,nutriments,ingredients_text,allergens_tags,traces_tags," +
-                "nutriscore_grade,nova_group,ecoscore_grade,labels_tags,categories_tags,image_front_url",
+                "nutriscore_grade,nova_group,ecoscore_grade,labels_tags,categories_tags,image_front_url," +
+                "ingredients_text_with_allergens",
             request.url.queryParameter("fields")
         )
         assertEquals(

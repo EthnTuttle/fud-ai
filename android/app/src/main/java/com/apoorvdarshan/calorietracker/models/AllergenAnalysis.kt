@@ -47,6 +47,13 @@ data class AllergenAnalysis(
             return AllergenAnalysis(AllergenAssessment.UNABLE_TO_ASSESS)
         }
 
+        /**
+         * Whether [candidate] mentions any of [sensitivities], with the same aliases and plural
+         * handling as [evaluate]. Used to highlight ingredient label entries.
+         */
+        fun mentionsAny(sensitivities: List<String>, candidate: String): Boolean =
+            sensitivities.map(::normalize).filter(String::isNotEmpty).any { matches(it, candidate) }
+
         private fun normalize(value: String): String {
             val folded = Normalizer.normalize(value, Normalizer.Form.NFD)
                 .replace("\\p{Mn}+".toRegex(), "")

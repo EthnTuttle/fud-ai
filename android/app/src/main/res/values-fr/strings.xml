@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informations sur le produit</string>
+    <string name="product_barcode">Code-barres</string>
+    <string name="product_package">Emballage</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Groupe NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergènes</string>
+    <string name="product_may_contain">Peut contenir</string>
+    <string name="product_allergen_check">Vérification des allergènes</string>
+    <string name="product_labels">Labels</string>
+    <string name="product_categories">Catégories</string>
+    <string name="product_ingredient_label">Liste des ingrédients</string>
+    <string name="product_possible_allergen">Allergène possible : %1$s</string>
+    <string name="product_info_settings_show">Afficher les informations sur le produit</string>
+    <string name="product_info_settings_fields">Détails à afficher</string>
+    <string name="product_info_settings_footer">Affichées à la fin des écrans de vérification et de modification des aliments scannés par code-barres. La vérification des allergènes n\'est pas concernée et apparaît toujours lorsque vous avez défini des sensibilités aux allergènes.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protéines</string>
     <string name="macro_carbs">Glucides</string>
@@ -528,6 +546,7 @@
     <string name="settings_height_unit">Unité de taille</string>
     <string name="settings_weight_unit">Unité de poids</string>
     <string name="settings_week_starts">La semaine commence le</string>
+    <string name="settings_meal_times_customize">Personnaliser</string>
     <string name="settings_week_monday">Lundi</string>
     <string name="settings_week_sunday">Dimanche</string>
     <string name="settings_notifications">Notifications</string>

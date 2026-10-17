@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informazioni sul prodotto</string>
+    <string name="product_barcode">Codice a barre</string>
+    <string name="product_package">Confezione</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Gruppo NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergeni</string>
+    <string name="product_may_contain">Può contenere</string>
+    <string name="product_allergen_check">Controllo allergeni</string>
+    <string name="product_labels">Etichette</string>
+    <string name="product_categories">Categorie</string>
+    <string name="product_ingredient_label">Elenco ingredienti</string>
+    <string name="product_possible_allergen">Possibile allergene: %1$s</string>
+    <string name="product_info_settings_show">Mostra informazioni sul prodotto</string>
+    <string name="product_info_settings_fields">Dettagli da mostrare</string>
+    <string name="product_info_settings_footer">Mostrate alla fine delle schermate di revisione e modifica degli alimenti scansionati con codice a barre. Il controllo allergeni non cambia e compare sempre quando hai impostato delle sensibilità agli allergeni.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Proteine</string>
     <string name="macro_carbs">Carboidrati</string>
@@ -528,6 +546,7 @@
     <string name="settings_height_unit">Unità di altezza</string>
     <string name="settings_weight_unit">Unità di peso</string>
     <string name="settings_week_starts">La settimana inizia il</string>
+    <string name="settings_meal_times_customize">Personalizza</string>
     <string name="settings_week_monday">Lunedì</string>
     <string name="settings_week_sunday">Domenica</string>
     <string name="settings_notifications">Notifiche</string>

@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Productinformatie</string>
+    <string name="product_barcode">Barcode</string>
+    <string name="product_package">Verpakking</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA-groep</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergenen</string>
+    <string name="product_may_contain">Kan bevatten</string>
+    <string name="product_allergen_check">Allergenencontrole</string>
+    <string name="product_labels">Keurmerken</string>
+    <string name="product_categories">Categorieën</string>
+    <string name="product_ingredient_label">Ingrediëntenlijst</string>
+    <string name="product_possible_allergen">Mogelijk allergeen: %1$s</string>
+    <string name="product_info_settings_show">Productinformatie tonen</string>
+    <string name="product_info_settings_fields">Te tonen details</string>
+    <string name="product_info_settings_footer">Wordt onderaan de controle- en bewerkschermen getoond voor voedingsmiddelen die met een barcode zijn gescand. De allergenencontrole verandert niet en verschijnt altijd als je allergeengevoeligheden hebt ingesteld.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Eiwit</string>
     <string name="macro_carbs">Koolhydraten</string>
@@ -527,6 +545,7 @@
     <string name="settings_height_unit">Lengte-eenheid</string>
     <string name="settings_weight_unit">Gewichtseenheid</string>
     <string name="settings_week_starts">Week begint op</string>
+    <string name="settings_meal_times_customize">Aanpassen</string>
     <string name="settings_week_monday">Maandag</string>
     <string name="settings_week_sunday">Zondag</string>
     <string name="settings_notifications">Meldingen</string>
