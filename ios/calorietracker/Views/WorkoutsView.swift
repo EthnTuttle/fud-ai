@@ -329,7 +329,13 @@ private struct ExerciseLibraryBrowserView: View {
                             defaultValue: "Source",
                             comment: "Exercise library filter title: all exercises or only ones the user created"
                         ),
-                        value: showsOnlyUserExercises ? String(localized: "Mine") : String(localized: "All"),
+                        value: showsOnlyUserExercises
+                            ? String(localized: "Mine")
+                            : String(
+                                localized: "workouts.filter.source.all",
+                                defaultValue: "All",
+                                comment: "Exercise library Source filter value when exercises from every source are shown"
+                            ),
                         systemImage: "person.crop.circle",
                         isActive: showsOnlyUserExercises
                     ) {

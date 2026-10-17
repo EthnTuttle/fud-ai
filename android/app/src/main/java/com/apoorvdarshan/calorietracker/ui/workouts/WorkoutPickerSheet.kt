@@ -18,12 +18,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -88,6 +90,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -644,7 +647,8 @@ private fun PickerSourceControl(
     modifier: Modifier = Modifier
 ) {
     FudGlassSurface(modifier = modifier.fillMaxWidth(), cornerRadius = 18.dp, padding = 4.dp) {
-        Row(Modifier.fillMaxWidth()) {
+        // Equal-height segments: a label that wraps to two lines grows all three together.
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
             listOf(
                 WorkoutPickerSource.DATASET to stringResource(R.string.workout_source_dataset),
                 WorkoutPickerSource.SAVED to stringResource(R.string.workout_source_saved),
@@ -654,10 +658,11 @@ private fun PickerSourceControl(
                 Row(
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxHeight()
                         .clip(RoundedCornerShape(14.dp))
                         .background(if (selected) AppColors.Calorie.copy(alpha = 0.14f) else androidx.compose.ui.graphics.Color.Transparent)
                         .clickable { onSelect(option) }
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = 10.dp, horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -671,13 +676,17 @@ private fun PickerSourceControl(
                         tint = if (selected) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.48f),
                         modifier = Modifier.size(17.dp)
                     )
-                    Spacer(Modifier.width(7.dp))
+                    Spacer(Modifier.width(6.dp))
+                    // Three segments share the row, so longer translations
+                    // ("Verilənlər bazası", "Base de données") wrap instead of truncating.
                     Text(
                         label,
                         color = if (selected) AppColors.Calorie else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f),
                         fontSize = 13.sp,
+                        lineHeight = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                 }

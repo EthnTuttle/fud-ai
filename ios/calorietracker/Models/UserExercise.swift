@@ -1,11 +1,12 @@
 import Foundation
 
 enum UserExercise {
-    static let idPrefix = "user_exercise_"
+    nonisolated static let idPrefix = "user_exercise_"
 
     static func newID() -> String { "\(idPrefix)\(UUID().uuidString)" }
 
-    static func isUserExercise(_ id: String) -> Bool { id.hasPrefix(idPrefix) }
+    /// Pure prefix check; nonisolated so library filtering can run it off the main actor.
+    nonisolated static func isUserExercise(_ id: String) -> Bool { id.hasPrefix(idPrefix) }
 
     static func photoFilename(forExerciseID id: String) -> String {
         let uuid = id.replacingOccurrences(of: idPrefix, with: "")
