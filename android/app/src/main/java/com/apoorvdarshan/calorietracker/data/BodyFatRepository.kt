@@ -47,6 +47,9 @@ class BodyFatRepository(
     }
 
     suspend fun deleteEntry(id: UUID) {
+        // Remember the deletion first, like WeightRepository.deleteEntry: a Health Connect
+        // re-import would otherwise bring back a reading another app wrote.
+        prefs.addDeletedBodyFatEntryId(id.toString())
         prefs.updateBodyFatEntries { current -> current.filter { it.id != id } }
         syncProfileBodyFatToLatest()
         // Delete the HC record even when sync is off (iOS parity, best-effort) —
@@ -77,7 +80,8 @@ class BodyFatRepository(
      * under their original UUID (reinstall recovery); the same-id upsert is a no-op
      * when the entry still exists locally. The change-token path filters own records
      * at the manager level, so live echo-imports stay suppressed — see
-     * WeightRepository.importExternalWeights for the full rationale.
+     * WeightRepository.importExternalWeights for the full rationale. Ids the user
+     * deleted are skipped, so a re-import can't bring them back.
      */
     suspend fun importExternalBodyFats(external: List<ExternalBodyFat>) {
         val manager = health ?: return
@@ -92,19 +96,23 @@ class BodyFatRepository(
             }
         if (incoming.isEmpty()) return
         var changed = false
-        prefs.updateBodyFatEntries { current ->
-            val byId = current.associateBy { it.id }.toMutableMap()
-            for (entry in incoming) {
-                val existing = byId[entry.id]
-                if (existing == null || abs(existing.bodyFatFraction - entry.bodyFatFraction) > 0.0001 || existing.date != entry.date) {
-                    byId[entry.id] = entry
-                    changed = true
-                }
-            }
-            if (changed) byId.values.sortedBy { it.date } else current
+        // Same transaction as the merge, like WeightRepository.importExternalWeights.
+        prefs.updateBodyFatEntriesSkippingDeleted { current, deletedIds ->
+            val merged = mergeExternalBodyFats(current, incoming, deletedIds)
+            changed = merged != null
+            merged ?: current
         }
         if (!changed) return
         syncProfileBodyFatToLatest()
+    }
+
+    /** Same as [WeightRepository.heldExternalReadingTimes], for body-fat readings. */
+    suspend fun heldExternalReadingTimes(external: List<ExternalBodyFat>): List<Instant> {
+        val manager = health ?: return emptyList()
+        val held = prefs.bodyFatEntries.first().mapTo(HashSet()) { it.id }
+        return external
+            .filter { !manager.isOwnRecord(it.clientRecordId) && externalId(it.clientRecordId, it.recordId, it.time) in held }
+            .map { it.time }
     }
 
     /** Stable id for an external record: prefer the source's clientRecordId, then the
@@ -135,4 +143,26 @@ class BodyFatRepository(
         val manager = health ?: return false
         return prefs.healthConnectEnabled.first() && manager.hasBodyFatWrite()
     }
+}
+
+/**
+ * Upserts Health Connect body-fat readings into [current] by id, skipping ids in
+ * [deletedIds]. Returns the merged history sorted by date, or null when nothing changed.
+ */
+internal fun mergeExternalBodyFats(
+    current: List<BodyFatEntry>,
+    incoming: List<BodyFatEntry>,
+    deletedIds: Set<String>
+): List<BodyFatEntry>? {
+    val byId = current.associateBy { it.id }.toMutableMap()
+    var changed = false
+    for (entry in incoming) {
+        if (entry.id.toString() in deletedIds) continue
+        val existing = byId[entry.id]
+        if (existing == null || abs(existing.bodyFatFraction - entry.bodyFatFraction) > 0.0001 || existing.date != entry.date) {
+            byId[entry.id] = entry
+            changed = true
+        }
+    }
+    return if (changed) byId.values.sortedBy { it.date } else null
 }

@@ -62,6 +62,24 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Məhsul məlumatı</string>
+    <string name="product_barcode">Barkod</string>
+    <string name="product_package">Qablaşdırma</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">NOVA qrupu</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Allergenlər</string>
+    <string name="product_may_contain">Tərkibində ola bilər</string>
+    <string name="product_allergen_check">Allergen yoxlaması</string>
+    <string name="product_labels">Etiketlər</string>
+    <string name="product_categories">Kateqoriyalar</string>
+    <string name="product_ingredient_label">Tərkib etiketi</string>
+    <string name="product_possible_allergen">Mümkün allergen: %1$s</string>
+    <string name="product_info_settings_show">Məhsul məlumatını göstər</string>
+    <string name="product_info_settings_fields">Göstəriləcək məlumatlar</string>
+    <string name="product_info_settings_footer">Barkodla skan edilmiş qidalar üçün nəzərdən keçirmə və redaktə ekranlarının sonunda göstərilir. Allergen yoxlamasına təsir etmir və allergen həssaslıqlarınız təyin olunduqda həmişə göstərilir.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protein</string>
     <string name="macro_carbs">Karbohidrat</string>
@@ -355,6 +373,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Yemək Təfərrüatları</string>
     <string name="sheet_serving">Porsiya</string>
+    <string name="recipe_servings_title">Reseptdəki porsiyalar</string>
+    <string name="recipe_servings_footer">Bunu bütün inqrediyentləri əlavə etdikdən sonra təyin edin. Fud AI resepti bölür ki, 1 porsiya qeyd edəsiniz, Saxlanılmış Yeməklər isə həmin porsiya ölçüsünü yadda saxlayır.</string>
+    <string name="cd_recipe_servings_fewer">Daha az porsiya</string>
+    <string name="cd_recipe_servings_more">Daha çox porsiya</string>
     <string name="sheet_nutrition">Qidalanma</string>
     <string name="sheet_meal">Yemək</string>
     <string name="sheet_more_nutrition">Daha çox Qidalanma</string>
@@ -510,6 +532,11 @@
     <string name="settings_goal_weight">Hədəf Çəki</string>
     <string name="settings_calories">Kalorilər</string>
     <string name="settings_recalculate_goals">Hədəfləri Yenidən Hesabla</string>
+    <string name="settings_estimated_maintenance">Təxmini saxlama kalorisi</string>
+    <string name="settings_maintenance_deficit_format">Kəsir: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_surplus_format">Artıq kalori: %1$,d kcal/gün</string>
+    <string name="settings_maintenance_close">Hədəf saxlama kalorisinə yaxındır</string>
+    <string name="settings_estimated_maintenance_info">Təxmini saxlama kalorisi adi bir gündə yandırdığınız kaloridir: profilinizdəki BMR aktivlik səviyyənizə vurulur. Bundan az yemək arıqlamaq üçün kəsir, çox yemək isə çəki almaq üçün artıq kalori yaradır. Göstərilən kəsir və ya artıq kalori hədəf kalorinizdən bu təxminin çıxılmasıdır. Bu düstur əsaslı təxmindir, ona görə real sərfiniz fərqlənə bilər və hədəflərin yenidən hesablanması hədəfinizi qeyd etdiyiniz qida, çəki meyli və ya ölçülmüş enerji sərfi əsasında təyin edə bilər. Bu tibbi məsləhət deyil.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · avto</string>
     <string name="settings_macro_pinned_a11y">Sabitlənmiş</string>
@@ -546,8 +573,25 @@
     <string name="settings_clear_key">Açarı təmizlə</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Köhnə çəki qeydləri</string>
     <string name="settings_clear_food_log">Yemək Qeydlərini Təmizlə</string>
     <string name="settings_delete_all_data">Bütün Məlumatları Sil</string>
+    <string name="storage_title">Yaddaş</string>
+    <string name="storage_saved_photos">Saxlanmış şəkillər</string>
+    <string name="storage_on_device_models">Cihazdakı modellər</string>
+    <string name="storage_cache">Keş</string>
+    <string name="storage_compress_photos">Şəkilləri sıxışdır</string>
+    <string name="storage_clear_cache">Keşi təmizlə</string>
+    <string name="storage_footer">«Şəkilləri sıxışdır» 2048 pikseldən böyük şəkillərin ölçüsünü həmişəlik kiçildir. «Keşi təmizlə» miniatürləri və endirilmiş məşq şəkillərini silir; lazım olduqda yenidən yaradılırlar. Cihazdakı modelləri onların süni intellekt və ya nitq ayarlarından silin.</string>
+    <string name="storage_compress_confirm_title">Şəkillər sıxışdırılsın?</string>
+    <string name="storage_compress_confirm_message">Ən uzun tərəfi 2048 pikseldən böyük olan şəkillər həmişəlik 2048 pikselə kiçildiləcək və JPEG kimi saxlanılacaq. Kiçik şəkillər dəyişməz qalır. Bunu geri qaytarmaq mümkün deyil.</string>
+    <string name="storage_compress_action">Sıxışdır</string>
+    <string name="storage_compressing_progress">Şəkillər sıxışdırılır… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Şəkillər sıxışdırıldı</string>
+    <string name="storage_compress_freed">%1$s boşaldıldı.</string>
+    <string name="storage_compress_nothing">Sıxışdırılmalı şəkil yoxdur.</string>
+    <string name="storage_compress_unreadable">Bəzi şəkillər oxuna bilmədi və dəyişdirilmədi.</string>
+    <string name="storage_compress_failed">Bəzi şəkilləri sıxışdırmaq mümkün olmadı və onlar dəyişdirilmədi. Cihazınızda boş yer olduğundan əmin olun, sonra yenidən cəhd edin.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Yemək qeydləri təmizlənsin?</string>
@@ -812,4 +856,5 @@
     <string name="settings_save_photos_to_gallery">Fotolarda saxla</string>
     <string name="settings_save_photos_to_gallery_subtitle">Qeyd edərkən yemək fotolarını qalereyada da saxla</string>
     <string name="settings_other_nutrients_note">Kalori, protein, karbohidrat və yağ hədəflərindən ayrıdır.</string>
+    <string name="label_date">Tarix</string>
 </resources>

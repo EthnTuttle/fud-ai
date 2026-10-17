@@ -6,6 +6,32 @@ enum GoalEnergyMath {
     static let kilocaloriesPerKilogram = 7_700.0
 }
 
+/// How the calorie target the user follows compares with their formula maintenance estimate
+/// (BMR × activity). Shown in Settings as an estimate, never as measured burn.
+struct MaintenanceBreakdown: Equatable {
+    enum Balance: Equatable {
+        case deficit
+        case maintenance
+        case surplus
+    }
+
+    /// Differences smaller than this read as "close to maintenance": the formula estimate is far
+    /// less precise than ±50 kcal, so an AI-tuned Maintain target must not show a "30 kcal deficit".
+    static let maintenanceTolerance = 50
+
+    let maintenanceCalories: Int
+    let targetCalories: Int
+
+    /// Target minus maintenance: negative is a daily deficit, positive a daily surplus.
+    var dailyDifference: Int { targetCalories - maintenanceCalories }
+
+    var balance: Balance {
+        if dailyDifference <= -Self.maintenanceTolerance { return .deficit }
+        if dailyDifference >= Self.maintenanceTolerance { return .surplus }
+        return .maintenance
+    }
+}
+
 // MARK: - Enums
 
 enum Gender: String, Codable, CaseIterable {
@@ -273,6 +299,12 @@ struct UserProfile: Codable, Equatable {
     }
 
     var effectiveCalories: Int { customCalories ?? dailyCalories }
+
+    /// Maintenance uses the same truncated TDEE as `dailyCalories`, so a formula target's
+    /// difference is exactly `calorieAdjustment`; custom and AI-set targets compare as followed.
+    var maintenanceBreakdown: MaintenanceBreakdown {
+        MaintenanceBreakdown(maintenanceCalories: Int(tdee), targetCalories: effectiveCalories)
+    }
 
     /// A macro is "pinned" when its custom value is set; "auto" when nil.
     /// Auto macros split the remaining calories (after subtracting pinned macros) using

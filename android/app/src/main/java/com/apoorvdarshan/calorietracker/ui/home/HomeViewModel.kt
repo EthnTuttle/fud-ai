@@ -5,8 +5,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.models.BarcodeLabelMemory
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FastingSession
+import com.apoorvdarshan.calorietracker.models.LabelScanBarcodeHandoff
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.AddMenuConfig
 import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
@@ -96,6 +99,12 @@ data class HomeUiState(
      * re-storing the image bytes as a new file on disk.
      */
     val pendingReviewSource: FoodEntry? = null,
+    /**
+     * The analysis rebuilt from the user's saved nutrition label when Open Food
+     * Facts could not use a barcode (#485). The review shows its note only while
+     * this exact object is the pending analysis.
+     */
+    val savedLabelAnalysis: FoodAnalysis? = null,
     val analyzing: Boolean = false,
     val foodSaveInProgress: Boolean = false,
     val foodLoggingBlocked: Boolean = false,
@@ -116,6 +125,18 @@ data class HomeUiState(
         get() = listOfNotNull(pendingImageBytes) + pendingAdditionalImageBytes
     val pendingDraftImageFilenames: List<String>
         get() = listOfNotNull(pendingDraftImageFilename) + pendingDraftAdditionalImageFilenames
+    val pendingUsesSavedBarcodeLabel: Boolean
+        get() = pendingAnalysis != null && pendingAnalysis === savedLabelAnalysis
+    /**
+     * The review re-logs a logged entry (Saved Meals or a saved barcode label) that
+     * already holds one portion of a split recipe, so it hides "Servings in recipe" (#458).
+     */
+    val pendingReviewIsLoggedPortion: Boolean
+        get() = when {
+            pendingReviewSource != null -> RecipeServings.isLoggedPortion(pendingReviewSource.servingUnitOptions)
+            pendingUsesSavedBarcodeLabel -> RecipeServings.isLoggedPortion(pendingAnalysis?.servingUnitOptions.orEmpty())
+            else -> false
+        }
     val activeFast: FastingSession? get() = fastingSessions.lastOrNull { it.isActive }
     fun isFavorite(entry: FoodEntry): Boolean = entry.favoriteKey in favoriteKeys
 }
@@ -140,6 +161,10 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
 private val _stepsRefreshEpoch = MutableStateFlow(0)
     private val _burnRefreshTick = MutableStateFlow(0)
     private var retryAction: (() -> Unit)? = null
+    /** Barcode carried from the "Scan label" prompt into the next label photo (#485). */
+    private val labelScanBarcode = LabelScanBarcodeHandoff()
+    /** The barcode whose error dialog currently offers "Scan label". */
+    private var scanLabelOfferBarcode: String? = null
     /** The in-flight photo/text/barcode analysis behind the analyzing overlay, so Cancel can abort it. */
     private var analysisJob: Job? = null
     /** Bumped on each analysis launch so a delayed cancel cleanup cannot wipe a newer draft. */
@@ -449,6 +474,7 @@ viewModelScope.launch {
 
     fun analyzeText(description: String) {
         retryAction = { analyzeText(description) }
+        labelScanBarcode.clear()
         analysisJob = launchAnalysis { _ ->
             val previousDraftImages = _ui.value.pendingDraftImageFilenames
             container.analyzingFood.value = true
@@ -482,6 +508,7 @@ viewModelScope.launch {
 
     fun analyzePhoto(bytes: ByteArray) {
         retryAction = { analyzePhoto(bytes) }
+        labelScanBarcode.clear()
         analysisJob = launchAnalysis { _ ->
             val previousDraftImages = _ui.value.pendingDraftImageFilenames
             container.analyzingFood.value = true
@@ -518,8 +545,19 @@ viewModelScope.launch {
         note: String? = null,
         progressiveMeal: Boolean = false
     ) {
+        // A label photo taken from the barcode prompt keeps that barcode (#485).
+        runPhotoAnalysis(imageBytesList, note, progressiveMeal, labelScanBarcode.take())
+    }
+
+    private fun runPhotoAnalysis(
+        imageBytesList: List<ByteArray>,
+        note: String?,
+        progressiveMeal: Boolean,
+        labelBarcode: String?
+    ) {
         val retryImages = imageBytesList.toList()
-        retryAction = { analyzePhotos(retryImages, note, progressiveMeal) }
+        retryAction = { runPhotoAnalysis(retryImages, note, progressiveMeal, labelBarcode) }
+        val source = if (labelBarcode != null) FoodSource.NUTRITION_LABEL else FoodSource.SNAP_FOOD
         analysisJob = launchAnalysis { _ ->
             val images = imageBytesList.filter { it.isNotEmpty() }.take(10)
             if (images.isEmpty()) return@launchAnalysis
@@ -532,19 +570,24 @@ viewModelScope.launch {
                 pendingAnalysis = null,
                 pendingImageBytes = images.first(),
                 pendingAdditionalImageBytes = images.drop(1),
-                pendingFoodSource = FoodSource.SNAP_FOOD,
+                pendingFoodSource = source,
                 pendingDraftImageFilename = null,
                 pendingDraftAdditionalImageFilenames = emptyList(),
                 pendingReviewSource = null
             )
             discardPendingDraft(previousDraftImages)
             try {
-                val analysis = container.foodAnalysis.analyzeFood(
+                val analyzed = container.foodAnalysis.analyzeFood(
                     images,
                     note?.takeIf { it.isNotBlank() },
                     progressiveMeal
                 ).copy(customNote = note?.takeIf { it.isNotBlank() })
-                savePendingDraft(analysis, imageBytesList = images, source = FoodSource.SNAP_FOOD)
+                val analysis = if (labelBarcode != null) {
+                    analyzed.copy(productMetadata = BarcodeLabelMemory.labelMetadata(analyzed.productMetadata, labelBarcode))
+                } else {
+                    analyzed
+                }
+                savePendingDraft(analysis, imageBytesList = images, source = source)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: AiError) {
@@ -559,6 +602,8 @@ viewModelScope.launch {
 
     fun lookupBarcode(barcode: String) {
         retryAction = { lookupBarcode(barcode) }
+        labelScanBarcode.clear()
+        scanLabelOfferBarcode = null
         analysisJob = launchAnalysis { _ ->
             val previousDraftImages = _ui.value.pendingDraftImageFilenames
             container.analyzingFood.value = true
@@ -586,11 +631,28 @@ viewModelScope.launch {
                 throw error
             } catch (error: OpenFoodFactsService.LookupException) {
                 ensureActive()
+                // Open Food Facts wins when it has nutrition; otherwise reuse the
+                // label the user scanned for this barcode before (#485).
+                if (BarcodeLabelMemory.allowsFallback(error.failure)) {
+                    val savedLabel = BarcodeLabelMemory.latestLabelEntry(
+                        barcode,
+                        container.foodRepository.entries.first()
+                    )
+                    ensureActive()
+                    if (savedLabel != null) {
+                        val analysis = savedLabel.toAnalysis()
+                        _ui.value = _ui.value.copy(savedLabelAnalysis = analysis)
+                        savePendingDraft(analysis, source = FoodSource.NUTRITION_LABEL, usesSavedBarcodeLabel = true)
+                        return@launchAnalysis
+                    }
+                }
+                val offersScanLabel = error.failure == OpenFoodFactsService.LookupFailure.MISSING_NUTRITION ||
+                    error.failure == OpenFoodFactsService.LookupFailure.PRODUCT_NOT_FOUND
+                scanLabelOfferBarcode = barcode.takeIf { offersScanLabel }
                 _ui.value = _ui.value.copy(
                     analyzing = false,
                     error = barcodeLookupErrorMessage(error),
-                    errorOffersScanLabel = error.failure == OpenFoodFactsService.LookupFailure.MISSING_NUTRITION ||
-                        error.failure == OpenFoodFactsService.LookupFailure.PRODUCT_NOT_FOUND
+                    errorOffersScanLabel = offersScanLabel
                 )
             } catch (e: Throwable) {
                 ensureActive()
@@ -648,8 +710,11 @@ viewModelScope.launch {
                 val filenames = when {
                     reviewSource != null -> reviewSource.allImageFilenames
                     pendingDraftImageFilenames.isNotEmpty() -> pendingDraftImageFilenames
-                    else -> imageBytesList.mapIndexedNotNull { index, bytes ->
-                        container.imageStore.storeBytes(bytes, if (index == 0) id else UUID.randomUUID())
+                    // Large photos are downscaled while stored, so keep that off the main thread.
+                    else -> withContext(Dispatchers.IO) {
+                        imageBytesList.mapIndexedNotNull { index, bytes ->
+                            container.imageStore.storeBytes(bytes, if (index == 0) id else UUID.randomUUID())
+                        }
                     }
                 }
                 fun s(v: Int) = (v * scale).roundToInt()
@@ -769,6 +834,8 @@ viewModelScope.launch {
 
     fun dismissPending() {
         retryAction = null
+        labelScanBarcode.clear()
+        scanLabelOfferBarcode = null
         draftSaveGeneration += 1
         val previousDraftImages = _ui.value.pendingDraftImageFilenames
         _ui.value = _ui.value.copy(
@@ -785,6 +852,21 @@ viewModelScope.launch {
         viewModelScope.launch {
             discardPendingDraft(previousDraftImages)
         }
+    }
+
+    /**
+     * "Scan label" on the barcode error: close it and carry that barcode into the
+     * label photo, so the logged entry can be reused next time (#485).
+     */
+    fun startLabelScanForFailedBarcode() {
+        val barcode = scanLabelOfferBarcode
+        dismissPending()
+        labelScanBarcode.arm(barcode)
+    }
+
+    /** Any other way out of a label scan (camera closed, sheet dismissed, another log method). */
+    fun clearLabelScanBarcode() {
+        labelScanBarcode.clear()
     }
 
     fun retryPendingAnalysis() {
@@ -815,6 +897,7 @@ viewModelScope.launch {
      * the retry action so no error dialog follows.
      */
     fun cancelAnalysis() {
+        labelScanBarcode.clear()
         if (!_ui.value.analyzing) return
         val job = analysisJob
         val canceledGeneration = analysisGeneration
@@ -854,6 +937,7 @@ viewModelScope.launch {
      * iOS RecentsView's `onReview` callback path.
      */
     fun reviewSavedMeal(template: FoodEntry) {
+        labelScanBarcode.clear()
         draftSaveGeneration += 1
         val analysis = template.toAnalysis()
         val bytesList = template.allImageFilenames.mapNotNull {
@@ -984,7 +1068,8 @@ viewModelScope.launch {
         analysis: FoodAnalysis,
         imageBytes: ByteArray? = null,
         imageBytesList: List<ByteArray> = imageBytes?.let(::listOf).orEmpty(),
-        source: FoodSource
+        source: FoodSource,
+        usesSavedBarcodeLabel: Boolean = false
     ) {
         retryAction = null
         draftSaveGeneration += 1
@@ -1020,7 +1105,8 @@ viewModelScope.launch {
                 analysis = analysis,
                 imageFilename = imageFilename,
                 additionalImageFilenames = additionalImageFilenames,
-                source = source
+                source = source,
+                usesSavedBarcodeLabel = usesSavedBarcodeLabel
             )
         )
         if (saveGeneration != draftSaveGeneration || _ui.value.pendingAnalysis !== analysis) {
@@ -1066,6 +1152,8 @@ viewModelScope.launch {
             pendingDraftImageFilename = draft.imageFilename,
             pendingDraftAdditionalImageFilenames = draft.additionalImageFilenames,
             pendingReviewSource = null,
+            // Keeps the saved-label notice on a review restored after the app was closed (#485).
+            savedLabelAnalysis = draft.savedLabelAnalysis,
             error = null
         )
     }

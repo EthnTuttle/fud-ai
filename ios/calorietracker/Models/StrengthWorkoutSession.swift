@@ -279,6 +279,16 @@ enum StrengthWorkoutIntensity: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
     var title: String { rawValue.capitalized }
+
+    /// Display name. "Light Effort" etc. are distinct catalog keys from the
+    /// appearance option "Light"; their English values stay "Light" etc.
+    var localizedTitle: String {
+        switch self {
+        case .light: String(localized: "Light Effort")
+        case .moderate: String(localized: "Moderate Effort")
+        case .vigorous: String(localized: "Vigorous Effort")
+        }
+    }
 }
 
 enum StrengthExerciseTimerAction {
@@ -294,6 +304,8 @@ struct StrengthExerciseTimer: Codable, Equatable, Hashable {
     var intensity: StrengthWorkoutIntensity = .moderate
 
     var isRunning: Bool { runningSince != nil }
+    /// Choosing an effort before starting creates a timer that has not recorded time yet.
+    var hasStarted: Bool { isRunning || accumulatedSeconds > 0 || savedDurationSeconds != nil }
     var isSaved: Bool {
         guard let savedDurationSeconds else { return false }
         return !isRunning && savedDurationSeconds.isFinite && savedDurationSeconds > 0
@@ -485,7 +497,21 @@ struct StrengthWorkoutBurnEstimate: Equatable {
 /// timers use duration and an activity/intensity MET estimate. Untimed strength
 /// exercises retain the set-based estimate. Timed exercises are counted once,
 /// and these estimates are kept out of nutrition-goal calculations.
+///
+/// Estimates are net active energy: the Compendium's gross METs minus the
+/// 1 MET the body burns at rest anyway, i.e.
+/// kcal = max(MET − 1, 0) × 3.5 × kg / 200 × minutes. That matches Apple
+/// Health's active energy (and Health Connect's active calories), which
+/// exclude resting energy, so a burn written there is not double-counted.
 enum StrengthWorkoutBurnEstimator {
+    /// Resting energy expenditure in METs; gross Compendium values include it.
+    private static let restingMET = 1.0
+
+    /// kcal above rest for `minutes` at the given gross MET.
+    private static func netActiveCalories(grossMET: Double, bodyWeightKg: Double, minutes: Double) -> Double {
+        max(grossMET - restingMET, 0) * 3.5 * bodyWeightKg / 200 * minutes
+    }
+
     static func estimate(
         exercises: [StrengthPlannedExercise],
         bodyWeightKg: Double,
@@ -508,7 +534,7 @@ enum StrengthWorkoutBurnEstimator {
             let hasSavedDuration = exercise.timer?.isSaved == true
             if hasSavedDuration {
                 let met = timedMET(for: exercise, intensity: timerIntensity(for: exercise, defaultRPEScale: defaultRPEScale))
-                timedCalories += met * 3.5 * safeBodyWeight / 200 * (savedSeconds / 60)
+                timedCalories += netActiveCalories(grossMET: met, bodyWeightKg: safeBodyWeight, minutes: savedSeconds / 60)
             }
             var performedInExercise = 0
             for set in exercise.sets {
@@ -547,7 +573,9 @@ enum StrengthWorkoutBurnEstimator {
         let averageEffort = untimedSetCount > 0 ? effortTotal / Double(untimedSetCount) : 0
         let averageRelativeLoad = untimedSetCount > 0 ? relativeLoadTotal / Double(untimedSetCount) : 0
         let met = min(max(3.8 + (2.4 * averageEffort) + (0.5 * averageRelativeLoad), 3.5), 8.0)
-        let strengthCalories = untimedSetCount > 0 ? met * 3.5 * safeBodyWeight / 200 * estimatedMinutes : 0
+        let strengthCalories = untimedSetCount > 0
+            ? netActiveCalories(grossMET: met, bodyWeightKg: safeBodyWeight, minutes: estimatedMinutes)
+            : 0
         let rawCalories = min(strengthCalories + timedCalories, 5_000)
 
         return StrengthWorkoutBurnEstimate(
@@ -568,10 +596,11 @@ enum StrengthWorkoutBurnEstimator {
         return effort < 0.4 ? .light : (effort >= 0.75 ? .vigorous : .moderate)
     }
 
-    /// Representative activity values from the 2024 Adult Compendium:
+    /// Representative gross activity values from the 2024 Adult Compendium:
     /// https://pacompendium.com/bicycling/ , /walking/ , /running/ , /sports/
-    /// and /conditioning-exercise/. Intensity is an RPE-derived approximation
-    /// of pace/effort, not a measured speed, power output, or energy expenditure.
+    /// and /conditioning-exercise/. Intensity is an RPE-derived (or chosen)
+    /// approximation of pace/effort, not a measured speed, power output, or
+    /// energy expenditure. Callers subtract resting energy via `netActiveCalories`.
     private static func timedMET(for exercise: StrengthPlannedExercise, intensity: StrengthWorkoutIntensity) -> Double {
         let values: (Double, Double, Double)
         if exercise.isCardio {

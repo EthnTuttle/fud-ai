@@ -298,6 +298,8 @@ DisposableEffect(lifecycleOwner, vm) {
         if (granted) {
             clearCaptureDraft()
             showCameraCapture = true
+        } else {
+            vm.clearLabelScanBarcode()
         }
     }
 
@@ -332,6 +334,7 @@ DisposableEffect(lifecycleOwner, vm) {
     fun performFoodLogMethod(method: FoodLogMethod) {
         showAddMenu = false
         addMenuDestination = null
+        vm.clearLabelScanBarcode()
         when (method) {
             FoodLogMethod.CAMERA -> openCamera()
             FoodLogMethod.PHOTOS -> {
@@ -374,6 +377,7 @@ DisposableEffect(lifecycleOwner, vm) {
         editingFast = null
         showCameraCapture = false
         showMultiPhotoCapture = false
+        vm.clearLabelScanBarcode()
         vm.setSelectedDate(LocalDate.now())
 
         // Fasting shortcuts manage the fast itself; food shortcuts stay blocked while one is active.
@@ -1003,6 +1007,8 @@ CalorieHero(
                 showCameraCapture = false
                 if (pendingCaptureImageBytes.isNotEmpty()) {
                     showMultiPhotoCapture = true
+                } else {
+                    vm.clearLabelScanBarcode()
                 }
             }
         )
@@ -1010,7 +1016,7 @@ CalorieHero(
 
     if (showMultiPhotoCapture && captureDraftBusy && pendingCaptureImageBytes.isEmpty()) {
         AlertDialog(
-            onDismissRequest = { showMultiPhotoCapture = false; clearCaptureDraft() },
+            onDismissRequest = { showMultiPhotoCapture = false; clearCaptureDraft(); vm.clearLabelScanBarcode() },
             text = { CircularProgressIndicator() },
             confirmButton = {}
         )
@@ -1043,7 +1049,10 @@ CalorieHero(
             },
             onRemove = { index ->
                 captureDraft.remove(index)
-                if (pendingCaptureImageBytes.size == 1) showMultiPhotoCapture = false
+                if (pendingCaptureImageBytes.size == 1) {
+                    showMultiPhotoCapture = false
+                    vm.clearLabelScanBarcode()
+                }
             },
             onAnalyze = { note, progressiveMeal ->
                 if (!captureDraft.busy.value) {
@@ -1056,6 +1065,7 @@ CalorieHero(
             onDismiss = {
                 showMultiPhotoCapture = false
                 clearCaptureDraft()
+                vm.clearLabelScanBarcode()
             }
         )
     }
@@ -1120,6 +1130,8 @@ CalorieHero(
                 ?: ui.pendingFoodSource
                 ?: if (ui.pendingImageBytes != null) FoodSource.SNAP_FOOD else FoodSource.TEXT_INPUT,
             initialTimestamp = initialTimestamp,
+            usesSavedBarcodeLabel = ui.pendingUsesSavedBarcodeLabel,
+            allowsRecipeServings = !ui.pendingReviewIsLoggedPortion,
             onWhatIfSuggestion = vm::suggestMealWhatIf,
             onSave = { name, grams, servingSizeIsKnown, scale, mealType, selectedServingUnit, selectedServingQuantity, editedAnalysis, timestamp ->
                 vm.saveAnalysis(
@@ -1154,7 +1166,7 @@ CalorieHero(
                 ),
                 onPrimary = {
                     if (ui.errorOffersScanLabel) {
-                        vm.dismissPending()
+                        vm.startLabelScanForFailedBarcode()
                         openCamera()
                     } else {
                         vm.retryPendingAnalysis()

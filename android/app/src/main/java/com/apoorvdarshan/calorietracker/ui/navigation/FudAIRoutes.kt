@@ -12,6 +12,7 @@ object FudAIRoutes {
     const val CALCULATION_METHODS = "settings/calculation-methods"
     const val QUICK_ACTIONS = "settings/quick-actions"
     const val ADD_MENU = "settings/add-menu"
+    const val PRODUCT_INFO = "settings/product-info"
     const val TAB_BAR = "settings/tab-bar"
     const val BODY_MEASUREMENTS = "settings/body-measurements"
     const val ALLERGEN_SENSITIVITIES = "settings/allergen-sensitivities"

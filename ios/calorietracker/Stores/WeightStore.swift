@@ -8,7 +8,13 @@ class WeightStore {
     var onEntryDeleted: ((UUID) -> Void)?
 
     static let storageKey = "weightEntries"
+    /// Not prefixed `healthKit`, so iCloud backups carry it: a restore onto a
+    /// new phone re-runs the Apple Health import and must still skip deletions.
+    /// Never trimmed: each tombstone is one deletion the user made by hand
+    /// (well under 100 bytes), and dropping one lets its reading come back.
+    static let deletionTombstonesKey = "weightDeletionTombstones"
     private let observesExternalChanges: Bool
+    private let defaults: UserDefaults
     private let entriesBlob: PersistedBlobGuard
 
     /// True while an unreadable weight blob is on disk without a backup copy;
@@ -24,6 +30,7 @@ class WeightStore {
         corruptBackupDirectory: URL? = nil
     ) {
         self.observesExternalChanges = observesExternalChanges
+        self.defaults = defaults
         self.entriesBlob = PersistedBlobGuard(defaults: defaults, key: Self.storageKey, backupDirectory: corruptBackupDirectory)
         loadEntries(isInitialLoad: true)
         if observesExternalChanges {
@@ -58,9 +65,11 @@ class WeightStore {
         entries.sorted { $0.date > $1.date }.first
     }
 
+    /// Entries logged on any calendar day `range` covers. `TimeRange.dateRange()`
+    /// bounds are day starts, so a plain `contains` dropped today's readings.
     func entries(in range: ClosedRange<Date>) -> [WeightEntry] {
         entries
-            .filter { range.contains($0.date) }
+            .filter { range.containsDay(of: $0.date) }
             .sorted { $0.date < $1.date }
     }
 
@@ -74,26 +83,55 @@ class WeightStore {
         syncProfileWeightToLatest()
 
         // Detect goal-weight crossing — fire only on the transition, not on every weight past goal.
-        if let profile = UserProfile.load(), let goalKg = profile.goalWeightKg, let previous = previousLatest {
-            let crossed: Bool
-            switch profile.goal {
-            case .lose:    crossed = previous.weightKg > goalKg && entry.weightKg <= goalKg
-            case .gain:    crossed = previous.weightKg < goalKg && entry.weightKg >= goalKg
-            case .maintain: crossed = false
-            }
-            if crossed {
-                NotificationCenter.default.post(name: .weightGoalReached, object: nil)
-            }
+        if let profile = UserProfile.load(), let goalKg = profile.goalWeightKg, let previous = previousLatest,
+           Self.crossesGoal(entry, previousLatest: previous, goalKg: goalKg, goal: profile.goal) {
+            NotificationCenter.default.post(name: .weightGoalReached, object: nil)
+        }
+    }
+
+    /// Only a new latest reading can reach the goal: a weigh-in logged for an
+    /// earlier day is history, not progress.
+    static func crossesGoal(_ entry: WeightEntry, previousLatest previous: WeightEntry, goalKg: Double, goal: WeightGoal) -> Bool {
+        guard entry.date >= previous.date else { return false }
+        switch goal {
+        case .lose:    return previous.weightKg > goalKg && entry.weightKg <= goalKg
+        case .gain:    return previous.weightKg < goalKg && entry.weightKg >= goalKg
+        case .maintain: return false
         }
     }
 
     func deleteEntry(_ entry: WeightEntry) {
         guard !isPersistenceBlocked else { return }
         let id = entry.id
+        let removed = entries.filter { $0.id == id }
         entries.removeAll { $0.id == id }
         saveEntries()
+        rememberDeletion(of: removed.isEmpty ? [entry] : removed)
         onEntryDeleted?(id)
         syncProfileWeightToLatest()
+    }
+
+    // MARK: - Deletion tombstones
+
+    /// Deleting only removes Fud AI's own Health sample. Readings from other
+    /// sources stay in Apple Health, so without this the Health observer (and
+    /// the full-history imports) put a deleted weight straight back.
+    var deletionTombstones: [WeightDeletionTombstone] {
+        guard let data = defaults.data(forKey: Self.deletionTombstonesKey) else { return [] }
+        return (try? JSONDecoder().decode([WeightDeletionTombstone].self, from: data)) ?? []
+    }
+
+    func isDeletedHealthSample(_ sample: WeightHealthSample) -> Bool {
+        deletionTombstones.contains { $0.matches(sample) }
+    }
+
+    private func rememberDeletion(of deleted: [WeightEntry]) {
+        var tombstones = deletionTombstones
+        tombstones.append(contentsOf: deleted.map {
+            WeightDeletionTombstone(entryID: $0.id, date: $0.date, weightKg: $0.weightKg)
+        })
+        guard let data = try? JSONEncoder().encode(tombstones) else { return }
+        defaults.set(data, forKey: Self.deletionTombstonesKey)
     }
 
     /// Keep UserProfile.weightKg aligned with the most recent weight entry so Settings (Weight row)
@@ -124,15 +162,96 @@ class WeightStore {
     /// samples already exist there. Saves + syncs profile once at the end.
     /// Samples whose id is already in the store (a restore that raced a
     /// live observer write, or the same batch delivered twice) are skipped so
-    /// the list never accumulates duplicate ids.
-    func importExternalEntries(_ external: [WeightEntry]) {
-        guard !isPersistenceBlocked else { return }
+    /// the list never accumulates duplicate ids. Returns false when the batch
+    /// could not be saved (persistence blocked, or the save failed and was
+    /// rolled back), so a caller tracking its progress can retry it.
+    @discardableResult
+    func importExternalEntries(_ external: [WeightEntry]) -> Bool {
+        guard !isPersistenceBlocked else { return false }
         var seen = Set(entries.map(\.id))
         let fresh = external.filter { seen.insert($0.id).inserted }
-        guard !fresh.isEmpty else { return }
+        guard !fresh.isEmpty else { return true }
         entries.append(contentsOf: fresh)
-        saveEntries()
+        guard saveEntries() else {
+            entries.removeLast(fresh.count)
+            return false
+        }
         syncProfileWeightToLatest()
+        return true
+    }
+
+    /// Imports Apple Health readings. Skips readings already in the history
+    /// (same day, same value), readings the user deleted here, and Fud AI's own
+    /// samples unless the history is empty (reinstall / new phone restore).
+    /// Decided against the live entries so overlapping imports can't duplicate.
+    /// Returns false when the samples were not saved; HealthKitManager then
+    /// keeps its import anchor (or backfill version) so they arrive again.
+    /// `onlyUnloggedDays` also skips readings on any day the history already
+    /// has a weigh-in for (see `HealthKitManager.WeightChangesImport`).
+    @discardableResult
+    func importHealthSamples(
+        _ samples: [WeightHealthSample],
+        restoreOwnSamplesIfEmpty: Bool,
+        onlyUnloggedDays: Bool = false
+    ) -> Bool {
+        guard !isPersistenceBlocked else { return false }
+        guard !samples.isEmpty else { return true }
+        return importExternalEntries(Self.healthImportCandidates(
+            samples,
+            existing: entries,
+            tombstones: deletionTombstones,
+            restoringOwnHistory: restoreOwnSamplesIfEmpty && entries.isEmpty,
+            onlyUnloggedDays: onlyUnloggedDays
+        ))
+    }
+
+    /// One run of HealthKitManager's anchored weight import.
+    @discardableResult
+    func importHealthSamples(_ samples: [WeightHealthSample], for mode: HealthKitManager.WeightChangesImport) -> Bool {
+        importHealthSamples(
+            samples,
+            restoreOwnSamplesIfEmpty: mode == .fullHistory,
+            onlyUnloggedDays: mode == .unloggedDaysOnly
+        )
+    }
+
+    static func healthImportCandidates(
+        _ samples: [WeightHealthSample],
+        existing: [WeightEntry],
+        tombstones: [WeightDeletionTombstone],
+        restoringOwnHistory: Bool,
+        onlyUnloggedDays: Bool = false,
+        calendar: Calendar = .current
+    ) -> [WeightEntry] {
+        // Same-day + close-value match catches our own pre-metadata writes,
+        // externals already imported, and same-day duplicates within this
+        // batch (an entry write + a profile push on the same day).
+        var loggedByDay: [Date: [Double]] = [:]
+        for entry in existing {
+            loggedByDay[calendar.startOfDay(for: entry.date), default: []].append(entry.weightKg)
+        }
+        // Days the history held before this batch; readings from the batch
+        // itself don't close a day to its other readings.
+        let historyDays = Set(loggedByDay.keys)
+        var fresh: [WeightEntry] = []
+        for sample in samples {
+            let day = calendar.startOfDay(for: sample.date)
+            if onlyUnloggedDays && historyDays.contains(day) { continue }
+            if loggedByDay[day, default: []].contains(where: { abs($0 - sample.weightKg) < 0.01 }) { continue }
+            if tombstones.contains(where: { $0.matches(sample, calendar: calendar) }) { continue }
+            if let fudaiID = sample.fudaiID {
+                // Own samples are either already represented or synthetic
+                // profile pushes (writeWeight(kg:date:)) that never had an entry.
+                guard restoringOwnHistory else { continue }
+                // Keep the ORIGINAL entry id so a later in-app delete of the
+                // restored entry still finds its HK sample by metadata.
+                fresh.append(WeightEntry(id: fudaiID, date: sample.date, weightKg: sample.weightKg))
+            } else {
+                fresh.append(WeightEntry(date: sample.date, weightKg: sample.weightKg))
+            }
+            loggedByDay[day, default: []].append(sample.weightKg)
+        }
+        return fresh
     }
 
     /// Upserts by id; duplicate ids resolve newest-wins instead of trapping.
@@ -153,7 +272,8 @@ class WeightStore {
         return order.compactMap { byID[$0] }
     }
 
-    private func saveEntries() {
+    @discardableResult
+    private func saveEntries() -> Bool {
         entriesBlob.save(entries)
     }
 

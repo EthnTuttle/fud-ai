@@ -87,6 +87,10 @@
     <string name="product_labels">Labels</string>
     <string name="product_categories">Categories</string>
     <string name="product_ingredient_label">Ingredient label</string>
+    <string name="product_possible_allergen">Possible allergen: %1$s</string>
+    <string name="product_info_settings_show">Show product information</string>
+    <string name="product_info_settings_fields">Details to show</string>
+    <string name="product_info_settings_footer">Shown at the end of the review and edit screens for barcode-scanned foods. Allergen check is not affected and always appears when you have allergen sensitivities set.</string>
 
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Protein</string>
@@ -676,6 +680,11 @@
     <string name="settings_goal_weight">Goal Weight</string>
     <string name="settings_calories">Calories</string>
     <string name="settings_recalculate_goals">Recalculate Goals</string>
+    <string name="settings_estimated_maintenance">Estimated Maintenance</string>
+    <string name="settings_maintenance_deficit_format">Deficit: %1$,d kcal/day</string>
+    <string name="settings_maintenance_surplus_format">Surplus: %1$,d kcal/day</string>
+    <string name="settings_maintenance_close">Target is close to maintenance</string>
+    <string name="settings_estimated_maintenance_info">Estimated maintenance is the calories you would burn on a typical day: your BMR from your profile multiplied by your activity level. Eating below it is a deficit for losing weight; eating above it is a surplus for gaining. The deficit or surplus shown is your calorie target minus this estimate. It is a formula estimate, so your real burn can differ, and goal recalculation may set your target from your logged food, weight trend or measured energy burn instead. This is not medical advice.</string>
     <string name="settings_macro_pinned_format">%1$dg</string>
     <string name="settings_macro_auto_format">%1$dg · auto</string>
     <string name="settings_macro_pinned_a11y">Pinned</string>
@@ -810,6 +819,7 @@
     <string name="settings_fallback_footer">Used only when an AI request includes a photo. Same provider as primary is allowed — just pick a different model.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Older Weigh-ins</string>
     <string name="settings_manage_health_access">Manage Health Connect Access</string>
     <string name="settings_permissions">Permissions</string>
     <string name="settings_energy_goals">Energy Burn Goals</string>
@@ -820,6 +830,22 @@
     <string name="settings_refresh_energy_goals">Refresh Energy Burn Goals</string>
     <string name="settings_clear_food_log">Clear Food Log</string>
     <string name="settings_delete_all_data">Delete All Data</string>
+    <string name="storage_title">Storage</string>
+    <string name="storage_saved_photos">Saved Photos</string>
+    <string name="storage_on_device_models">On-Device Models</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_compress_photos">Compress Photos</string>
+    <string name="storage_clear_cache">Clear Cache</string>
+    <string name="storage_footer">Compress Photos permanently resizes photos larger than 2048 px. Clear Cache removes thumbnails and downloaded workout images, which are recreated when needed. Delete on-device models from their AI or speech settings.</string>
+    <string name="storage_compress_confirm_title">Compress Photos?</string>
+    <string name="storage_compress_confirm_message">Photos larger than 2048 pixels on their longest side will be permanently resized to 2048 pixels and saved as JPEG. Smaller photos stay unchanged. This can’t be undone.</string>
+    <string name="storage_compress_action">Compress</string>
+    <string name="storage_compressing_progress">Compressing photos… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Photos Compressed</string>
+    <string name="storage_compress_freed">Freed %1$s.</string>
+    <string name="storage_compress_nothing">No photos needed compressing.</string>
+    <string name="storage_compress_unreadable">Some photos couldn’t be read and were left unchanged.</string>
+    <string name="storage_compress_failed">Some photos couldn’t be compressed and were left unchanged. Make sure your device has free space, then try again.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Clear food log?</string>
@@ -1306,6 +1332,10 @@
     <string name="ingredients_remove">Remove</string>
     <string name="ingredients_weight">Weight</string>
     <string name="ingredients_footer">Ingredient changes update the meal’s calorie and macro totals automatically.</string>
+    <string name="recipe_servings_title">Servings in recipe</string>
+    <string name="recipe_servings_footer">Set this after adding every ingredient. Fud AI splits the recipe so you log 1 serving, and Saved Meals keep that serving size.</string>
+    <string name="cd_recipe_servings_fewer">Fewer servings</string>
+    <string name="cd_recipe_servings_more">More servings</string>
     <string name="combine_action">Combine</string>
     <string name="combine_into_meal">Combine into Meal</string>
     <string name="combine_selected_count">%1$d selected</string>

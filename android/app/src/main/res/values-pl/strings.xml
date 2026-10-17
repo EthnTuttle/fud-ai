@@ -62,6 +62,26 @@
     <string name="in_label_format">%1$d in</string>
     <string name="bullet">·</string>
 
+    <!-- Open Food Facts product metadata -->
+    <string name="product_information">Informacje o produkcie</string>
+    <string name="product_barcode">Kod kreskowy</string>
+    <string name="barcode_saved_label_title">Używana jest Twoja zapisana etykieta żywieniowa dla tego kodu kreskowego</string>
+    <string name="barcode_saved_label_footer">Open Food Facts nie ma wartości odżywczych dla tego produktu. Aby zapomnieć tę etykietę, usuń wpisy jedzenia, które jej użyły.</string>
+    <string name="product_package">Opakowanie</string>
+    <string name="product_nutri_score">Nutri-Score</string>
+    <string name="product_nova_group">Grupa NOVA</string>
+    <string name="product_eco_score">Eco-Score</string>
+    <string name="product_allergens">Alergeny</string>
+    <string name="product_may_contain">Może zawierać</string>
+    <string name="product_allergen_check">Kontrola alergenów</string>
+    <string name="product_labels">Oznaczenia</string>
+    <string name="product_categories">Kategorie</string>
+    <string name="product_ingredient_label">Skład na etykiecie</string>
+    <string name="product_possible_allergen">Możliwy alergen: %1$s</string>
+    <string name="product_info_settings_show">Pokazuj informacje o produkcie</string>
+    <string name="product_info_settings_fields">Wyświetlane szczegóły</string>
+    <string name="product_info_settings_footer">Wyświetlane na końcu ekranów przeglądu i edycji produktów zeskanowanych kodem kreskowym. Nie wpływa na kontrolę alergenów, która zawsze się pojawia, gdy masz ustawione wrażliwości na alergeny.</string>
+
     <!-- Macros / Goal labels -->
     <string name="macro_protein">Białko</string>
     <string name="macro_carbs">Węglowodany</string>
@@ -359,6 +379,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Szczegóły jedzenia</string>
     <string name="sheet_serving">Porcja</string>
+    <string name="recipe_servings_title">Porcje w przepisie</string>
+    <string name="recipe_servings_footer">Ustaw to po dodaniu wszystkich składników. Fud AI dzieli przepis, więc zapisujesz 1 porcję, a Zapisane posiłki zachowują tę wielkość porcji.</string>
+    <string name="cd_recipe_servings_fewer">Mniej porcji</string>
+    <string name="cd_recipe_servings_more">Więcej porcji</string>
     <string name="sheet_nutrition">Odżywianie</string>
     <string name="sheet_meal">Posiłek</string>
     <string name="sheet_more_nutrition">Więcej wartości odżywczych</string>
@@ -516,6 +540,11 @@
     <string name="settings_goal_weight">Waga docelowa</string>
     <string name="settings_calories">Kalorie</string>
     <string name="settings_recalculate_goals">Przelicz cele</string>
+    <string name="settings_estimated_maintenance">Szacowane kalorie na utrzymanie</string>
+    <string name="settings_maintenance_deficit_format">Deficyt: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_surplus_format">Nadwyżka: %1$,d kcal/dzień</string>
+    <string name="settings_maintenance_close">Cel jest bliski utrzymaniu</string>
+    <string name="settings_estimated_maintenance_info">Szacowane kalorie na utrzymanie to kalorie, które spalasz w typowy dzień: Twoje BMR z profilu pomnożone przez poziom aktywności. Jedzenie poniżej tej wartości to deficyt pozwalający schudnąć; powyżej — nadwyżka pozwalająca przytyć. Pokazany deficyt lub nadwyżka to Twój cel kaloryczny minus ta szacunkowa wartość. To szacunek oparty na wzorze, więc Twoje rzeczywiste spalanie może się różnić, a przeliczanie celów może ustalić cel na podstawie zapisanych posiłków, trendu wagi lub zmierzonego spalania energii. To nie jest porada medyczna.</string>
     <string name="settings_macro_pinned_format">%1$d g</string>
     <string name="settings_macro_auto_format">%1$d g · auto</string>
     <string name="settings_macro_pinned_a11y">Przypięte</string>
@@ -552,8 +581,25 @@
     <string name="settings_clear_key">Wyczyść klucz</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Starsze pomiary wagi</string>
     <string name="settings_clear_food_log">Wyczyść dziennik jedzenia</string>
     <string name="settings_delete_all_data">Usuń wszystkie dane</string>
+    <string name="storage_title">Pamięć</string>
+    <string name="storage_saved_photos">Zapisane zdjęcia</string>
+    <string name="storage_on_device_models">Modele na urządzeniu</string>
+    <string name="storage_cache">Pamięć podręczna</string>
+    <string name="storage_compress_photos">Kompresuj zdjęcia</string>
+    <string name="storage_clear_cache">Wyczyść pamięć podręczną</string>
+    <string name="storage_footer">Kompresuj zdjęcia trwale zmniejsza zdjęcia większe niż 2048 px. Wyczyść pamięć podręczną usuwa miniatury i pobrane obrazy ćwiczeń, które zostaną odtworzone w razie potrzeby. Modele na urządzeniu usuniesz w ich ustawieniach AI lub mowy.</string>
+    <string name="storage_compress_confirm_title">Skompresować zdjęcia?</string>
+    <string name="storage_compress_confirm_message">Zdjęcia, których dłuższy bok przekracza 2048 pikseli, zostaną trwale zmniejszone do 2048 pikseli i zapisane jako JPEG. Mniejsze zdjęcia pozostaną bez zmian. Tej operacji nie można cofnąć.</string>
+    <string name="storage_compress_action">Kompresuj</string>
+    <string name="storage_compressing_progress">Kompresowanie zdjęć… %1$d/%2$d</string>
+    <string name="storage_compress_done_title">Zdjęcia skompresowane</string>
+    <string name="storage_compress_freed">Zwolniono %1$s.</string>
+    <string name="storage_compress_nothing">Żadne zdjęcia nie wymagały kompresji.</string>
+    <string name="storage_compress_unreadable">Niektórych zdjęć nie udało się odczytać i pozostały bez zmian.</string>
+    <string name="storage_compress_failed">Niektórych zdjęć nie udało się skompresować i pozostały bez zmian. Upewnij się, że na urządzeniu jest wolne miejsce, i spróbuj ponownie.</string>
 
     <!-- Settings dialogs -->
     <string name="settings_clear_food_title">Wyczyścić dziennik jedzenia?</string>
@@ -819,4 +865,5 @@
     <string name="photo_save_permission_denied">Odmowa dostępu do zdjęć</string>
     <string name="settings_save_photos_to_gallery">Zapisuj w Zdjęciach</string>
     <string name="settings_save_photos_to_gallery_subtitle">Zapisuj też zdjęcia posiłków w galerii podczas logowania</string>
+    <string name="label_date">Data</string>
 </resources>

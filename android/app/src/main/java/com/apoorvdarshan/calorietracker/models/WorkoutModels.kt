@@ -269,6 +269,9 @@ data class ExerciseTimer(
     val intensity: WorkoutIntensity = WorkoutIntensity.MODERATE
 ) {
     val isRunning: Boolean get() = runningSince != null
+    /** Choosing an effort before starting creates a timer that has not recorded time yet. */
+    val hasStarted: Boolean
+        get() = isRunning || accumulatedSeconds > 0.0 || savedDurationSeconds != null
     val isSaved: Boolean
         get() = !isRunning && savedDurationSeconds?.let { it.isFinite() && it > 0.0 } == true
     val savedSeconds: Double
@@ -456,8 +459,22 @@ data class WorkoutBurnEstimate(
     val repCount: Int
 )
 
-/** Saved exercise timers replace that exercise's rep-based estimate. */
+/**
+ * Saved exercise timers replace that exercise's rep-based estimate.
+ *
+ * Estimates are net active energy: the Compendium's gross METs minus the 1 MET the body
+ * burns at rest anyway, i.e. kcal = max(MET - 1, 0) × 3.5 × kg / 200 × minutes. That
+ * matches Health Connect's active-calories (and Apple Health's active-energy) semantics,
+ * which exclude resting energy, so a burn written there is not double-counted.
+ */
 object WorkoutBurnEstimator {
+    /** Resting energy expenditure in METs; gross Compendium values include it. */
+    private const val RestingMet = 1.0
+
+    /** kcal above rest for [minutes] at the given gross MET. */
+    private fun netActiveCalories(grossMet: Double, bodyWeightKg: Double, minutes: Double): Double =
+        (grossMet - RestingMet).coerceAtLeast(0.0) * 3.5 * bodyWeightKg / 200.0 * minutes
+
     fun estimate(
         exercises: List<PlannedExercise>,
         bodyWeightKg: Double,
@@ -481,7 +498,7 @@ object WorkoutBurnEstimator {
                 if (timedSeconds > 0.0) {
                     val intensity = timerIntensity(exercise, defaultRpeScale)
                     val met = timedMet(exercise, intensity)
-                    timedCalories += met * 3.5 * safeBodyWeight / 200.0 * (timedSeconds / 60.0)
+                    timedCalories += netActiveCalories(met, safeBodyWeight, timedSeconds / 60.0)
                 }
                 // Logged reps remain useful statistics; their estimate must not be added twice.
                 exercise.sets.forEach { set ->
@@ -519,7 +536,7 @@ object WorkoutBurnEstimator {
         val averageEffort = effortTotal / strengthSetCount.coerceAtLeast(1)
         val averageRelativeLoad = relativeLoadTotal / strengthSetCount.coerceAtLeast(1)
         val met = (3.8 + (2.4 * averageEffort) + (0.5 * averageRelativeLoad)).coerceIn(3.5, 8.0)
-        val strengthCalories = if (strengthSetCount > 0) met * 3.5 * safeBodyWeight / 200.0 * estimatedMinutes else 0.0
+        val strengthCalories = if (strengthSetCount > 0) netActiveCalories(met, safeBodyWeight, estimatedMinutes) else 0.0
         val rawCalories = strengthCalories + timedCalories
 
         return WorkoutBurnEstimate(
@@ -544,9 +561,10 @@ object WorkoutBurnEstimator {
     }
 
     /**
-     * Representative effort estimates from the 2024 Adult Compendium of Physical Activities:
+     * Representative gross-MET effort estimates from the 2024 Adult Compendium of Physical Activities:
      * https://pacompendium.com/{bicycling,walking,running,sports,conditioning-exercise}/
      * Effort labels are approximate; pace, watts, and individual efficiency are not measured.
+     * Callers subtract resting energy via [netActiveCalories].
      */
     private fun timedMet(exercise: PlannedExercise, intensity: WorkoutIntensity): Double {
         val values = if (exercise.isCardio) {
