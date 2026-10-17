@@ -703,6 +703,7 @@
     <string name="whats_new_v30_adaptive">Adaptive Ziele und Energieverbrauch sind nicht mehr experimentell und bei Neuinstallationen standardmäßig aktiv.</string>
     <string name="whats_new_v30_widgets">Widget-Redesign: der Tacho-Stil vom Home-Tab, gezeichnet in der echten Größe jedes Widgets.</string>
     <string name="whats_new_v30_restore">Neu installiert oder neues Handy? Ernährungstagebuch, Gewicht und Körperfett werden jetzt automatisch aus Health Connect wiederhergestellt.</string>
+    <string name="cloud_backup_restore_no_space">Nicht genug freier Speicher, um dieses Backup wiederherzustellen. Gib etwas Speicher frei und versuche es erneut.</string>
     <string name="settings_fasting_tracking">Fasten aufzeichnen</string>
     <string name="settings_fasting_goal">Standard-Fastenziel</string>
     <string name="settings_fasting_goal_value">%1$d Stunden</string>

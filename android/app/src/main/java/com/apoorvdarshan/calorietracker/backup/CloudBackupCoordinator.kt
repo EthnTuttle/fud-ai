@@ -8,12 +8,15 @@ import com.apoorvdarshan.calorietracker.BuildConfig
 import com.apoorvdarshan.calorietracker.data.KeyStore
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.time.Instant
 
 data class CloudBackupUi(
@@ -25,11 +28,24 @@ data class CloudBackupUi(
     val existingCloudBackup: Boolean = false,
 )
 
+/**
+ * Text for the backup error dialog. VM errors such as OutOfMemoryError (#484)
+ * and blank messages mean nothing to users, so they get [fallback] instead.
+ */
+fun cloudBackupErrorMessage(failure: Throwable, fallback: String, noSpace: String): String =
+    if (failure is CloudBackupNoSpaceException) {
+        noSpace
+    } else {
+        failure.message?.takeIf { failure !is Error && it.isNotBlank() } ?: fallback
+    }
+
 class CloudBackupCoordinator(
     private val context: Context,
     private val prefs: PreferencesStore,
     private val images: FoodImageStore,
     private val keyStore: KeyStore,
+    /** The reference-checked photo cleanup, run once a restore has written the restored diary. */
+    private val pruneUnusedPhotos: suspend () -> Unit = {},
     private val drive: DriveCloudBackupClient = DriveCloudBackupClient(
         BuildConfig.CLOUD_BACKUP_WEB_CLIENT_ID
     ),
@@ -85,7 +101,10 @@ class CloudBackupCoordinator(
     suspend fun enableAfterAuth(restoreIfPresent: Boolean): Result<Unit> = mutex.withLock {
         runCatching {
             busy(true)
-            prefs.setCloudBackupEnabled(true)
+            // A restore turns backup on only when it succeeds. If it failed with
+            // backup already on, the next auto-backup would replace the Drive
+            // copy with this phone's data.
+            if (!restoreIfPresent) prefs.setCloudBackupEnabled(true)
             val token = requireToken()
             val fileId = prefs.cloudBackupFileId.first() ?: drive.findBackupFileId(token)
             if (fileId != null && restoreIfPresent) {
@@ -166,23 +185,32 @@ class CloudBackupCoordinator(
             Instant.now().toEpochMilli() - lastAt.toEpochMilli() < CloudBackupPolicy.MIN_AUTO_BACKUP_INTERVAL_MS
         ) return
         mutex.withLock {
-            runCatching { upload(requireToken(), skipIfUnchanged = true) }
+            // Checked again under the lock: a restore, delete or sign-out that
+            // ran while this waited may have turned backup off.
+            if (prefs.cloudBackupEnabled.first()) {
+                runCatching { upload(requireToken(), skipIfUnchanged = true) }
+            }
         }
         refresh()
     }
 
-    private suspend fun upload(token: String, skipIfUnchanged: Boolean = false) {
+    // The archive goes through a temp file so photo-heavy diaries never sit in
+    // the heap all at once (#484). Runs on IO: callers launch from the main thread.
+    private suspend fun upload(token: String, skipIfUnchanged: Boolean = false) = withContext(Dispatchers.IO) {
         val values = prefs.snapshotCloudBackupValues()
         val photos = snapshotPhotos()
         val hash = CloudBackupArchive.contentHash(values, photos)
-        if (skipIfUnchanged && hash == prefs.cloudBackupLastHash.first()) return
-        val zip = CloudBackupArchive.pack(
-            values = values,
-            photos = photos,
-            exportedAt = Instant.now().toString(),
-            appVersion = BuildConfig.VERSION_NAME,
-        )
-        val fileId = drive.upload(token, zip, prefs.cloudBackupFileId.first())
+        if (skipIfUnchanged && hash == prefs.cloudBackupLastHash.first()) return@withContext
+        val fileId = withTempArchive { zip ->
+            CloudBackupArchive.pack(
+                destination = zip,
+                values = values,
+                photos = photos,
+                exportedAt = Instant.now().toString(),
+                appVersion = BuildConfig.VERSION_NAME,
+            )
+            drive.upload(token, zip, prefs.cloudBackupFileId.first())
+        }
         prefs.setCloudBackupFileId(fileId)
         prefs.setCloudBackupLastHash(hash)
         prefs.setCloudBackupLastAt(Instant.now().toString())
@@ -190,38 +218,47 @@ class CloudBackupCoordinator(
     }
 
     private suspend fun restoreFromDrive(token: String, fileId: String) {
-        val zip = drive.download(token, fileId)
-        applyArchive(zip)
-        prefs.setCloudBackupFileId(fileId)
-        prefs.setCloudBackupEnabled(true)
-    }
-
-    suspend fun applyArchive(zip: ByteArray) {
-        val unpack = CloudBackupArchive.unpack(zip)
-        val enabled = true
-        val email = prefs.cloudBackupAccountEmail.first()
-        val fileId = prefs.cloudBackupFileId.first()
-        images.clearAll()
-        unpack.photos.forEach { (name, bytes) -> images.restoreBytes(name, bytes) }
-        prefs.restoreCloudBackupValues(unpack.document.payload.values)
-        // Device-specific Health Connect tokens must not transfer. Mark food
-        // restore done so Health Connect skips a second import of the same IDs.
-        prefs.clearHealthChangesToken()
-        prefs.setHealthFoodRestoreDone(true)
-        prefs.setCloudBackupEnabled(enabled)
-        prefs.setCloudBackupAccountEmail(email)
-        prefs.setCloudBackupFileId(fileId)
-        prefs.setCloudBackupLastHash(unpack.document.content_sha256)
-        prefs.setCloudBackupLastAt(unpack.document.exported_at)
-    }
-
-    private fun snapshotPhotos(): Map<String, ByteArray> {
-        val out = linkedMapOf<String, ByteArray>()
-        for (name in images.listedFilenames()) {
-            val safe = CloudBackupPolicy.safePhotoName(name) ?: continue
-            images.loadBytes(safe)?.let { out[safe] = it }
+        withContext(Dispatchers.IO) {
+            withTempArchive { zip ->
+                drive.download(token, fileId, zip)
+                applyArchive(zip, fileId)
+            }
+            // The restore leaves photos the restored diary does not use in
+            // place; remove them now so the next backup does not carry them.
+            // If this fails, the startup prune removes them instead.
+            runCatching { pruneUnusedPhotos() }
         }
-        return out
+    }
+
+    private suspend fun applyArchive(zip: File, fileId: String) {
+        val email = prefs.cloudBackupAccountEmail.first()
+        CloudBackupRestore.apply(zip, images) { document ->
+            prefs.restoreCloudBackupValues(document.payload.values)
+            // Device-specific Health Connect tokens must not transfer. Mark food
+            // restore done so Health Connect skips a second import of the same IDs.
+            prefs.clearHealthChangesToken()
+            prefs.setHealthFoodRestoreDone(true)
+            prefs.setCloudBackupEnabled(true)
+            prefs.setCloudBackupAccountEmail(email)
+            prefs.setCloudBackupFileId(fileId)
+            prefs.setCloudBackupLastHash(document.content_sha256)
+            prefs.setCloudBackupLastAt(document.exported_at)
+            refresh()
+        }
+    }
+
+    private fun snapshotPhotos(): List<CloudBackupPhoto> =
+        images.listedFilenames().mapNotNull { name ->
+            val safe = CloudBackupPolicy.safePhotoName(name) ?: return@mapNotNull null
+            val file = images.file(safe)
+            if (file.isFile) CloudBackupPhoto.fromFile(safe, file) else null
+        }
+
+    private inline fun <T> withTempArchive(block: (File) -> T): T {
+        // Operations hold [mutex], so anything already here is an orphan from a killed process.
+        val dir = File(context.cacheDir, TEMP_DIR)
+        CloudBackupArchive.deleteTempArchives(dir)
+        return CloudBackupArchive.withTempArchive(dir, block)
     }
 
     private suspend fun requireToken(): String =
@@ -239,5 +276,9 @@ class CloudBackupCoordinator(
         val caps = cm.getNetworkCapabilities(network) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) &&
             caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
+    private companion object {
+        const val TEMP_DIR = "cloud-backup"
     }
 }

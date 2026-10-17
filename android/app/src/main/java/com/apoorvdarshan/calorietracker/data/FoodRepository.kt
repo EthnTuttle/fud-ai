@@ -308,10 +308,13 @@ class FoodRepository(
      */
     suspend fun pruneOrphanedImages() {
         val store = imageStore ?: return
+        // Read before the references: a Drive restore that replaces the photos
+        // meanwhile makes this prune skip instead of deleting restored files.
+        val generation = store.restoreGeneration()
         // Preserve legacy saved meals before deciding which files are unused.
         ensureFavoritesMigrated()
         val referenced = prefs.foodImageReferenceFilenames() ?: return
-        store.pruneUnreferenced(referenced)
+        store.pruneUnreferenced(referenced, generation)
     }
 
     // -- Restore from Health Connect --------------------------------------
