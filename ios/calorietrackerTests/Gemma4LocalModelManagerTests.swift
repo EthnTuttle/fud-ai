@@ -182,6 +182,84 @@ struct Gemma4LocalModelManagerTests {
         #expect(manager.hasStoredData)
     }
 
+    @Test func interruptionResumeDataIsKeptForTheNextAttempt() {
+        var retry = GemmaDownloadRetryState(resumeData: nil, delays: [1, 2])
+        let resumeData = Data([0x01, 0x02, 0x03])
+        let interruption = URLError(
+            .networkConnectionLost,
+            userInfo: [NSURLSessionDownloadTaskResumeData: resumeData]
+        )
+
+        #expect(retry.recordFailure(interruption, receivedBytes: 1_024) == .retry(after: 1))
+        #expect(retry.resumeData == resumeData)
+    }
+
+    @Test func onlyAttemptsWithoutNewBytesSpendTheRetryBudget() {
+        var retry = GemmaDownloadRetryState(resumeData: nil, delays: [1, 2])
+        let timeout = URLError(.timedOut)
+
+        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .retry(after: 1))
+        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .retry(after: 2))
+        #expect(retry.recordFailure(timeout, receivedBytes: 512) == .retry(after: 1))
+        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .retry(after: 2))
+        #expect(retry.recordFailure(timeout, receivedBytes: 0) == .fail)
+    }
+
+    @Test func transientFailureWithoutNewResumeDataKeepsTheSavedResumeData() {
+        let saved = Data([0x0a])
+        var retry = GemmaDownloadRetryState(resumeData: saved, delays: [1])
+
+        #expect(retry.recordFailure(URLError(.notConnectedToInternet), receivedBytes: 0) == .retry(after: 1))
+        #expect(retry.resumeData == saved)
+    }
+
+    @Test func resumeDataThatCannotResumeIsDroppedForAFreshAttempt() {
+        var retry = GemmaDownloadRetryState(resumeData: Data([0x0a]), delays: [1, 2])
+        let expiredLink = GemmaArtifactDownloadOperation.DownloadError.httpStatus(403)
+
+        #expect(retry.recordFailure(expiredLink, receivedBytes: 0) == .retry(after: 1))
+        #expect(retry.resumeData == nil)
+        #expect(retry.recordFailure(expiredLink, receivedBytes: 0) == .fail)
+    }
+
+    @Test func permanentFailuresAreNotRetried() {
+        var retry = GemmaDownloadRetryState(resumeData: nil, delays: [1, 2])
+
+        #expect(retry.recordFailure(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(404),
+            receivedBytes: 0
+        ) == .fail)
+        #expect(retry.recordFailure(URLError(.badURL), receivedBytes: 0) == .fail)
+    }
+
+    @Test func transientClassificationCoversNetworkDropsAndServerErrors() {
+        #expect(GemmaDownloadRetryState.isTransient(URLError(.networkConnectionLost)))
+        #expect(GemmaDownloadRetryState.isTransient(URLError(.timedOut)))
+        #expect(GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(503)
+        ))
+        #expect(GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(429)
+        ))
+        #expect(!GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(404)
+        ))
+        #expect(!GemmaDownloadRetryState.isTransient(URLError(.cancelled)))
+        #expect(!GemmaDownloadRetryState.isTransient(CancellationError()))
+    }
+
+    @Test func resumeDataIsReadFromBridgedURLErrors() {
+        let resumeData = Data([0x01])
+        let bridged = NSError(
+            domain: NSURLErrorDomain,
+            code: NSURLErrorTimedOut,
+            userInfo: [NSURLSessionDownloadTaskResumeData: resumeData]
+        )
+
+        #expect(GemmaDownloadRetryState.resumeData(from: bridged) == resumeData)
+        #expect(GemmaDownloadRetryState.resumeData(from: URLError(.timedOut)) == nil)
+    }
+
     @Test func noticesAreBundledForOfflineViewing() throws {
         let url = try #require(LiteRTLMNoticesView.noticesURL(in: .main))
         let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
