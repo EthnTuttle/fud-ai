@@ -13,6 +13,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import com.apoorvdarshan.calorietracker.backup.DriveCloudBackupClient
+import com.apoorvdarshan.calorietracker.backup.cloudBackupErrorMessage
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
@@ -421,6 +422,11 @@ fun SettingsScreen(
     val settingsScope = rememberCoroutineScope()
     val importReadFailedMessage = stringResource(R.string.import_read_failed)
     val cloudBackupSignInFailed = stringResource(R.string.cloud_backup_sign_in_failed)
+    val cloudBackupFailed = stringResource(R.string.error_title)
+    val cloudBackupNoSpace = stringResource(R.string.cloud_backup_restore_no_space)
+    val cloudBackupFailure: (Throwable) -> String = {
+        cloudBackupErrorMessage(it, cloudBackupFailed, cloudBackupNoSpace)
+    }
     val cloudBackup by container.cloudBackup.ui.collectAsState()
     LaunchedEffect(selectedCategory) {
         if (selectedCategory == SettingsCategory.DATA_MANAGEMENT) {
@@ -434,7 +440,7 @@ fun SettingsScreen(
                 showCloudRestoreChoice = true
             } else {
                 container.cloudBackup.enableAfterAuth(restoreIfPresent = false)
-                    .onFailure { cloudBackupError = it.message }
+                    .onFailure { cloudBackupError = cloudBackupFailure(it) }
             }
         }
     }
@@ -1530,7 +1536,7 @@ fun SettingsScreen(
                                 .clickable(enabled = !cloudBackup.busy) {
                                     settingsScope.launch {
                                         container.cloudBackup.backupNow()
-                                            .onFailure { cloudBackupError = it.message }
+                                            .onFailure { cloudBackupError = cloudBackupFailure(it) }
                                     }
                                 }
                                 .padding(horizontal = 16.dp, vertical = 13.dp),
@@ -1548,7 +1554,7 @@ fun SettingsScreen(
                                 .clickable(enabled = !cloudBackup.busy) {
                                     settingsScope.launch {
                                         container.cloudBackup.restoreNow()
-                                            .onFailure { cloudBackupError = it.message }
+                                            .onFailure { cloudBackupError = cloudBackupFailure(it) }
                                     }
                                 }
                                 .padding(horizontal = 16.dp, vertical = 13.dp),
@@ -1817,7 +1823,7 @@ fun SettingsScreen(
                     showCloudRestoreChoice = false
                     settingsScope.launch {
                         container.cloudBackup.enableAfterAuth(restoreIfPresent = true)
-                            .onFailure { cloudBackupError = it.message }
+                            .onFailure { cloudBackupError = cloudBackupFailure(it) }
                     }
                 },
                 dismissText = stringResource(R.string.cloud_backup_keep),
@@ -1825,7 +1831,7 @@ fun SettingsScreen(
                     showCloudRestoreChoice = false
                     settingsScope.launch {
                         container.cloudBackup.enableAfterAuth(restoreIfPresent = false)
-                            .onFailure { cloudBackupError = it.message }
+                            .onFailure { cloudBackupError = cloudBackupFailure(it) }
                     }
                 }
             )
@@ -1845,7 +1851,7 @@ fun SettingsScreen(
                     showCloudDeleteConfirm = false
                     settingsScope.launch {
                         container.cloudBackup.deleteCloudBackup()
-                            .onFailure { cloudBackupError = it.message }
+                            .onFailure { cloudBackupError = cloudBackupFailure(it) }
                     }
                 },
                 dismissText = stringResource(R.string.action_cancel),
@@ -4348,10 +4354,15 @@ private fun LocalModelRow(
             LocalModelInstallStatus.Installed ->
                 TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
             LocalModelInstallStatus.NotInstalled,
-            is LocalModelInstallStatus.Failed ->
+            is LocalModelInstallStatus.Failed -> {
                 TextButton(onClick = onDownload, enabled = state.eligible) {
                     Text(stringResource(R.string.action_download))
                 }
+                // An interrupted download keeps its bytes for resuming; Delete frees them.
+                if (state.keptBytes > 0L) {
+                    TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
+                }
+            }
         }
     }
 }

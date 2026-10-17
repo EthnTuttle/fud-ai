@@ -56,6 +56,21 @@ struct Gemma4LocalModelManagerTests {
         #expect(Gemma4LocalModelManager.hasRequiredStorage(availableBytes: required))
     }
 
+    @Test func storageCheckCountsBytesKeptForResume() {
+        // A resume only needs room for the rest of the artifact, not the whole 2.59 GB again.
+        let kept: Int64 = 2_000_000_000
+        let required = Gemma4LocalModelManager.artifactByteCount - kept
+            + Gemma4LocalModelManager.installationHeadroomBytes
+
+        #expect(Gemma4LocalModelManager.requiredStorageBytes(keptBytes: kept) == required)
+        #expect(!Gemma4LocalModelManager.hasRequiredStorage(availableBytes: required - 1, keptBytes: kept))
+        #expect(Gemma4LocalModelManager.hasRequiredStorage(availableBytes: required, keptBytes: kept))
+        #expect(
+            Gemma4LocalModelManager.requiredStorageBytes(keptBytes: .max)
+                == Gemma4LocalModelManager.installationHeadroomBytes
+        )
+    }
+
     @Test func verificationStreamsExactBytesAndSHA256() throws {
         let root = makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -180,6 +195,64 @@ struct Gemma4LocalModelManagerTests {
 
         #expect(FileManager.default.fileExists(atPath: storedFile.path))
         #expect(manager.hasStoredData)
+    }
+
+    @Test func onlyAttemptsWithoutLastingProgressSpendTheRetryBudget() {
+        var retry = GemmaDownloadRetryState(delays: [1, 2])
+        let timeout = URLError(.timedOut)
+
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .retry(after: 1))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .retry(after: 2))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 512) == .retry(after: 1))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .retry(after: 2))
+        #expect(retry.recordFailure(timeout, lastingProgressBytes: 0) == .fail)
+    }
+
+    @Test func restartThatEndsBelowTheOldPartialSpendsTheRetryBudget() {
+        // A server that ignores Range replaces the partial; dropping before the old length leaves
+        // less than the attempt started with, even though it received bytes.
+        var retry = GemmaDownloadRetryState(delays: [1])
+        let dropped = URLError(.networkConnectionLost)
+
+        #expect(retry.recordFailure(dropped, lastingProgressBytes: -4_096) == .retry(after: 1))
+        #expect(retry.recordFailure(dropped, lastingProgressBytes: -4_096) == .fail)
+    }
+
+    @Test func permanentFailuresAreNotRetried() {
+        var retry = GemmaDownloadRetryState(delays: [1, 2])
+
+        #expect(retry.recordFailure(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(404),
+            lastingProgressBytes: 0
+        ) == .fail)
+        #expect(retry.recordFailure(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(403),
+            lastingProgressBytes: 0
+        ) == .fail)
+        #expect(retry.recordFailure(URLError(.badURL), lastingProgressBytes: 0) == .fail)
+    }
+
+    @Test func transientClassificationCoversNetworkDropsAndServerErrors() {
+        #expect(GemmaDownloadRetryState.isTransient(URLError(.networkConnectionLost)))
+        #expect(GemmaDownloadRetryState.isTransient(URLError(.timedOut)))
+        #expect(GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(503)
+        ))
+        #expect(GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(429)
+        ))
+        // The partial was reset to zero, so the retry starts over instead of failing.
+        #expect(GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.unexpectedRange
+        ))
+        #expect(!GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.httpStatus(404)
+        ))
+        #expect(!GemmaDownloadRetryState.isTransient(
+            GemmaArtifactDownloadOperation.DownloadError.invalidHTTPResponse
+        ))
+        #expect(!GemmaDownloadRetryState.isTransient(URLError(.cancelled)))
+        #expect(!GemmaDownloadRetryState.isTransient(CancellationError()))
     }
 
     @Test func noticesAreBundledForOfflineViewing() throws {

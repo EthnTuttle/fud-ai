@@ -17,8 +17,10 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -126,7 +128,7 @@ class DriveCloudBackupClient(
         }
     }
 
-    suspend fun upload(accessToken: String, zip: ByteArray, existingFileId: String?): String =
+    suspend fun upload(accessToken: String, zip: File, existingFileId: String?): String =
         withContext(Dispatchers.IO) {
             if (existingFileId != null) {
                 update(accessToken, existingFileId, zip)
@@ -136,7 +138,8 @@ class DriveCloudBackupClient(
             }
         }
 
-    suspend fun download(accessToken: String, fileId: String): ByteArray = withContext(Dispatchers.IO) {
+    /** Streams the backup into [destination]; it can be larger than the app's heap (#484). */
+    suspend fun download(accessToken: String, fileId: String, destination: File) = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("https://www.googleapis.com/drive/v3/files/$fileId?alt=media")
             .header("Authorization", "Bearer $accessToken")
@@ -144,7 +147,9 @@ class DriveCloudBackupClient(
             .build()
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) error("Drive download failed (${response.code})")
-            response.body?.bytes() ?: error("Empty backup file")
+            response.body.byteStream().use { input ->
+                destination.outputStream().use { input.copyTo(it) }
+            }
         }
     }
 
@@ -173,7 +178,7 @@ class DriveCloudBackupClient(
         }
     }
 
-    private fun create(accessToken: String, zip: ByteArray): String {
+    private fun create(accessToken: String, zip: File): String {
         val metadata = JSONObject()
             .put("name", CloudBackupPolicy.FILE_NAME)
             .put("parents", org.json.JSONArray().put("appDataFolder"))
@@ -187,7 +192,7 @@ class DriveCloudBackupClient(
             )
             .addPart(
                 MultipartBody.Part.create(
-                    zip.toRequestBody("application/zip".toMediaType())
+                    zip.asRequestBody("application/zip".toMediaType())
                 )
             )
             .build()
@@ -203,11 +208,11 @@ class DriveCloudBackupClient(
         }
     }
 
-    private fun update(accessToken: String, fileId: String, zip: ByteArray) {
+    private fun update(accessToken: String, fileId: String, zip: File) {
         val request = Request.Builder()
             .url("https://www.googleapis.com/upload/drive/v3/files/$fileId?uploadType=media")
             .header("Authorization", "Bearer $accessToken")
-            .patch(zip.toRequestBody("application/zip".toMediaType()))
+            .patch(zip.asRequestBody("application/zip".toMediaType()))
             .build()
         http.newCall(request).execute().use { response ->
             if (!response.isSuccessful) error("Drive update failed (${response.code})")
