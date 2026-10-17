@@ -2107,7 +2107,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "ШІ-анализ"
+            "value": "ШІ-аналіз"
           }
         },
         "zh-Hans": {
@@ -2153,13 +2153,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todos los %lld"
+            "value": "Todos (%lld)"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tous les %lld"
+            "value": "Tous (%lld)"
           }
         },
         "hi": {
@@ -2201,13 +2201,13 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todos os %lld"
+            "value": "Todos (%lld)"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toate cele %lld"
+            "value": "Toate (%lld)"
           }
         },
         "ru": {
@@ -9633,9 +9633,45 @@
           }
         },
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld أيام"
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld يوم"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld يوم"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld يومان"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld أيام"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld يومًا"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld يوم"
+                }
+              }
+            }
           }
         },
         "az": {
@@ -9645,15 +9681,39 @@
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld Tage"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage"
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld jours"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jour"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jours"
+                }
+              }
+            }
           }
         },
         "hi": {
@@ -9675,21 +9735,63 @@
           }
         },
         "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld dagen"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dagen"
+                }
+              }
+            }
           }
         },
         "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld dias"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dia"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dias"
+                }
+              }
+            }
           }
         },
         "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld zile"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zi"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld zile"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de zile"
+                }
+              }
+            }
           }
         },
         "zh-Hans": {
@@ -83111,7 +83213,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I tuoi obiettivi giornalieri di calorie e macro sono impostati dall’IA. Quando tocchi «Ricalcola obiettivi» — o automaticamente circa una volta a settimana se Obiettivi adattivi è attivo — Fud AI invia al tuo provider IA il tuo profilo, le equazioni di riferimento qui sotto, i totali nutrizionali giornalieri aggregati nel rispetto della privacy, le misurazioni esatte e datate di peso, grasso corporeo e circonferenze rilevate con il metro, i dati aggregati sugli allenamenti — numero, durata, serie e ripetizioni — e i dati energetici facoltativi di Apple Health. Per questo calcolo non vengono inviati nomi degli alimenti, note, foto, ingredienti o nomi degli esercizi. L’IA parte da queste formule validate scientificamente e poi le adatta ai tuoi dati reali per stimare il tuo vero mantenimento e i tuoi obiettivi."
+            "value": "I tuoi obiettivi giornalieri di calorie e macro sono impostati dall’IA. Quando tocchi «Ricalcola obiettivi» — o automaticamente circa una volta a settimana se gli Obiettivi adattivi sono attivi — Fud AI invia al tuo provider IA il tuo profilo, le equazioni di riferimento qui sotto, i totali nutrizionali giornalieri aggregati nel rispetto della privacy, le misurazioni esatte e datate di peso, grasso corporeo e circonferenze rilevate con il metro, i dati aggregati sugli allenamenti — numero, durata, serie e ripetizioni — e i dati energetici facoltativi di Apple Health. Per questo calcolo non vengono inviati nomi degli alimenti, note, foto, ingredienti o nomi degli esercizi. L’IA parte da queste formule validate scientificamente e poi le adatta ai tuoi dati reali per stimare il tuo vero mantenimento e i tuoi obiettivi."
           }
         },
         "ja": {
@@ -83141,7 +83243,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Suas metas diárias de calorias e macros são definidas por IA. Quando você toca em «Recalcular metas» — ou automaticamente cerca de uma vez por semana se Metas adaptativas estiver ativado — o Fud AI envia ao seu provedor de IA seu perfil, as equações de referência abaixo, totais nutricionais diários agregados com proteção de privacidade, medições exatas e datadas de peso, gordura corporal e circunferências feitas com fita métrica, dados agregados dos treinos — quantidade, duração, séries e repetições — e dados opcionais de energia do Apple Health. Nomes de alimentos, notas, fotos, ingredientes e nomes de exercícios não são enviados para este cálculo. A IA parte dessas fórmulas revisadas por pares e as ajusta aos seus dados reais para estimar sua verdadeira manutenção e suas metas."
+            "value": "Suas metas diárias de calorias e macros são definidas por IA. Quando você toca em «Recalcular metas» — ou automaticamente cerca de uma vez por semana se as Metas adaptativas estiverem ativadas — o Fud AI envia ao seu provedor de IA seu perfil, as equações de referência abaixo, totais nutricionais diários agregados com proteção de privacidade, medições exatas e datadas de peso, gordura corporal e circunferências feitas com fita métrica, dados agregados dos treinos — quantidade, duração, séries e repetições — e dados opcionais de energia do Apple Health. Nomes de alimentos, notas, fotos, ingredientes e nomes de exercícios não são enviados para este cálculo. A IA parte dessas fórmulas revisadas por pares e as ajusta aos seus dados reais para estimar sua verdadeira manutenção e suas metas."
           }
         },
         "ro": {
@@ -106868,13 +106970,81 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld ejercicios"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg ejercicio"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg ejercicios"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@، %2$lld تمارين"
+            "value": "%1$@، %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "zero": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg تمرين"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg تمرين"
+                    }
+                  },
+                  "two": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg تمرينان"
+                    }
+                  },
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg تمارين"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg تمرينًا"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg تمرين"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "az": {
@@ -106892,13 +107062,57 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld Übungen"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Übung"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Übungen"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld exercices"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg exercice"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg exercices"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "hi": {
@@ -106910,7 +107124,29 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld esercizi"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg esercizio"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg esercizi"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ja": {
@@ -106928,7 +107164,29 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld oefeningen"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg oefening"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg oefeningen"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "pl": {
@@ -106940,13 +107198,63 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld exercícios"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg exercício"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg exercícios"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, %2$lld exerciții"
+            "value": "%1$@, %#@exercises@"
+          },
+          "substitutions": {
+            "exercises": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg exercițiu"
+                    }
+                  },
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg exerciții"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg de exerciții"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "ru": {
@@ -107432,15 +107740,63 @@
     "%lld exercises": {
       "localizations": {
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld ejercicios"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ejercicio"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld ejercicios"
+                }
+              }
+            }
           }
         },
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld تمارين"
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تمرين"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تمرين"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تمرينان"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تمارين"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تمرينًا"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld تمرين"
+                }
+              }
+            }
           }
         },
         "az": {
@@ -107456,15 +107812,39 @@
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld Übungen"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Übung"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Übungen"
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld exercices"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld exercice"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld exercices"
+                }
+              }
+            }
           }
         },
         "hi": {
@@ -107474,9 +107854,21 @@
           }
         },
         "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld esercizi"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld esercizio"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld esercizi"
+                }
+              }
+            }
           }
         },
         "ja": {
@@ -107492,9 +107884,21 @@
           }
         },
         "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld oefeningen"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld oefening"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld oefeningen"
+                }
+              }
+            }
           }
         },
         "pl": {
@@ -107504,15 +107908,45 @@
           }
         },
         "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld exercícios"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld exercício"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld exercícios"
+                }
+              }
+            }
           }
         },
         "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld exerciții"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld exercițiu"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld exerciții"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld de exerciții"
+                }
+              }
+            }
           }
         },
         "ru": {
@@ -159806,21 +160240,57 @@
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld Trainings"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Training"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Trainings"
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld entrenamientos"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entrenamiento"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entrenamientos"
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld entraînements"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entraînement"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld entraînements"
+                }
+              }
+            }
           }
         },
         "hi": {
@@ -159830,9 +160300,21 @@
           }
         },
         "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld allenamenti"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld allenamento"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld allenamenti"
+                }
+              }
+            }
           }
         },
         "ja": {
@@ -159848,9 +160330,21 @@
           }
         },
         "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld trainingen"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld training"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld trainingen"
+                }
+              }
+            }
           }
         },
         "pl": {
@@ -159860,9 +160354,21 @@
           }
         },
         "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld treinos"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld treino"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld treinos"
+                }
+              }
+            }
           }
         },
         "ro": {

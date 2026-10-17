@@ -86,7 +86,7 @@
     <string name="derived_body_fat">Grăsime corporală</string>
     <string name="derived_frame">Constituție</string>
     <string name="frame_small">Mică</string>
-    <string name="frame_medium">Mediu</string>
+    <string name="frame_medium">Medie</string>
     <string name="frame_large">Mare</string>
     <string name="notif_channel_weight_log">Memento pentru înregistrarea greutății</string>
     <string name="notif_channel_weight_log_desc">Memento zilnic să te cântărești și să-ți înregistrezi greutatea.</string>
@@ -1040,7 +1040,7 @@
     <string name="workout_exercise_ai_fill">Completează cu AI</string>
     <string name="workout_exercise_ai_fill_hint">Completează cu AI trimite această fotografie furnizorului tău de AI. Verifică detaliile sugerate înainte de salvare.</string>
     <string name="filter_all">Tot</string>
-    <string name="filter_all_count">Toate cele %d</string>
+    <string name="filter_all_count">Toate (%d)</string>
     <string name="hide_details">Ascunde detaliile</string>
     <string name="instructions">Instrucțiuni</string>
     <string name="watch_on_youtube">Urmărește pe YouTube</string>
@@ -1278,7 +1278,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „O analiză sistematică, meta-analiză și meta-regresie a efectului suplimentării cu proteine asupra creșterii masei musculare și forței induse de antrenamentul de rezistență.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Estimările se bazează pe datele de antrenare ale modelului AI subiacent (USDA FoodData Central, etichetele producătorilor și literatura științifică). Precizia variază în funcție de aliment, vizibilitatea dimensiunii porției și modelul furnizorului. Verifică întotdeauna etichetele alimentelor pe care le înregistrezi frecvent.</string>
     <string name="settings_not_medical_title">Nu este sfat medical</string>
-    <string name="settings_not_medical_body">Fud AI este un instrument de estimare, nu un instrument clinic. Ecuațiile predictive au o eroare inerentă (de obicei ±10%% pentru BMR). Consultă un dietetician autorizat, un medic sau un specialist în medicină sportivă înainte de schimbări importante în alimentație — mai ales dacă ai o afecțiune medicală, ești însărcinată sau alăptezi, ai sub 18 ani sau te confrunți cu o tulburare de alimentație.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI este un instrument de estimare, nu un instrument clinic. Ecuațiile predictive au o eroare inerentă (de obicei ±10% pentru BMR). Consultă un dietetician autorizat, un medic sau un specialist în medicină sportivă înainte de schimbări importante în alimentație — mai ales dacă ai o afecțiune medicală, ești însărcinată sau alăptezi, ai sub 18 ani sau te confrunți cu o tulburare de alimentație.</string>
     <string name="settings_waist_cm_format">Talie %1$.0f cm</string>
     <string name="settings_waist_in_format">Talie %1$.0f in</string>
     <string name="export_range_today">Astăzi</string>

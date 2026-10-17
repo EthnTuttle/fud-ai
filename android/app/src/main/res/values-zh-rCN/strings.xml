@@ -86,7 +86,7 @@
     <string name="derived_body_fat">体脂</string>
     <string name="derived_frame">骨架</string>
     <string name="frame_small">小骨架</string>
-    <string name="frame_medium">中</string>
+    <string name="frame_medium">中骨架</string>
     <string name="frame_large">大骨架</string>
     <string name="notif_channel_weight_log">体重记录提醒</string>
     <string name="notif_channel_weight_log_desc">每天提醒你称重并记录体重。</string>
@@ -1259,7 +1259,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “蛋白质补充对抗阻训练引起的肌肉量和力量增长之影响的系统综述、荟萃分析和荟萃回归。” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">估算值依赖底层 AI 模型的训练数据（USDA FoodData Central、制造商营养标签和科学文献）。准确度会因食物、份量是否清晰可见以及服务商模型而异。对于经常记录的食物，请务必与标签核对。</string>
     <string name="settings_not_medical_title">非医疗建议</string>
-    <string name="settings_not_medical_body">Fud AI 是一款估算工具，而非临床仪器。预测公式本身存在误差（基础代谢率通常为 ±10%%）。在大幅调整饮食前，请咨询注册营养师、医生或运动医学专业人士——尤其是当你患有疾病、正在怀孕或哺乳、未满 18 岁，或正在应对进食障碍时。</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI 是一款估算工具，而非临床仪器。预测公式本身存在误差（基础代谢率通常为 ±10%）。在大幅调整饮食前，请咨询注册营养师、医生或运动医学专业人士——尤其是当你患有疾病、正在怀孕或哺乳、未满 18 岁，或正在应对进食障碍时。</string>
     <string name="settings_waist_cm_format">腰围 %1$.0f 厘米</string>
     <string name="settings_waist_in_format">腰围 %1$.0f 英寸</string>
     <string name="export_range_today">今日</string>

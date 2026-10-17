@@ -207,6 +207,7 @@ struct LocalizationCatalogTests {
             "Days on Target": "Днів у цілі",
             "%@ goal": "Ціль %@",
             "Add %lld to Log · %@": "Додати %lld до журналу · %@",
+            "AI analysis": "ШІ-аналіз",
         ]
         for (key, value) in expected {
             #expect(bundle.localizedString(forKey: key, value: nil, table: nil) == value, "uk \(key)")
@@ -227,6 +228,36 @@ struct LocalizationCatalogTests {
         let entries = "%lld entry · tap to view or delete"
         #expect(try Self.format(entries, "uk", 2).hasPrefix("2 записи ·"))
         #expect(try Self.format(entries, "uk", 11).hasPrefix("11 записів ·"))
+    }
+
+    // MARK: - Counted labels
+
+    @Test func workoutCountsFollowPluralRules() throws {
+        // Calendar days, streak tiles and exercise pickers show a single item too (#507).
+        #expect(try Self.format("%lld workouts", "de", 1) == "1 Training")
+        #expect(try Self.format("%lld workouts", "de", 3) == "3 Trainings")
+        #expect(try Self.format("%lld workouts", "es", 1) == "1 entrenamiento")
+        #expect(try Self.format("%lld workouts", "fr", 1) == "1 entraînement")
+        #expect(try Self.format("%lld workouts", "nl", 2) == "2 trainingen")
+        #expect(try Self.format("%lld days", "de", 1) == "1 Tag")
+        #expect(try Self.format("%lld days", "pt-BR", 1) == "1 dia")
+        #expect(try Self.format("%lld days", "ro", 21) == "21 de zile")
+        #expect(try Self.format("%lld exercises", "it", 1) == "1 esercizio")
+        #expect(try Self.format("%lld exercises", "it", 9) == "9 esercizi")
+        // The count is the second argument here, after the muscle group name.
+        let german = try Self.languageBundle("de", in: .main)
+        let format = german.localizedString(forKey: "%@, %lld exercises", value: nil, table: nil)
+        let locale = Locale(identifier: "de")
+        #expect(String(format: format, locale: locale, arguments: ["Brust", Int64(1)]) == "Brust, 1 Übung")
+        #expect(String(format: format, locale: locale, arguments: ["Brust", Int64(12)]) == "Brust, 12 Übungen")
+    }
+
+    @Test func allFilterLabelHasNoDanglingArticle() throws {
+        // "Todos los 12" read as an unfinished phrase on the workout filter pills.
+        #expect(try Self.format("All %lld", "es", 12) == "Todos (12)")
+        #expect(try Self.format("All %lld", "fr", 12) == "Tous (12)")
+        #expect(try Self.format("All %lld", "pt-BR", 12) == "Todos (12)")
+        #expect(try Self.format("All %lld", "ro", 12) == "Toate (12)")
     }
 
     // MARK: - Error descriptions
@@ -331,7 +362,7 @@ struct LocalizationCatalogTests {
         "цели", "еда", "еду", "вес", "веса", "что", "это", "чтобы", "сейчас", "нет", "или", "тоже",
         "также", "только", "можно", "нужно", "сначала", "затем", "осталось", "начнём", "записать",
         "сбросить", "получить", "пользователя", "уведомления", "язык", "медленно", "привет",
-        "понятно", "проверить", "всего", "единица", "вручную", "минимум",
+        "понятно", "проверить", "всего", "единица", "вручную", "минимум", "анализ",
     ]
 
     @Test(.enabled(if: LocalizationCatalogTests.sourceCatalogsAvailable))

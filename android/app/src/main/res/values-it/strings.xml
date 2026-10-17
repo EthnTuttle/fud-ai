@@ -86,7 +86,7 @@
     <string name="derived_body_fat">Grasso corporeo</string>
     <string name="derived_frame">Corporatura</string>
     <string name="frame_small">Esile</string>
-    <string name="frame_medium">Medio</string>
+    <string name="frame_medium">Media</string>
     <string name="frame_large">Robusta</string>
     <string name="notif_channel_weight_log">Promemoria per il peso</string>
     <string name="notif_channel_weight_log_desc">Promemoria giornaliero per pesarti e registrare il peso.</string>
@@ -1233,7 +1233,7 @@
     <string name="settings_macro_auto_label_format">%1$s (auto)</string>
     <string name="vm_health_connect_needed">Health Connect necessario</string>
     <string name="vm_not_enough_energy">Dati energetici insufficienti</string>
-    <string name="vm_adaptive_on_message">Obiettivi adattivi è attivo. Fud AI controllerà una volta a settimana quando ci saranno abbastanza dati su cibo e peso.</string>
+    <string name="vm_adaptive_on_message">Gli obiettivi adattivi sono attivi. Fud AI controllerà una volta a settimana quando ci saranno abbastanza dati su cibo e peso.</string>
     <string name="vm_goals_recalculated">Obiettivi ricalcolati</string>
     <plurals name="import_add_meals_title">
         <item quantity="one">Aggiungi pasto condiviso</item>
@@ -1243,7 +1243,7 @@
     <string name="import_note">Viene aggiunto al tuo diario con i valori nutrizionali esatti del mittente. Nessuna foto inclusa.</string>
     <string name="import_add_to_log">Aggiungi al diario</string>
     <string name="import_add_to_log_many_format">Aggiungi %1$d al diario · %2$d kcal</string>
-    <string name="settings_calc_intro">I tuoi obiettivi giornalieri di calorie e macro sono impostati dall’IA. Quando tocchi «Ricalcola obiettivi» — o automaticamente circa una volta a settimana se Obiettivi adattivi è attivo — Fud AI invia al tuo provider IA il tuo profilo, le equazioni di riferimento qui sotto, i totali nutrizionali giornalieri aggregati nel rispetto della privacy, le misurazioni esatte e datate di peso, grasso corporeo e circonferenze rilevate con il metro, i dati aggregati sugli allenamenti — numero, durata, serie e ripetizioni — e i dati energetici facoltativi di Health Connect. Per questo calcolo non vengono inviati nomi degli alimenti, note, foto, ingredienti o nomi degli esercizi. L’IA parte da queste formule validate scientificamente e poi le adatta ai tuoi dati reali per stimare il tuo vero mantenimento e i tuoi obiettivi.</string>
+    <string name="settings_calc_intro">I tuoi obiettivi giornalieri di calorie e macro sono impostati dall’IA. Quando tocchi «Ricalcola obiettivi» — o automaticamente circa una volta a settimana se gli Obiettivi adattivi sono attivi — Fud AI invia al tuo provider IA il tuo profilo, le equazioni di riferimento qui sotto, i totali nutrizionali giornalieri aggregati nel rispetto della privacy, le misurazioni esatte e datate di peso, grasso corporeo e circonferenze rilevate con il metro, i dati aggregati sugli allenamenti — numero, durata, serie e ripetizioni — e i dati energetici facoltativi di Health Connect. Per questo calcolo non vengono inviati nomi degli alimenti, note, foto, ingredienti o nomi degli esercizi. L’IA parte da queste formule validate scientificamente e poi le adatta ai tuoi dati reali per stimare il tuo vero mantenimento e i tuoi obiettivi.</string>
     <string name="settings_calc_sec_bmr">Metabolismo basale (BMR)</string>
     <string name="settings_calc_sec_tdee">Dispendio energetico giornaliero (TDEE)</string>
     <string name="settings_calc_mifflin_name">Equazione di Mifflin-St Jeor</string>
@@ -1270,7 +1270,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Revisione sistematica, meta-analisi e meta-regressione dell’effetto dell’integrazione proteica sugli aumenti di massa muscolare e forza indotti dall’allenamento di resistenza». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Le stime si basano sui dati di addestramento del modello IA sottostante (USDA FoodData Central, etichette dei produttori e letteratura scientifica). La precisione varia in base all’alimento, alla visibilità delle dimensioni della porzione e al modello del provider. Verifica sempre le etichette degli alimenti che registri spesso.</string>
     <string name="settings_not_medical_title">Non è un consiglio medico</string>
-    <string name="settings_not_medical_body">Fud AI è uno strumento di stima, non uno strumento clinico. Le equazioni predittive hanno un errore intrinseco (in genere ±10%% per il metabolismo basale). Consulta un dietista, un medico o uno specialista in medicina dello sport prima di cambiare in modo significativo l’alimentazione, soprattutto se hai una condizione medica, sei in gravidanza o allatti, hai meno di 18 anni o stai affrontando un disturbo alimentare.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI è uno strumento di stima, non uno strumento clinico. Le equazioni predittive hanno un errore intrinseco (in genere ±10% per il metabolismo basale). Consulta un dietista, un medico o uno specialista in medicina dello sport prima di cambiare in modo significativo l’alimentazione, soprattutto se hai una condizione medica, sei in gravidanza o allatti, hai meno di 18 anni o stai affrontando un disturbo alimentare.</string>
     <string name="settings_waist_cm_format">Vita %1$.0f cm</string>
     <string name="settings_waist_in_format">Vita %1$.0f in</string>
     <string name="export_range_today">Oggi</string>

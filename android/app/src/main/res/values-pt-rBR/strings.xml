@@ -86,7 +86,7 @@
     <string name="derived_body_fat">Gordura corporal</string>
     <string name="derived_frame">Compleição</string>
     <string name="frame_small">Pequena</string>
-    <string name="frame_medium">Médio</string>
+    <string name="frame_medium">Média</string>
     <string name="frame_large">Grande</string>
     <string name="notif_channel_weight_log">Lembrete de registro de peso</string>
     <string name="notif_channel_weight_log_desc">Lembrete diário para se pesar e registrar o peso.</string>
@@ -1032,7 +1032,7 @@
     <string name="workout_exercise_ai_fill">Preencher com IA</string>
     <string name="workout_exercise_ai_fill_hint">Preencher com IA envia esta foto para o seu provedor de IA. Revise os detalhes sugeridos antes de salvar.</string>
     <string name="filter_all">Tudo</string>
-    <string name="filter_all_count">Todos os %d</string>
+    <string name="filter_all_count">Todos (%d)</string>
     <string name="hide_details">Ocultar detalhes</string>
     <string name="instructions">Instruções</string>
     <string name="watch_on_youtube">Assistir no YouTube</string>
@@ -1233,7 +1233,7 @@
     <string name="settings_macro_auto_label_format">%1$s (auto)</string>
     <string name="vm_health_connect_needed">Health Connect necessário</string>
     <string name="vm_not_enough_energy">Dados de energia insuficientes</string>
-    <string name="vm_adaptive_on_message">Metas adaptativas está ativado. O Fud AI vai verificar uma vez por semana quando houver dados suficientes de alimentação e peso.</string>
+    <string name="vm_adaptive_on_message">As metas adaptativas estão ativadas. O Fud AI vai verificar uma vez por semana quando houver dados suficientes de alimentação e peso.</string>
     <string name="vm_goals_recalculated">Metas recalculadas</string>
     <plurals name="import_add_meals_title">
         <item quantity="one">Adicionar %1$d refeição compartilhada</item>
@@ -1243,7 +1243,7 @@
     <string name="import_note">Adiciona ao seu registro com os nutrientes exatos do remetente. Nenhuma foto é incluída.</string>
     <string name="import_add_to_log">Adicionar ao registro</string>
     <string name="import_add_to_log_many_format">Adicionar %1$d ao registro · %2$d kcal</string>
-    <string name="settings_calc_intro">Suas metas diárias de calorias e macros são definidas por IA. Quando você toca em «Recalcular metas» — ou automaticamente cerca de uma vez por semana se Metas adaptativas estiver ativado — o Fud AI envia ao seu provedor de IA seu perfil, as equações de referência abaixo, totais nutricionais diários agregados com proteção de privacidade, medições exatas e datadas de peso, gordura corporal e circunferências feitas com fita métrica, dados agregados dos treinos — quantidade, duração, séries e repetições — e dados opcionais de energia do Health Connect. Nomes de alimentos, notas, fotos, ingredientes e nomes de exercícios não são enviados para este cálculo. A IA parte dessas fórmulas revisadas por pares e as ajusta aos seus dados reais para estimar sua verdadeira manutenção e suas metas.</string>
+    <string name="settings_calc_intro">Suas metas diárias de calorias e macros são definidas por IA. Quando você toca em «Recalcular metas» — ou automaticamente cerca de uma vez por semana se as Metas adaptativas estiverem ativadas — o Fud AI envia ao seu provedor de IA seu perfil, as equações de referência abaixo, totais nutricionais diários agregados com proteção de privacidade, medições exatas e datadas de peso, gordura corporal e circunferências feitas com fita métrica, dados agregados dos treinos — quantidade, duração, séries e repetições — e dados opcionais de energia do Health Connect. Nomes de alimentos, notas, fotos, ingredientes e nomes de exercícios não são enviados para este cálculo. A IA parte dessas fórmulas revisadas por pares e as ajusta aos seus dados reais para estimar sua verdadeira manutenção e suas metas.</string>
     <string name="settings_calc_sec_bmr">Metabolismo basal (BMR)</string>
     <string name="settings_calc_sec_tdee">Gasto energético diário (TDEE)</string>
     <string name="settings_calc_mifflin_name">Equação de Mifflin-St Jeor</string>
@@ -1270,7 +1270,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “Revisão sistemática, meta-análise e meta-regressão do efeito da suplementação proteica sobre os ganhos de massa muscular e força induzidos pelo treinamento resistido.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">As estimativas se baseiam nos dados de treinamento do modelo de IA subjacente (USDA FoodData Central, rótulos de fabricantes e literatura científica). A precisão varia conforme o alimento, a visibilidade do tamanho da porção e o modelo do provedor. Sempre confira os rótulos dos alimentos que você registra com frequência.</string>
     <string name="settings_not_medical_title">Não é orientação médica</string>
-    <string name="settings_not_medical_body">O Fud AI é uma ferramenta de estimativa, não um instrumento clínico. Equações preditivas têm erro inerente (normalmente ±10%% para a TMB). Consulte um nutricionista, médico ou especialista em medicina esportiva antes de mudanças significativas na dieta — principalmente se você tem alguma condição médica, está grávida ou amamentando, tem menos de 18 anos ou lida com um transtorno alimentar.</string>
+    <string name="settings_not_medical_body" formatted="false">O Fud AI é uma ferramenta de estimativa, não um instrumento clínico. Equações preditivas têm erro inerente (normalmente ±10% para a TMB). Consulte um nutricionista, médico ou especialista em medicina esportiva antes de mudanças significativas na dieta — principalmente se você tem alguma condição médica, está grávida ou amamentando, tem menos de 18 anos ou lida com um transtorno alimentar.</string>
     <string name="settings_waist_cm_format">Cintura %1$.0f cm</string>
     <string name="settings_waist_in_format">Cintura %1$.0f pol</string>
     <string name="export_range_today">Hoje</string>

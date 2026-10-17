@@ -1259,7 +1259,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “저항 운동으로 인한 근육량 및 근력 증가에 단백질 보충이 미치는 영향에 대한 체계적 문헌고찰, 메타분석 및 메타회귀.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">추정치는 기반 AI 모델의 학습 데이터(USDA FoodData Central, 제조업체 영양 표시, 과학 문헌)를 바탕으로 합니다. 정확도는 음식, 1회 제공량의 가시성, 제공자 모델에 따라 달라집니다. 자주 기록하는 음식은 항상 라벨과 대조하세요.</string>
     <string name="settings_not_medical_title">의학적 조언이 아닙니다</string>
-    <string name="settings_not_medical_body">Fud AI는 추정 도구이며 임상 기기가 아닙니다. 예측 공식에는 본질적인 오차가 있습니다(BMR의 경우 보통 ±10%%). 식단을 크게 바꾸기 전에 공인 영양사, 의사 또는 스포츠 의학 전문가와 상담하세요. 특히 질환이 있거나, 임신 또는 수유 중이거나, 18세 미만이거나, 섭식 장애를 겪고 있다면 반드시 상담하세요.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI는 추정 도구이며 임상 기기가 아닙니다. 예측 공식에는 본질적인 오차가 있습니다(BMR의 경우 보통 ±10%). 식단을 크게 바꾸기 전에 공인 영양사, 의사 또는 스포츠 의학 전문가와 상담하세요. 특히 질환이 있거나, 임신 또는 수유 중이거나, 18세 미만이거나, 섭식 장애를 겪고 있다면 반드시 상담하세요.</string>
     <string name="settings_waist_cm_format">허리 %1$.0fcm</string>
     <string name="settings_waist_in_format">허리 %1$.0fin</string>
     <string name="export_range_today">오늘</string>

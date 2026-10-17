@@ -86,7 +86,7 @@
     <string name="derived_body_fat">Masse grasse</string>
     <string name="derived_frame">Morphologie</string>
     <string name="frame_small">Fine</string>
-    <string name="frame_medium">Moyen</string>
+    <string name="frame_medium">Moyenne</string>
     <string name="frame_large">Large</string>
     <string name="notif_channel_weight_log">Rappel de saisie du poids</string>
     <string name="notif_channel_weight_log_desc">Rappel quotidien pour vous peser et enregistrer votre poids.</string>
@@ -1032,7 +1032,7 @@
     <string name="workout_exercise_ai_fill">Remplir avec l’IA</string>
     <string name="workout_exercise_ai_fill_hint">La fonction Remplir avec l’IA envoie cette photo à votre fournisseur d’IA. Vérifiez les informations proposées avant d’enregistrer.</string>
     <string name="filter_all">Tout</string>
-    <string name="filter_all_count">Tous les %d</string>
+    <string name="filter_all_count">Tous (%d)</string>
     <string name="hide_details">Masquer les détails</string>
     <string name="instructions">Instructions</string>
     <string name="watch_on_youtube">Regarder sur YouTube</string>
@@ -1270,7 +1270,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). « Revue systématique, méta-analyse et méta-régression de l’effet de la supplémentation en protéines sur les gains de masse musculaire et de force induits par l’entraînement en résistance. » Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Les estimations reposent sur les données d’entraînement du modèle d’IA sous-jacent (USDA FoodData Central, étiquettes des fabricants, littérature scientifique). Leur précision varie selon l’aliment, la visibilité de la taille de la portion et le modèle du fournisseur. Vérifiez toujours les étiquettes des aliments que vous enregistrez souvent.</string>
     <string name="settings_not_medical_title">Pas un avis médical</string>
-    <string name="settings_not_medical_body">Fud AI est un outil d’estimation, pas un instrument clinique. Les équations prédictives comportent une marge d’erreur inhérente (généralement ±10%% pour le métabolisme de base). Consultez un diététicien, un médecin ou un spécialiste de médecine du sport avant tout changement alimentaire important — surtout si vous avez un problème de santé, êtes enceinte ou allaitez, avez moins de 18 ans ou souffrez d’un trouble alimentaire.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI est un outil d’estimation, pas un instrument clinique. Les équations prédictives comportent une marge d’erreur inhérente (généralement ±10% pour le métabolisme de base). Consultez un diététicien, un médecin ou un spécialiste de médecine du sport avant tout changement alimentaire important — surtout si vous avez un problème de santé, êtes enceinte ou allaitez, avez moins de 18 ans ou souffrez d’un trouble alimentaire.</string>
     <string name="settings_waist_cm_format">Taille %1$.0f cm</string>
     <string name="settings_waist_in_format">Taille %1$.0f po</string>
     <string name="export_range_today">Aujourd\'hui</string>

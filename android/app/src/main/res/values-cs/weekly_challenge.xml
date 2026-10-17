@@ -8,7 +8,7 @@
     <string name="challenge_offline_status">Offline · zobrazuje se poslední uložený žebříček</string>
     <string name="challenge_not_updated">Zatím neaktualizováno</string>
     <string name="challenge_intro_title">Budujte spolu zdravé návyky</string>
-    <string name="challenge_intro_body">Dobrovolně se zapoj a porovnávej týdenní milníky v aktivitě, výživě, pravidelnosti a hydrataci. Tvá soukromá obrazovka Pokrok zůstane dostupná i bez připojení.</string>
+    <string name="challenge_intro_body">Dobrovolně se zapoj a porovnávej týdenní milníky v aktivitě, výživě, pravidelnosti a hydrataci. Tvá soukromá obrazovka Pokrok zůstane dostupná, i když se do výzvy nezapojíš.</string>
     <string name="challenge_privacy_disclosure">Fud AI počítá vše ve tvém zařízení. Nahrává jen začátek týdne, celkové body, počty splněných dní aktivity, výživy, pravidelnosti a hydratace a celkové kalorie z aktivity. Názvy jídel, jídla, váha, podrobnosti tréninků a záznamy Health Connect se nikdy nenahrávají.</string>
     <string name="challenge_public_profile_disclosure">Účastníci vidí jen tvé zobrazované jméno a volitelně jedno uživatelské jméno na X nebo Instagramu. Váha ani hubnutí se nikdy nehodnotí.</string>
     <string name="challenge_points_title">Jak fungují body</string>
@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d / 28 b.</string>
     <string name="challenge_days_format">%1$d / 7 dní</string>
     <string name="challenge_days_kcal_format">%1$d / 7 dní · %2$d kcal</string>
+    <string name="challenge_days_kj_format">%1$d / 7 dní · %2$d kJ</string>
     <string name="challenge_weekly_breakdown">Tento týden</string>
     <string name="challenge_edit_profile">Upravit profil</string>
     <string name="challenge_leave_action">Opustit</string>

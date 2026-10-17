@@ -339,7 +339,7 @@
     <string name="onboarding_paste_api_key_helper">Вставте свій ключ API %1$s у поле вище. Текст підказки — не ключ.</string>
     <string name="onboarding_missing_api_key_title">Вставте свій ключ API %1$s</string>
     <string name="onboarding_missing_api_key_message">Щоб продовжити, потрібен справжній ключ у полі «Ключ API». Текст підказки — не ключ: вставте свій ключ %1$s.</string>
-    <string name="onboarding_ai_notice_analysis_title">ШІ-анализ</string>
+    <string name="onboarding_ai_notice_analysis_title">ШІ-аналіз</string>
     <string name="onboarding_ai_notice_analysis_body">Фото їжі, голосові розшифровки та введені страви надсилаються безпосередньо вибраному провайдеру ШІ.</string>
     <string name="onboarding_ai_notice_local_title">Локальні дані</string>
     <string name="onboarding_ai_notice_local_body">Ваш журнал харчування, історія ваги, історія відсотка жиру та ключі API (BYOK) залишаються на цьому пристрої.</string>
@@ -1424,7 +1424,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Оцінки базуються на навчальних даних базової моделі ШІ (USDA FoodData Central, етикетки виробників, наукова література). Точність залежить від продукту, видимості розміру порції та моделі провайдера. Завжди звіряйтеся з етикетками продуктів, які часто записуєте.</string>
     <string name="settings_not_medical_title">Не є медичною порадою</string>
-    <string name="settings_not_medical_body">Fud AI — це інструмент для оцінювання, а не клінічний прилад. Прогностичні рівняння мають властиву їм похибку (зазвичай ±10%% для BMR). Проконсультуйтеся з лікарем або дієтологом перед значними змінами в дієті, особливо якщо ви маєте медичні протипоказання, вагітні, годуєте грудьми, вам не виповнилося 18 років або ви маєте розлади харчової поведінки.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI — це інструмент для оцінювання, а не клінічний прилад. Прогностичні рівняння мають властиву їм похибку (зазвичай ±10% для BMR). Проконсультуйтеся з лікарем або дієтологом перед значними змінами в дієті, особливо якщо ви маєте медичні протипоказання, вагітні, годуєте грудьми, вам не виповнилося 18 років або ви маєте розлади харчової поведінки.</string>
     <string name="settings_waist_cm_format">Талія %1$.0f см</string>
     <string name="settings_waist_in_format">Талія %1$.0f дюйм.</string>
     <string name="export_range_today">Сьогодні</string>

@@ -1267,7 +1267,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Müqavimət məşqlərinin yaratdığı əzələ kütləsi və güc artımına zülal əlavələrinin təsirinin sistematik icmalı, meta-analizi və meta-reqressiyası». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Təxminlər əsas AI modelinin təlim məlumatlarına (USDA FoodData Central, istehsalçıların qida etiketləri və elmi ədəbiyyat) əsaslanır. Dəqiqlik qidaya, porsiya ölçüsünün görünməsinə və provayder modelinə görə dəyişir. Tez-tez qeyd etdiyiniz qidaların etiketlərini həmişə yoxlayın.</string>
     <string name="settings_not_medical_title">Tibbi məsləhət deyil</string>
-    <string name="settings_not_medical_body">Fud AI tibbi alət deyil, təxmin alətidir. Proqnoz tənlikləri təbii xəta daşıyır (BMR üçün adətən ±10%%). Əhəmiyyətli pəhriz dəyişikliklərindən əvvəl — xüsusən xəstəliyiniz varsa, hamiləsinizsə və ya əmizdirirsinizsə, 18 yaşdan kiçiksinizsə və ya yemə pozuntusu ilə mübarizə aparırsınızsa — sertifikatlı dietoloq, həkim və ya idman həkimi ilə məsləhətləşin.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI tibbi alət deyil, təxmin alətidir. Proqnoz tənlikləri təbii xəta daşıyır (BMR üçün adətən ±10%). Əhəmiyyətli pəhriz dəyişikliklərindən əvvəl — xüsusən xəstəliyiniz varsa, hamiləsinizsə və ya əmizdirirsinizsə, 18 yaşdan kiçiksinizsə və ya yemə pozuntusu ilə mübarizə aparırsınızsa — sertifikatlı dietoloq, həkim və ya idman həkimi ilə məsləhətləşin.</string>
     <string name="settings_waist_cm_format">Bel %1$.0f sm</string>
     <string name="settings_waist_in_format">Bel %1$.0f düym</string>
     <string name="export_range_today">Bu gün</string>

@@ -31,6 +31,7 @@
     <string name="challenge_points_format">%1$d/28 pkt</string>
     <string name="challenge_days_format">%1$d/7 dni</string>
     <string name="challenge_days_kcal_format">%1$d/7 dni · %2$d kcal</string>
+    <string name="challenge_days_kj_format">%1$d/7 dni · %2$d kJ</string>
     <string name="challenge_weekly_breakdown">Ten tydzień</string>
     <string name="challenge_edit_profile">Edytuj profil</string>
     <string name="challenge_leave_action">Opuść</string>

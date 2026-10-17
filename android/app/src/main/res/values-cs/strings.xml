@@ -23,7 +23,6 @@
     <string name="grams_value_decimal_format">%1$.1f g</string>
     <string name="kg_value_format">%1$.1f kg</string>
     <string name="lbs_value_format">%1$.1f lb</string>
-    <string name="challenge_days_kj_format">%1$d/7 dní · %2$d kJ</string>
     <string name="health_import_count_kj">Nové záznamy: %1$d · %2$d kJ</string>
     <string name="workout_text_estimate_kj">Odhadovaný výdej: %1$d kJ</string>
     <string name="unit_kj">kJ</string>
@@ -1338,7 +1337,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „Systematický přehled, metaanalýza a metaregrese vlivu suplementace bílkovin na nárůst svalové hmoty a síly při silovém tréninku.“ Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Odhady vycházejí z trénovacích dat použitého modelu AI (USDA FoodData Central, údaje výrobců, odborná literatura). Přesnost se liší podle jídla, viditelnosti velikosti porce a modelu poskytovatele. U jídel, která zapisuješ často, si vždy ověř údaje na etiketě.</string>
     <string name="settings_not_medical_title">Nejde o lékařské doporučení</string>
-    <string name="settings_not_medical_body">Fud AI je odhadovací nástroj, ne klinický přístroj. Predikční rovnice mají přirozenou chybu (u BMR typicky ±10%%). Před zásadními změnami stravy se poraď s nutričním terapeutem, lékařem nebo sportovním lékařem — zvlášť pokud máš zdravotní potíže, čekáš dítě nebo kojíš, je ti méně než 18, nebo řešíš poruchu příjmu potravy.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI je odhadovací nástroj, ne klinický přístroj. Predikční rovnice mají přirozenou chybu (u BMR typicky ±10%). Před zásadními změnami stravy se poraď s nutričním terapeutem, lékařem nebo sportovním lékařem — zvlášť pokud máš zdravotní potíže, čekáš dítě nebo kojíš, je ti méně než 18, nebo řešíš poruchu příjmu potravy.</string>
     <string name="settings_waist_cm_format">Pas %1$.0f cm</string>
     <string name="settings_waist_in_format">Pas %1$.0f in</string>
     <string name="export_range_today">Dnes</string>

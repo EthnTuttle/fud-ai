@@ -86,7 +86,7 @@
     <string name="derived_body_fat">نسبة الدهون</string>
     <string name="derived_frame">البنية</string>
     <string name="frame_small">صغيرة</string>
-    <string name="frame_medium">متوسط</string>
+    <string name="frame_medium">متوسطة</string>
     <string name="frame_large">كبيرة</string>
     <string name="notif_channel_weight_log">تذكير تسجيل الوزن</string>
     <string name="notif_channel_weight_log_desc">تذكير يومي بوزن نفسك وتسجيل وزنك.</string>
@@ -1311,7 +1311,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «مراجعة منهجية وتحليل تلوي وانحدار تلوي لتأثير مكملات البروتين في الزيادات الناتجة عن تمارين المقاومة في كتلة العضلات وقوتها». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">تعتمد التقديرات على بيانات تدريب نموذج الذكاء الاصطناعي الأساسي (USDA FoodData Central وملصقات القيم الغذائية من الشركات المصنّعة والمراجع العلمية). تختلف الدقة حسب الطعام ومدى وضوح حجم الحصة ونموذج المزوّد. تحقّق دائمًا من الملصقات للأطعمة التي تسجّلها كثيرًا.</string>
     <string name="settings_not_medical_title">ليست نصيحة طبية</string>
-    <string name="settings_not_medical_body">Fud AI أداة تقدير وليس أداة سريرية. تحمل المعادلات التنبؤية خطأً متأصلًا (عادةً ±10%% لمعدل الأيض الأساسي). استشر أخصائي تغذية معتمدًا أو طبيبًا أو أخصائي طب رياضي قبل إجراء تغييرات كبيرة في نظامك الغذائي — خاصةً إذا كانت لديك حالة طبية، أو كنتِ حاملًا أو مرضعة، أو كان عمرك أقل من 18 عامًا، أو كنت تتعامل مع اضطراب في الأكل.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI أداة تقدير وليس أداة سريرية. تحمل المعادلات التنبؤية خطأً متأصلًا (عادةً ±10% لمعدل الأيض الأساسي). استشر أخصائي تغذية معتمدًا أو طبيبًا أو أخصائي طب رياضي قبل إجراء تغييرات كبيرة في نظامك الغذائي — خاصةً إذا كانت لديك حالة طبية، أو كنتِ حاملًا أو مرضعة، أو كان عمرك أقل من 18 عامًا، أو كنت تتعامل مع اضطراب في الأكل.</string>
     <string name="settings_waist_cm_format">الخصر %1$.0f سم</string>
     <string name="settings_waist_in_format">الخصر %1$.0f بوصة</string>
     <string name="export_range_today">اليوم</string>

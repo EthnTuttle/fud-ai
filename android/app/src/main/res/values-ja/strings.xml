@@ -1259,7 +1259,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018).「レジスタンストレーニングによる筋量と筋力の増加に対するたんぱく質補給の効果についての系統的レビュー、メタ解析、メタ回帰。」Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">推定値は、基盤となるAIモデルの学習データ（USDA FoodData Central、メーカーの栄養表示、科学文献）に基づきます。精度は食品、分量の見えやすさ、プロバイダーのモデルによって異なります。頻繁に記録する食品は必ずラベルと照合してください。</string>
     <string name="settings_not_medical_title">医学的助言ではありません</string>
-    <string name="settings_not_medical_body">Fud AIは推定のためのツールであり、医療機器ではありません。予測式には固有の誤差があります（BMRでは通常±10%%）。大きな食事の変更をする前には、管理栄養士、医師、スポーツ医学の専門家に相談してください。特に持病がある、妊娠中または授乳中である、18歳未満である、摂食障害を抱えている場合は必ず相談してください。</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AIは推定のためのツールであり、医療機器ではありません。予測式には固有の誤差があります（BMRでは通常±10%）。大きな食事の変更をする前には、管理栄養士、医師、スポーツ医学の専門家に相談してください。特に持病がある、妊娠中または授乳中である、18歳未満である、摂食障害を抱えている場合は必ず相談してください。</string>
     <string name="settings_waist_cm_format">ウエスト %1$.0f cm</string>
     <string name="settings_waist_in_format">ウエスト %1$.0f in</string>
     <string name="export_range_today">今日</string>

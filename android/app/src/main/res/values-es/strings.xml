@@ -86,7 +86,7 @@
     <string name="derived_body_fat">Grasa corporal</string>
     <string name="derived_frame">Complexión</string>
     <string name="frame_small">Pequeña</string>
-    <string name="frame_medium">Medio</string>
+    <string name="frame_medium">Mediana</string>
     <string name="frame_large">Grande</string>
     <string name="notif_channel_weight_log">Recordatorio de registro de peso</string>
     <string name="notif_channel_weight_log_desc">Recordatorio diario para pesarte y registrar tu peso.</string>
@@ -1032,7 +1032,7 @@
     <string name="workout_exercise_ai_fill">Rellenar con IA</string>
     <string name="workout_exercise_ai_fill_hint">Rellenar con IA envía esta foto a tu proveedor de IA. Revisa los datos sugeridos antes de guardar.</string>
     <string name="filter_all">Todo</string>
-    <string name="filter_all_count">Todos los %d</string>
+    <string name="filter_all_count">Todos (%d)</string>
     <string name="hide_details">Ocultar detalles</string>
     <string name="instructions">Instrucciones</string>
     <string name="watch_on_youtube">Ver en YouTube</string>
@@ -1233,7 +1233,7 @@
     <string name="settings_macro_auto_label_format">%1$s (auto)</string>
     <string name="vm_health_connect_needed">Se necesita Health Connect</string>
     <string name="vm_not_enough_energy">No hay suficientes datos de energía</string>
-    <string name="vm_adaptive_on_message">Objetivos adaptativos está activado. Fud AI revisará una vez por semana cuando haya suficientes datos de comida y peso.</string>
+    <string name="vm_adaptive_on_message">Los objetivos adaptativos están activados. Fud AI revisará una vez por semana cuando haya suficientes datos de comida y peso.</string>
     <string name="vm_goals_recalculated">Objetivos recalculados</string>
     <plurals name="import_add_meals_title">
         <item quantity="one">Añadir comida compartida</item>
@@ -1270,7 +1270,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Revisión sistemática, metaanálisis y metarregresión del efecto de la suplementación con proteínas sobre el aumento de masa muscular y fuerza inducido por el entrenamiento de resistencia». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Las estimaciones se basan en los datos de entrenamiento del modelo de IA subyacente (USDA FoodData Central, etiquetas de fabricantes y literatura científica). La precisión varía según el alimento, la visibilidad del tamaño de la porción y el modelo del proveedor. Contrasta siempre las etiquetas de los alimentos que registras con frecuencia.</string>
     <string name="settings_not_medical_title">No es asesoramiento médico</string>
-    <string name="settings_not_medical_body">Fud AI es una herramienta de estimación, no un instrumento clínico. Las ecuaciones predictivas tienen un error inherente (normalmente ±10%% para la TMB). Consulta a un dietista-nutricionista, médico o especialista en medicina deportiva antes de hacer cambios importantes en tu dieta, sobre todo si tienes una afección médica, estás embarazada o en periodo de lactancia, eres menor de 18 años o tienes un trastorno de la conducta alimentaria.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI es una herramienta de estimación, no un instrumento clínico. Las ecuaciones predictivas tienen un error inherente (normalmente ±10% para la TMB). Consulta a un dietista-nutricionista, médico o especialista en medicina deportiva antes de hacer cambios importantes en tu dieta, sobre todo si tienes una afección médica, estás embarazada o en periodo de lactancia, eres menor de 18 años o tienes un trastorno de la conducta alimentaria.</string>
     <string name="settings_waist_cm_format">Cintura %1$.0f cm</string>
     <string name="settings_waist_in_format">Cintura %1$.0f in</string>
     <string name="export_range_today">Hoy</string>

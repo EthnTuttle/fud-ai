@@ -63,7 +63,6 @@
     <string name="unit_ft_in">ft / in</string>
     <string name="kcal_value_format">%1$,d kcal</string>
     <string name="kj_value_format">%1$,d kJ</string>
-    <string name="challenge_days_kj_format">%1$d/7 dni · %2$d kJ</string>
     <string name="health_import_count_kj">Nowe wpisy: %1$d · %2$d kJ</string>
     <string name="workout_text_estimate_kj">Szacowane spalanie: %1$d kJ</string>
     <string name="import_add_to_log_many_format_kj">Dodaj %1$d do dziennika · %2$d kJ</string>
@@ -87,7 +86,7 @@
     <string name="derived_body_fat">Tkanka tłuszczowa</string>
     <string name="derived_frame">Budowa ciała</string>
     <string name="frame_small">Drobna</string>
-    <string name="frame_medium">Średni</string>
+    <string name="frame_medium">Średnia</string>
     <string name="frame_large">Masywna</string>
     <string name="notif_channel_weight_log">Przypomnienie o zapisaniu wagi</string>
     <string name="notif_channel_weight_log_desc">Codzienne przypomnienie, by się zważyć i zapisać wagę.</string>
@@ -1304,7 +1303,7 @@
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „Przegląd systematyczny, metaanaliza i metaregresja wpływu suplementacji białkiem na przyrost masy mięśniowej i siły wywołany treningiem oporowym”. Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Szacunki opierają się na danych treningowych bazowego modelu AI (USDA FoodData Central, etykietach producentów i literaturze naukowej). Dokładność zależy od produktu, widoczności wielkości porcji i modelu dostawcy. W przypadku często rejestrowanych produktów zawsze porównuj wynik z etykietą.</string>
     <string name="settings_not_medical_title">To nie jest porada medyczna</string>
-    <string name="settings_not_medical_body">Fud AI to narzędzie do szacowania, a nie instrument kliniczny. Równania predykcyjne mają nieodłączny błąd (zwykle ±10%% dla BMR). Przed istotnymi zmianami w diecie skonsultuj się z dietetykiem, lekarzem lub specjalistą medycyny sportowej — zwłaszcza jeśli masz chorobę, jesteś w ciąży lub karmisz piersią, masz mniej niż 18 lat albo zmagasz się z zaburzeniami odżywiania.</string>
+    <string name="settings_not_medical_body" formatted="false">Fud AI to narzędzie do szacowania, a nie instrument kliniczny. Równania predykcyjne mają nieodłączny błąd (zwykle ±10% dla BMR). Przed istotnymi zmianami w diecie skonsultuj się z dietetykiem, lekarzem lub specjalistą medycyny sportowej — zwłaszcza jeśli masz chorobę, jesteś w ciąży lub karmisz piersią, masz mniej niż 18 lat albo zmagasz się z zaburzeniami odżywiania.</string>
     <string name="settings_waist_cm_format">Talia %1$.0f cm</string>
     <string name="settings_waist_in_format">Talia %1$.0f in</string>
     <string name="export_range_today">Dziś</string>
