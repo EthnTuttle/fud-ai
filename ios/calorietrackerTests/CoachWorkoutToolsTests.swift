@@ -607,6 +607,72 @@ struct CoachWorkoutToolsTests {
         #expect(empty["count"] as? Int == 0)
         #expect((empty["exercises"] as? [Any])?.isEmpty == true)
     }
+
+    @Test func exerciseLibrarySearchMapsCommonFilterNamesAndReportsWhatFiltersRemoved() throws {
+        let library = ExerciseSearchFixture.library
+        #expect(CoachTools.rankedLibraryMatches(library, query: "press", muscle: "legs").map(\.name) == ["Leg Press"])
+        // Cable stations are often called machines, so a "machine" filter keeps cable exercises.
+        #expect(CoachTools.rankedLibraryMatches(library, query: "rows", equipment: "machine").map(\.name) == ["Seated Cable Rows"])
+
+        let tools = CoachTools(weights: [], bodyFats: [], foods: [], workoutAccessEnabled: true, exerciseLibrary: library)
+        let narrowed = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "press", "muscle": "pecs"])
+        )
+        #expect(narrowed["total_matches"] as? Int == 3)
+        #expect(narrowed["excluded_by_filters"] as? Int == 1)
+        #expect(narrowed["filters_ignored"] == nil)
+
+        // A filter the library never uses must not hide every match and make Coach call it missing.
+        let ignored = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "leg press", "muscle": "upper chest"])
+        )
+        let exercises = try #require(ignored["exercises"] as? [[String: Any]])
+        #expect(exercises.first?["name"] as? String == "Leg Press")
+        #expect(ignored["total_matches"] as? Int == 4)
+        #expect(ignored["filters_ignored"] as? Bool == true)
+        #expect((ignored["note"] as? String)?.isEmpty == false)
+        #expect(ignored["muscle"] as? String == "upper chest")
+        #expect(ignored["excluded_by_filters"] == nil)
+
+        let none = try WorkoutCoachFixture.jsonObject(
+            tools.execute(name: "search_exercise_library", arguments: ["query": "zercher", "muscle": "abs"])
+        )
+        #expect(none["count"] as? Int == 0)
+        #expect(none["filters_ignored"] == nil)
+    }
+
+    @Test func exerciseLibrarySearchFiltersFindBundledCatalogExercisesByCommonNames() throws {
+        let library = FreeExerciseDBLoader.load()
+        try #require(library.count > 800)
+        // "abs" is not a prefix of "abdominals", so this filter used to drop all 93 ab exercises.
+        #expect(CoachTools.rankedLibraryMatches(library, query: "ab crunch machine", muscle: "abs").first?.name == "Ab Crunch Machine")
+        #expect(CoachTools.rankedLibraryMatches(library, query: "crunch", muscle: "core").map(\.name).contains("Ab Crunch Machine"))
+        #expect(CoachTools.rankedLibraryMatches(library, query: "calf raise", muscle: "calf").map(\.name).contains("Donkey Calf Raises"))
+        #expect(!CoachTools.rankedLibraryMatches(library, query: "squat", muscle: "legs").isEmpty)
+        #expect(!CoachTools.rankedLibraryMatches(library, query: "fly", muscle: "pecs").isEmpty)
+        #expect(!CoachTools.rankedLibraryMatches(library, query: "raise", muscle: "delts").isEmpty)
+        #expect(CoachTools.rankedLibraryMatches(library, query: "smith machine squat", equipment: "smith machine").first?.name == "Smith Machine Squat")
+        #expect(CoachTools.rankedLibraryMatches(library, query: "pushups", equipment: "bodyweight").first?.name == "Pushups")
+        #expect(CoachTools.rankedLibraryMatches(library, query: "pushups", equipment: "body weight").first?.name == "Pushups")
+        #expect(CoachTools.rankedLibraryMatches(library, query: "curl", equipment: "ez bar").map(\.name).contains("EZ-Bar Curl"))
+        #expect(CoachTools.rankedLibraryMatches(library, query: "pull apart", equipment: "resistance band").first?.name == "Band Pull Apart")
+        #expect(CoachTools.rankedLibraryMatches(library, query: "lat pulldown", equipment: "machine").map(\.name).contains("Wide-Grip Lat Pulldown"))
+    }
+
+    @Test func exerciseLibrarySearchSchemaListsEveryCatalogMuscleAndEquipmentName() throws {
+        let library = FreeExerciseDBLoader.load()
+        try #require(!library.isEmpty)
+        let muscles = Set(library.flatMap { $0.primaryMuscles + $0.secondaryMuscles }.map { $0.lowercased() })
+        let equipment = Set(library.map { $0.rawEquipment.lowercased() }).subtracting(["unspecified"])
+        #expect(Set(CoachTools.libraryMuscleNames.components(separatedBy: ", ")) == muscles)
+        #expect(Set(CoachTools.libraryEquipmentNames.components(separatedBy: ", ")) == equipment)
+
+        let properties = try #require(
+            CoachTools.parameterSchema(for: "search_exercise_library")["properties"] as? [String: [String: Any]]
+        )
+        #expect((properties["muscle"]?["description"] as? String)?.hasSuffix(CoachTools.libraryMuscleNames) == true)
+        #expect((properties["equipment"]?["description"] as? String)?.hasSuffix(CoachTools.libraryEquipmentNames) == true)
+    }
 }
 
 @MainActor

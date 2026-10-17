@@ -88,6 +88,11 @@ struct CoachTools {
         "search_exercise_library": "Search the exercise library (built-in catalog plus the user's own custom exercises) by name or keywords. Returns matching exercises with catalog_id, name, category, equipment, primary and secondary muscles, and is_custom. Optional muscle and equipment filters narrow the results. When the user shares a photo of a gym machine or exercise, identify it first, then search with its likely names. Read-only: it cannot add, edit, or create exercises.",
     ]
 
+    /// The bundled catalog's muscle and equipment names, which custom exercises pick from too.
+    /// The library-search schema lists them so the model filters with words the library uses.
+    static let libraryMuscleNames = "abdominals, abductors, adductors, biceps, calves, chest, forearms, glutes, hamstrings, lats, lower back, middle back, neck, quadriceps, shoulders, traps, triceps"
+    static let libraryEquipmentNames = "bands, barbell, body only, cable, dumbbell, e-z curl bar, exercise ball, foam roll, kettlebells, machine, medicine ball, other"
+
     /// One schema source is translated to each provider's wrapper by
     /// ChatService, so no-argument workout tools never accidentally inherit a
     /// required date range.
@@ -123,8 +128,8 @@ struct CoachTools {
                 "type": "object",
                 "properties": [
                     "query": ["type": "string", "description": "Exercise name or keywords, e.g. chest press machine"],
-                    "muscle": ["type": "string", "description": "Optional muscle filter, e.g. chest or quadriceps"],
-                    "equipment": ["type": "string", "description": "Optional equipment filter, e.g. machine, cable, or dumbbell"],
+                    "muscle": ["type": "string", "description": "Optional muscle filter using the library's muscle names: \(libraryMuscleNames)"],
+                    "equipment": ["type": "string", "description": "Optional equipment filter using the library's equipment names: \(libraryEquipmentNames)"],
                     "limit": ["type": "integer", "description": "Optional max exercises to return (default 10, max 20)"],
                 ],
                 "required": ["query"],
@@ -556,12 +561,12 @@ struct CoachTools {
         let muscle = (arguments["muscle"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let equipment = (arguments["equipment"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let limit = (arguments["limit"] as? Int).map { min(max($0, 1), 20) } ?? 10
-        let matches = Self.rankedLibraryMatches(
-            exerciseLibrary,
-            query: query,
-            muscle: muscle,
-            equipment: equipment
-        )
+        let queryMatches = Self.rankedLibraryMatches(exerciseLibrary, query: query)
+        let filtered = queryMatches.filter(Self.libraryFilter(muscle: muscle, equipment: equipment))
+        // A filter word the library never uses ("upper" chest, "bench" equipment) must not hide
+        // every match, or Coach would report an exercise that is in the library as missing.
+        let filtersIgnored = filtered.isEmpty && !queryMatches.isEmpty
+        let matches = filtersIgnored ? queryMatches : filtered
         let exercises = matches.prefix(limit).map { item -> [String: Any] in
             var payload: [String: Any] = [
                 "catalog_id": item.id,
@@ -582,6 +587,12 @@ struct CoachTools {
         ]
         if !muscle.isEmpty { payload["muscle"] = muscle }
         if !equipment.isEmpty { payload["equipment"] = equipment }
+        if filtersIgnored {
+            payload["filters_ignored"] = true
+            payload["note"] = "No exercise matched both the query and the muscle/equipment filters, so these results ignore the filters."
+        } else if matches.count < queryMatches.count {
+            payload["excluded_by_filters"] = queryMatches.count - matches.count
+        }
         return jsonString(payload)
     }
 
@@ -596,16 +607,12 @@ struct CoachTools {
     ) -> [ExerciseLibraryItem] {
         let terms = searchWords(query)
         guard !terms.isEmpty else { return [] }
-        let muscleTerms = searchWords(muscle)
-        let equipmentTerms = searchWords(equipment)
         let normalizedQuery = terms.joined(separator: " ")
+        let passesFilters = libraryFilter(muscle: muscle, equipment: equipment)
 
         let scored = library.compactMap { item -> (item: ExerciseLibraryItem, score: Int)? in
+            guard passesFilters(item) else { return nil }
             let muscleWords = searchWords((item.primaryMuscles + item.secondaryMuscles).joined(separator: " "))
-            guard muscleTerms.allSatisfy({ wordsMatch($0, muscleWords) }),
-                  equipmentTerms.allSatisfy({ wordsMatch($0, searchWords(item.rawEquipment)) })
-            else { return nil }
-
             let nameWords = searchWords(item.name)
             let metadataWords = muscleWords + searchWords("\(item.category) \(item.rawEquipment)")
             var nameHits = 0
@@ -633,6 +640,83 @@ struct CoachTools {
             .map(\.item)
     }
 
+    /// Muscle and equipment filters match the library's own words ("abdominals", "body only",
+    /// "e-z curl bar"), so common names the model may use are mapped onto those first. Every
+    /// filter word must match; an alias matches when any of its library names does.
+    static func libraryFilter(muscle: String, equipment: String) -> (ExerciseLibraryItem) -> Bool {
+        let muscleGroups = filterGroups(muscle, aliases: muscleFilterAliases)
+        let equipmentGroups = filterGroups(equipment, aliases: equipmentFilterAliases)
+        return { item in
+            groupsMatch(muscleGroups, searchWords((item.primaryMuscles + item.secondaryMuscles).joined(separator: " ")))
+                && groupsMatch(equipmentGroups, searchWords(item.rawEquipment))
+        }
+    }
+
+    /// Common muscle names mapped to the library's own (libraryMuscleNames). Keys are singular;
+    /// plural filters ("legs", "delts") reach them through the same plural strip as search words.
+    private static let muscleFilterAliases: [String: [String]] = [
+        "ab": ["abdominals"],
+        "abs": ["abdominals"],
+        "core": ["abdominals"],
+        "oblique": ["abdominals"],
+        "stomach": ["abdominals"],
+        "pec": ["chest"],
+        "pectoral": ["chest"],
+        "delt": ["shoulders"],
+        "deltoid": ["shoulders"],
+        "calf": ["calves"],
+        "trapezius": ["traps"],
+        "latissimus": ["lats"],
+        "latissimus dorsi": ["lats"],
+        "back": ["back", "lats", "traps"],
+        "upper back": ["middle back", "lats", "traps"],
+        "leg": ["quadriceps", "hamstrings", "glutes", "calves", "adductors", "abductors"],
+        "thigh": ["quadriceps", "hamstrings", "adductors", "abductors"],
+        "inner thigh": ["adductors"],
+        "outer thigh": ["abductors"],
+        "hip": ["glutes", "adductors", "abductors"],
+        "arm": ["biceps", "triceps", "forearms"],
+    ]
+
+    /// Common equipment names mapped to the library's own (libraryEquipmentNames). Smith
+    /// machine exercises are listed as machine, and cable stations are often called machines.
+    private static let equipmentFilterAliases: [String: [String]] = [
+        "bodyweight": ["body only"],
+        "body weight": ["body only"],
+        "no equipment": ["body only"],
+        "smith": ["machine"],
+        "machine": ["machine", "cable"],
+        "pulley": ["cable"],
+        "ez": ["e-z curl bar"],
+        "ezbar": ["e-z curl bar"],
+        "resistance": ["bands"],
+        "stability": ["exercise ball"],
+        "swiss": ["exercise ball"],
+        "roller": ["foam roll"],
+        "free weight": ["barbell", "dumbbell", "kettlebells"],
+    ]
+
+    /// One entry per filter word (or one for a whole aliased phrase like "body weight"), each
+    /// holding the alternative phrases that satisfy it as word lists.
+    nonisolated private static func filterGroups(_ text: String, aliases: [String: [String]]) -> [[[String]]] {
+        let words = searchWords(text)
+        guard !words.isEmpty else { return [] }
+        if words.count > 1, let phrases = aliasTargets(words.joined(separator: " "), aliases) {
+            return [phrases.map(searchWords)]
+        }
+        return words.map { word in (aliasTargets(word, aliases) ?? [word]).map(searchWords) }
+    }
+
+    nonisolated private static func groupsMatch(_ groups: [[[String]]], _ words: [String]) -> Bool {
+        groups.allSatisfy { phrases in
+            phrases.contains { phrase in phrase.allSatisfy { wordsMatch($0, words) } }
+        }
+    }
+
+    nonisolated private static func aliasTargets(_ key: String, _ aliases: [String: [String]]) -> [String]? {
+        termVariants(key).lazy.compactMap { aliases[$0] }.first
+    }
+
     nonisolated private static func searchWords(_ text: String) -> [String] {
         text.lowercased()
             .components(separatedBy: CharacterSet.alphanumerics.inverted)
@@ -640,10 +724,15 @@ struct CoachTools {
     }
 
     nonisolated private static func wordsMatch(_ term: String, _ words: [String]) -> Bool {
+        let variants = termVariants(term)
+        return words.contains { word in variants.contains { word.hasPrefix($0) } }
+    }
+
+    nonisolated private static func termVariants(_ term: String) -> [String] {
         var variants = [term]
         if term.count > 3, term.hasSuffix("es") { variants.append(String(term.dropLast(2))) }
         if term.count > 3, term.hasSuffix("s") { variants.append(String(term.dropLast())) }
-        return words.contains { word in variants.contains { word.hasPrefix($0) } }
+        return variants
     }
 
     nonisolated private static func libraryMetadata(_ value: String) -> String? {
