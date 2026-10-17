@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -73,15 +74,51 @@ class ExerciseSearchTest {
     }
 
     @Test
-    fun relevanceTiersOrderExactPrefixPhraseWordsAndMetadata() {
+    fun relevanceTiersOrderExactPrefixPhraseAndWords() {
         assertEquals(0, ExerciseSearch.relevance(exercise(name = "Chest Press"), "Chest press"))
         assertEquals(1, ExerciseSearch.relevance(exercise(name = "Chest Press Machine"), "Chest press"))
         assertEquals(2, ExerciseSearch.relevance(exercise(name = "Cable Chest Press"), "Chest press"))
         assertEquals(3, ExerciseSearch.relevance(exercise(name = "Press Against Chest Wall"), "Chest press"))
-        assertEquals(
-            4,
-            ExerciseSearch.relevance(exercise(name = "Barbell Bench Press", primaryMuscles = listOf("Chest")), "Chest press")
-        )
+    }
+
+    /** #497: muscle, equipment, and category values do not stand in for missing name words. */
+    @Test
+    fun freeTextQueriesNeedEveryWordInTheName() {
+        val neckPress = exercise(name = "Neck Press", equipment = "Barbell", primaryMuscles = listOf("Chest"))
+
+        assertNull(ExerciseSearch.relevance(neckPress, "Chest press"))
+        assertNull(ExerciseSearch.relevance(neckPress, "barbell press"))
+        assertNull(ExerciseSearch.relevance(tricepsPushdown, "cable triceps"))
+    }
+
+    @Test
+    fun queryNamingAMuscleEquipmentOrCategoryRanksAfterNameMatches() {
+        val neckPress = exercise(name = "Neck Press", primaryMuscles = listOf("Chest"))
+
+        assertEquals(4, ExerciseSearch.relevance(neckPress, "chest"))
+        assertEquals(4, ExerciseSearch.relevance(tricepsPushdown, "cable"))
+        assertEquals(4, ExerciseSearch.relevance(tricepsPushdown, "strength"))
+        assertEquals(4, ExerciseSearch.relevance(exercise(name = "Superman", primaryMuscles = listOf("Lower Back")), "lower back"))
+        assertEquals(1, ExerciseSearch.relevance(exercise(name = "Chest Push", primaryMuscles = listOf("Chest")), "chest"))
+    }
+
+    /** Shorthand that used to match only through instructions text ("tighten your abs"). */
+    @Test
+    fun gymShorthandFindsTheMuscleGroup() {
+        assertEquals(3, ExerciseSearch.relevance(exercise(name = "Ab Roller", primaryMuscles = listOf("Abdominals")), "abs"))
+        assertEquals(4, ExerciseSearch.relevance(exercise(name = "Crunches", primaryMuscles = listOf("Abdominals")), "abs"))
+        assertEquals(4, ExerciseSearch.relevance(exercise(name = "Butterfly", primaryMuscles = listOf("Chest")), "pec"))
+        assertEquals(4, ExerciseSearch.relevance(exercise(name = "Arnold Dumbbell Press", primaryMuscles = listOf("Shoulders")), "delts"))
+        assertEquals(3, ExerciseSearch.relevance(exercise(name = "Barbell Rear Delt Row", primaryMuscles = listOf("Shoulders")), "delts"))
+        assertNull(ExerciseSearch.relevance(exercise(name = "Butterfly", primaryMuscles = listOf("Chest")), "abs"))
+    }
+
+    @Test
+    fun pluralQueriesMatchSingularNameWords() {
+        assertEquals(3, ExerciseSearch.relevance(exercise(name = "Barbell Curl"), "curls"))
+        assertEquals(3, ExerciseSearch.relevance(exercise(name = "Bench Press"), "presses"))
+        assertEquals(3, ExerciseSearch.relevance(exercise(name = "Dumbbell Tricep Extension"), "triceps extension"))
+        assertNull(ExerciseSearch.relevance(exercise(name = "Abductor"), "abs"))
     }
 
     @Test
@@ -96,10 +133,11 @@ class ExerciseSearchTest {
 
     /**
      * Reporter's example (#497): "Chest press" returned unrelated presses whose
-     * instructions merely mention the chest, in alphabetical order.
+     * instructions merely mention the chest, in alphabetical order. Only exercises
+     * with both words in the name should be listed.
      */
     @Test
-    fun chestPressRanksNameMatchesFirstAndSkipsInstructionOnlyHits() {
+    fun chestPressListsOnlyExercisesNamedChestPress() {
         val repository = ExerciseRepository.forTests(
             listOf(
                 exercise(
@@ -117,6 +155,7 @@ class ExerciseSearchTest {
                     primaryMuscles = listOf("Chest"),
                     secondaryMuscles = listOf("Shoulders", "Triceps")
                 ),
+                exercise(id = "Neck_Press", name = "Neck Press", equipment = "Barbell", primaryMuscles = listOf("Chest")),
                 exercise(id = "Leverage_Chest_Press", name = "Leverage Chest Press", equipment = "Machine", primaryMuscles = listOf("Chest")),
                 exercise(id = "Cable_Chest_Press", name = "Cable Chest Press", equipment = "Cable", primaryMuscles = listOf("Chest"))
             )
@@ -124,10 +163,7 @@ class ExerciseSearchTest {
 
         val results = repository.filtered(searchText = "Chest press")
 
-        assertEquals(
-            listOf("Cable Chest Press", "Leverage Chest Press", "Barbell Bench Press - Medium Grip"),
-            results.map { it.name }
-        )
+        assertEquals(listOf("Cable Chest Press", "Leverage Chest Press"), results.map { it.name })
     }
 
     @Test
@@ -148,21 +184,34 @@ class ExerciseSearchTest {
     }
 
     @Test
-    fun bundledCatalogChestPressListsChestPressesFirst() {
-        val records: List<ExerciseRecord> = File(repositoryRoot(), "ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json")
-            .reader(Charsets.UTF_8)
-            .use { Gson().fromJson(it, object : TypeToken<List<ExerciseRecord>>() {}.type) }
-        val repository = ExerciseRepository.forTests(records.mapNotNull { ExerciseItem.from(it) })
+    fun bundledCatalogChestPressListsOnlyChestPresses() {
+        val results = bundledRepository().filtered(searchText = "Chest press")
 
-        val results = repository.filtered(searchText = "Chest press")
-        val nameMatches = results.takeWhile { item ->
-            val name = item.name.lowercase()
-            "chest" in name && "press" in name
-        }
-
-        assertTrue("expected the chest presses first, got ${results.take(8).map { it.name }}", nameMatches.size >= 6)
+        assertTrue("expected the chest presses, got ${results.map { it.name }}", results.size >= 6)
+        assertTrue(
+            "every result should name a chest press, got ${results.map { it.name }}",
+            results.all { item ->
+                val name = item.name.lowercase()
+                "chest" in name && "press" in name
+            }
+        )
         assertEquals("Cable Chest Press", results.first().name)
-        assertFalse(results.any { it.name == "Alternating Cable Shoulder Press" })
+    }
+
+    @Test
+    fun bundledCatalogGymShorthandFindsTheMuscleGroup() {
+        val repository = bundledRepository()
+
+        val abs = repository.filtered(searchText = "abs").map { it.name }
+        assertEquals("Ab Crunch Machine", abs.first())
+        assertTrue(abs.containsAll(listOf("Ab Roller", "Crunches")))
+
+        val pec = repository.filtered(searchText = "pec").map { it.name }
+        assertTrue(pec.containsAll(listOf("Barbell Bench Press - Medium Grip", "Butterfly")))
+
+        val delts = repository.filtered(searchText = "delts").map { it.name }
+        assertEquals("Barbell Rear Delt Row", delts.first())
+        assertTrue(delts.contains("Arnold Dumbbell Press"))
     }
 
     private fun exercise(
@@ -185,6 +234,13 @@ class ExerciseSearchTest {
         secondaryMuscles = secondaryMuscles,
         instructions = instructions
     )
+
+    private fun bundledRepository(): ExerciseRepository {
+        val records: List<ExerciseRecord> = File(repositoryRoot(), "ios/calorietracker/Resources/FreeExerciseDB/dist/exercises.json")
+            .reader(Charsets.UTF_8)
+            .use { Gson().fromJson(it, object : TypeToken<List<ExerciseRecord>>() {}.type) }
+        return ExerciseRepository.forTests(records.mapNotNull { ExerciseItem.from(it) })
+    }
 
     private fun repositoryRoot(): File = generateSequence(
         File(checkNotNull(System.getProperty("user.dir"))).absoluteFile

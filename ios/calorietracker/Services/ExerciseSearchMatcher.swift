@@ -8,22 +8,26 @@ struct ExerciseSearchIndex: Hashable, Sendable {
     /// ("cablechestpress", "chestpress", "press"), so phrase matches stay word-aligned
     /// and "pushup" / "push up" / "push-up" all compare equal.
     let nameSuffixes: [String]
-    /// Equipment, category, and primary-muscle words. Instructions and secondary muscles
-    /// are deliberately excluded: they mention many unrelated words and made searches
-    /// return non-matching items.
-    let metadataWords: [String]
+    /// Equipment, category, and primary-muscle values with their words joined
+    /// ("lowerback", "bodyonly"). They only match a query that names one of them as a
+    /// whole ("cable", "lower back", or an alias such as "abs"), so free-text queries
+    /// such as "chest press" still need every word in the name. Instructions and
+    /// secondary muscles are never searched: they mention many unrelated words.
+    let metadataTerms: [String]
 
     nonisolated init(name: String, metadata: [String]) {
         let nameWords = ExerciseSearchMatcher.words(in: name)
         self.nameWords = nameWords
         self.nameSuffixes = nameWords.indices.map { nameWords[$0...].joined() }
-        self.metadataWords = metadata.flatMap { ExerciseSearchMatcher.words(in: $0) }
+        self.metadataTerms = metadata
+            .map { ExerciseSearchMatcher.words(in: $0).joined() }
+            .filter { !$0.isEmpty }
     }
 }
 
-/// Tokenized AND search for the exercise library, with optional query aliases and
+/// Tokenized AND search over exercise names, with optional query aliases and
 /// relevance ranking: exact name > name prefix > phrase inside the name >
-/// every word in the name > match that needs equipment/category/primary-muscle words.
+/// every word in the name > query that names a muscle group, equipment, or category.
 enum ExerciseSearchMatcher {
     /// Maps common multi-word phrases to catalog exercise IDs.
     nonisolated static let aliases: [String: String] = [
@@ -31,6 +35,27 @@ enum ExerciseSearchMatcher {
         "triceps cable pushdown": "Triceps_Pushdown",
         "tricep cable pushdown": "Triceps_Pushdown",
         "tricep pushdown": "Triceps_Pushdown",
+    ]
+
+    /// Gym shorthand that is not a prefix of the catalog value it means, mapped to
+    /// `ExerciseSearchIndex.metadataTerms` values. Applies only to the whole query.
+    nonisolated static let metadataAliases: [String: [String]] = [
+        "abs": ["abdominals"],
+        "core": ["abdominals"],
+        "pec": ["chest"],
+        "pecs": ["chest"],
+        "pectoral": ["chest"],
+        "pectorals": ["chest"],
+        "delt": ["shoulders"],
+        "delts": ["shoulders"],
+        "deltoid": ["shoulders"],
+        "deltoids": ["shoulders"],
+        "quads": ["quadriceps"],
+        "hams": ["hamstrings"],
+        "calf": ["calves"],
+        "trapezius": ["traps"],
+        "back": ["lats", "middleback", "lowerback"],
+        "bodyweight": ["bodyonly"],
     ]
 
     /// Lowercased runs of letters and digits; punctuation and whitespace separate words.
@@ -65,8 +90,8 @@ enum ExerciseSearchMatcher {
         if tokens.allSatisfy({ token in index.nameWords.contains { word($0, matches: token) } }) {
             return 3
         }
-        let allWords = index.nameWords + index.metadataWords
-        if tokens.allSatisfy({ token in allWords.contains { word($0, matches: token) } }) {
+        let aliasTerms = metadataAliases[tokens.joined(separator: " ")] ?? []
+        if index.metadataTerms.contains(where: { $0.hasPrefix(compactQuery) || aliasTerms.contains($0) }) {
             return 4
         }
         return nil
@@ -83,7 +108,11 @@ enum ExerciseSearchMatcher {
     /// Word-prefix match, so "tricep" finds "Triceps" but "press" no longer matches
     /// inside unrelated words. Non-ASCII tokens also match inside a word because
     /// scripts such as Japanese or Chinese do not separate words with spaces.
+    /// Plural tokens also match the singular word ("abs" finds "Ab", "curls" finds "Curl").
     nonisolated private static func word(_ word: String, matches token: String) -> Bool {
-        word.hasPrefix(token) || (!token.allSatisfy(\.isASCII) && word.contains(token))
+        if word.hasPrefix(token) { return true }
+        guard token.allSatisfy(\.isASCII) else { return word.contains(token) }
+        guard token.count >= 3, token.hasSuffix("s") else { return false }
+        return word == token.dropLast() || (token.hasSuffix("es") && word == token.dropLast(2))
     }
 }
