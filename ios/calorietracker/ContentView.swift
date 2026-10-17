@@ -2066,7 +2066,7 @@ private var dailyStepsTaskKey: String {
             .sheet(item: $savedMealsMode, content: { mode in
                 RecentsView(mode: mode, logDate: logDateForSelectedDay, onReview: { entry in
                     afterLoggingPresentationDismisses {
-                        currentImages = entry.allImageData.compactMap(UIImage.init(data:))
+                        currentImages = entry.parentImageData.compactMap(UIImage.init(data:))
                         currentImage = currentImages.first
                         currentEmoji = entry.emoji
                         currentFoodSource = entry.source

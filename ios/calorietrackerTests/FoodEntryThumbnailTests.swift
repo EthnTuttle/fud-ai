@@ -49,6 +49,11 @@ struct FoodEntryThumbnailTests {
         #expect(saved.ingredients.first?.imageFilename == ingredient)
         #expect(saved.thumbnailPhotoCandidates.first?.id == .filename(final))
         #expect(saved.allImageFilenames == [first, final, ingredient])
+        #expect(saved.parentImageData.count == 2)
+        #expect(saved.allImageData.count == 3)
+        let copied = saved.duplicatedForLogging(at: Date())
+        #expect(copied.additionalImageData == [FoodImageStore.shared.load(filename: final)!])
+        #expect(copied.ingredients.first?.imageFilename == ingredient)
     }
 
     @Test func compactedLegacyCacheCannotImpersonateAMissingFile() {

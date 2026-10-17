@@ -13,8 +13,8 @@ struct FoodEntryPhoto: Identifiable, Equatable, Sendable {
 }
 
 extension FoodEntry {
-    /// Chronological references and aligned cached bytes, without reading files.
-    var photoSources: [FoodEntryPhoto] {
+    /// Parent captures in order, kept distinct from photographed ingredients.
+    private var parentPhotoSources: [FoodEntryPhoto] {
         var photos: [FoodEntryPhoto] = []
         var seen = Set<FoodEntryPhoto.ID>()
         func append(_ id: FoodEntryPhoto.ID, data: Data? = nil) {
@@ -34,10 +34,27 @@ extension FoodEntry {
             let data = cacheAligned && additionalImageData.indices.contains(index) ? additionalImageData[index] : nil
             append(filename.map { .filename($0) } ?? .additionalData(index), data: data)
         }
+        return photos
+    }
+
+    /// Chronological references and aligned cached bytes, without reading files.
+    var photoSources: [FoodEntryPhoto] {
+        var photos = parentPhotoSources
+        var seen = Set(photos.map(\.id))
         for filename in ingredients.flatMap(\.allImageFilenames) {
-            append(.filename(filename))
+            let id = FoodEntryPhoto.ID.filename(filename)
+            if seen.insert(id).inserted { photos.append(FoodEntryPhoto(id: id, data: nil)) }
         }
         return photos
+    }
+
+    /// Copies/reviews must not turn ingredient photos into parent captures.
+    var parentImageData: [Data] {
+        parentPhotoSources.compactMap { photo in
+            if let data = photo.data { return data }
+            guard case let .filename(filename) = photo.id else { return nil }
+            return FoodImageStore.shared.load(filename: filename)
+        }
     }
 
     /// Prefer the completed progressive meal without reordering stored photos.
