@@ -552,6 +552,7 @@
     <string name="settings_clear_key">مسح المفتاح</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">سجلات الوزن الأقدم</string>
     <string name="settings_clear_food_log">مسح سجل الطعام</string>
     <string name="settings_delete_all_data">حذف جميع البيانات</string>
 
@@ -817,4 +818,5 @@
     <string name="settings_save_photos_to_gallery">حفظ في الصور</string>
     <string name="settings_save_photos_to_gallery_subtitle">احفظ أيضًا صور الوجبات في المعرض عند التسجيل</string>
     <string name="settings_other_nutrients_note">منفصل عن أهداف السعرات الحرارية والبروتين والكربوهيدرات والدهون.</string>
+    <string name="label_date">التاريخ</string>
 </resources>

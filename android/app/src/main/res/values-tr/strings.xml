@@ -796,6 +796,7 @@
     <string name="settings_fallback_footer">Yalnızca bir yapay zeka isteği fotoğraf içerdiğinde kullanılır. Birincil ile aynı sağlayıcıya izin verilir — sadece farklı bir model seçin.</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Eski kilo kayıtları</string>
     <string name="settings_manage_health_access">Health Connect Erişimini Yönet</string>
     <string name="settings_permissions">İzinler</string>
     <string name="settings_energy_goals">Enerji Yakım Hedefleri</string>

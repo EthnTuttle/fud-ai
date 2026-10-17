@@ -540,6 +540,7 @@
     <string name="settings_clear_key">Sleutel wissen</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">Oudere gewichtsmetingen</string>
     <string name="settings_clear_food_log">Voedingsdagboek wissen</string>
     <string name="settings_delete_all_data">Alle gegevens verwijderen</string>
 
@@ -801,4 +802,5 @@
     <string name="settings_save_photos_to_gallery">Opslaan in Foto\u2019s</string>
     <string name="settings_save_photos_to_gallery_subtitle">Sla maaltijdfoto\u2019s ook op in je galerij bij het loggen</string>
     <string name="settings_other_nutrients_note">Los van de doelen voor calorieën, eiwitten, koolhydraten en vet.</string>
+    <string name="label_date">Datum</string>
 </resources>

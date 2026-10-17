@@ -539,6 +539,7 @@
     <string name="settings_clear_key">키 지우기</string>
 
     <string name="settings_health_connect">Health Connect</string>
+    <string name="settings_health_history_access">이전 체중 기록</string>
     <string name="settings_clear_food_log">음식 기록 지우기</string>
     <string name="settings_delete_all_data">모든 데이터 삭제</string>
 
@@ -800,4 +801,5 @@
     <string name="settings_save_photos_to_gallery">사진에 저장</string>
     <string name="settings_save_photos_to_gallery_subtitle">기록할 때 식사 사진을 갤러리에도 저장</string>
     <string name="settings_other_nutrients_note">칼로리, 단백질, 탄수화물, 지방 목표와 별개입니다.</string>
+    <string name="label_date">날짜</string>
 </resources>

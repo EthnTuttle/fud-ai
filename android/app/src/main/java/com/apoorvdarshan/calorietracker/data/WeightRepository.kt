@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.data
 
 import com.apoorvdarshan.calorietracker.models.WeightEntry
+import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.services.health.ExternalWeight
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectManager
 import kotlinx.coroutines.flow.Flow
@@ -54,20 +55,19 @@ class WeightRepository(
 
         val profile = profileRepository.current()
         val goal = profile?.goalWeightKg
-        if (profile != null && goal != null && previousLatest != null) {
-            val crossed = when (profile.goal) {
-                com.apoorvdarshan.calorietracker.models.WeightGoal.LOSE ->
-                    previousLatest.weightKg > goal && entry.weightKg <= goal
-                com.apoorvdarshan.calorietracker.models.WeightGoal.GAIN ->
-                    previousLatest.weightKg < goal && entry.weightKg >= goal
-                com.apoorvdarshan.calorietracker.models.WeightGoal.MAINTAIN -> false
-            }
-            if (crossed) return WeightGoalReachedEvent(entry)
+        if (profile != null && goal != null && previousLatest != null &&
+            crossesWeightGoal(entry, previousLatest, goal, profile.goal)
+        ) {
+            return WeightGoalReachedEvent(entry)
         }
         return null
     }
 
     suspend fun deleteEntry(id: UUID) {
+        // Remember the deletion first: a Health Connect re-import (expired changes token,
+        // cloud restore, newly granted history) would otherwise bring back a weigh-in
+        // another app wrote, since only our own record is deleted below.
+        prefs.addDeletedWeightEntryId(id.toString())
         prefs.updateWeightEntries { current -> current.filter { it.id != id } }
         syncProfileWeightToLatest()
         // Delete the HC record even when sync is off (iOS parity, best-effort) —
@@ -106,7 +106,8 @@ class WeightRepository(
      * under their original UUID — after a reinstall the local store is empty and this
      * is what brings the history back; when the entry still exists locally the
      * same-id upsert is a no-op. The change-token path filters own records at the
-     * manager level, so live echo-imports are still suppressed.
+     * manager level, so live echo-imports are still suppressed. Ids the user deleted
+     * are skipped, so a re-import can't bring them back.
      */
     suspend fun importExternalWeights(external: List<ExternalWeight>) {
         val manager = health ?: return
@@ -121,24 +122,25 @@ class WeightRepository(
             }
         if (incoming.isEmpty()) return
         var changed = false
-        prefs.updateWeightEntries { current ->
-            // associateBy keeps the last duplicate id, so a history that already
-            // holds the same id twice collapses instead of failing the import.
-            val byId = current.associateBy { it.id }.toMutableMap()
-            // Persist the collapse even if every incoming value already matches,
-            // otherwise the duplicate survives and keeps skewing the trend math.
-            if (byId.size != current.size) changed = true
-            for (entry in incoming) {
-                val existing = byId[entry.id]
-                if (existing == null || abs(existing.weightKg - entry.weightKg) > 0.0001 || existing.date != entry.date) {
-                    byId[entry.id] = entry
-                    changed = true
-                }
-            }
-            if (changed) byId.values.sortedBy { it.date } else current
+        // Deleted ids are read inside the merge's transaction: a snapshot taken before it
+        // could miss a deletion that lands in between and add the reading back.
+        prefs.updateWeightEntriesSkippingDeleted { current, deletedIds ->
+            val merged = mergeExternalWeights(current, incoming, deletedIds)
+            changed = merged != null
+            merged ?: current
         }
         if (!changed) return
         syncProfileWeightToLatest()
+    }
+
+    /** Times of the readings in [external] that another app wrote and the history already
+     *  holds, matched by the id [importExternalWeights] gives them. */
+    suspend fun heldExternalReadingTimes(external: List<ExternalWeight>): List<Instant> {
+        val manager = health ?: return emptyList()
+        val held = prefs.weightEntries.first().mapTo(HashSet()) { it.id }
+        return external
+            .filter { !manager.isOwnRecord(it.clientRecordId) && externalId(it.clientRecordId, it.recordId, it.time) in held }
+            .map { it.time }
     }
 
     /** Stable id for an external record: prefer the source's clientRecordId, then the
@@ -157,4 +159,46 @@ class WeightRepository(
         val manager = health ?: return false
         return prefs.healthConnectEnabled.first() && manager.hasWeightWrite()
     }
+}
+
+/** Only a new latest reading can reach the goal: a weigh-in logged for an earlier day is
+ *  history, not progress. */
+internal fun crossesWeightGoal(
+    entry: WeightEntry,
+    previousLatest: WeightEntry,
+    goalKg: Double,
+    goal: WeightGoal
+): Boolean {
+    if (entry.date < previousLatest.date) return false
+    return when (goal) {
+        WeightGoal.LOSE -> previousLatest.weightKg > goalKg && entry.weightKg <= goalKg
+        WeightGoal.GAIN -> previousLatest.weightKg < goalKg && entry.weightKg >= goalKg
+        WeightGoal.MAINTAIN -> false
+    }
+}
+
+/**
+ * Upserts Health Connect weigh-ins into [current] by id, skipping ids in [deletedIds].
+ * Returns the merged history sorted by date, or null when nothing changed.
+ */
+internal fun mergeExternalWeights(
+    current: List<WeightEntry>,
+    incoming: List<WeightEntry>,
+    deletedIds: Set<String>
+): List<WeightEntry>? {
+    // associateBy keeps the last duplicate id, so a history that already
+    // holds the same id twice collapses instead of failing the import.
+    val byId = current.associateBy { it.id }.toMutableMap()
+    // Persist the collapse even if every incoming value already matches,
+    // otherwise the duplicate survives and keeps skewing the trend math.
+    var changed = byId.size != current.size
+    for (entry in incoming) {
+        if (entry.id.toString() in deletedIds) continue
+        val existing = byId[entry.id]
+        if (existing == null || abs(existing.weightKg - entry.weightKg) > 0.0001 || existing.date != entry.date) {
+            byId[entry.id] = entry
+            changed = true
+        }
+    }
+    return if (changed) byId.values.sortedBy { it.date } else null
 }

@@ -655,7 +655,7 @@ fun SettingsScreen(
         pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
         healthConnectLauncher.launch(
             if (ui.dailySummaryEnabled) container.health.dailySummaryPermissions
-            else container.health.permissions
+            else container.health.connectPermissions
         )
     }
 
@@ -669,7 +669,7 @@ fun SettingsScreen(
             return
         }
         pendingHealthPermissionAction = HealthConnectPermissionAction.ENERGY_GOALS
-        healthConnectLauncher.launch(container.health.permissions)
+        healthConnectLauncher.launch(container.health.connectPermissions)
     }
 
     fun openBatteryOptimizationSettings() {
@@ -1465,7 +1465,20 @@ fun SettingsScreen(
                         icon = Icons.Outlined.LocalFireDepartment
                     ) {
                         pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
-                        healthConnectLauncher.launch(container.health.permissions)
+                        healthConnectLauncher.launch(container.health.connectPermissions)
+                    }
+                }
+                // Users who connected before history access was requested only see weigh-ins
+                // from 30 days before their first grant; granting it re-runs the import.
+                if (ui.healthConnectEnabled && ui.healthHistoryAccessMissing) {
+                    HorizontalDivider()
+                    SettingRow(
+                        stringResource(R.string.settings_health_history_access),
+                        stringResource(R.string.settings_grant_permission),
+                        icon = Icons.Outlined.MonitorWeight
+                    ) {
+                        pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
+                        healthConnectLauncher.launch(container.health.connectPermissions)
                     }
                 }
                 HorizontalDivider()
