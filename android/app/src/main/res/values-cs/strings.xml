@@ -415,6 +415,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1R</string>
     <string name="progress_range_all">Vše</string>
+    <string name="progress_previous_period">Předchozí období</string>
+    <string name="progress_next_period">Další období</string>
 
     <string name="progress_weight_section">Váha</string>
     <string name="progress_log_weight">Zapsat váhu</string>

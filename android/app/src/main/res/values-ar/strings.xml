@@ -463,6 +463,8 @@
     <string name="progress_range_6m">6ش</string>
     <string name="progress_range_year">1س</string>
     <string name="progress_range_all">الكل</string>
+    <string name="progress_previous_period">الفترة السابقة</string>
+    <string name="progress_next_period">الفترة التالية</string>
 
     <string name="progress_weight_section">الوزن</string>
     <string name="progress_log_weight">تسجيل الوزن</string>

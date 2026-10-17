@@ -454,6 +454,8 @@
     <string name="progress_range_6m">6月</string>
     <string name="progress_range_year">1年</string>
     <string name="progress_range_all">全部</string>
+    <string name="progress_previous_period">上一时段</string>
+    <string name="progress_next_period">下一时段</string>
 
     <string name="progress_weight_section">体重</string>
     <string name="progress_log_weight">记录体重</string>

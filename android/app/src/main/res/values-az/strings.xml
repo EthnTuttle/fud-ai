@@ -455,6 +455,8 @@
     <string name="progress_range_6m">6A</string>
     <string name="progress_range_year">1İ</string>
     <string name="progress_range_all">Hamısı</string>
+    <string name="progress_previous_period">Əvvəlki dövr</string>
+    <string name="progress_next_period">Növbəti dövr</string>
 
     <string name="progress_weight_section">Çəki</string>
     <string name="progress_log_weight">Çəkini Qeyd Et</string>

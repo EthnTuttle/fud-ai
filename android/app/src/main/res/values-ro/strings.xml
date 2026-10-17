@@ -457,6 +457,8 @@
     <string name="progress_range_6m">6L</string>
     <string name="progress_range_year">1A</string>
     <string name="progress_range_all">Tot</string>
+    <string name="progress_previous_period">Perioada anterioară</string>
+    <string name="progress_next_period">Perioada următoare</string>
 
     <string name="progress_weight_section">Greutate</string>
     <string name="progress_log_weight">Înregistrează greutatea</string>

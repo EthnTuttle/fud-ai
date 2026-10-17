@@ -456,6 +456,8 @@
     <string name="progress_range_6m">6M</string>
     <string name="progress_range_year">1A</string>
     <string name="progress_range_all">Todo</string>
+    <string name="progress_previous_period">Periodo anterior</string>
+    <string name="progress_next_period">Periodo siguiente</string>
 
     <string name="progress_weight_section">Peso</string>
     <string name="progress_log_weight">Registrar peso</string>

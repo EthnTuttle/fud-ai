@@ -454,6 +454,8 @@
     <string name="progress_range_6m">6개월</string>
     <string name="progress_range_year">1년</string>
     <string name="progress_range_all">전체</string>
+    <string name="progress_previous_period">이전 기간</string>
+    <string name="progress_next_period">다음 기간</string>
 
     <string name="progress_weight_section">체중</string>
     <string name="progress_log_weight">체중 기록</string>

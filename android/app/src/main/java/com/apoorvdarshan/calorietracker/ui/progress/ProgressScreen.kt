@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.ui.progress
 
+import android.text.format.DateUtils
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -8,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,8 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ChevronRight
@@ -62,6 +66,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -155,10 +160,17 @@ enum class TimeRange(@StringRes val labelRes: Int, val days: Int) {
     YEAR(R.string.progress_range_year, 365),
     ALL_TIME(R.string.progress_range_all, 3650);
 
-    fun dateRange(today: LocalDate = LocalDate.now()): Pair<LocalDate, LocalDate> {
-        val start = today.minusDays((days - 1).toLong())
-        return start to today
+    /** Inclusive local days covered by this range. [offset] steps back whole windows
+     *  (0 = the window ending [today], 1 = the one just before it) so the rolling
+     *  windows stay contiguous while browsing past periods. */
+    fun dateRange(today: LocalDate = LocalDate.now(), offset: Int = 0): Pair<LocalDate, LocalDate> {
+        val end = today.minusDays(days.toLong() * offset.coerceAtLeast(0))
+        val start = end.minusDays((days - 1).toLong())
+        return start to end
     }
+
+    /** All has no earlier window to step back to. */
+    val supportsPeriodNavigation: Boolean get() = this != ALL_TIME
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -196,6 +208,9 @@ private fun MyProgressContent(container: AppContainer) {
     val weightMetric = weightUnit == "kg"
 
     var range by rememberSaveable { mutableStateOf(TimeRange.WEEK) }
+    // Whole windows stepped back from the current one. Session-only and keyed on
+    // the range, so switching 1W / 1M / … always lands on the current window.
+    var periodOffset by rememberSaveable(range) { mutableIntStateOf(0) }
     var showAddDialog by remember { mutableStateOf(false) }
     var showAddBodyFatDialog by remember { mutableStateOf(false) }
     var showAllWeights by remember { mutableStateOf(false) }
@@ -205,7 +220,7 @@ private fun MyProgressContent(container: AppContainer) {
     var selectedMetric by rememberSaveable { mutableStateOf(ProgressMetric.WEIGHT) }
 
     // Filter weights + body fats to range
-    val (rangeStartDate, rangeEndDate) = range.dateRange()
+    val (rangeStartDate, rangeEndDate) = range.dateRange(offset = periodOffset)
     val zone = ZoneId.systemDefault()
     val rangeStart = rangeStartDate.atStartOfDay(zone).toInstant()
     val rangeEndExclusive = rangeEndDate.plusDays(1).atStartOfDay(zone).toInstant()
@@ -243,13 +258,14 @@ private fun MyProgressContent(container: AppContainer) {
     // cancels the previous LaunchedEffect so the picker stays interruptible.
     var foodRangeStats by remember { mutableStateOf<ProgressFoodRangeStats?>(null) }
     var isLoadingFoodRangeStats by remember { mutableStateOf(false) }
-    LaunchedEffect(foods, range, ui.profile, optionalNutrientGoals) {
+    LaunchedEffect(foods, range, periodOffset, ui.profile, optionalNutrientGoals) {
         isLoadingFoodRangeStats = true
         foodRangeStats = null
         val computed = withContext(Dispatchers.Default) {
             computeProgressFoodRangeStats(
                 foods = foods,
                 dayCount = range.days,
+                endDay = rangeEndDate,
                 zone = zone,
                 profile = ui.profile,
                 optionalGoals = optionalNutrientGoals
@@ -272,6 +288,18 @@ private fun MyProgressContent(container: AppContainer) {
         ) {
             // 1. Segmented TimeRange picker
             item { TimeRangePicker(selected = range, onSelect = { range = it }) }
+
+            if (range.supportsPeriodNavigation) {
+                item {
+                    PeriodNavigator(
+                        start = rangeStartDate,
+                        end = rangeEndDate,
+                        canGoForward = periodOffset > 0,
+                        onPrevious = { periodOffset += 1 },
+                        onNext = { periodOffset = (periodOffset - 1).coerceAtLeast(0) }
+                    )
+                }
+            }
 
             // 2. Progress metric selector. Optional metrics keep their stable
             //    preference order.
@@ -566,6 +594,78 @@ private fun <T> IosStyleSegmentedControl(
             }
         }
     }
+}
+
+/**
+ * Arrows + localized date label for stepping through past windows. Arrows instead
+ * of a page swipe because the charts already own horizontal drags for their
+ * value inspectors.
+ */
+@Composable
+private fun PeriodNavigator(
+    start: LocalDate,
+    end: LocalDate,
+    canGoForward: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit
+) {
+    val context = LocalContext.current
+    val label = remember(start, end) { formatProgressPeriod(context, start, end) }
+    FudGlassSurface(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 14.dp,
+        padding = 0.dp
+    ) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onPrevious) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = stringResource(R.string.progress_previous_period),
+                    tint = AppColors.Calorie
+                )
+            }
+            Text(
+                label,
+                modifier = Modifier.weight(1f),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            IconButton(onClick = onNext, enabled = canGoForward) {
+                Icon(
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = stringResource(R.string.progress_next_period),
+                    tint = if (canGoForward) AppColors.Calorie
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
+            }
+        }
+    }
+}
+
+/** Localized "Oct 11 – 17" style range label; adds the year once the window leaves
+ *  the current year. Noon timestamps keep DateUtils from reading a midnight end as
+ *  the previous day. */
+private fun formatProgressPeriod(
+    context: android.content.Context,
+    start: LocalDate,
+    end: LocalDate,
+    today: LocalDate = LocalDate.now()
+): String {
+    val zone = ZoneId.systemDefault()
+    val yearFlag = if (start.year != today.year || end.year != today.year) {
+        DateUtils.FORMAT_SHOW_YEAR
+    } else {
+        DateUtils.FORMAT_NO_YEAR
+    }
+    return DateUtils.formatDateRange(
+        context,
+        start.atTime(12, 0).atZone(zone).toInstant().toEpochMilli(),
+        end.atTime(12, 0).atZone(zone).toInstant().toEpochMilli(),
+        DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH or yearFlag
+    )
 }
 
 @Composable
@@ -1205,6 +1305,11 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
     val ticks = niceAxisTicks(0.0, maxValue, count = 5)
     val yTop = ticks.last().coerceAtLeast(maxValue)
     val xLabelFmt = DateTimeFormatter.ofPattern("MMM d", Locale.US)
+    val haptic = LocalHapticFeedback.current
+    var selectedIndex by remember(dailyCalories) { mutableStateOf<Int?>(null) }
+    val inspectorDateFormat = remember {
+        DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(Locale.getDefault())
+    }
 
     Column {
         Row(Modifier.fillMaxWidth().height(190.dp)) {
@@ -1227,8 +1332,48 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
                 val barWidth = rawWidth.coerceIn(2f, maxBarPx)
                 val totalGroupW = barWidth * n + gap * (n - 1)
                 val startX = ((barAreaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
+                val selectedBarIndex = selectedIndex?.takeIf { it in 0 until n }
 
-                Canvas(Modifier.fillMaxSize()) {
+                fun select(x: Float) {
+                    val index = calorieBarIndexAt(x, startX, barWidth, gap, n) ?: return
+                    if (index != selectedIndex) {
+                        selectedIndex = index
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    }
+                }
+
+                Canvas(
+                    Modifier
+                        .fillMaxSize()
+                        // Tap pins a day's value (tap it again to clear); a horizontal
+                        // drag scrubs across bars. Vertical drags stay with the page scroll.
+                        .pointerInput(n, barAreaWidthPx) {
+                            detectTapGestures { offset ->
+                                val index = calorieBarIndexAt(offset.x, startX, barWidth, gap, n)
+                                if (index == null || index == selectedIndex) {
+                                    selectedIndex = null
+                                } else {
+                                    select(offset.x)
+                                }
+                            }
+                        }
+                        .pointerInput(n, barAreaWidthPx) {
+                            var gestureX = 0f
+                            detectHorizontalDragGestures(
+                                onDragStart = { offset ->
+                                    gestureX = offset.x
+                                    select(gestureX)
+                                },
+                                onDragEnd = { selectedIndex = null },
+                                onDragCancel = { selectedIndex = null },
+                                onHorizontalDrag = { change, dragAmount ->
+                                    gestureX = (gestureX + dragAmount).coerceIn(0f, size.width.toFloat())
+                                    select(gestureX)
+                                    change.consume()
+                                }
+                            )
+                        }
+                ) {
                     val pxW = size.width; val pxH = size.height
                     ticks.forEach { tick ->
                         val y = pxH - ((tick / yTop).toFloat() * pxH)
@@ -1261,7 +1406,53 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
                             ),
                             topLeft = Offset(x, y),
                             size = Size(barWidth, barH),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(7f, 7f)
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(7f, 7f),
+                            alpha = if (selectedBarIndex == null || selectedBarIndex == i) 1f else 0.4f
+                        )
+                    }
+                    selectedBarIndex?.let { i ->
+                        val cx = startX + i * (barWidth + gap) + barWidth / 2f
+                        drawLine(
+                            color = AppColors.Calorie.copy(alpha = 0.62f),
+                            start = Offset(cx, 0f), end = Offset(cx, pxH),
+                            strokeWidth = 2.5f,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(7f, 7f))
+                        )
+                    }
+                }
+
+                selectedBarIndex?.let { i ->
+                    val (day, cals) = dailyCalories[i]
+                    val tooltipWidth = 116.dp
+                    val tooltipWidthPx = with(density) { tooltipWidth.toPx() }
+                    val cx = startX + i * (barWidth + gap) + barWidth / 2f
+                    val tooltipLeft = (cx - tooltipWidthPx / 2f)
+                        .coerceIn(0f, (barAreaWidthPx - tooltipWidthPx).coerceAtLeast(0f))
+                    Column(
+                        modifier = Modifier
+                            .offset { IntOffset(tooltipLeft.roundToInt(), with(density) { 6.dp.roundToPx() }) }
+                            .width(tooltipWidth)
+                            .shadow(8.dp, RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f))
+                            .border(0.75.dp, AppColors.Calorie.copy(alpha = 0.24f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
+                        Text(
+                            inspectorDateFormat.format(day),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = secondaryColor,
+                            maxLines = 1
+                        )
+                        Text(
+                            stringResource(R.string.kcal_value_format, cals),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
                         )
                     }
                 }
@@ -1325,6 +1516,15 @@ private fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: Int
     }
 }
 
+/** Index of the calorie bar nearest [x], using the same centred-group geometry
+ *  CalorieBarChart draws with. Null only when there are no bars. */
+internal fun calorieBarIndexAt(x: Float, startX: Float, barWidth: Float, gap: Float, count: Int): Int? {
+    if (count <= 0) return null
+    val slot = barWidth + gap
+    if (slot <= 0f) return 0
+    return ((x - startX - barWidth / 2f) / slot).roundToInt().coerceIn(0, count - 1)
+}
+
 /** Pick at most [maxLabels] evenly-spaced bar indices for x-axis labelling. */
 private fun pickXLabelIndices(n: Int, maxLabels: Int = 7): List<Int> {
     if (n <= 0) return emptyList()
@@ -1347,7 +1547,7 @@ private fun MacroAveragesSection(
 }
 
 
-private data class ProgressFoodRangeStats(
+internal data class ProgressFoodRangeStats(
     val dailyCalories: List<Pair<LocalDate, Int>>,
     val avgProtein: Double,
     val avgCarbs: Double,
@@ -1355,19 +1555,21 @@ private data class ProgressFoodRangeStats(
     val nutrientItems: List<NutrientAverageItem>
 )
 
-private fun computeProgressFoodRangeStats(
+/** [endDay] is the newest local day in the window (today unless the user is browsing
+ *  a past period); the window covers [dayCount] days up to it. */
+internal fun computeProgressFoodRangeStats(
     foods: List<FoodEntry>,
     dayCount: Int,
+    endDay: LocalDate = LocalDate.now(),
     zone: ZoneId,
     profile: com.apoorvdarshan.calorietracker.models.UserProfile?,
     optionalGoals: OptionalNutrientGoals
 ): ProgressFoodRangeStats {
-    val today = LocalDate.now()
-    val rangeStart = today.minusDays((dayCount - 1).toLong())
+    val rangeStart = endDay.minusDays((dayCount - 1).toLong())
     val buckets = linkedMapOf<LocalDate, MutableList<FoodEntry>>()
     for (entry in foods) {
         val day = entry.timestamp.atZone(zone).toLocalDate()
-        if (day < rangeStart || day > today) continue
+        if (day < rangeStart || day > endDay) continue
         buckets.getOrPut(day) { mutableListOf() }.add(entry)
     }
 
@@ -1440,7 +1642,7 @@ private fun ProgressNutritionLoadingCard() {
     }
 }
 
-private data class NutrientAverageItem(
+internal data class NutrientAverageItem(
     val key: String,
     val labelRes: Int,
     val current: Double,

@@ -4090,6 +4090,9 @@ struct ProgressTabView: View {
     @Environment(ImportedHealthWorkoutStore.self) private var importedHealthWorkoutStore
     @AppStorage("weightUnit") private var weightUnitRaw = "lbs"
     @State private var timeRange: TimeRange = .week
+    /// Whole windows stepped back from the current one; session-only, reset
+    /// whenever the range changes.
+    @State private var periodOffset = 0
     @State private var showLogWeight = false
     @State private var showLogBodyFat = false
     @State private var showGoalReached = false
@@ -4106,17 +4109,33 @@ struct ProgressTabView: View {
 
     private var foodRangeStatsTaskKey: String {
         let latest = foodStore.entries.first?.id.uuidString ?? "none"
-        return "\(timeRange.rawValue)|\(foodStore.entries.count)|\(latest)"
+        return "\(timeRange.rawValue)|\(periodOffset)|\(foodStore.entries.count)|\(latest)"
     }
 
-    private var dateRange: ClosedRange<Date> { timeRange.dateRange() }
+    /// Switching ranges always lands on the current window, in the same
+    /// update so the nutrition task restarts once.
+    private var timeRangeSelection: Binding<TimeRange> {
+        Binding(
+            get: { timeRange },
+            set: { newRange in
+                timeRange = newRange
+                periodOffset = 0
+            }
+        )
+    }
+
+    /// Selected window as whole local days (for day-keyed data).
+    private var dateRange: ClosedRange<Date> { timeRange.dayRange(offset: periodOffset) }
+
+    /// Selected window through the last instant of its final day (for timestamped readings).
+    private var timestampRange: ClosedRange<Date> { timeRange.timestampRange(offset: periodOffset) }
 
     private var filteredWeightEntries: [WeightEntry] {
-        weightStore.entries(in: dateRange)
+        weightStore.entries(in: timestampRange)
     }
 
     private var filteredBodyFatEntries: [BodyFatEntry] {
-        bodyFatStore.entries(in: dateRange)
+        bodyFatStore.entries(in: timestampRange)
     }
 
     private var workoutCalorieSessions: [StrengthWorkoutSession] {
@@ -4165,7 +4184,7 @@ struct ProgressTabView: View {
                     ScrollView {
                         VStack(spacing: 18) {
                     // Segmented Picker
-                    Picker("Time Range", selection: $timeRange) {
+                    Picker("Time Range", selection: timeRangeSelection) {
                         ForEach(TimeRange.allCases, id: \.self) { range in
                             Text(range.title).tag(range)
                         }
@@ -4173,6 +4192,16 @@ struct ProgressTabView: View {
                     .pickerStyle(.segmented)
                     .tint(AppColors.calorie)
                     .padding(.horizontal)
+
+                    if timeRange.supportsPeriodNavigation {
+                        ProgressPeriodNavigator(
+                            label: TimeRange.periodLabel(for: dateRange),
+                            canGoForward: periodOffset > 0,
+                            onPrevious: { periodOffset += 1 },
+                            onNext: { periodOffset = max(0, periodOffset - 1) }
+                        )
+                        .padding(.horizontal)
+                    }
 
                     ProgressMetricSelector(
                         metrics: availableProgressMetrics,
@@ -4309,6 +4338,7 @@ struct ProgressTabView: View {
                 let stats = ProgressFoodRangeStats.compute(
                     entries: foodStore.entries,
                     dayCount: timeRange.days,
+                    endDay: dateRange.upperBound,
                     profile: userProfile,
                     optionalGoals: .current
                 )

@@ -459,6 +459,8 @@
     <string name="progress_range_6m">6М</string>
     <string name="progress_range_year">1Г</string>
     <string name="progress_range_all">Всё</string>
+    <string name="progress_previous_period">Предыдущий период</string>
+    <string name="progress_next_period">Следующий период</string>
 
     <string name="progress_weight_section">Вес</string>
     <string name="progress_log_weight">Записать вес</string>
