@@ -83,7 +83,7 @@ enum SiriLoggingService {
         return LoggedWeight(entry: entry, displayValue: displayValue, unitName: unitName)
     }
 
-    private static func parseWeight(_ description: String) throws -> (kg: Double, displayValue: Double, unitName: String) {
+    static func parseWeight(_ description: String) throws -> (kg: Double, displayValue: Double, unitName: String) {
         let normalized = description
             .lowercased()
             .replacingOccurrences(of: ",", with: ".")
@@ -100,12 +100,17 @@ enum SiriLoggingService {
             || normalized.contains("lbs")
             || normalized.contains("pound")
             || normalized.contains("pounds")
+            // Russian and Ukrainian Siri phrases say фунт/фунтов/фунтів.
+            || normalized.contains("фунт")
         let unitIsKilograms = normalized.contains("kg")
             || normalized.contains("kgs")
             || normalized.contains("kilogram")
             || normalized.contains("kilograms")
             || normalized.contains("kilo")
             || normalized.contains("kilos")
+            || normalized.contains("кг")
+            || normalized.contains("кило")
+            || normalized.contains("кіло")
 
         let usePounds = unitIsPounds || (!unitIsKilograms && !usesMetric)
         let kg = usePounds ? value / 2.20462 : value

@@ -103,7 +103,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ошибка"
+            "value" : "Помилка"
           }
         },
         "zh-Hans" : {
