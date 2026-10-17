@@ -501,6 +501,10 @@ struct CalorieChartSection: View {
     let dailyCalories: [(date: Date, calories: Int)]
     let calorieGoal: Int
     @State private var selectedDay: Date?
+    /// Axis a drag committed to at its first movement, keyed by where it began:
+    /// only a clearly horizontal drag scrubs (and clears on release), so a page
+    /// scroll that starts on the chart leaves a tap-pinned value alone.
+    @State private var dragLock: (start: CGPoint, scrubs: Bool)?
 
     private var selectedItem: (date: Date, calories: Int)? {
         guard let selectedDay else { return nil }
@@ -577,8 +581,9 @@ struct CalorieChartSection: View {
                         let plotFrame = proxy.plotFrame.map { geometry[$0] }
 
                         ZStack(alignment: .topLeading) {
-                            // Tap pins a day's value; a horizontal drag scrubs across
-                            // bars. Vertical drags fall through to the page scroll.
+                            // Tap pins a day's value; a clearly horizontal drag scrubs
+                            // across bars. Other drags are the page scroll: they neither
+                            // move nor clear the selection.
                             Color.clear
                                 .contentShape(Rectangle())
                                 .simultaneousGesture(
@@ -598,14 +603,20 @@ struct CalorieChartSection: View {
                                 .simultaneousGesture(
                                     DragGesture(minimumDistance: 6)
                                         .onChanged { value in
-                                            guard abs(value.translation.width) > abs(value.translation.height),
+                                            if dragLock?.start != value.startLocation {
+                                                dragLock = (value.startLocation, Self.isClearlyHorizontal(value.translation))
+                                            }
+                                            guard dragLock?.scrubs == true,
                                                   let plotFrame,
                                                   let day = nearestDay(at: value.location.x - plotFrame.minX, proxy: proxy),
                                                   day != selectedDay else { return }
                                             selectedDay = day
                                             UISelectionFeedbackGenerator().selectionChanged()
                                         }
-                                        .onEnded { _ in
+                                        .onEnded { value in
+                                            guard let lock = dragLock, lock.start == value.startLocation else { return }
+                                            dragLock = nil
+                                            guard lock.scrubs else { return }
                                             withAnimation(.easeOut(duration: 0.16)) {
                                                 selectedDay = nil
                                             }
@@ -634,6 +645,12 @@ struct CalorieChartSection: View {
         }
         .padding()
         .progressCardStyle()
+    }
+
+    /// Whether a drag's first movement is clearly sideways (well over its
+    /// vertical travel) rather than the start of a page scroll.
+    static func isClearlyHorizontal(_ translation: CGSize) -> Bool {
+        abs(translation.width) > abs(translation.height) * 1.5
     }
 
     /// Bars are binned by day, so their visual centre is midday.

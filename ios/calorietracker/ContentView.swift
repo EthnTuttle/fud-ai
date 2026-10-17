@@ -4110,6 +4110,14 @@ struct ProgressTabView: View {
     @State private var isLoadingFoodRangeStats = false
     /// Daily steps for the selected window; nil while loading.
     @State private var stepDays: [StepDay]?
+    /// The window `stepDays` belongs to, so a refresh of the same window keeps
+    /// its bars on screen instead of flashing the spinner.
+    @State private var stepDaysWindow: ClosedRange<Date>?
+    /// Bumped on each return from the background so the Steps card re-reads
+    /// totals that kept counting while the app was away.
+    @State private var stepsRefreshEpoch = 0
+    @State private var wasInBackground = false
+    @Environment(\.scenePhase) private var scenePhase
 
     private var userProfile: UserProfile { profileStore.profile }
 
@@ -4173,7 +4181,7 @@ struct ProgressTabView: View {
     }
 
     private var stepsTaskKey: String {
-        "\(progressMetric == .steps)|\(healthKitEnabled)|\(timeRange.rawValue)|\(periodOffset)"
+        "\(progressMetric == .steps)|\(healthKitEnabled)|\(timeRange.rawValue)|\(periodOffset)|\(stepsRefreshEpoch)"
     }
 
     /// Show the Body Fat section to anyone who has either logged a reading,
@@ -4376,16 +4384,32 @@ struct ProgressTabView: View {
             }
             .task(id: stepsTaskKey) {
                 // Steps come from Apple Health on demand, only while the Steps
-                // metric is showing; range / period changes cancel a stale read.
+                // metric is showing; range / period changes cancel a stale read,
+                // and returning to the app re-reads the window on screen.
                 guard progressMetric == .steps, healthKitEnabled else {
                     stepDays = nil
+                    stepDaysWindow = nil
                     return
                 }
-                stepDays = nil
                 let window = dateRange
+                // A new window shows the spinner; a foreground refresh of the same
+                // window keeps its bars until the fresh totals arrive.
+                if stepDaysWindow != window { stepDays = nil }
                 let days = await healthKitManager.fetchDailySteps(from: window.lowerBound, through: window.upperBound)
                 guard !Task.isCancelled else { return }
                 stepDays = days
+                stepDaysWindow = window
+            }
+            .onChange(of: scenePhase) { _, phase in
+                switch phase {
+                case .background:
+                    wasInBackground = true
+                case .active where wasInBackground:
+                    wasInBackground = false
+                    stepsRefreshEpoch += 1
+                default:
+                    break
+                }
             }
             .onChange(of: availableProgressMetrics, initial: true) { _, metrics in
                 if !metrics.contains(progressMetric) {

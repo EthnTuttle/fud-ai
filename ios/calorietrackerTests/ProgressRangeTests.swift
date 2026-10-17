@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Testing
 @testable import calorietracker
@@ -136,6 +137,16 @@ struct ProgressRangeTests {
         #expect(withToday.avgProtein == 280.0 / 3)
         #expect(withoutToday.dailyCalories.map(\.calories) == [2_000, 2_200])
         #expect(withoutToday.avgProtein == 130)
+    }
+
+    @Test func onlyClearlyHorizontalDragsScrubTheCalorieChart() {
+        #expect(CalorieChartSection.isClearlyHorizontal(CGSize(width: 20, height: 5)))
+        #expect(CalorieChartSection.isClearlyHorizontal(CGSize(width: -20, height: 4)))
+        // Diagonal and vertical drags are the page scroll: they must not move or
+        // clear a value pinned by tap.
+        #expect(!CalorieChartSection.isClearlyHorizontal(CGSize(width: 10, height: 9)))
+        #expect(!CalorieChartSection.isClearlyHorizontal(CGSize(width: 3, height: -30)))
+        #expect(!CalorieChartSection.isClearlyHorizontal(CGSize(width: 0, height: 6)))
     }
 
     private var utcCalendar: Calendar {
