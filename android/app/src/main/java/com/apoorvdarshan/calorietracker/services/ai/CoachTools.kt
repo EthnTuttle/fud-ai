@@ -815,6 +815,9 @@ class CoachTools(
          * Ranks library items for the coach search: whole-name matches first, then items whose
          * name holds more of the query words, then muscle/equipment/category matches. Words match
          * by prefix (with a simple plural strip) so "curls" finds "Curl" but "row" skips "Narrow".
+         * When some items match every query word, only those are returned ("incline press" does
+         * not list an incline curl); otherwise items matching any word by name are kept, so a
+         * descriptive query ("hammer strength chest press") still finds the closest exercise.
          * Mirrors iOS CoachTools.rankedLibraryMatches.
          */
         fun rankedLibraryMatches(
@@ -823,12 +826,11 @@ class CoachTools(
             muscle: String = "",
             equipment: String = ""
         ): List<ExerciseItem> {
-            val terms = searchWords(query)
+            val terms = significantWords(searchWords(query))
             if (terms.isEmpty()) return emptyList()
-            val normalizedQuery = terms.joinToString(" ")
             val passesFilters = libraryFilter(muscle, equipment)
 
-            return library.mapNotNull { item ->
+            val scored = library.mapNotNull { item ->
                 if (!passesFilters(item)) return@mapNotNull null
                 val muscleWords = searchWords((item.primaryMuscles + item.secondaryMuscles).joinToString(" "))
                 val nameWords = searchWords(item.name)
@@ -847,15 +849,25 @@ class CoachTools(
                 var score = nameHits * 10 + metadataHits * 3
                 if (allMatched) score += 20
                 if (nameHits == terms.size) score += 30
-                if (nameWords.joinToString(" ") == normalizedQuery) score += 100
-                item to score
+                if (significantWords(nameWords) == terms) score += 100
+                LibraryMatch(item, score, allMatched)
             }
+            return scored.filter { it.allMatched }.ifEmpty { scored }
                 .sortedWith(
-                    compareByDescending<Pair<ExerciseItem, Int>> { it.second }
-                        .thenBy(String.CASE_INSENSITIVE_ORDER) { it.first.name }
+                    compareByDescending<LibraryMatch> { it.score }
+                        .thenBy(String.CASE_INSENSITIVE_ORDER) { it.item.name }
                 )
-                .map { it.first }
+                .map { it.item }
         }
+
+        private class LibraryMatch(val item: ExerciseItem, val score: Int, val allMatched: Boolean)
+
+        /**
+         * One- and two-letter words ("a", "on", "ez") prefix-match far too many words, so they
+         * only count when the whole query is that short.
+         */
+        private fun significantWords(words: List<String>): List<String> =
+            words.filter { it.length > 2 }.ifEmpty { words }
 
         /**
          * Muscle and equipment filters match the library's own words ("abdominals", "body only",

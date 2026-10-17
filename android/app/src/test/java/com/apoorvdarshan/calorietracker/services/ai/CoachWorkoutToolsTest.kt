@@ -486,11 +486,12 @@ class CoachWorkoutToolsTest {
         val payload = json(tools.execute("search_exercise_library", mapOf("query" to "chest press")))
         val exercises = payload.getAsJsonArray("exercises").map { it.asJsonObject }
 
+        // Leg Press only shares "press", so it is left out once other exercises match both words.
         assertEquals(
-            listOf("Hammer Strength Chest Press", "Leverage Chest Press", "Machine Bench Press", "Leg Press"),
+            listOf("Hammer Strength Chest Press", "Leverage Chest Press", "Machine Bench Press"),
             exercises.map { it["name"].asString }
         )
-        assertEquals(4, payload["total_matches"].asInt)
+        assertEquals(3, payload["total_matches"].asInt)
         assertEquals("user_exercise_hammer", exercises[0]["catalog_id"].asString)
         assertTrue(exercises[0]["is_custom"].asBoolean)
         assertFalse(exercises[1]["is_custom"].asBoolean)
@@ -529,6 +530,39 @@ class CoachWorkoutToolsTest {
     }
 
     @Test
+    fun exerciseLibrarySearchKeepsOnlyFullMatchesWhenThereAreAny() {
+        val library = listOf(
+            libraryItem("Incline_Dumbbell_Press", "Incline Dumbbell Press", "Dumbbell", listOf("Chest")),
+            libraryItem("Alternate_Incline_Dumbbell_Curl", "Alternate Incline Dumbbell Curl", "Dumbbell", listOf("Biceps"))
+        )
+        assertEquals(
+            listOf("Incline Dumbbell Press"),
+            CoachTools.rankedLibraryMatches(library, "incline press").map { it.name }
+        )
+        // No exercise matches every word, so the closest name matches are still offered.
+        assertEquals(
+            listOf("Incline Dumbbell Press", "Alternate Incline Dumbbell Curl"),
+            CoachTools.rankedLibraryMatches(library, "hammer strength incline press").map { it.name }
+        )
+    }
+
+    @Test
+    fun exerciseLibrarySearchIgnoresOneAndTwoLetterWordsUnlessTheQueryIsThatShort() {
+        val library = listOf(
+            libraryItem("Barbell_Curl", "Barbell Curl", "Barbell", listOf("Biceps")),
+            libraryItem("Ab_Roller", "Ab Roller", "Other", listOf("Abdominals")),
+            libraryItem("EZ-Bar_Curl", "EZ-Bar Curl", "E-Z Curl Bar", listOf("Biceps"))
+        )
+        // "a" used to prefix-match "Ab" and pull the ab roller into a curl search.
+        assertEquals(
+            listOf("Barbell Curl", "EZ-Bar Curl"),
+            CoachTools.rankedLibraryMatches(library, "a curl").map { it.name }
+        )
+        assertEquals("EZ-Bar Curl", CoachTools.rankedLibraryMatches(library, "ez bar curl").first().name)
+        assertEquals(listOf("Ab Roller"), CoachTools.rankedLibraryMatches(library, "ab").map { it.name })
+    }
+
+    @Test
     fun exerciseLibrarySearchMapsCommonFilterNamesAndReportsWhatFiltersRemoved() {
         val library = searchLibrary()
         assertEquals(listOf("Leg Press"), CoachTools.rankedLibraryMatches(library, "press", muscle = "legs").map { it.name })
@@ -549,7 +583,7 @@ class CoachWorkoutToolsTest {
             tools.execute("search_exercise_library", mapOf("query" to "leg press", "muscle" to "upper chest"))
         )
         assertEquals("Leg Press", ignored.getAsJsonArray("exercises")[0].asJsonObject["name"].asString)
-        assertEquals(4, ignored["total_matches"].asInt)
+        assertEquals(1, ignored["total_matches"].asInt)
         assertTrue(ignored["filters_ignored"].asBoolean)
         assertTrue(ignored["note"].asString.isNotEmpty())
         assertEquals("upper chest", ignored["muscle"].asString)

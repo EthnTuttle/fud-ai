@@ -599,18 +599,21 @@ struct CoachTools {
     /// Ranks library items for the coach search: whole-name matches first, then items whose
     /// name holds more of the query words, then muscle/equipment/category matches. Words match
     /// by prefix (with a simple plural strip) so "curls" finds "Curl" but "row" skips "Narrow".
+    /// When some items match every query word, only those are returned ("incline press" does
+    /// not list an incline curl); otherwise items matching any word by name are kept, so a
+    /// descriptive query ("hammer strength chest press") still finds the closest exercise.
+    /// Mirrors Android CoachTools.rankedLibraryMatches.
     static func rankedLibraryMatches(
         _ library: [ExerciseLibraryItem],
         query: String,
         muscle: String = "",
         equipment: String = ""
     ) -> [ExerciseLibraryItem] {
-        let terms = searchWords(query)
+        let terms = significantWords(searchWords(query))
         guard !terms.isEmpty else { return [] }
-        let normalizedQuery = terms.joined(separator: " ")
         let passesFilters = libraryFilter(muscle: muscle, equipment: equipment)
 
-        let scored = library.compactMap { item -> (item: ExerciseLibraryItem, score: Int)? in
+        let scored = library.compactMap { item -> (item: ExerciseLibraryItem, score: Int, allMatched: Bool)? in
             guard passesFilters(item) else { return nil }
             let muscleWords = searchWords((item.primaryMuscles + item.secondaryMuscles).joined(separator: " "))
             let nameWords = searchWords(item.name)
@@ -629,10 +632,11 @@ struct CoachTools {
             var score = nameHits * 10 + metadataHits * 3
             if allMatched { score += 20 }
             if nameHits == terms.count { score += 30 }
-            if nameWords.joined(separator: " ") == normalizedQuery { score += 100 }
-            return (item, score)
+            if significantWords(nameWords) == terms { score += 100 }
+            return (item, score, allMatched)
         }
-        return scored
+        let complete = scored.filter(\.allMatched)
+        return (complete.isEmpty ? scored : complete)
             .sorted { lhs, rhs in
                 if lhs.score != rhs.score { return lhs.score > rhs.score }
                 return lhs.item.name.localizedCaseInsensitiveCompare(rhs.item.name) == .orderedAscending
@@ -715,6 +719,13 @@ struct CoachTools {
 
     nonisolated private static func aliasTargets(_ key: String, _ aliases: [String: [String]]) -> [String]? {
         termVariants(key).lazy.compactMap { aliases[$0] }.first
+    }
+
+    /// One- and two-letter words ("a", "on", "ez") prefix-match far too many words, so they
+    /// only count when the whole query is that short.
+    nonisolated private static func significantWords(_ words: [String]) -> [String] {
+        let significant = words.filter { $0.count > 2 }
+        return significant.isEmpty ? words : significant
     }
 
     nonisolated private static func searchWords(_ text: String) -> [String] {
