@@ -22,7 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -107,6 +109,13 @@ fun FudAINavHost(
     // The expanded voice assistant dims the whole app, tab bar included; its compact
     // bubble sits above the bar.
     val voiceUi by container.voiceAssistant.ui.collectAsState()
+    // A workout rest can end on any tab; mark it with a haptic while the app is open.
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(container.workoutRestTimer) {
+        container.workoutRestTimer.completions.collect {
+            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        }
+    }
     // Null until the stored choice is read, so a hidden tab never flashes in the bar.
     val hiddenTabs by container.prefs.hiddenTabs.collectAsState(initial = null)
     val showTabs = selectedTabRoute != null && hiddenTabs != null && !analyzing &&

@@ -198,9 +198,16 @@ struct StrengthWorkoutPreferences: Codable, Equatable {
     var equipment: Set<String> = []
     var rpeScale: StrengthWorkoutRPEScale = .strength
     var strength = StrengthWorkoutNumbers()
+    /// Rest countdown after a logged set, in seconds (0 = off). Optional so
+    /// preferences saved before the rest timer still decode; nil uses the default.
+    var restTimerSeconds: Int?
+
+    /// The effective rest countdown, in seconds; 0 means off.
+    var restSeconds: Int { WorkoutRestTimerSetting.sanitized(restTimerSeconds) }
 
     mutating func sanitize() {
         frequencyDays = min(max(frequencyDays, 1), 7)
+        if let restTimerSeconds { self.restTimerSeconds = WorkoutRestTimerSetting.sanitized(restTimerSeconds) }
         additionalIssues = additionalIssues.trimmingCharacters(in: .whitespacesAndNewlines)
         customSplit = customSplit.trimmingCharacters(in: .whitespacesAndNewlines)
         if !issues.contains(.other) { additionalIssues = "" }

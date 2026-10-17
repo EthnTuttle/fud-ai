@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.LocalDining
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.SportsMartialArts
@@ -188,6 +189,7 @@ import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.WaterUnit
+import com.apoorvdarshan.calorietracker.models.WorkoutRestTimerSetting
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
 import com.apoorvdarshan.calorietracker.models.WorkoutSplit
 import com.apoorvdarshan.calorietracker.export.DiaryImportMode
@@ -250,7 +252,7 @@ private enum class SettingsSheet {
     SPEECH_FALLBACK_PROVIDER, SPEECH_FALLBACK_LANGUAGE, SPEECH_FALLBACK_KEY,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
     CALORIES, PROTEIN, CARBS, FAT, OPTIONAL_NUTRIENTS,
-    APPEARANCE, APP_LANGUAGE, WEEK_START, ENERGY_UNIT, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE
+    APPEARANCE, APP_LANGUAGE, WEEK_START, ENERGY_UNIT, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE, WORKOUT_REST
 }
 
 private fun energyUnitTitleRes(unit: EnergyUnit): Int =
@@ -1147,6 +1149,20 @@ fun SettingsScreen(
                 HorizontalDivider()
                 Text(
                     stringResource(R.string.settings_rpe_guide),
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                )
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_rest_timer),
+                    restTimerLabel(ui.workoutRestTimerSeconds),
+                    icon = Icons.Outlined.HourglassEmpty,
+                    inlineMenu = true
+                ) { sheet = SettingsSheet.WORKOUT_REST }
+                Text(
+                    stringResource(R.string.settings_rest_timer_footer),
                     fontSize = 12.sp,
                     lineHeight = 18.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
@@ -3005,6 +3021,13 @@ private fun SettingsSheets(
                     selected = { it == ui.workoutSplit },
                     onSelect = { vm.selectWorkoutSplit(it); onDismiss() }
                 )
+                SettingsSheet.WORKOUT_REST -> ListSheet(
+                    title = stringResource(R.string.settings_rest_timer),
+                    items = WorkoutRestTimerSetting.Options,
+                    label = { restTimerLabel(it) },
+                    selected = { it == ui.workoutRestTimerSeconds },
+                    onSelect = { vm.selectWorkoutRestTimer(it); onDismiss() }
+                )
                 SettingsSheet.WORKOUT_RPE -> ListSheet(
                     title = stringResource(R.string.settings_rpe_scale),
                     items = WorkoutRpeScale.entries,
@@ -3478,6 +3501,20 @@ private fun ThemeColorSwatch(themeColor: AppThemeColor, modifier: Modifier = Mod
             .clip(CircleShape)
             .background(Brush.linearGradient(listOf(themeColor.start, themeColor.end)))
     )
+}
+
+/** "Off", or the rest length in the app language's own units, such as "1 min, 30 sec". */
+@Composable
+private fun restTimerLabel(seconds: Int): String {
+    if (seconds <= 0) return stringResource(R.string.workout_rest_off)
+    val locale = LocalConfiguration.current.locales[0]
+    val measures = buildList {
+        if (seconds / 60 > 0) add(android.icu.util.Measure(seconds / 60, android.icu.util.MeasureUnit.MINUTE))
+        if (seconds % 60 > 0) add(android.icu.util.Measure(seconds % 60, android.icu.util.MeasureUnit.SECOND))
+    }
+    return android.icu.text.MeasureFormat
+        .getInstance(locale, android.icu.text.MeasureFormat.FormatWidth.SHORT)
+        .formatMeasures(*measures.toTypedArray())
 }
 
 @Composable

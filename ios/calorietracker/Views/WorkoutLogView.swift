@@ -91,6 +91,10 @@ struct WorkoutLogView: View {
     @State private var isTextSheetPresented = false
     @State private var workoutInputUsesVoice = false
     @State private var voiceAssistant = VoiceAssistantController.shared
+    @State private var restTimer = WorkoutRestTimerController.shared
+    @State private var isRoutinesSheetPresented = false
+    @State private var isSaveRoutinePresented = false
+    @State private var routineName = ""
     @State private var selectedDetailItem: ExerciseLibraryItem?
     @State private var historyRequest: WorkoutLogExerciseHistoryRequest?
 
@@ -145,6 +149,11 @@ struct WorkoutLogView: View {
 
     private var selectedDateKey: String {
         StrengthWorkoutStore.dateKey(for: selectedDate)
+    }
+
+    /// Rest runs only on today's log, and only while the rest timer is on.
+    private var isRestAvailable: Bool {
+        workoutStore.preferences.restSeconds > 0 && Calendar.current.isDateInToday(selectedDate)
     }
 
     private var isReordering: Bool {
@@ -349,7 +358,7 @@ struct WorkoutLogView: View {
                                         workoutStore.setTimerIntensity(intensity, exerciseID: exercise.id, on: selectedDate)
                                     },
                                     updateSetCount: { count in
-                                        workoutStore.setSetCount(count, exerciseID: exercise.id, on: selectedDate)
+                                        changeSetCount(count, exercise: exercise)
                                     },
                                     updateWeight: { setID, value in
                                         workoutStore.updateSet(
@@ -361,12 +370,7 @@ struct WorkoutLogView: View {
                                         )
                                     },
                                     updateReps: { setID, value in
-                                        workoutStore.updateSet(
-                                            exerciseID: exercise.id,
-                                            setID: setID,
-                                            on: selectedDate,
-                                            reps: value
-                                        )
+                                        logReps(value, setID: setID, exercise: exercise)
                                     },
                                     updateRPE: { setID, value in
                                         workoutStore.updateSet(
@@ -375,7 +379,11 @@ struct WorkoutLogView: View {
                                             on: selectedDate,
                                             rpe: value
                                         )
-                                    }
+                                    },
+                                    restingSetID: restTimer.timer?.exerciseID == exercise.id ? restTimer.timer?.setID : nil,
+                                    startRest: isRestAvailable ? { setID in
+                                        startRest(after: setID, in: exercise)
+                                    } : nil
                                 )
                                 .background {
                                     GeometryReader { geometry in
@@ -437,6 +445,22 @@ struct WorkoutLogView: View {
                 .listSectionSpacing(8)
                 .scrollDismissesKeyboard(.interactively)
                 .contentMargins(.bottom, 96, for: .scrollContent)
+                // Pinned below the navigation bar so it stays visible above the
+                // keyboard while the next set is being typed.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if let timer = restTimer.timer {
+                        WorkoutRestTimerBar(
+                            timer: timer,
+                            onExtend: { restTimer.extend() },
+                            onSkip: { restTimer.skip() }
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+                }
+                .animation(.snappy(duration: 0.25), value: restTimer.timer == nil)
                 .animation(.snappy, value: selectedDate)
                 .onPreferenceChange(WorkoutLogCardFramePreferenceKey.self) { frames in
                     workoutCardFrames = frames
@@ -531,6 +555,27 @@ struct WorkoutLogView: View {
             .sheet(isPresented: $isCreateExercisePresented) {
                 UserExerciseEditorView()
             }
+            .sheet(isPresented: $isRoutinesSheetPresented) {
+                WorkoutRoutinesSheet(
+                    onApply: { routine in
+                        workoutStore.applyRoutine(routine.id, to: selectedDate)
+                        isRoutinesSheetPresented = false
+                    },
+                    onClose: { isRoutinesSheetPresented = false }
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            }
+            .alert("Save Routine", isPresented: $isSaveRoutinePresented) {
+                TextField("Routine name", text: $routineName)
+                Button("Cancel", role: .cancel) {}
+                Button("Save") {
+                    workoutStore.saveRoutine(named: routineName, from: selectedDate)
+                }
+                .disabled(StrengthWorkoutRoutinePlanner.sanitizedName(routineName).isEmpty)
+            } message: {
+                Text("Saves this day's exercises with their planned sets, reps and weights.")
+            }
             .sheet(isPresented: $isCopySheetPresented) {
                 WorkoutLogCopySheet(
                     days: copyableDays,
@@ -591,6 +636,21 @@ struct WorkoutLogView: View {
                     isCopySheetPresented = true
                 } label: {
                     Label("Copy from day", systemImage: "calendar.badge.plus")
+                }
+
+                Button {
+                    isRoutinesSheetPresented = true
+                } label: {
+                    Label("Start from routine", systemImage: "list.bullet.rectangle.portrait")
+                }
+
+                if !selectedExercises.isEmpty {
+                    Button {
+                        routineName = ""
+                        isSaveRoutinePresented = true
+                    } label: {
+                        Label("Save as routine", systemImage: "square.and.arrow.down")
+                    }
                 }
 
                 if walkRunQuickLogEnabled {
@@ -675,6 +735,53 @@ struct WorkoutLogView: View {
 
     private func workoutCountText(_ count: Int) -> String {
         String(localized: "\(count) workouts")
+    }
+
+    /// Logging a set (its reps first filled in) on today's log starts the rest
+    /// countdown; clearing a logged set's reps and typing them again does not.
+    private func logReps(_ value: String, setID: UUID, exercise: StrengthPlannedExercise) {
+        let previousReps = currentReps(setID: setID, exerciseID: exercise.id)
+        workoutStore.updateSet(exerciseID: exercise.id, setID: setID, on: selectedDate, reps: value)
+        guard WorkoutRestTimer.shouldStart(
+            previousReps: previousReps,
+            newReps: currentReps(setID: setID, exerciseID: exercise.id),
+            restSeconds: workoutStore.preferences.restSeconds,
+            isToday: Calendar.current.isDateInToday(selectedDate),
+            alreadyRested: restTimer.hasRested(setID: setID)
+        ) else { return }
+        startRest(after: setID, in: exercise)
+    }
+
+    private func currentReps(setID: UUID, exerciseID: UUID) -> String {
+        selectedExercises.first { $0.id == exerciseID }?.sets.first { $0.id == setID }?.reps ?? ""
+    }
+
+    /// On today's log, adding a set with the stepper finishes the previous set
+    /// and starts its rest.
+    private func changeSetCount(_ count: Int, exercise: StrengthPlannedExercise) {
+        let before = currentSets(exerciseID: exercise.id)
+        workoutStore.setSetCount(count, exerciseID: exercise.id, on: selectedDate)
+        guard let setID = WorkoutRestTimer.setFinishedByAddingSets(
+            before: before,
+            after: currentSets(exerciseID: exercise.id),
+            restSeconds: workoutStore.preferences.restSeconds,
+            isToday: Calendar.current.isDateInToday(selectedDate),
+            running: restTimer.timer
+        ) else { return }
+        startRest(after: setID, in: exercise)
+    }
+
+    private func currentSets(exerciseID: UUID) -> [StrengthPlannedSet] {
+        selectedExercises.first { $0.id == exerciseID }?.sets ?? []
+    }
+
+    private func startRest(after setID: UUID, in exercise: StrengthPlannedExercise) {
+        restTimer.start(
+            exerciseID: exercise.id,
+            setID: setID,
+            exerciseName: exercise.name,
+            durationSeconds: workoutStore.preferences.restSeconds
+        )
     }
 
     private func changeDay(by delta: Int) {
@@ -1131,6 +1238,10 @@ private struct WorkoutLogExerciseCard: View {
     let updateWeight: (UUID, String) -> Void
     let updateReps: (UUID, String) -> Void
     let updateRPE: (UUID, String) -> Void
+    /// The set whose rest is counting down, when it belongs to this exercise.
+    var restingSetID: UUID? = nil
+    /// Nil when rest is unavailable (rest timer off, or not today's log).
+    var startRest: ((UUID) -> Void)? = nil
     @Environment(\.colorScheme) private var colorScheme
 
     private var isCardio: Bool { exercise.isCardio }
@@ -1285,7 +1396,9 @@ private struct WorkoutLogExerciseCard: View {
                                 focusedField: focusedField,
                                 updateWeight: { updateWeight(set.id, $0) },
                                 updateReps: { updateReps(set.id, $0) },
-                                updateRPE: { updateRPE(set.id, $0) }
+                                updateRPE: { updateRPE(set.id, $0) },
+                                isResting: restingSetID == set.id,
+                                startRest: startRest.map { start -> () -> Void in { start(set.id) } }
                             )
 
                             if index < exercise.sets.count - 1 {
@@ -1481,6 +1594,8 @@ private struct WorkoutLogSetRow: View {
     let updateWeight: (String) -> Void
     let updateReps: (String) -> Void
     let updateRPE: (String) -> Void
+    var isResting = false
+    var startRest: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 8) {
@@ -1517,6 +1632,10 @@ private struct WorkoutLogSetRow: View {
                 focusedField: focusedField
             )
             .frame(maxWidth: .infinity)
+
+            if let startRest {
+                WorkoutRestSetButton(setNumber: setIndex + 1, isResting: isResting, action: startRest)
+            }
         }
         .padding(.vertical, 7)
         .contentShape(Rectangle())

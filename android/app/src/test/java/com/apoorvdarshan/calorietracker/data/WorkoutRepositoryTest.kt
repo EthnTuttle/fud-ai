@@ -153,6 +153,33 @@ class WorkoutRepositoryTest {
     }
 
     @Test
+    fun steppingUpAfterALoggedSetRestsThatSetEachTime() = runBlocking {
+        val repository = WorkoutRepository(FakeWorkoutStateStore())
+        val today = LocalDate.of(2026, 10, 18)
+        repository.toggleExercise(exerciseItem(), today)
+        val exercise = repository.planNow(today).exercises.single()
+        repository.updateSet(exercise.id, exercise.sets.single().id, today, "60", WorkoutWeightUnit.KG, "8")
+
+        // What the workout log does when + is tapped: compare the sets before and after.
+        suspend fun restAfterAddingSet(): UUID? {
+            val before = repository.planNow(today).exercises.single().sets
+            repository.setSetCount(before.size + 1, exercise.id, today)
+            val after = repository.planNow(today).exercises.single().sets
+            return com.apoorvdarshan.calorietracker.models.WorkoutRestTimer.setFinishedByAddingSets(
+                before, after, restSeconds = 90, isToday = true, running = null
+            )
+        }
+
+        val first = repository.planNow(today).exercises.single().sets.single()
+        assertEquals(first.id, restAfterAddingSet())
+        // Set 2 arrived with set 1's reps, so adding set 3 finishes set 2 without any typing.
+        val second = repository.planNow(today).exercises.single().sets[1]
+        assertEquals("8", second.reps)
+        assertEquals(second.id, restAfterAddingSet())
+        assertEquals(3, repository.planNow(today).exercises.single().sets.size)
+    }
+
+    @Test
     fun copyPlanCanCarrySetDetailsWhenRequested() = runBlocking {
         val store = FakeWorkoutStateStore()
         val repository = WorkoutRepository(store)
