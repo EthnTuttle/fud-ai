@@ -375,6 +375,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Szczegóły jedzenia</string>
     <string name="sheet_serving">Porcja</string>
+    <string name="recipe_servings_title">Porcje w przepisie</string>
+    <string name="recipe_servings_footer">Ustaw to po dodaniu wszystkich składników. Fud AI dzieli przepis, więc zapisujesz 1 porcję, a Zapisane posiłki zachowują tę wielkość porcji.</string>
+    <string name="cd_recipe_servings_fewer">Mniej porcji</string>
+    <string name="cd_recipe_servings_more">Więcej porcji</string>
     <string name="sheet_nutrition">Odżywianie</string>
     <string name="sheet_meal">Posiłek</string>
     <string name="sheet_more_nutrition">Więcej wartości odżywczych</string>

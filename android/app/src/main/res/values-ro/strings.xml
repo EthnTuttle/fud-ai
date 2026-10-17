@@ -373,6 +373,10 @@
     <!-- Food sheets shared primitives -->
     <string name="sheet_food_details">Detalii aliment</string>
     <string name="sheet_serving">Porție</string>
+    <string name="recipe_servings_title">Porții în rețetă</string>
+    <string name="recipe_servings_footer">Setează asta după ce adaugi toate ingredientele. Fud AI împarte rețeta ca să înregistrezi 1 porție, iar Mesele salvate păstrează această mărime a porției.</string>
+    <string name="cd_recipe_servings_fewer">Mai puține porții</string>
+    <string name="cd_recipe_servings_more">Mai multe porții</string>
     <string name="sheet_nutrition">Nutriție</string>
     <string name="sheet_meal">Masă</string>
     <string name="sheet_more_nutrition">Mai multe informații nutriționale</string>

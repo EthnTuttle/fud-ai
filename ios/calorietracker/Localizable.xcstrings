@@ -91226,6 +91226,230 @@
           }
         }
       }
+    },
+    "Servings in recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدد حصص الوصفة"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reseptdəki porsiyalar"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porce v receptu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portionen im Rezept"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porciones de la receta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portions de la recette"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "रेसिपी में सर्विंग"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porzioni della ricetta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レシピの人数分"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "레시피 인분 수"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porties in recept"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porcje w przepisie"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porções da receita"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porții în rețetă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порций в рецепте"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarifteki porsiyon sayısı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порцій у рецепті"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "食谱份数"
+          }
+        }
+      }
+    },
+    "Set this after adding every ingredient. Fud AI splits the recipe so you log 1 serving, and Saved Meals keep that serving size.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضبط هذا بعد إضافة كل المكونات. يقسّم Fud AI الوصفة لتسجّل حصة واحدة، وتحتفظ الوجبات المحفوظة بحجم تلك الحصة."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu bütün inqrediyentləri əlavə etdikdən sonra təyin edin. Fud AI resepti bölür ki, 1 porsiya qeyd edəsiniz, Saxlanılmış Yeməklər isə həmin porsiya ölçüsünü yadda saxlayır."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nastavte to po přidání všech ingrediencí. Fud AI recept rozdělí, abyste zapsali 1 porci, a Uložená jídla si tuto velikost porce ponechají."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lege das fest, nachdem du alle Zutaten hinzugefügt hast. Fud AI teilt das Rezept auf, sodass du 1 Portion einträgst, und Gespeicherte Mahlzeiten behalten diese Portionsgröße."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configúralo después de añadir todos los ingredientes. Fud AI divide la receta para que registres 1 porción, y Comidas guardadas conserva ese tamaño de porción."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglez-le après avoir ajouté tous les ingrédients. Fud AI divise la recette pour que vous enregistriez 1 portion, et les Repas enregistrés conservent cette taille de portion."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सभी सामग्री जोड़ने के बाद इसे सेट करें। Fud AI रेसिपी को बाँट देता है ताकि आप 1 सर्विंग लॉग करें, और सहेजे गए भोजन उस सर्विंग का आकार याद रखते हैं।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostalo dopo aver aggiunto tutti gli ingredienti. Fud AI divide la ricetta così registri 1 porzione, e i Pasti salvati mantengono quella dimensione della porzione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべての材料を追加してから設定してください。Fud AIがレシピを分けるので1人分だけを記録でき、保存した食事にもその分量が残ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 재료를 추가한 뒤 설정하세요. Fud AI가 레시피를 나눠 1인분을 기록하고, 저장된 식사에도 그 1인분 크기가 유지됩니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel dit in nadat je alle ingrediënten hebt toegevoegd. Fud AI verdeelt het recept zodat je 1 portie logt, en Opgeslagen maaltijden onthouden die portiegrootte."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustaw to po dodaniu wszystkich składników. Fud AI dzieli przepis, więc zapisujesz 1 porcję, a Zapisane posiłki zachowują tę wielkość porcji."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defina isto depois de adicionar todos os ingredientes. O Fud AI divide a receita para você registrar 1 porção, e as Refeições salvas mantêm esse tamanho de porção."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setează asta după ce adaugi toate ingredientele. Fud AI împarte rețeta ca să înregistrezi 1 porție, iar Mesele salvate păstrează această mărime a porției."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите это после добавления всех ингредиентов. Fud AI разделит рецепт, чтобы вы записали 1 порцию, а в сохранённых блюдах останется этот размер порции."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu tüm malzemeleri ekledikten sonra ayarlayın. Fud AI tarifi böler, böylece 1 porsiyon kaydedersiniz; Kaydedilen öğünler de bu porsiyon boyutunu korur."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажіть це після додавання всіх інгредієнтів. Fud AI розділить рецепт, щоб ви записали 1 порцію, а збережені страви збережуть цей розмір порції."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在添加所有食材后再设置。Fud AI 会拆分食谱，让你记录 1 份，已保存的餐食也会保留这个份量。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

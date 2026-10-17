@@ -76,6 +76,7 @@ import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
 import com.apoorvdarshan.calorietracker.models.ProductInfoField
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
@@ -135,30 +136,33 @@ fun EditFoodEntrySheet(
 
     val servingSizeIsKnown = currentBaseEntry.hasKnownServingSize
     val baseServing = currentBaseEntry.reviewServingReference
-    val servingUnitOptions = remember(currentBaseEntry.servingUnitOptions, baseServing, servingSizeIsKnown) {
+    val entryServingUnitOptions = remember(currentBaseEntry.servingUnitOptions, baseServing, servingSizeIsKnown) {
         if (servingSizeIsKnown) {
             ServingUnitOption.normalizedOptions(currentBaseEntry.servingUnitOptions, baseServing)
         } else {
             currentBaseEntry.reviewServingUnitOptions
         }
     }
+    // The sheet can swap in a recipe "serving" unit (#458) without rebuilding the entry.
+    var servingUnitOptions by remember(currentBaseEntry, entryServingUnitOptions) { mutableStateOf(entryServingUnitOptions) }
+    var recipeServings by remember(currentBaseEntry) { mutableStateOf(1) }
     var name by remember(currentBaseEntry) { mutableStateOf(currentBaseEntry.name) }
     val initialServingUnit = if (servingSizeIsKnown && preferGramsByDefault) {
         ServingUnitOption.grams.unit
     } else {
         currentBaseEntry.reviewSelectedServingUnit
     }
-    var selectedServingUnitId by remember(currentBaseEntry, servingUnitOptions, preferGramsByDefault) {
-        mutableStateOf(ServingUnitOption.initialUnitId(initialServingUnit, servingUnitOptions))
+    var selectedServingUnitId by remember(currentBaseEntry, entryServingUnitOptions, preferGramsByDefault) {
+        mutableStateOf(ServingUnitOption.initialUnitId(initialServingUnit, entryServingUnitOptions))
     }
     var servingGrams by remember(currentBaseEntry, baseServing) { mutableStateOf(baseServing) }
-    var servingQuantityText by remember(currentBaseEntry, servingUnitOptions, preferGramsByDefault) {
+    var servingQuantityText by remember(currentBaseEntry, entryServingUnitOptions, preferGramsByDefault) {
         mutableStateOf(
             ServingUnitOption.initialQuantityText(
                 totalGrams = baseServing,
                 selectedUnitId = selectedServingUnitId,
                 selectedQuantity = currentBaseEntry.reviewSelectedServingQuantity,
-                options = servingUnitOptions
+                options = entryServingUnitOptions
             )
         )
     }
@@ -196,6 +200,14 @@ fun EditFoodEntrySheet(
         .ingredients.map { it.scaled(scale) }
     fun applyIngredientChanges(displayedIngredients: List<MealIngredient>) {
         currentBaseEntry = currentBaseEntry.applyingIngredientChanges(displayedIngredients)
+    }
+    fun applyRecipeServings(servings: Int) {
+        val split = RecipeServings.split(servingUnitOptions, baseServing, servings)
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitId = split.selectedUnitId
+        servingGrams = split.servingGrams
+        servingQuantityText = split.quantityText
     }
 
     fun buildUpdated(): FoodEntry = currentBaseEntry.copy(
@@ -580,7 +592,11 @@ fun EditFoodEntrySheet(
                                 )
                             }
                         )
-                    }
+                    },
+                    recipeServings = recipeServings.takeIf {
+                        RecipeServings.isAvailable(currentBaseEntry.ingredients.size, baseServing, servingSizeIsKnown)
+                    },
+                    onRecipeServingsChange = { applyRecipeServings(it) }
                 )
             }
 

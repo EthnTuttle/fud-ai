@@ -74,6 +74,7 @@ import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.MealIngredient
 import com.apoorvdarshan.calorietracker.models.MealMicronutrientSnapshot
 import com.apoorvdarshan.calorietracker.models.ProductInfoField
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.ServingAmountExpression
 import com.apoorvdarshan.calorietracker.models.SupplementalNutrient
@@ -155,12 +156,12 @@ fun FoodResultSheet(
     } else {
         analysis.selectedServingUnit
     }
-    var selectedServingUnitId by rememberSaveable(analysis, servingUnitOptions, preferGramsByDefault) {
+    var selectedServingUnitId by rememberSaveable(analysis, preferGramsByDefault) {
         mutableStateOf(ServingUnitOption.initialUnitId(initialServingUnit, servingUnitOptions))
     }
     var baseServingGrams by rememberSaveable(analysis) { mutableStateOf(analysis.servingSizeGrams) }
     var servingGrams by rememberSaveable(analysis) { mutableStateOf(analysis.servingSizeGrams) }
-    var servingQuantityText by rememberSaveable(analysis, servingUnitOptions, preferGramsByDefault) {
+    var servingQuantityText by rememberSaveable(analysis, preferGramsByDefault) {
         mutableStateOf(
             ServingUnitOption.initialQuantityText(
                 totalGrams = analysis.servingSizeGrams,
@@ -225,6 +226,7 @@ fun FoodResultSheet(
     var editableFolate by rememberSaveable(analysis) { mutableStateOf(analysis.folate) }
     var editableOmega3 by rememberSaveable(analysis) { mutableStateOf(analysis.omega3) }
     var editableIngredients by rememberSaveable(analysis, stateSaver = foodDraftSaver<List<MealIngredient>>()) { mutableStateOf(analysis.ingredients) }
+    var recipeServings by rememberSaveable(analysis) { mutableStateOf(1) }
     var ingredientEditor by rememberSaveable(stateSaver = foodDraftSaver<IngredientEditorTarget?>()) { mutableStateOf<IngredientEditorTarget?>(null) }
     var previewPhotoIndex by remember { mutableStateOf<Int?>(null) }
     var viewerBitmaps by remember { mutableStateOf<List<android.graphics.Bitmap>?>(null) }
@@ -332,7 +334,17 @@ fun FoodResultSheet(
             selectedServingUnitId = ServingUnitOption.grams.unit
             servingUnitOptions = emptyList()
             servingSizeIsKnown = true
+            // The edited list is now the whole meal again, so any split is gone.
+            recipeServings = 1
         }
+    }
+    fun applyRecipeServings(servings: Int) {
+        val split = RecipeServings.split(servingUnitOptions, baseServingGrams, servings)
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitId = split.selectedUnitId
+        servingGrams = split.servingGrams
+        servingQuantityText = split.quantityText
     }
     fun editedAnalysis() = analysis.copy(
         name = name.trim().ifEmpty { analysis.name },
@@ -670,7 +682,11 @@ fun FoodResultSheet(
                                 )
                             }
                         )
-                    }
+                    },
+                    recipeServings = recipeServings.takeIf {
+                        RecipeServings.isAvailable(editableIngredients.size, baseServingGrams, servingSizeIsKnown)
+                    },
+                    onRecipeServingsChange = { applyRecipeServings(it) }
                 )
             }
 

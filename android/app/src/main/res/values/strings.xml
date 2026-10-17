@@ -1307,6 +1307,10 @@
     <string name="ingredients_remove">Remove</string>
     <string name="ingredients_weight">Weight</string>
     <string name="ingredients_footer">Ingredient changes update the meal’s calorie and macro totals automatically.</string>
+    <string name="recipe_servings_title">Servings in recipe</string>
+    <string name="recipe_servings_footer">Set this after adding every ingredient. Fud AI splits the recipe so you log 1 serving, and Saved Meals keep that serving size.</string>
+    <string name="cd_recipe_servings_fewer">Fewer servings</string>
+    <string name="cd_recipe_servings_more">More servings</string>
     <string name="combine_action">Combine</string>
     <string name="combine_into_meal">Combine into Meal</string>
     <string name="combine_selected_count">%1$d selected</string>

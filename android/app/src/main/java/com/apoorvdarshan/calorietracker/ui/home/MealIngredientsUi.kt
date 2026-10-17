@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +51,7 @@ import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
 import kotlin.math.roundToInt
 import com.apoorvdarshan.calorietracker.models.IngredientPortion
 import com.apoorvdarshan.calorietracker.models.MealIngredient
+import com.apoorvdarshan.calorietracker.models.RecipeServings
 import com.apoorvdarshan.calorietracker.ui.theme.AppColors
 import kotlinx.serialization.Serializable
 
@@ -64,7 +67,10 @@ internal fun MealIngredientsCard(
     onEdit: (Int) -> Unit,
     onAdd: () -> Unit = {},
     addMenu: (@Composable () -> Unit)? = null,
-    imageStore: FoodImageStore? = null
+    imageStore: FoodImageStore? = null,
+    /** "Servings in recipe" value; null hides the row (#458). */
+    recipeServings: Int? = null,
+    onRecipeServingsChange: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val store = imageStore ?: remember(context) {
@@ -130,7 +136,71 @@ internal fun MealIngredientsCard(
         } else {
             MealIngredientsAddRow(onClick = onAdd)
         }
+        if (recipeServings != null) {
+            SheetHairline()
+            RecipeServingsRow(recipeServings, onRecipeServingsChange)
+        }
     }
+}
+
+@Composable
+private fun RecipeServingsRow(servings: Int, onChange: (Int) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.recipe_servings_title),
+                fontSize = 16.sp,
+                modifier = Modifier.weight(1f)
+            )
+            RecipeServingsStepButton(
+                icon = Icons.Filled.Remove,
+                contentDescription = stringResource(R.string.cd_recipe_servings_fewer),
+                enabled = servings > RecipeServings.MIN,
+                onClick = { onChange(servings - 1) }
+            )
+            Text(
+                servings.toString(),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+            RecipeServingsStepButton(
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.cd_recipe_servings_more),
+                enabled = servings < RecipeServings.MAX,
+                onClick = { onChange(servings + 1) }
+            )
+        }
+        Text(
+            stringResource(R.string.recipe_servings_footer),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+        )
+    }
+}
+
+@Composable
+private fun RecipeServingsStepButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    Icon(
+        icon,
+        contentDescription = contentDescription,
+        modifier = Modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(4.dp),
+        tint = AppColors.Calorie.copy(alpha = if (enabled) 1f else 0.35f)
+    )
 }
 
 @Composable

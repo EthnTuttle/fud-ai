@@ -61,6 +61,7 @@ struct FoodResultView: View {
     @State private var editableFolate: Double?
     @State private var editableOmega3: Double?
     @State private var editableIngredients: [MealIngredient]
+    @State private var recipeServings = 1
     @State private var ingredientEditor: IngredientEditorTarget?
     @State private var showWhatIfSheet = false
     @State private var imagePreview: FullScreenImagePreview?
@@ -379,6 +380,31 @@ struct FoodResultView: View {
         selectedServingUnitID = ServingUnitOption.grams.unit
         servingUnitOptions = []
         servingSizeIsKnown = true
+        // The edited list is now the whole meal again, so any split is gone.
+        recipeServings = 1
+    }
+
+    /// Shown only for a real ingredient breakdown with a known total mass (#458).
+    private var recipeServingsBinding: Binding<Int>? {
+        guard RecipeServings.isAvailable(
+            ingredientCount: editableIngredients.count,
+            totalGrams: baseServingSizeGrams,
+            servingSizeIsKnown: servingSizeIsKnown
+        ) else { return nil }
+        return Binding(get: { recipeServings }, set: applyRecipeServings)
+    }
+
+    private func applyRecipeServings(_ servings: Int) {
+        let split = RecipeServings.split(
+            options: servingUnitOptions,
+            totalGrams: baseServingSizeGrams,
+            servings: servings
+        )
+        recipeServings = split.servings
+        servingUnitOptions = split.options
+        selectedServingUnitID = split.selectedUnitID
+        servingSizeGrams = split.servingSizeGrams
+        servingSizeText = split.quantityText
     }
 
     var body: some View {
@@ -550,7 +576,8 @@ struct FoodResultView: View {
                                     applyIngredientChanges(scaledIngredients + [ingredient])
                                 }
                             )
-                        )
+                        ),
+                        recipeServings: recipeServingsBinding
                     )
 
                     Section {
@@ -771,6 +798,8 @@ struct MealIngredientsSection: View {
     let onEdit: (Int) -> Void
     var onAdd: (() -> Void)? = nil
     var addMenu: AnyView? = nil
+    /// "Servings in recipe" stepper; nil hides it (#458).
+    var recipeServings: Binding<Int>? = nil
 
     var body: some View {
         Section {
@@ -829,10 +858,27 @@ struct MealIngredientsSection: View {
                 }
                 .tint(AppColors.calorie)
             }
+
+            if let recipeServings {
+                Stepper(value: recipeServings, in: RecipeServings.range) {
+                    HStack {
+                        Text("Servings in recipe")
+                        Spacer()
+                        Text(String(recipeServings.wrappedValue))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
         } header: {
             Text("Ingredients")
         } footer: {
-            Text("Ingredient changes update the meal's calorie and macro totals automatically.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Ingredient changes update the meal's calorie and macro totals automatically.")
+                if recipeServings != nil {
+                    Text("Set this after adding every ingredient. Fud AI splits the recipe so you log 1 serving, and Saved Meals keep that serving size.")
+                }
+            }
         }
     }
 

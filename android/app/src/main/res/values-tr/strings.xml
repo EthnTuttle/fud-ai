@@ -1292,6 +1292,10 @@
     <string name="ingredients_remove">Kaldır</string>
     <string name="ingredients_weight">Ağırlık</string>
     <string name="ingredients_footer">Malzeme değişiklikleri, öğünün kalori ve makro toplamlarını otomatik olarak günceller.</string>
+    <string name="recipe_servings_title">Tarifteki porsiyon sayısı</string>
+    <string name="recipe_servings_footer">Bunu tüm malzemeleri ekledikten sonra ayarlayın. Fud AI tarifi böler, böylece 1 porsiyon kaydedersiniz; Kaydedilen öğünler de bu porsiyon boyutunu korur.</string>
+    <string name="cd_recipe_servings_fewer">Daha az porsiyon</string>
+    <string name="cd_recipe_servings_more">Daha fazla porsiyon</string>
     <string name="combine_action">Birleştir</string>
     <string name="combine_into_meal">Öğün Olarak Birleştir</string>
     <string name="combine_selected_count">%1$d seçildi</string>
