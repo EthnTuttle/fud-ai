@@ -10,8 +10,9 @@ class WeightStore {
     static let storageKey = "weightEntries"
     /// Not prefixed `healthKit`, so iCloud backups carry it: a restore onto a
     /// new phone re-runs the Apple Health import and must still skip deletions.
+    /// Never trimmed: each tombstone is one deletion the user made by hand
+    /// (well under 100 bytes), and dropping one lets its reading come back.
     static let deletionTombstonesKey = "weightDeletionTombstones"
-    static let maxDeletionTombstones = 1000
     private let observesExternalChanges: Bool
     private let defaults: UserDefaults
     private let entriesBlob: PersistedBlobGuard
@@ -129,9 +130,6 @@ class WeightStore {
         tombstones.append(contentsOf: deleted.map {
             WeightDeletionTombstone(entryID: $0.id, date: $0.date, weightKg: $0.weightKg)
         })
-        if tombstones.count > Self.maxDeletionTombstones {
-            tombstones.removeFirst(tombstones.count - Self.maxDeletionTombstones)
-        }
         guard let data = try? JSONEncoder().encode(tombstones) else { return }
         defaults.set(data, forKey: Self.deletionTombstonesKey)
     }
@@ -164,24 +162,35 @@ class WeightStore {
     /// samples already exist there. Saves + syncs profile once at the end.
     /// Samples whose id is already in the store (a restore that raced a
     /// live observer write, or the same batch delivered twice) are skipped so
-    /// the list never accumulates duplicate ids.
-    func importExternalEntries(_ external: [WeightEntry]) {
-        guard !isPersistenceBlocked else { return }
+    /// the list never accumulates duplicate ids. Returns false when the batch
+    /// could not be saved (persistence blocked, or the save failed and was
+    /// rolled back), so a caller tracking its progress can retry it.
+    @discardableResult
+    func importExternalEntries(_ external: [WeightEntry]) -> Bool {
+        guard !isPersistenceBlocked else { return false }
         var seen = Set(entries.map(\.id))
         let fresh = external.filter { seen.insert($0.id).inserted }
-        guard !fresh.isEmpty else { return }
+        guard !fresh.isEmpty else { return true }
         entries.append(contentsOf: fresh)
-        saveEntries()
+        guard saveEntries() else {
+            entries.removeLast(fresh.count)
+            return false
+        }
         syncProfileWeightToLatest()
+        return true
     }
 
     /// Imports Apple Health readings. Skips readings already in the history
     /// (same day, same value), readings the user deleted here, and Fud AI's own
     /// samples unless the history is empty (reinstall / new phone restore).
     /// Decided against the live entries so overlapping imports can't duplicate.
-    func importHealthSamples(_ samples: [WeightHealthSample], restoreOwnSamplesIfEmpty: Bool) {
-        guard !isPersistenceBlocked, !samples.isEmpty else { return }
-        importExternalEntries(Self.healthImportCandidates(
+    /// Returns false when the samples were not saved; HealthKitManager then
+    /// keeps its import anchor (or backfill version) so they arrive again.
+    @discardableResult
+    func importHealthSamples(_ samples: [WeightHealthSample], restoreOwnSamplesIfEmpty: Bool) -> Bool {
+        guard !isPersistenceBlocked else { return false }
+        guard !samples.isEmpty else { return true }
+        return importExternalEntries(Self.healthImportCandidates(
             samples,
             existing: entries,
             tombstones: deletionTombstones,
@@ -241,7 +250,8 @@ class WeightStore {
         return order.compactMap { byID[$0] }
     }
 
-    private func saveEntries() {
+    @discardableResult
+    private func saveEntries() -> Bool {
         entriesBlob.save(entries)
     }
 

@@ -796,10 +796,12 @@ class HealthKitManager {
     /// deletion tombstones and own-sample restore are decided by
     /// WeightStore.importHealthSamples against the live entries, so re-running
     /// this — or overlapping it with the incremental import — never creates
-    /// duplicates. Stamps weightBackfillVersionKey on success so subsequent
-    /// scene-active wire-ups skip it.
+    /// duplicates. Stamps weightBackfillVersionKey once the store accepted the
+    /// samples so subsequent scene-active wire-ups skip it. `importSamples`
+    /// returns false when the weight store could not save them (blocked
+    /// persistence); the version then stays unstamped and the backfill retries.
     func backfillWeightFromHealthKitIfNeeded(
-        importSamples: @escaping ([WeightHealthSample]) -> Void
+        importSamples: @escaping ([WeightHealthSample]) -> Bool
     ) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         let backfilled = UserDefaults.standard.integer(forKey: weightBackfillVersionKey)
@@ -813,7 +815,8 @@ class HealthKitManager {
             // instead of being permanently burned by one bad run.
             guard let samples = await fetchAllSamples(.bodyMass, unit: .gramUnit(with: .kilo), fudaiMetadataKey: "fudai_weight_id") else { return }
             let weightSamples = samples.map { WeightHealthSample(weightKg: $0.value, date: $0.date, fudaiID: $0.fudaiID) }
-            await MainActor.run { importSamples(weightSamples) }
+            let imported = await MainActor.run { importSamples(weightSamples) }
+            guard imported else { return }
             UserDefaults.standard.set(typesVersion, forKey: weightBackfillVersionKey)
         }
     }
@@ -844,8 +847,10 @@ class HealthKitManager {
     /// see `WeightChangesImport`; `isFullHistory` tells the caller so own
     /// samples are only restored from a full scan, like the backfill. Calls
     /// arriving mid-run queue one follow-up run instead of being dropped.
+    /// `importSamples` returns false when the weight store could not save the
+    /// samples; the anchor then stays put so the next run delivers them again.
     func importWeightChangesFromHealthKit(
-        importSamples: @escaping (_ samples: [WeightHealthSample], _ isFullHistory: Bool) -> Void
+        importSamples: @escaping (_ samples: [WeightHealthSample], _ isFullHistory: Bool) -> Bool
     ) {
         guard UserDefaults.standard.bool(forKey: "healthKitEnabled") else { return }
         guard !isImportingWeightChanges else {
@@ -869,7 +874,9 @@ class HealthKitManager {
                     let weightSamples = result.samples.map {
                         WeightHealthSample(weightKg: $0.value, date: $0.date, fudaiID: $0.fudaiID)
                     }
-                    await MainActor.run { importSamples(weightSamples, mode == .fullHistory) }
+                    let imported = await MainActor.run { importSamples(weightSamples, mode == .fullHistory) }
+                    // Advancing the anchor past samples the store refused would lose them.
+                    guard imported else { return }
                 }
                 saveWeightImportAnchor(result.anchor)
             } while weightChangesImportRequested

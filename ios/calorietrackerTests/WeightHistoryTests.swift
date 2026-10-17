@@ -89,6 +89,59 @@ struct WeightHistoryTests {
         }
     }
 
+    @Test func oldDeletionsStayRememberedAfterMoreThanAThousandDeletions() throws {
+        try withStore { store, defaults in
+            // A thousand earlier deletions, the first of a reading still in Apple Health.
+            let base = Date(timeIntervalSince1970: 1_700_000_000)
+            let first = WeightDeletionTombstone(entryID: UUID(), date: base, weightKg: 90)
+            let later = (1..<1_000).map {
+                WeightDeletionTombstone(entryID: UUID(), date: base.addingTimeInterval(Double($0) * 86_400), weightKg: 80)
+            }
+            defaults.set(try JSONEncoder().encode([first] + later), forKey: WeightStore.deletionTombstonesKey)
+
+            let entry = WeightEntry(date: base.addingTimeInterval(86_400 * 1_200), weightKg: 75)
+            store.replaceAllEntries([entry])
+            store.deleteEntry(entry)
+
+            #expect(store.deletionTombstones.count == 1_001)
+            #expect(store.deletionTombstones.first == first)
+            // A full-history import (new phone, types-version bump) must still skip it.
+            store.importHealthSamples(
+                [WeightHealthSample(weightKg: 90, date: base, fudaiID: nil)],
+                restoreOwnSamplesIfEmpty: true
+            )
+            #expect(store.entries.isEmpty)
+        }
+    }
+
+    @Test func healthImportReportsSamplesABlockedStoreCouldNotSave() throws {
+        // HealthKitManager only advances its anchor (or stamps the backfill) when
+        // the store reports the samples saved, so a blocked store gets them again.
+        let sample = WeightHealthSample(weightKg: 81.4, date: Date(timeIntervalSince1970: 1_790_000_000), fudaiID: nil)
+        let suite = "WeightHistoryTests.blocked.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(Data("broken".utf8), forKey: WeightStore.storageKey)
+        let blocked = WeightStore(
+            observesExternalChanges: false,
+            defaults: defaults,
+            corruptBackupDirectory: URL(fileURLWithPath: "/dev/null/cannot-create")
+        )
+
+        #expect(blocked.isPersistenceBlocked)
+        #expect(!blocked.importHealthSamples([sample], restoreOwnSamplesIfEmpty: false))
+        #expect(!blocked.importHealthSamples([], restoreOwnSamplesIfEmpty: false))
+        #expect(blocked.entries.isEmpty)
+
+        try withStore { store, _ in
+            #expect(store.importHealthSamples([sample], restoreOwnSamplesIfEmpty: false))
+            // Nothing new (already logged) or nothing at all still counts as handled.
+            #expect(store.importHealthSamples([sample], restoreOwnSamplesIfEmpty: false))
+            #expect(store.importHealthSamples([], restoreOwnSamplesIfEmpty: false))
+            #expect(store.entries.map(\.weightKg) == [81.4])
+        }
+    }
+
     @Test func deletedOwnSampleIsNotRestoredAfterReinstall() throws {
         try withStore { store, _ in
             let deleted = WeightEntry(date: Date(timeIntervalSince1970: 1_790_000_000), weightKg: 72)
