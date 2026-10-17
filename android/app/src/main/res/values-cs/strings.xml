@@ -528,6 +528,7 @@
     <string name="settings_section_personal">Osobní údaje</string>
     <string name="settings_section_goals">Cíle a výživa</string>
     <string name="settings_section_app">Nastavení aplikace</string>
+    <string name="settings_section_tracking_notifications">Sledování a oznámení</string>
     <string name="settings_section_ai">AI poskytovatel</string>
     <string name="settings_section_speech">Převod řeči na text</string>
     <string name="settings_section_health">Zdraví a data</string>

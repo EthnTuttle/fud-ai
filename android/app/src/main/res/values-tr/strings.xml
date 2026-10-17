@@ -664,7 +664,7 @@
     <string name="settings_section_goals">Hedefler ve Beslenme</string>
     <string name="settings_section_daily_targets">Günlük Hedefler</string>
     <string name="settings_section_app">Uygulama Ayarları</string>
-    <string name="settings_section_tracking_reminders">Takip ve Hatırlatmalar</string>
+    <string name="settings_section_tracking_notifications">Takip ve Bildirimler</string>
     <string name="settings_category_ai_providers">Yapay Zeka Sağlayıcıları ve Yedekler</string>
     <string name="settings_section_ai_voice">Yapay Zeka ve Ses</string>
     <string name="settings_section_ai">Birincil Yapay Zeka</string>

@@ -671,7 +671,7 @@
     <string name="settings_section_goals">Goals &amp; Nutrition</string>
     <string name="settings_section_daily_targets">Daily Targets</string>
     <string name="settings_section_app">App Settings</string>
-    <string name="settings_section_tracking_reminders">Tracking &amp; Reminders</string>
+    <string name="settings_section_tracking_notifications">Tracking &amp; Notifications</string>
     <string name="settings_category_ai_providers">AI Providers &amp; Fallbacks</string>
     <string name="settings_section_ai_voice">AI &amp; Voice</string>
     <string name="settings_section_ai">Primary AI</string>
