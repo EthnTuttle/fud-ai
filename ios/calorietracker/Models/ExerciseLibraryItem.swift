@@ -12,8 +12,8 @@ struct ExerciseLibraryItem: Identifiable, Hashable {
     let primaryMuscles: [String]
     let secondaryMuscles: [String]
     let instructions: [String]
-    /// Precomputed once so library filtering does not rebuild haystacks every keystroke.
-    let searchableText: String
+    /// Precomputed once so library filtering does not re-tokenize items every keystroke.
+    let searchIndex: ExerciseSearchIndex
 
     init(
         id: String,
@@ -38,18 +38,10 @@ struct ExerciseLibraryItem: Identifiable, Hashable {
         self.rawEquipment = Self.metadataTitle(rawEquipment)
         self.primaryMuscles = Self.metadataTitles(primaryMuscles)
         self.secondaryMuscles = Self.metadataTitles(secondaryMuscles)
-        let cleanedInstructions = instructions.compactMap { $0.trimmed.nilIfEmpty }
-        self.instructions = cleanedInstructions
-        self.searchableText = Self.buildSearchableText(
+        self.instructions = instructions.compactMap { $0.trimmed.nilIfEmpty }
+        self.searchIndex = ExerciseSearchIndex(
             name: name,
-            rawLevel: self.rawLevel,
-            force: self.force,
-            mechanic: self.mechanic,
-            category: self.category,
-            rawEquipment: self.rawEquipment,
-            primaryMuscles: self.primaryMuscles,
-            secondaryMuscles: self.secondaryMuscles,
-            instructions: cleanedInstructions
+            metadata: [self.rawEquipment, self.category].filter { $0 != "Unspecified" } + self.primaryMuscles
         )
     }
 
@@ -66,32 +58,6 @@ struct ExerciseLibraryItem: Identifiable, Hashable {
             .filter { $0 != "Unspecified" }
             .joined(separator: " - ")
             .nilIfEmpty ?? String(localized: "Database metadata")
-    }
-
-    nonisolated private static func buildSearchableText(
-        name: String,
-        rawLevel: String,
-        force: String,
-        mechanic: String,
-        category: String,
-        rawEquipment: String,
-        primaryMuscles: [String],
-        secondaryMuscles: [String],
-        instructions: [String]
-    ) -> String {
-        [
-            name,
-            rawLevel,
-            force,
-            mechanic,
-            category,
-            rawEquipment,
-            primaryMuscles.joined(separator: " "),
-            secondaryMuscles.joined(separator: " "),
-            instructions.joined(separator: " ")
-        ]
-        .joined(separator: " ")
-        .lowercased()
     }
 
     nonisolated private static func metadataTitles(_ values: [String]) -> [String] {
