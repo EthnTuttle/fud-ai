@@ -4616,8 +4616,7 @@ private struct AISettingsSubsectionHeader: View {
 enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
     case personalInfo
     case goalsNutrition
-    case trackingReminders
-    case notifications
+    case trackingNotifications
     case aiAccess
     case aiProviders
     case speechToText
@@ -4635,8 +4634,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
     static let preferenceCases: [Self] = [
         .personalInfo,
         .goalsNutrition,
-        .trackingReminders,
-        .notifications,
+        .trackingNotifications,
         .aiAccess,
         .aiProviders,
         .speechToText,
@@ -4661,8 +4659,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .personalInfo: "Personal Info"
         case .goalsNutrition: "Goals & Nutrition"
-        case .trackingReminders: "Tracking & Reminders"
-        case .notifications: "Notifications"
+        case .trackingNotifications: "Tracking & Notifications"
         case .aiAccess: "AI Access"
         case .aiProviders: "AI Providers & Fallbacks"
         case .speechToText: "Speech-to-Text"
@@ -4683,8 +4680,7 @@ enum ProfileSettingsCategory: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .personalInfo: "person.crop.circle"
         case .goalsNutrition: "target"
-        case .trackingReminders: "timer"
-        case .notifications: "bell"
+        case .trackingNotifications: "bell"
         case .aiAccess: "key.horizontal"
         case .aiProviders: "sparkles"
         case .speechToText: "waveform"
@@ -4921,9 +4917,7 @@ struct ProfileView: View {
                 NavigationStack(path: $settingsPath) {
                     settingsHub
                         .navigationDestination(for: ProfileSettingsCategory.self) { category in
-                            if category == .notifications {
-                                NotificationSettingsView()
-                            } else if category == .aiAccess {
+                            if category == .aiAccess {
                                 HostedAISettingsView()
                             } else if category == .voiceAssistant {
                                 VoiceAssistantSettingsView()
@@ -5473,7 +5467,9 @@ struct ProfileView: View {
                 .listRowBackground(AppColors.appCard)
                 }
 
-                if settingsCategory == .trackingReminders {
+                // Tracking first, then the notification sections, so one page holds the
+                // features and the reminders that depend on them (#432).
+                if settingsCategory == .trackingNotifications {
                 Section {
                     NavigationLink {
                         MealTimeSettingsView()
@@ -5621,6 +5617,8 @@ struct ProfileView: View {
 
                 }
                 .listRowBackground(AppColors.appCard)
+
+                NotificationSettingsSections()
                 }
 
                 if settingsCategory == .aiProviders {
