@@ -65,6 +65,8 @@
     <!-- Open Food Facts product metadata -->
     <string name="product_information">Informacje o produkcie</string>
     <string name="product_barcode">Kod kreskowy</string>
+    <string name="barcode_saved_label_title">Używana jest Twoja zapisana etykieta żywieniowa dla tego kodu kreskowego</string>
+    <string name="barcode_saved_label_footer">Open Food Facts nie ma wartości odżywczych dla tego produktu. Aby zapomnieć tę etykietę, usuń wpisy jedzenia, które jej użyły.</string>
     <string name="product_package">Opakowanie</string>
     <string name="product_nutri_score">Nutri-Score</string>
     <string name="product_nova_group">Grupa NOVA</string>

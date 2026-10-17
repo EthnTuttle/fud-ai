@@ -44,6 +44,8 @@
     <!-- Open Food Facts product metadata -->
     <string name="product_information">Informace o produktu</string>
     <string name="product_barcode">Čárový kód</string>
+    <string name="barcode_saved_label_title">Používá se váš uložený výživový štítek pro tento čárový kód</string>
+    <string name="barcode_saved_label_footer">Open Food Facts pro tento produkt nemá nutriční hodnoty. Chcete-li tento štítek zapomenout, smažte záznamy jídla, které ho použily.</string>
     <string name="product_package">Balení</string>
     <string name="product_nutri_score">Nutri-Score</string>
     <string name="product_nova_group">Skupina NOVA</string>

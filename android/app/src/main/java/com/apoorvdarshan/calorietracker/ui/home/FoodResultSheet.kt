@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -108,6 +109,8 @@ fun FoodResultSheet(
     source: FoodSource = FoodSource.TEXT_INPUT,
     initialTimestamp: Instant = Instant.now(),
     isSubmitting: Boolean = false,
+    /** True when a barcode Open Food Facts could not use was prefilled from a saved label (#485). */
+    usesSavedBarcodeLabel: Boolean = false,
     container: com.apoorvdarshan.calorietracker.AppContainer,
     analyzeIngredientText: suspend (String) -> FoodAnalysis,
     lookupIngredientBarcode: suspend (String) -> FoodAnalysis,
@@ -535,6 +538,10 @@ fun FoodResultSheet(
                         Text(analysis.emoji ?: "🍽", fontSize = 80.sp)
                     }
                 }
+            }
+
+            if (usesSavedBarcodeLabel) {
+                item { SavedBarcodeLabelNoticeCard() }
             }
 
             item { SheetSectionHeader(stringResource(R.string.sheet_food_details)) }
@@ -1205,3 +1212,40 @@ private fun WhatIfImpactRow(
 }
 
 private fun whatIfGrams(value: Double): String = "${MacroValueFormatter.string(value)}g"
+
+/**
+ * Explains a review prefilled from the user's saved nutrition label for a barcode,
+ * and how to forget that label without any extra settings (#485).
+ */
+@Composable
+private fun SavedBarcodeLabelNoticeCard() {
+    SheetPillCard {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                Icons.Outlined.QrCodeScanner,
+                contentDescription = null,
+                tint = AppColors.Calorie,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    stringResource(R.string.barcode_saved_label_title),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.Calorie
+                )
+                Text(
+                    stringResource(R.string.barcode_saved_label_footer),
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
+                )
+            }
+        }
+    }
+}

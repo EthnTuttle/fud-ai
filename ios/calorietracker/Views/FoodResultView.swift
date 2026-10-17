@@ -20,6 +20,9 @@ struct FoodResultView: View {
     let source: FoodSource
     let progressiveMeal: Bool
     let productMetadata: FoodProductMetadata?
+    /// True when a barcode Open Food Facts could not use was prefilled from the
+    /// user's own earlier nutrition-label scan (#485).
+    let usesSavedBarcodeLabel: Bool
 
     @State private var baseServingSizeGrams: Double
     @State private var servingUnitOptions: [ServingUnitOption]
@@ -133,6 +136,7 @@ struct FoodResultView: View {
         ingredients: [MealIngredient] = [],
         progressiveMeal: Bool = false,
         productMetadata: FoodProductMetadata? = nil,
+        usesSavedBarcodeLabel: Bool = false,
         servingSizeGrams: Double = 100,
         sugar: Double? = nil,
         addedSugar: Double? = nil,
@@ -200,6 +204,7 @@ struct FoodResultView: View {
         self.source = source
         self.progressiveMeal = progressiveMeal
         self.productMetadata = productMetadata
+        self.usesSavedBarcodeLabel = usesSavedBarcodeLabel
         self._baseServingSizeGrams = State(initialValue: servingSizeGrams)
         self._servingUnitOptions = State(initialValue: normalizedServingUnitOptions)
         self._servingSizeIsKnown = State(initialValue: servingSizeIsKnown)
@@ -454,6 +459,10 @@ struct FoodResultView: View {
                             }
                             .listRowBackground(Color.clear)
                         }
+                    }
+
+                    if usesSavedBarcodeLabel {
+                        SavedBarcodeLabelNoticeSection()
                     }
 
                     Section("Food Details") {
@@ -785,6 +794,20 @@ struct FoodResultView: View {
         )
     }
 
+}
+
+/// Explains a review prefilled from the user's saved nutrition label for a
+/// barcode, and how to forget that label without any extra settings (#485).
+private struct SavedBarcodeLabelNoticeSection: View {
+    var body: some View {
+        Section {
+            Label("Using your saved label for this barcode", systemImage: "barcode.viewfinder")
+                .font(.system(.body, design: .rounded, weight: .semibold))
+                .foregroundStyle(AppColors.calorie)
+        } footer: {
+            Text("Open Food Facts has no nutrition for this product. To forget this label, delete the food logs that used it.")
+        }
+    }
 }
 
 struct IngredientEditorTarget: Identifiable {
