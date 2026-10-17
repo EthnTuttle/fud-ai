@@ -196,6 +196,39 @@ struct LocalizationCatalogTests {
         }
     }
 
+    // MARK: - Ukrainian
+
+    @Test func ukrainianShowsUkrainianInsteadOfRussian() throws {
+        let bundle = try Self.languageBundle("uk", in: .main)
+        let expected = [
+            "Error": "Помилка",
+            "Skip": "Пропустити",
+            "Let's get started!": "Почнімо!",
+            "Days on Target": "Днів у цілі",
+            "%@ goal": "Ціль %@",
+            "Add %lld to Log · %@": "Додати %lld до журналу · %@",
+        ]
+        for (key, value) in expected {
+            #expect(bundle.localizedString(forKey: key, value: nil, table: nil) == value, "uk \(key)")
+        }
+        #expect(bundle.localizedString(forKey: "Error", value: nil, table: "WeeklyChallenge") == "Помилка")
+        #expect(bundle.localizedString(forKey: "Edit Public Profile", value: nil, table: "WeeklyChallenge") == "Редагувати публічний профіль")
+    }
+
+    @Test func ukrainianCountsFollowPluralRules() throws {
+        // Streak tiles on Progress.
+        #expect(try Self.format("%lld days", "uk", 1) == "1 день")
+        #expect(try Self.format("%lld days", "uk", 3) == "3 дні")
+        #expect(try Self.format("%lld days", "uk", 5) == "5 днів")
+        #expect(try Self.format("%lld days", "uk", 22) == "22 дні")
+        // These had only "one" and "other", so 2–4 read "2 кроків".
+        #expect(try Self.format("%lld steps", "uk", 3) == "3 кроки")
+        #expect(try Self.format("%lld steps", "uk", 7) == "7 кроків")
+        let entries = "%lld entry · tap to view or delete"
+        #expect(try Self.format(entries, "uk", 2).hasPrefix("2 записи ·"))
+        #expect(try Self.format(entries, "uk", 11).hasPrefix("11 записів ·"))
+    }
+
     // MARK: - Error descriptions
 
     @Test func errorTextIsTranslatedInEveryLanguage() throws {
@@ -290,7 +323,65 @@ struct LocalizationCatalogTests {
         }
     }
 
+    /// Words that are Russian and never Ukrainian. Seeing one in uk text means a value was
+    /// copied from the Russian translation (#507).
+    static let russianOnlyWords: Set<String> = [
+        "ошибка", "ошибки", "пропустить", "будет", "будут", "добавить", "добавлено", "изменить",
+        "изменения", "спасибо", "отправить", "поздравляем", "разрешить", "запретить", "дней", "цель",
+        "цели", "еда", "еду", "вес", "веса", "что", "это", "чтобы", "сейчас", "нет", "или", "тоже",
+        "также", "только", "можно", "нужно", "сначала", "затем", "осталось", "начнём", "записать",
+        "сбросить", "получить", "пользователя", "уведомления", "язык", "медленно", "привет",
+        "понятно", "проверить", "всего", "единица", "вручную", "минимум",
+    ]
+
+    @Test(.enabled(if: LocalizationCatalogTests.sourceCatalogsAvailable))
+    func ukrainianCatalogsContainNoRussian() throws {
+        let catalogs = [
+            "calorietracker/Localizable.xcstrings",
+            "calorietracker/AIErrorMessages.xcstrings",
+            "calorietracker/BarcodeLookup.xcstrings",
+            "calorietracker/InfoPlist.xcstrings",
+            "calorietracker/LocalModels.xcstrings",
+            "calorietracker/WeeklyChallenge.xcstrings",
+            "calorietracker/AppShortcuts.xcstrings",
+            "FudAIWidgets/Localizable.xcstrings",
+            "FudAIWatchApp/Localizable.xcstrings",
+            "FudAIWatchWidgets/Localizable.xcstrings",
+            "calorietrackerShare/Localizable.xcstrings",
+        ]
+        var checked = 0
+        for catalog in catalogs {
+            // Stale keys too: they still compile into the app, and some are still shown.
+            for (key, entry) in try Self.sourceStrings(catalog) {
+                let localizations = entry["localizations"] as? [String: Any] ?? [:]
+                for text in Self.allText(localizations["uk"]) {
+                    checked += 1
+                    let lowered = text.lowercased()
+                    #expect(!lowered.contains(where: { "ыэъё".contains($0) }), "\(catalog): uk \(key) uses Russian letters: \(text)")
+                    let words = lowered.components(separatedBy: CharacterSet.letters.inverted)
+                        .filter { Self.russianOnlyWords.contains($0) }
+                    #expect(words.isEmpty, "\(catalog): uk \(key) is Russian (\(words)): \(text)")
+                }
+            }
+        }
+        #expect(checked > 1_500)
+    }
+
     // MARK: - Helpers
+
+    /// Every text in a localization: single values, plural forms and Siri phrase sets.
+    static func allText(_ node: Any?) -> [String] {
+        guard let node = node as? [String: Any] else { return [] }
+        var texts: [String] = []
+        if let value = (node["stringUnit"] as? [String: Any])?["value"] as? String {
+            texts.append(value)
+        }
+        texts += ((node["stringSet"] as? [String: Any])?["values"] as? [String]) ?? []
+        for (key, child) in node where key != "stringUnit" && key != "stringSet" {
+            texts += allText(child)
+        }
+        return texts
+    }
 
     nonisolated static let iosSourceRoot = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent() // calorietrackerTests

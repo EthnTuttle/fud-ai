@@ -2443,7 +2443,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Весь инвентарь (%lld)"
+            "value": "Усе обладнання (%lld)"
           }
         },
         "zh-Hans": {
@@ -2779,7 +2779,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вся механика"
+            "value": "Уся механіка"
           }
         },
         "zh-Hans": {
@@ -8281,7 +8281,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@%2$@ осталось"
+            "value": "%1$@%2$@ залишилось"
           }
         },
         "cs": {
@@ -9153,6 +9153,18 @@
         "uk": {
           "variations": {
             "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld записи · торкніться, щоб переглянути або видалити"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld записів · торкніться, щоб переглянути або видалити"
+                }
+              },
               "one": {
                 "stringUnit": {
                   "state": "translated",
@@ -9560,13 +9572,13 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld дня"
+                  "value": "%lld дні"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld дней"
+                  "value": "%lld днів"
                 }
               },
               "one": {
@@ -9578,7 +9590,7 @@
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld дней"
+                  "value": "%lld дня"
                 }
               }
             }
@@ -9764,25 +9776,25 @@
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%1$lld продукта будет добавлено в %3$@."
+                  "value": "%1$lld продукти буде додано на %3$@."
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%1$lld продуктів будет добавлено в %3$@."
+                  "value": "%1$lld продуктів буде додано на %3$@."
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%1$lld продукт будет добавлен в %3$@."
+                  "value": "%1$lld продукт буде додано на %3$@."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%1$lld продуктів будет добавлено в %3$@."
+                  "value": "%1$lld продукту буде додано на %3$@."
                 }
               }
             }
@@ -10617,7 +10629,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld осталось"
+            "value": "%lld залишилось"
           }
         },
         "cs": {
@@ -10737,7 +10749,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$lld/%2$lld осталось"
+            "value": "%1$lld/%2$lld залишилось"
           }
         },
         "cs": {
@@ -11835,7 +11847,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "О адаптивних целях"
+            "value": "Про адаптивні цілі"
           }
         },
         "cs": {
@@ -12119,7 +12131,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "О сжигании енергии"
+            "value": "Про спалювання енергії"
           }
         },
         "zh-Hans": {
@@ -12166,7 +12178,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "О цели расхода калорий"
+            "value": "Про цілі витрати енергії"
           }
         },
         "cs": {
@@ -13534,7 +13546,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Корректировка"
+            "value": "Коригування"
           }
         },
         "zh-Hans": {
@@ -13998,7 +14010,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Совет AI"
+            "value": "Порада AI"
           }
         },
         "zh-Hans": {
@@ -14047,7 +14059,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не вдалося получить предложение ШІ"
+            "value": "Не вдалося отримати пропозицію ШІ"
           }
         },
         "cs": {
@@ -14273,7 +14285,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Разрешить"
+            "value": "Дозволити"
           }
         },
         "zh-Hans": {
@@ -15142,7 +15154,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Анализ с помощью AI…"
+            "value": "Аналіз за допомогою AI…"
           }
         },
         "zh-Hans": {
@@ -16189,7 +16201,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Спросить совет у AI"
+            "value": "Запитати пораду в AI"
           }
         },
         "zh-Hans": {
@@ -18696,7 +18708,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Одновременно можно закрепить не более 2 макронутриентов. Сначала открепите другой (натисніть на значок замка)."
+            "value": "Одночасно можна закріпити не більше 2 макронутрієнтів. Спочатку відкріпіть інший (натисніть на значок замка)."
           }
         },
         "zh-Hans": {
@@ -18988,7 +19000,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ср.: %lld ккал"
+            "value": "Сер.: %lld ккал"
           }
         },
         "cs": {
@@ -19172,7 +19184,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ср.: %@"
+            "value": "Сер.: %@"
           }
         },
         "zh-Hans": {
@@ -20821,7 +20833,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показатели тела"
+            "value": "Показники тіла"
           }
         },
         "cs": {
@@ -23170,7 +23182,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Проверить"
+            "value": "Перевірити"
           }
         },
         "zh-Hans": {
@@ -23791,7 +23803,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Виберите ШІ"
+            "value": "Виберіть ШІ"
           }
         },
         "cs": {
@@ -23969,7 +23981,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Получить скидку"
+            "value": "Отримати знижку"
           }
         },
         "zh-Hans": {
@@ -25139,7 +25151,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Поздравляем!"
+            "value": "Вітаємо!"
           }
         },
         "zh-Hans": {
@@ -25312,7 +25324,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Подключиться к\nApple Health"
+            "value": "Підключитися до\nApple Health"
           }
         },
         "cs": {
@@ -25662,7 +25674,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Копировать %@"
+            "value": "Копіювати %@"
           }
         },
         "cs": {
@@ -26760,7 +26772,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дневной баланс"
+            "value": "Денний баланс"
           }
         },
         "zh-Hans": {
@@ -27743,7 +27755,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дней в цели"
+            "value": "Днів у цілі"
           }
         },
         "cs": {
@@ -30287,7 +30299,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Видалити замер"
+            "value": "Видалити замір"
           }
         },
         "zh-Hans": {
@@ -30980,7 +30992,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Запретить"
+            "value": "Заборонити"
           }
         },
         "zh-Hans": {
@@ -32629,7 +32641,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ошибка"
+            "value": "Помилка"
           }
         },
         "zh-Hans": {
@@ -33205,7 +33217,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ожидается через 30 дней"
+            "value": "Очікується через 30 днів"
           }
         },
         "zh-Hans": {
@@ -33786,7 +33798,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Бистро (1,0 kg/нед.)"
+            "value": "Швидко (1,0 kg/тиж.)"
           }
         },
         "zh-Hans": {
@@ -35217,7 +35229,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Еда"
+            "value": "Їжа"
           }
         },
         "cs": {
@@ -36662,7 +36674,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI — ШІ-трекер калорий"
+            "value": "Fud AI — ШІ-трекер калорій"
           }
         },
         "zh-Hans": {
@@ -37399,7 +37411,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Набрать вес"
+            "value": "Набрати вагу"
           }
         },
         "cs": {
@@ -38834,7 +38846,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Цель к"
+            "value": "Ціль на"
           }
         },
         "zh-Hans": {
@@ -39071,7 +39083,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Понятно"
+            "value": "Зрозуміло"
           }
         },
         "zh-Hans": {
@@ -39189,7 +39201,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "грамми"
+            "value": "грами"
           }
         },
         "zh-Hans": {
@@ -39819,7 +39831,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Привет, Siri, %@"
+            "value": "Привіт, Siri, %@"
           }
         },
         "tr": {
@@ -40456,7 +40468,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Стабильно при текущем темпе"
+            "value": "Стабільно за поточного темпу"
           }
         },
         "zh-Hans": {
@@ -43136,7 +43148,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Через 60 дней"
+            "value": "Через 60 днів"
           }
         },
         "zh-Hans": {
@@ -43255,7 +43267,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Через 90 дней"
+            "value": "Через 90 днів"
           }
         },
         "zh-Hans": {
@@ -44855,7 +44867,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Начнём!"
+            "value": "Почнімо!"
           }
         },
         "zh-Hans": {
@@ -45146,7 +45158,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Лимит"
+            "value": "Ліміт"
           }
         },
         "tr": {
@@ -46057,7 +46069,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записать ${foodDescription}"
+            "value": "Записати ${foodDescription}"
           }
         },
         "cs": {
@@ -46350,7 +46362,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Запишите минимум 2 дня еди и 2 измерения веса, чтоби увидеть прогноз."
+            "value": "Запишіть щонайменше 2 дні харчування та 2 зважування, щоб побачити прогноз."
           }
         },
         "zh-Hans": {
@@ -46517,7 +46529,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записать еду"
+            "value": "Записати їжу"
           }
         },
         "cs": {
@@ -46747,7 +46759,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записать вес ${weightDescription}"
+            "value": "Записати вагу ${weightDescription}"
           }
         },
         "cs": {
@@ -47439,7 +47451,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сбросить вес"
+            "value": "Схуднути"
           }
         },
         "cs": {
@@ -48364,7 +48376,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Поддерживать"
+            "value": "Підтримувати"
           }
         },
         "cs": {
@@ -54401,7 +54413,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Замери"
+            "value": "Заміри"
           }
         },
         "zh-Hans": {
@@ -55326,7 +55338,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Умеренний (0,5 kg/нед.)"
+            "value": "Помірно (0,5 kg/тиж.)"
           }
         },
         "zh-Hans": {
@@ -58311,7 +58323,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Фактически"
+            "value": "Фактично"
           }
         },
         "zh-Hans": {
@@ -58541,7 +58553,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "ВИКЛ"
+            "value": "ВИМК"
           }
         },
         "zh-Hans": {
@@ -60016,7 +60028,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Процентаж"
+            "value": "Відсоток"
           }
         },
         "cs": {
@@ -60248,7 +60260,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Медиатека"
+            "value": "Медіатека"
           }
         },
         "cs": {
@@ -61688,7 +61700,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Протеиновий коктейль"
+            "value": "Протеїновий коктейль"
           }
         },
         "zh-Hans": {
@@ -63087,7 +63099,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пересчитать калории, белки, углеводи и жири на основе текущего веса, активности и цели? Ваши пользовательские значения будут заменени, а Авто-баланс сбросится на Углеводи."
+            "value": "Перерахувати калорії, білки, вуглеводи та жири на основі поточної ваги, активності й цілі? Ваші власні значення буде замінено, а автобаланс скинеться на вуглеводи."
           }
         },
         "zh-Hans": {
@@ -65844,7 +65856,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Зберегти изменения"
+            "value": "Зберегти зміни"
           }
         },
         "zh-Hans": {
@@ -66586,7 +66598,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отправить Тренеру"
+            "value": "Надіслати з повідомленням Тренеру"
           }
         },
         "cs": {
@@ -67108,7 +67120,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Размер порции"
+            "value": "Розмір порції"
           }
         },
         "zh-Hans": {
@@ -67691,7 +67703,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пропустить"
+            "value": "Пропустити"
           }
         },
         "zh-Hans": {
@@ -67927,7 +67939,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Медленно (0,25 kg/нед.)"
+            "value": "Повільно (0,25 kg/тиж.)"
           }
         },
         "zh-Hans": {
@@ -69426,7 +69438,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Уведомления о серии и сводках обновляются автоматически на основе ваших записей о еде."
+            "value": "Сповіщення про серію та підсумки оновлюються автоматично на основі ваших записів їжі."
           }
         },
         "zh-Hans": {
@@ -69818,7 +69830,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Рекомендация ШІ"
+            "value": "Рекомендація ШІ"
           }
         },
         "cs": {
@@ -70049,7 +70061,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Поддержать проект"
+            "value": "Підтримати проєкт"
           }
         },
         "zh-Hans": {
@@ -71872,7 +71884,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Спасибо!"
+            "value": "Дякуємо!"
           }
         },
         "zh-Hans": {
@@ -72447,7 +72459,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Етот макрос автоматически балансируется относительно остальних. Натисніть на значок замка, чтоби закрепить, затем коснитесь строки, чтоби задать своё значение."
+            "value": "Цей макронутрієнт автоматично балансується відносно інших. Натисніть на значок замка, щоб закріпити його, а потім торкніться рядка, щоб задати власне значення."
           }
         },
         "zh-Hans": {
@@ -72849,7 +72861,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Диапазон времени"
+            "value": "Часовий діапазон"
           }
         },
         "cs": {
@@ -74249,7 +74261,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Всего записей"
+            "value": "Усього записів"
           }
         },
         "cs": {
@@ -74930,7 +74942,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Единица"
+            "value": "Одиниця"
           }
         },
         "cs": {
@@ -75538,7 +75550,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Язик iPhone"
+            "value": "Мова iPhone"
           }
         },
         "cs": {
@@ -75829,7 +75841,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Використовується при касании значка микрофона для записи приёма пищи. Встроенний iOS работает на устройстве бесплатно; сторонние поставщики часто обеспечивают лучшую точность для кулинарних терминов и акцентов."
+            "value": "Використовується, коли ви торкаєтеся значка мікрофона, щоб записати прийом їжі. Вбудоване розпізнавання iOS працює на пристрої безкоштовно; сторонні провайдери часто точніше розпізнають кулінарні терміни та акценти."
           }
         },
         "zh-Hans": {
@@ -76336,7 +76348,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вид"
+            "value": "Вигляд"
           }
         },
         "cs": {
@@ -78042,7 +78054,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Язик голоса"
+            "value": "Мова голосу"
           }
         },
         "cs": {
@@ -79253,7 +79265,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Прогноз веса"
+            "value": "Прогноз ваги"
           }
         },
         "zh-Hans": {
@@ -82118,7 +82130,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ви достигнете цели через"
+            "value": "Ви досягнете цілі через"
           }
         },
         "zh-Hans": {
@@ -83266,7 +83278,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записанние калории и вес на весах не совсем совпадают. Возможно, ви записиваете не всю еду."
+            "value": "Записані калорії та вага на вагах не зовсім збігаються. Можливо, ви записуєте не всю їжу."
           }
         },
         "zh-Hans": {
@@ -83604,7 +83616,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Виберите 4 нутриента"
+            "value": "Виберіть 4 нутрієнти"
           }
         },
         "zh-Hans": {
@@ -84785,7 +84797,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Добавить %lld в журнал · %@"
+            "value": "Додати %lld до журналу · %@"
           }
         },
         "zh-Hans": {
@@ -86566,7 +86578,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Цель %@"
+            "value": "Ціль %@"
           }
         },
         "zh-Hans": {
@@ -86678,7 +86690,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Начато %@"
+            "value": "Розпочато %@"
           }
         },
         "zh-Hans": {
@@ -92227,7 +92239,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показатель прогресса"
+            "value": "Показник прогресу"
           }
         },
         "zh-Hans": {
@@ -93649,7 +93661,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Минимум"
+            "value": "Мінімум"
           }
         },
         "zh-Hans": {
@@ -93887,7 +93899,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "запись"
+            "value": "запис"
           }
         },
         "zh-Hans": {
@@ -95400,7 +95412,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не двигайтесь"
+            "value": "Не рухайтеся"
           }
         },
         "zh-Hans": {
@@ -95636,7 +95648,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вручную"
+            "value": "Вручну"
           }
         },
         "zh-Hans": {
@@ -96568,6 +96580,18 @@
         "uk": {
           "variations": {
             "plural": {
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld кроки"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld кроків"
+                }
+              },
               "one": {
                 "stringUnit": {
                   "state": "translated",

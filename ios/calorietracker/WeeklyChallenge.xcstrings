@@ -2692,7 +2692,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменить профиль"
+            "value": "Редагувати публічний профіль"
           }
         },
         "zh-Hans": {
@@ -3282,7 +3282,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ошибка"
+            "value": "Помилка"
           }
         },
         "zh-Hans": {
@@ -3400,7 +3400,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ошибка: %1$@"
+            "value": "Помилка: %1$@"
           }
         },
         "zh-Hans": {
@@ -4108,7 +4108,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Имя пользователя"
+            "value": "Ім’я користувача без @"
           }
         },
         "zh-Hans": {
@@ -4934,7 +4934,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Присоединиться"
+            "value": "Приєднатися"
           }
         },
         "zh-Hans": {
@@ -5052,7 +5052,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Присоединиться к соревнованию"
+            "value": "Приєднатися до щотижневого змагання"
           }
         },
         "zh-Hans": {
@@ -7766,7 +7766,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открить @%1$@ в %2$@"
+            "value": "Відкрити @%1$@ у %2$@"
           }
         },
         "zh-Hans": {
@@ -9654,7 +9654,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Жалоба отправлена"
+            "value": "Скаргу надіслано"
           }
         },
         "zh-Hans": {
@@ -10362,7 +10362,7 @@
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Отправить жалобу"
+            "value": "Надіслати скаргу"
           }
         },
         "zh-Hans": {
