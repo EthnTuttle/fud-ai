@@ -38,6 +38,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CancellationException
 
 /**
  * Single boundary for Health Connect I/O. Port of iOS HealthKitManager.
@@ -77,6 +78,39 @@ internal fun healthAvailabilityMessageKind(
     HealthConnectAvailability.PROVIDER_UPDATE_REQUIRED ->
         HealthAvailabilityMessageKind.PROVIDER_UPDATE_REQUIRED
     HealthConnectAvailability.UNAVAILABLE -> HealthAvailabilityMessageKind.SYSTEM_UNAVAILABLE
+}
+
+/**
+ * Per-day step totals for [start] through [lastDay], oldest first, keeping only days
+ * with steps. [readChunk] answers one inclusive span of at most a year, so 1Y / All
+ * reads stay bounded. A failed read is reported to [onFailure] and yields an empty
+ * list, but cancellation is rethrown: a superseded caller must never receive (and
+ * show) an empty result for a window it no longer displays.
+ */
+internal suspend fun collectDailyStepTotals(
+    start: LocalDate,
+    lastDay: LocalDate,
+    onFailure: (Exception) -> Unit,
+    readChunk: suspend (chunkStart: LocalDate, chunkEnd: LocalDate) -> List<Pair<LocalDate, Long>>
+): List<Pair<LocalDate, Int>> {
+    if (lastDay < start) return emptyList()
+    return try {
+        buildList {
+            var chunkStart = start
+            while (!chunkStart.isAfter(lastDay)) {
+                val chunkEnd = minOf(chunkStart.plusDays(364), lastDay)
+                readChunk(chunkStart, chunkEnd).forEach { (day, steps) ->
+                    if (steps > 0L) add(day to steps.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
+                }
+                chunkStart = chunkEnd.plusDays(1)
+            }
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        onFailure(e)
+        emptyList()
+    }
 }
 
 /**
@@ -756,37 +790,29 @@ class HealthConnectManager(
      * Step totals for each local day from [start] through [end], oldest first, skipping
      * days without steps. Uses Health Connect's per-day aggregation, which de-duplicates
      * phone and watch sources — never a sum of raw StepsRecords. Empty when steps can't
-     * be read.
+     * be read; cancellation propagates instead of reading as an empty window.
      */
     suspend fun readDailyStepTotals(start: LocalDate, end: LocalDate): List<Pair<LocalDate, Int>> {
         if (!hasStepsRead()) return emptyList()
         val c = client ?: return emptyList()
-        val lastDay = minOf(end, LocalDate.now())
-        if (lastDay < start) return emptyList()
-        return runCatching {
-            buildList {
-                // A year of daily buckets per request keeps 1Y / All reads bounded.
-                var chunkStart = start
-                while (!chunkStart.isAfter(lastDay)) {
-                    val chunkEnd = minOf(chunkStart.plusDays(364), lastDay)
-                    c.aggregateGroupByPeriod(
-                        AggregateGroupByPeriodRequest(
-                            metrics = setOf(StepsRecord.COUNT_TOTAL),
-                            timeRangeFilter = TimeRangeFilter.between(
-                                chunkStart.atStartOfDay(),
-                                chunkEnd.plusDays(1).atStartOfDay()
-                            ),
-                            timeRangeSlicer = Period.ofDays(1)
-                        )
-                    ).forEach { group ->
-                        val steps = group.result[StepsRecord.COUNT_TOTAL] ?: 0L
-                        if (steps > 0L) add(group.startTime.toLocalDate() to steps.toInt())
-                    }
-                    chunkStart = chunkEnd.plusDays(1)
-                }
+        return collectDailyStepTotals(
+            start = start,
+            lastDay = minOf(end, LocalDate.now()),
+            onFailure = { Log.w(TAG, "Health Connect daily steps read failed", it) }
+        ) { chunkStart, chunkEnd ->
+            c.aggregateGroupByPeriod(
+                AggregateGroupByPeriodRequest(
+                    metrics = setOf(StepsRecord.COUNT_TOTAL),
+                    timeRangeFilter = TimeRangeFilter.between(
+                        chunkStart.atStartOfDay(),
+                        chunkEnd.plusDays(1).atStartOfDay()
+                    ),
+                    timeRangeSlicer = Period.ofDays(1)
+                )
+            ).map { group ->
+                group.startTime.toLocalDate() to (group.result[StepsRecord.COUNT_TOTAL] ?: 0L)
             }
-        }.onFailure { Log.w(TAG, "Health Connect daily steps read failed", it) }
-            .getOrDefault(emptyList())
+        }
     }
 
     private suspend fun readDailySteps(start: Instant, end: Instant): Int? {

@@ -5,6 +5,7 @@ import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -130,6 +131,32 @@ class ProgressRangeTest {
         assertEquals(2, calorieBarIndexAt(x = 68f, startX = 10f, barWidth = 20f, gap = 4f, count = 3))
         assertEquals(2, calorieBarIndexAt(x = 500f, startX = 10f, barWidth = 20f, gap = 4f, count = 3))
         assertNull(calorieBarIndexAt(x = 20f, startX = 10f, barWidth = 20f, gap = 4f, count = 0))
+    }
+
+    @Test
+    fun calorieBarsKeepTheFixedGapWhileTheyFit() {
+        // A week on a 900px plot: 7 bars of (900 - 6 * 4) / 7 ≈ 125px, capped at 60px.
+        val (startX, barWidth, gap) = calorieBarGeometry(areaWidth = 900f, count = 7, maxBarWidth = 60f)
+        assertEquals(60f, barWidth, 0.001f)
+        assertEquals(4f, gap, 0.001f)
+        assertEquals((900f - (7 * 60f + 6 * 4f)) / 2f, startX, 0.001f)
+    }
+
+    @Test
+    fun denselyLoggedLongPeriodsFitTheWholePlotSoTheLatestDayIsReachable() {
+        // 365 logged days used to need 2px + 4px per bar = 2,186px, so on a 900px plot the
+        // bars ran off the right edge and the inspector stopped around the 150th day.
+        val width = 900f
+        for (count in listOf(150, 151, 200, 299, 300, 365, 1_000, 3_650)) {
+            val (startX, barWidth, gap) = calorieBarGeometry(width, count, maxBarWidth = 60f)
+            val rightEdge = startX + count * barWidth + (count - 1) * gap
+            assertTrue("$count bars overflow: $rightEdge", startX >= 0f && rightEdge <= width + 0.01f)
+            val lastCentre = startX + (count - 1) * (barWidth + gap) + barWidth / 2f
+            assertEquals(count - 1, calorieBarIndexAt(lastCentre, startX, barWidth, gap, count))
+            // A scrub clamps to the plot's right edge, which must land on the latest day.
+            assertEquals(count - 1, calorieBarIndexAt(width, startX, barWidth, gap, count))
+            assertEquals(0, calorieBarIndexAt(0f, startX, barWidth, gap, count))
+        }
     }
 
     private fun food(calories: Int, protein: Double, at: String) = FoodEntry(

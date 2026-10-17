@@ -60,6 +60,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.withContext
@@ -75,6 +76,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -120,6 +122,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.apoorvdarshan.calorietracker.AppContainer
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
@@ -221,6 +226,26 @@ private fun MyProgressContent(container: AppContainer) {
     // null until DataStore answers, so a restored Steps selection isn't reset early.
     val healthConnectEnabled by container.prefs.healthConnectEnabled.collectAsState(initial = null)
     val prefsScope = rememberCoroutineScope()
+    // Bumped when the app returns to the foreground (ON_START after ON_STOP, so not on
+    // first show): re-probes the steps grant, which may have changed in Health Connect
+    // meanwhile, and re-reads the steps on screen, which keep counting while away.
+    var foregroundEpoch by remember { mutableIntStateOf(0) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        var stopped = false
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> stopped = true
+                Lifecycle.Event.ON_START -> if (stopped) {
+                    stopped = false
+                    foregroundEpoch++
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val weightMetric = weightUnit == "kg"
 
     var range by rememberSaveable { mutableStateOf(TimeRange.WEEK) }
@@ -264,30 +289,59 @@ private fun MyProgressContent(container: AppContainer) {
     val bodyFatAvailable = ui.bodyFatEntries.isNotEmpty()
         || ui.profile?.bodyFatPercentage != null
         || ui.profile?.goalBodyFatPercentage != null
+    // Steps need the steps-read grant itself, not just Health Connect switched on:
+    // partial grants are valid, and connections from before steps were requested lack
+    // it. null until probed, so a restored Steps selection isn't reset early. The
+    // permission probe swallows failures (cancellation included), so a superseded
+    // probe re-checks before publishing.
+    var stepsReadable by remember { mutableStateOf<Boolean?>(null) }
+    LaunchedEffect(healthConnectEnabled, foregroundEpoch) {
+        val readable = when (healthConnectEnabled) {
+            null -> null
+            false -> false
+            true -> container.health.hasStepsRead()
+        }
+        ensureActive()
+        stepsReadable = readable
+    }
     val availableMetrics = availableProgressMetrics(
         bodyFatAvailable = bodyFatAvailable,
         workoutHistoryAvailable = reliableWorkoutBurnSessions.isNotEmpty(),
-        stepsAvailable = healthConnectEnabled == true
+        stepsAvailable = stepsReadable == true
     )
-    LaunchedEffect(availableMetrics, selectedMetric, healthConnectEnabled) {
-        if (healthConnectEnabled != null && selectedMetric !in availableMetrics) {
+    LaunchedEffect(availableMetrics, selectedMetric, stepsReadable) {
+        if (stepsReadable != null && selectedMetric !in availableMetrics) {
             selectedMetric = ProgressMetric.WEIGHT
         }
     }
 
     // Steps are read from Health Connect on demand, only while the Steps metric is
-    // showing; changing the window cancels a stale read.
+    // showing; changing the window cancels a stale read, and returning to the app
+    // re-reads the window on screen.
     var stepDays by remember { mutableStateOf<List<Pair<LocalDate, Int>>?>(null) }
+    var stepDaysWindow by remember { mutableStateOf<Pair<LocalDate, LocalDate>?>(null) }
     var stepsHistoryLimited by remember { mutableStateOf(false) }
-    LaunchedEffect(selectedMetric, healthConnectEnabled, rangeStartDate, rangeEndDate) {
-        stepDays = null
-        if (selectedMetric != ProgressMetric.STEPS || healthConnectEnabled != true) return@LaunchedEffect
-        stepsHistoryLimited = stepsHistoryMayBeMissing(
+    LaunchedEffect(selectedMetric, stepsReadable, rangeStartDate, rangeEndDate, foregroundEpoch) {
+        val window = rangeStartDate to rangeEndDate
+        if (selectedMetric != ProgressMetric.STEPS || stepsReadable != true) {
+            stepDays = null
+            stepDaysWindow = null
+            return@LaunchedEffect
+        }
+        // A new window shows the spinner; a foreground refresh of the same window
+        // keeps its bars until the fresh totals arrive.
+        if (stepDaysWindow != window) stepDays = null
+        val historyLimited = stepsHistoryMayBeMissing(
             start = rangeStartDate,
             today = LocalDate.now(),
             hasHistoryAccess = container.health.hasHealthDataHistory()
         )
-        stepDays = container.health.readDailyStepTotals(rangeStartDate, rangeEndDate)
+        val days = container.health.readDailyStepTotals(rangeStartDate, rangeEndDate)
+        // Never publish a superseded window's totals over the current one.
+        ensureActive()
+        stepsHistoryLimited = historyLimited
+        stepDays = days
+        stepDaysWindow = window
     }
 
     // Nutrition aggregates load on a background dispatcher. Changing `range`
@@ -368,6 +422,8 @@ private fun MyProgressContent(container: AppContainer) {
                         ProgressMetric.WORKOUTS -> WorkoutProgressSection(filteredWorkouts)
                         ProgressMetric.STEPS -> StepsProgressSection(
                             days = stepDays,
+                            chartStart = rangeStartDate.takeIf { range.supportsPeriodNavigation },
+                            chartEnd = minOf(rangeEndDate, LocalDate.now()),
                             weekly = showsWeeklyStepBars(rangeStartDate, rangeEndDate),
                             historyMayBeMissing = stepsHistoryLimited
                         )
@@ -1417,16 +1473,12 @@ internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: In
             ) {
                 val barAreaWidthPx = with(density) { maxWidth.toPx() }
                 val n = dailyCalories.size
-                val gap = 4f
                 // Cap bar width so single-day / very-sparse charts don't render as
                 // one giant block, but keep the cap generous enough that a 1W view
                 // fills the card width and leaves each bar a slot wide enough to
                 // hold its "Apr 18" label underneath.
                 val maxBarPx = with(density) { 60.dp.toPx() }
-                val rawWidth = (barAreaWidthPx - gap * (n - 1)) / n
-                val barWidth = rawWidth.coerceIn(2f, maxBarPx)
-                val totalGroupW = barWidth * n + gap * (n - 1)
-                val startX = ((barAreaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
+                val (startX, barWidth, gap) = calorieBarGeometry(barAreaWidthPx, n, maxBarPx)
                 val selectedBarIndex = selectedIndex?.takeIf { it in 0 until n }
 
                 fun select(x: Float) {
@@ -1478,7 +1530,9 @@ internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: In
                         val y = pxH - ((tick / yTop).toFloat() * pxH)
                         drawLine(gridColor, Offset(0f, y), Offset(pxW, y), strokeWidth = 1f)
                     }
-                    for (i in 0 until n) {
+                    // Per-bar guides only while slots are at least as wide as the old
+                    // fixed 2px bar + 4px gap; denser periods would turn them into a wash.
+                    if (barWidth + gap >= 6f) for (i in 0 until n) {
                         val cx = startX + i * (barWidth + gap) + barWidth / 2f
                         drawLine(
                             color = gridColor,
@@ -1574,12 +1628,8 @@ internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: In
                 val areaWidthDp = maxWidth
                 val areaWidthPx = with(density) { areaWidthDp.toPx() }
                 val n = dailyCalories.size
-                val gap = 4f
                 val maxBarPx = with(density) { 60.dp.toPx() }
-                val rawWidth = (areaWidthPx - gap * (n - 1)) / n
-                val barWidth = rawWidth.coerceIn(2f, maxBarPx)
-                val totalGroupW = barWidth * n + gap * (n - 1)
-                val startX = ((areaWidthPx - totalGroupW) / 2f).coerceAtLeast(0f)
+                val (startX, barWidth, gap) = calorieBarGeometry(areaWidthPx, n, maxBarPx)
                 val slotPx = barWidth + gap
                 val slotDp = with(density) { slotPx.toDp() }
                 // "Apr 18" at 11sp is ~38dp wide; add tiny breathing room.
@@ -1613,6 +1663,28 @@ internal fun CalorieBarChart(dailyCalories: List<Pair<LocalDate, Int>>, goal: In
             Spacer(Modifier.width(44.dp))
         }
     }
+}
+
+/** Centred bar layout shared by the calorie chart, its date labels and its inspector. */
+internal data class CalorieBarGeometry(val startX: Float, val barWidth: Float, val gap: Float)
+
+/**
+ * Lays out [count] bars across [areaWidth]: a 4px gap with bars up to [maxBarWidth],
+ * until a long, densely logged period no longer fits 2px bars. Then the gap shrinks
+ * (down to 1px) and finally bar and gap scale together, so the whole group always
+ * fits — the latest days stay visible and within reach of the inspector instead of
+ * running off the plot's right edge.
+ */
+internal fun calorieBarGeometry(areaWidth: Float, count: Int, maxBarWidth: Float): CalorieBarGeometry {
+    val n = count.coerceAtLeast(1)
+    val fixedGapWidth = (areaWidth - 4f * (n - 1)) / n
+    val (barWidth, gap) = when {
+        fixedGapWidth >= 2f -> fixedGapWidth.coerceAtMost(maxBarWidth) to 4f
+        n > 1 && (areaWidth - 2f * n) / (n - 1) >= 1f -> 2f to (areaWidth - 2f * n) / (n - 1)
+        else -> (areaWidth / n).let { slot -> slot * 2f / 3f to slot / 3f }
+    }
+    val totalWidth = barWidth * n + gap * (n - 1)
+    return CalorieBarGeometry(((areaWidth - totalWidth) / 2f).coerceAtLeast(0f), barWidth, gap)
 }
 
 /** Index of the calorie bar nearest [x], using the same centred-group geometry

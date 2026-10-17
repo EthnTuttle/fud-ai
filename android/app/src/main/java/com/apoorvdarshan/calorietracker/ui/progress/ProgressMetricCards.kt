@@ -98,6 +98,8 @@ internal fun preferredDailyWorkoutBurns(entries: List<WorkoutSession>): List<Pai
 @Composable
 internal fun StepsProgressSection(
     days: List<Pair<LocalDate, Int>>?,
+    chartStart: LocalDate?,
+    chartEnd: LocalDate,
     weekly: Boolean,
     historyMayBeMissing: Boolean
 ) {
@@ -131,16 +133,20 @@ internal fun StepsProgressSection(
                     )
                 )
                 val firstDayOfWeek = remember { WeekFields.of(Locale.getDefault()).firstDayOfWeek }
-                val bars = remember(days, weekly, firstDayOfWeek) { stepChartBars(days, weekly, firstDayOfWeek) }
+                // All has no fixed start: its chart begins at the first day with steps.
+                val start = chartStart ?: days.first().first
+                val bars = remember(days, start, chartEnd, weekly, firstDayOfWeek) {
+                    stepChartBars(days, start, chartEnd, weekly, firstDayOfWeek)
+                }
                 val dateFormatter = remember {
                     DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault())
                 }
-                DailyBarChart(
+                if (bars.isNotEmpty()) DailyBarChart(
                     values = bars,
                     contentDescription = stringResource(
                         R.string.progress_steps_chart_description,
-                        dateFormatter.format(days.first().first),
-                        dateFormatter.format(days.last().first),
+                        dateFormatter.format(bars.first().first),
+                        dateFormatter.format(bars.last().first),
                         numberFormat.format(summary.total),
                         numberFormat.format(summary.best?.second ?: 0)
                     ),
@@ -168,17 +174,36 @@ internal fun stepsSummary(days: List<Pair<LocalDate, Int>>): StepsSummary {
 internal fun showsWeeklyStepBars(start: LocalDate, end: LocalDate): Boolean =
     end.toEpochDay() - start.toEpochDay() + 1 > 90
 
-/** Daily bars, or each calendar week's average daily steps when [weekly] (dated at
- *  the week's first day), oldest first. */
+/** One bar per day from [start] through [end], or per calendar week when [weekly]
+ *  (that week's average over its days with steps, dated at the week's first day),
+ *  oldest first. Every slot is present — zero when Health Connect has no steps for
+ *  it — because the chart spaces bars by position, so a skipped day would pull the
+ *  later bars away from their dates. Averages elsewhere still use only the real days. */
 internal fun stepChartBars(
     days: List<Pair<LocalDate, Int>>,
+    start: LocalDate,
+    end: LocalDate,
     weekly: Boolean,
     firstDayOfWeek: DayOfWeek
 ): List<Pair<LocalDate, Int>> {
-    if (!weekly) return days.sortedBy { it.first }
-    return days.groupBy { it.first.with(TemporalAdjusters.previousOrSame(firstDayOfWeek)) }
-        .map { (week, values) -> week to values.map { it.second }.average().roundToInt() }
-        .sortedBy { it.first }
+    if (end < start) return emptyList()
+    if (!weekly) {
+        val stepsByDay = days.toMap()
+        return generateSequence(start) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(end) }
+            .map { day -> day to (stepsByDay[day] ?: 0) }
+            .toList()
+    }
+    val weekOf = { day: LocalDate -> day.with(TemporalAdjusters.previousOrSame(firstDayOfWeek)) }
+    val weeklyAverages = days
+        .filter { (day, _) -> day in start..end }
+        .groupBy { (day, _) -> weekOf(day) }
+        .mapValues { (_, values) -> values.map { it.second }.average().roundToInt() }
+    val lastWeek = weekOf(end)
+    return generateSequence(weekOf(start)) { it.plusWeeks(1) }
+        .takeWhile { !it.isAfter(lastWeek) }
+        .map { week -> week to (weeklyAverages[week] ?: 0) }
+        .toList()
 }
 
 /** Without the history grant, Health Connect hides records from more than ~30 days
