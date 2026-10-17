@@ -17,8 +17,8 @@ struct WatchNutritionView: View {
     var body: some View {
         VStack(spacing: 6) {
             WatchCalorieGauge(
-                eaten: receiver.snapshot.calories,
-                remaining: receiver.snapshot.caloriesRemaining,
+                eaten: receiver.snapshot.displayCalories,
+                remaining: receiver.snapshot.displayCaloriesRemaining,
                 progress: receiver.snapshot.calorieProgress,
                 gradient: themeGradient
             )

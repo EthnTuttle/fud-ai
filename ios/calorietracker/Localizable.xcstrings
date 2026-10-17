@@ -12038,6 +12038,118 @@
         }
       }
     },
+    "Avg: %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتوسط: %@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orta: %@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Průměr: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durchschn.: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prom.: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moy. : %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "औसत: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Media: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "평균: %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gem.: %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Śr.: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Média: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medie: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ср.: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ort.: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ср.: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均：%@"
+          }
+        }
+      }
+    },
     "Balanced pace set": {
       "localizations": {
         "ar": {
@@ -13951,6 +14063,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaloriler"
+          }
+        }
+      }
+    },
+    "Kilojoules": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيلوجول"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilocoullar"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojouly"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoule"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojulios"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoules"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "किलोजूल"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoule"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キロジュール"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "킬로줄"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoule"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilodżule"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quilojoules"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojouli"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Килоджоули"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojuller"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кілоджоулі"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "千焦"
           }
         }
       }
@@ -33548,6 +33772,118 @@
         }
       }
     },
+    "Logged %@: %lld kilojoules and %@ grams protein.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تسجيل %1$@: %2$lld كيلوجول و%3$@ غرام بروتين."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ qeyd edildi: %2$lld kilocoul və %3$@ qram protein."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapsáno %1$@: %2$lld kilojoulů a %3$@ gramů bílkovin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ eingetragen: %2$lld Kilojoule und %3$@ Gramm Protein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrado %1$@: %2$lld kilojulios y %3$@ gramos de proteína."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ enregistré : %2$lld kilojoules et %3$@ grammes de protéines."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ लॉग किया गया: %2$lld किलोजूल और %3$@ ग्राम प्रोटीन।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrato %1$@: %2$lld kilojoule e %3$@ grammi di proteine."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@を記録しました: %2$lldキロジュール、たんぱく質%3$@グラム。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 기록됨: %2$lld킬로줄, 단백질 %3$@그램."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ gelogd: %2$lld kilojoule en %3$@ gram eiwit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodano %1$@: %2$lld kilodżuli i %3$@ g białka."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ registrado: %2$lld quilojoules e %3$@ gramas de proteína."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am înregistrat %1$@: %2$lld kilojouli și %3$@ grame de proteine."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Записано %1$@: %2$lld килоджоулей и %3$@ г белка."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kaydedildi: %2$lld kilojul ve %3$@ gram protein."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Записано %1$@: %2$lld кілоджоулів і %3$@ г білка."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已记录 %1$@：%2$lld 千焦，蛋白质 %3$@ 克。"
+          }
+        }
+      }
+    },
     "Lose Weight": {
       "extractionState": "manual",
       "localizations": {
@@ -34796,6 +35132,102 @@
             "state": "translated",
             "value": "%@ kaldı"
           }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتبقي: %@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ qaldı"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zbývá %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ übrig"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reste : %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ बाकी"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimanenti: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 남음"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ over"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pozostało %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ restantes"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rămân: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Осталось %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишилось %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剩余 %@"
+          }
         }
       }
     },
@@ -34811,6 +35243,102 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ fazla"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تجاوز: %@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ artıq"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ navíc"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ zu viel"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dépassement : %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ अधिक"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in eccesso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@オーバー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 초과"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ te veel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ za dużo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ acima"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ peste"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Превышение: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевищення: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "超出 %@"
           }
         }
       }
@@ -34859,38 +35387,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ g fazla"
-          }
-        }
-      }
-    },
-    "%lld kcal left": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld kcal restantes"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld kcal kaldı"
-          }
-        }
-      }
-    },
-    "%lld kcal over": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld kcal de más"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld kcal fazla"
           }
         }
       }
@@ -49177,226 +49673,226 @@
         }
       }
     },
-    "Deficit: %@ kcal/day": {
+    "Deficit: %@/day": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "العجز: %@ kcal/يوم"
+            "value": "العجز: %@/يوم"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kəsir: %@ kcal/gün"
+            "value": "Kəsir: %@/gün"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deficit: %@ kcal/den"
+            "value": "Deficit: %@/den"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Defizit: %@ kcal/Tag"
+            "value": "Defizit: %@/Tag"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déficit: %@ kcal/día"
+            "value": "Déficit: %@/día"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déficit : %@ kcal/jour"
+            "value": "Déficit : %@/jour"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "घाटा: %@ kcal/दिन"
+            "value": "घाटा: %@/दिन"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deficit: %@ kcal/giorno"
+            "value": "Deficit: %@/giorno"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "カロリー不足: %@ kcal/日"
+            "value": "カロリー不足: %@/日"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "칼로리 적자: %@ kcal/일"
+            "value": "칼로리 적자: %@/일"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tekort: %@ kcal/dag"
+            "value": "Tekort: %@/dag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deficyt: %@ kcal/dzień"
+            "value": "Deficyt: %@/dzień"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déficit: %@ kcal/dia"
+            "value": "Déficit: %@/dia"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deficit: %@ kcal/zi"
+            "value": "Deficit: %@/zi"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дефицит: %@ ккал/день"
+            "value": "Дефицит: %@/день"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kalori açığı: %@ kcal/gün"
+            "value": "Kalori açığı: %@/gün"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дефіцит: %@ ккал/день"
+            "value": "Дефіцит: %@/день"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "热量缺口：%@ kcal/天"
+            "value": "热量缺口：%@/天"
           }
         }
       }
     },
-    "Surplus: %@ kcal/day": {
+    "Surplus: %@/day": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الفائض: %@ kcal/يوم"
+            "value": "الفائض: %@/يوم"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Artıq kalori: %@ kcal/gün"
+            "value": "Artıq kalori: %@/gün"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Přebytek: %@ kcal/den"
+            "value": "Přebytek: %@/den"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Überschuss: %@ kcal/Tag"
+            "value": "Überschuss: %@/Tag"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Superávit: %@ kcal/día"
+            "value": "Superávit: %@/día"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Surplus : %@ kcal/jour"
+            "value": "Surplus : %@/jour"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "अधिशेष: %@ kcal/दिन"
+            "value": "अधिशेष: %@/दिन"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Surplus: %@ kcal/giorno"
+            "value": "Surplus: %@/giorno"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "カロリー余剰: %@ kcal/日"
+            "value": "カロリー余剰: %@/日"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "칼로리 잉여: %@ kcal/일"
+            "value": "칼로리 잉여: %@/일"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overschot: %@ kcal/dag"
+            "value": "Overschot: %@/dag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nadwyżka: %@ kcal/dzień"
+            "value": "Nadwyżka: %@/dzień"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Superávit: %@ kcal/dia"
+            "value": "Superávit: %@/dia"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Surplus: %@ kcal/zi"
+            "value": "Surplus: %@/zi"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Профицит: %@ ккал/день"
+            "value": "Профицит: %@/день"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kalori fazlası: %@ kcal/gün"
+            "value": "Kalori fazlası: %@/gün"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Профіцит: %@ ккал/день"
+            "value": "Профіцит: %@/день"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "热量盈余：%@ kcal/天"
+            "value": "热量盈余：%@/天"
           }
         }
       }
@@ -51371,6 +51867,118 @@
         }
       }
     },
+    "Today you have logged %lld kilojoules and %@ grams protein.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّلت اليوم %1$lld كيلوجول و%2$@ غرام بروتين."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu gün %1$lld kilocoul və %2$@ qram protein qeyd etdiniz."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dnes máš zapsáno %1$lld kilojoulů a %2$@ gramů bílkovin."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute hast du %1$lld Kilojoule und %2$@ Gramm Protein eingetragen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoy has registrado %1$lld kilojulios y %2$@ gramos de proteína."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd’hui, tu as enregistré %1$lld kilojoules et %2$@ grammes de protéines."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज आपने %1$lld किलोजूल और %2$@ ग्राम प्रोटीन लॉग किया है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oggi hai registrato %1$lld kilojoule e %2$@ grammi di proteine."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日は%1$lldキロジュール、たんぱく質%2$@グラムを記録しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 %1$lld킬로줄, 단백질 %2$@그램을 기록했습니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag heb je %1$lld kilojoule en %2$@ gram eiwit gelogd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dzisiaj dodano %1$lld kilodżuli i %2$@ g białka."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoje você registrou %1$lld quilojoules e %2$@ gramas de proteína."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azi ai înregistrat %1$lld kilojouli și %2$@ grame de proteine."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сегодня записано %1$lld килоджоулей и %2$@ г белка."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün %1$lld kilojul ve %2$@ gram protein kaydettiniz."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сьогодні записано %1$lld кілоджоулів і %2$@ г білка."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天你已记录 %1$lld 千焦和 %2$@ 克蛋白质。"
+          }
+        }
+      }
+    },
     "Today you have logged %lld of %lld calories. %lld calories remaining. Protein: %@ grams.": {
       "comment": "A dialog for a CalorieSummaryIntent.",
       "isCommentAutoGenerated": true,
@@ -51421,6 +52029,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bugün %lld / %lld kalori kaydettiniz. %lld kaloriniz kaldı. Protein: %@ gram."
+          }
+        }
+      }
+    },
+    "Today you have logged %lld of %lld kilojoules. %lld kilojoules remaining. Protein: %@ grams.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّلت اليوم %1$lld من %2$lld كيلوجول. المتبقي %3$lld كيلوجول. البروتين: %4$@ غرام."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu gün %1$lld / %2$lld kilocoul qeyd etdiniz. %3$lld kilocoul qaldı. Protein: %4$@ qram."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dnes máš zapsáno %1$lld z %2$lld kilojoulů. Zbývá %3$lld kilojoulů. Bílkoviny: %4$@ gramů."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute hast du %1$lld von %2$lld Kilojoule eingetragen. Noch %3$lld Kilojoule übrig. Protein: %4$@ Gramm."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoy has registrado %1$lld de %2$lld kilojulios. Te quedan %3$lld kilojulios. Proteína: %4$@ gramos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aujourd’hui, tu as enregistré %1$lld kilojoules sur %2$lld. Il te reste %3$lld kilojoules. Protéines : %4$@ grammes."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज आपने %2$lld में से %1$lld किलोजूल लॉग किए हैं। %3$lld किलोजूल बाकी हैं। प्रोटीन: %4$@ ग्राम।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oggi hai registrato %1$lld di %2$lld kilojoule. Restano %3$lld kilojoule. Proteine: %4$@ grammi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日は%2$lldキロジュール中%1$lldキロジュールを記録しました。残り%3$lldキロジュールです。たんぱく質: %4$@グラム。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 %2$lld킬로줄 중 %1$lld킬로줄을 기록했습니다. %3$lld킬로줄 남았습니다. 단백질: %4$@그램."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag heb je %1$lld van %2$lld kilojoule gelogd. Nog %3$lld kilojoule over. Eiwit: %4$@ gram."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dzisiaj dodano %1$lld z %2$lld kilodżuli. Pozostało %3$lld kilodżuli. Białko: %4$@ g."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoje você registrou %1$lld de %2$lld quilojoules. Restam %3$lld quilojoules. Proteína: %4$@ gramas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azi ai înregistrat %1$lld din %2$lld kilojouli. Mai ai %3$lld kilojouli. Proteine: %4$@ grame."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сегодня записано %1$lld из %2$lld килоджоулей. Осталось %3$lld килоджоулей. Белок: %4$@ г."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün %1$lld / %2$lld kilojul kaydettiniz. %3$lld kilojulünüz kaldı. Protein: %4$@ gram."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сьогодні записано %1$lld із %2$lld кілоджоулів. Залишилося %3$lld кілоджоулів. Білок: %4$@ г."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天你已记录 %1$lld / %2$lld 千焦，还剩 %3$lld 千焦。蛋白质：%4$@ 克。"
           }
         }
       }
@@ -54148,6 +54868,342 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hafta Başlangıç Günü"
+          }
+        }
+      }
+    },
+    "Energy Unit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وحدة الطاقة"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enerji Vahidi"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jednotka energie"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energieeinheit"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidad de energía"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unité d’énergie"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऊर्जा इकाई"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unità di energia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エネルギーの単位"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "에너지 단위"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energie-eenheid"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jednostka energii"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unidade de energia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unitate de energie"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Единица энергии"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enerji Birimi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одиниця енергії"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "能量单位"
+          }
+        }
+      }
+    },
+    "Kilocalories (kcal)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيلو سعرة حرارية (kcal)"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilokalori (kcal)"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilokalorie (kcal)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilokalorien (kcal)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilocalorías (kcal)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilocalories (kcal)"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "किलोकैलोरी (kcal)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chilocalorie (kcal)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キロカロリー (kcal)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "킬로칼로리 (kcal)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilocalorieën (kcal)"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilokalorie (kcal)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quilocalorias (kcal)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilocalorii (kcal)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Килокалории (ккал)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilokalori (kcal)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кілокалорії (ккал)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "千卡 (kcal)"
+          }
+        }
+      }
+    },
+    "Kilojoules (kJ)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيلوجول (kJ)"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilocoul (kJ)"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojouly (kJ)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoule (kJ)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojulios (kJ)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoules (kJ)"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "किलोजूल (kJ)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoule (kJ)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キロジュール (kJ)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "킬로줄 (kJ)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojoule (kJ)"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilodżule (kJ)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quilojoules (kJ)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojouli (kJ)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Килоджоули (кДж)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilojul (kJ)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кілоджоулі (кДж)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "千焦 (kJ)"
           }
         }
       }
@@ -59093,120 +60149,114 @@
         }
       }
     },
-    "Add %lld to Log · %lld kcal": {
+    "Add %lld to Log · %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إضافة %lld إلى السجل · %lld kcal"
+            "value": "إضافة %lld إلى السجل · %@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jurnala %lld əlavə et · %lld kcal"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld zum Protokoll hinzufügen · %lld kcal"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add %lld to Log · %lld kcal"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir %lld al registro · %lld kcal"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajouter %lld au journal · %lld kcal"
-          }
-        },
-        "hi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld लॉग में जोड़ें · %lld kcal"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aggiungi %lld al diario · %lld kcal"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld件をログに追加 · %lld kcal"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld개 기록에 추가 · %lld kcal"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld toevoegen aan logboek · %lld kcal"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dodaj %lld do dziennika · %lld kcal"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adicionar %lld ao registro · %lld kcal"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Adaugă %lld în jurnal · %lld kcal"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить %lld в журнал · %lld kcal"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить %lld в журнал · %lld kcal"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "添加 %lld 份到记录 · %lld kcal"
+            "value": "Jurnala %lld əlavə et · %@"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Přidat %1$lld do deníku · %2$lld kcal"
+            "value": "Přidat %1$lld do deníku · %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld zum Protokoll hinzufügen · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir %lld al registro · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter %lld au journal · %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld लॉग में जोड़ें · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi %lld al diario · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld件をログに追加 · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 기록에 추가 · %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld toevoegen aan logboek · %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj %lld do dziennika · %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar %lld ao registro · %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă %lld în jurnal · %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить %lld в журнал · %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld öğünü Günlüğe Ekle · %lld kcal"
+            "value": "%lld öğünü Günlüğe Ekle · %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить %lld в журнал · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加 %lld 份到记录 · %@"
           }
         }
       }
@@ -68719,117 +69769,459 @@
             "state": "translated",
             "value": "%@ kcal"
           }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kcal"
+          }
         }
       }
     },
-    "Remove %@'s entry of %@ kcal? This also deletes the matching sample from Apple Health. The dated workout plan stays in your diary.": {
+    "kcal": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هل تريد إزالة إدخال %2$@ kcal بتاريخ %1$@؟ سيؤدي ذلك أيضًا إلى حذف العينة المطابقة من Apple Health. ستبقى خطة التمرين المؤرخة في يومياتك."
+            "value": "kcal"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ tarixli %2$@ kcal qeydini silmək istəyirsiniz? Bu, Apple Health-dəki uyğun nümunəni də siləcək. Tarixli məşq planı gündəliyinizdə qalacaq."
+            "value": "kcal"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kcal"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den Eintrag vom %1$@ mit %2$@ kcal entfernen? Dadurch wird auch das zugehörige Sample aus Apple Health gelöscht. Der datierte Trainingsplan bleibt in deinem Tagebuch."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove %1$@'s entry of %2$@ kcal? This also deletes the matching sample from Apple Health. The dated workout plan stays in your diary."
+            "value": "kcal"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Eliminar el registro del %1$@ de %2$@ kcal? Esto también elimina la muestra correspondiente de Apple Health. El plan de entrenamiento con fecha permanece en tu diario."
+            "value": "kcal"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Supprimer l’entrée du %1$@ de %2$@ kcal ? Cela supprime également l’échantillon correspondant d’Apple Health. Le programme d’entraînement daté reste dans votre journal."
+            "value": "kcal"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ की %2$@ kcal वाली प्रविष्टि हटाएँ? इससे Apple Health का संबंधित नमूना भी हट जाएगा। तारीख वाला वर्कआउट प्लान आपकी डायरी में बना रहेगा।"
+            "value": "kcal"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rimuovere la voce del %1$@ da %2$@ kcal? Verrà eliminato anche il campione corrispondente da Apple Health. Il piano di allenamento datato resterà nel diario."
+            "value": "kcal"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@の%2$@ kcalの記録を削除しますか？Apple Healthの該当サンプルも削除されます。日付付きのワークアウトプランは日記に残ります。"
+            "value": "kcal"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@의 %2$@ kcal 기록을 삭제할까요? Apple Health의 해당 샘플도 삭제됩니다. 날짜가 지정된 운동 계획은 일기에 남습니다."
+            "value": "kcal"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De registratie van %1$@ met %2$@ kcal verwijderen? Hiermee wordt ook de bijbehorende meting uit Apple Health verwijderd. Het gedateerde trainingsplan blijft in je dagboek staan."
+            "value": "kcal"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usunąć wpis z %1$@ o wartości %2$@ kcal? Spowoduje to również usunięcie pasującej próbki z Apple Health. Plan treningu z tą datą pozostanie w dzienniku."
+            "value": "kcal"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remover o registro de %1$@ com %2$@ kcal? Isso também exclui a amostra correspondente do Apple Health. O plano de treino com data permanece no seu diário."
+            "value": "kcal"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elimini înregistrarea din %1$@ de %2$@ kcal? Aceasta șterge și eșantionul corespunzător din Apple Health. Planul de antrenament datat rămâne în jurnal."
+            "value": "kcal"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Удалить запись от %1$@ на %2$@ ккал? Также будет удалена соответствующая запись из Apple Health. План тренировки с этой датой останется в дневнике."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Видалити запись от %1$@ на %2$@ ккал? Также будет удалена соответствующая запись из Apple Health. План тренировки с етой датой останется в дневнике."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "要删除 %1$@ 的 %2$@ kcal 记录吗？这也会删除 Apple Health 中对应的样本。带日期的锻炼计划仍会保留在日记中。"
+            "value": "ккал"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ kullanıcısının %@ kcal değerindeki kaydı silinsin mi? Bu işlem eşleşen Apple Health örneğini de siler. Tarihli antrenman planı günlüğünüzde kalır."
+            "value": "kcal"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ккал"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kcal"
+          }
+        }
+      }
+    },
+    "kJ": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "кДж"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "кДж"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kJ"
+          }
+        }
+      }
+    },
+    "%@ kJ": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ кДж"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ кДж"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kJ"
+          }
+        }
+      }
+    },
+    "Remove %@'s entry of %@? This also deletes the matching sample from Apple Health. The dated workout plan stays in your diary.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد إزالة إدخال %2$@ بتاريخ %1$@؟ سيؤدي ذلك أيضًا إلى حذف العينة المطابقة من Apple Health. ستبقى خطة التمرين المؤرخة في يومياتك."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tarixli %2$@ qeydini silmək istəyirsiniz? Bu, Apple Health-dəki uyğun nümunəni də siləcək. Tarixli məşq planı gündəliyinizdə qalacaq."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odstranit záznam z %1$@ s hodnotou %2$@? Tím se smaže i odpovídající vzorek z Apple Health. Datovaný plán tréninku zůstane v deníku."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den Eintrag vom %1$@ mit %2$@ entfernen? Dadurch wird auch das zugehörige Sample aus Apple Health gelöscht. Der datierte Trainingsplan bleibt in deinem Tagebuch."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar el registro del %1$@ de %2$@? Esto también elimina la muestra correspondiente de Apple Health. El plan de entrenamiento con fecha permanece en tu diario."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer l’entrée du %1$@ de %2$@ ? Cela supprime également l’échantillon correspondant d’Apple Health. Le programme d’entraînement daté reste dans votre journal."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ की %2$@ वाली प्रविष्टि हटाएँ? इससे Apple Health का संबंधित नमूना भी हट जाएगा। तारीख वाला वर्कआउट प्लान आपकी डायरी में बना रहेगा।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovere la voce del %1$@ da %2$@? Verrà eliminato anche il campione corrispondente da Apple Health. Il piano di allenamento datato resterà nel diario."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@の%2$@の記録を削除しますか？Apple Healthの該当サンプルも削除されます。日付付きのワークアウトプランは日記に残ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@의 %2$@ 기록을 삭제할까요? Apple Health의 해당 샘플도 삭제됩니다. 날짜가 지정된 운동 계획은 일기에 남습니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De registratie van %1$@ met %2$@ verwijderen? Hiermee wordt ook de bijbehorende meting uit Apple Health verwijderd. Het gedateerde trainingsplan blijft in je dagboek staan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usunąć wpis z %1$@ o wartości %2$@? Spowoduje to również usunięcie pasującej próbki z Apple Health. Plan treningu z tą datą pozostanie w dzienniku."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover o registro de %1$@ com %2$@? Isso também exclui a amostra correspondente do Apple Health. O plano de treino com data permanece no seu diário."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimini înregistrarea din %1$@ de %2$@? Aceasta șterge și eșantionul corespunzător din Apple Health. Planul de antrenament datat rămâne în jurnal."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить запись от %1$@ на %2$@? Также будет удалена соответствующая запись из Apple Health. План тренировки с этой датой останется в дневнике."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kullanıcısının %@ değerindeki kaydı silinsin mi? Bu işlem eşleşen Apple Health örneğini de siler. Tarihli antrenman planı günlüğünüzde kalır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видалити запись от %1$@ на %2$@? Также будет удалена соответствующая запись из Apple Health. План тренировки с етой датой останется в дневнике."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要删除 %1$@ 的 %2$@ 记录吗？这也会删除 Apple Health 中对应的样本。带日期的锻炼计划仍会保留在日记中。"
           }
         }
       }
@@ -74026,18 +75418,114 @@
         }
       }
     },
-    "%@g · %lld kcal": {
+    "%@g · %@": {
       "localizations": {
-        "en": {
+        "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@g · %2$lld kcal"
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ g · %2$lld kcal"
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@g · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@g · %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ г · %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ g · %2$@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ г · %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@g · %2$@"
           }
         }
       }
@@ -75136,16 +76624,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Otomatik Öğün Seçimi"
-          }
-        }
-      }
-    },
-    "Avg: %@ kcal": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prom.: %@ kcal"
           }
         }
       }
@@ -77190,12 +78668,114 @@
         }
       }
     },
-    "Estimated burn: %lld kcal": {
+    "Estimated burn: %@": {
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحرق المقدّر: %@"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Təxmini yandırılan: %@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odhadovaný výdej: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschätzter Verbrauch: %@"
+          }
+        },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Calorías quemadas estimadas: %lld kcal"
+            "value": "Gasto estimado: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dépense estimée : %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुमानित बर्न: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consumo stimato: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推定消費: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예상 소모량: %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschat verbruik: %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szacowane spalanie: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gasto estimado: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consum estimat: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Расчётный расход: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tahmini yakım: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Орієнтовні витрати: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预计消耗：%@"
           }
         }
       }
@@ -86797,114 +88377,114 @@
         }
       }
     },
-    "≈ %lld kcal burned": {
+    "≈ %@ burned": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal محروقة"
+            "value": "الحرق ≈ %@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal yandırıldı"
+            "value": "≈ %@ yandırıldı"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal spáleno"
+            "value": "≈ %@ spáleno"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal verbrannt"
+            "value": "≈ %@ verbrannt"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal quemadas"
+            "value": "Gasto ≈ %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal brûlées"
+            "value": "Dépense ≈ %@"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal बर्न"
+            "value": "≈ %@ बर्न"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal bruciate"
+            "value": "Consumo ≈ %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "消費 ≈ %lld kcal"
+            "value": "消費 ≈ %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal 소모"
+            "value": "≈ %@ 소모"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal verbrand"
+            "value": "≈ %@ verbrand"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal spalone"
+            "value": "≈ %@ spalone"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal queimadas"
+            "value": "Gasto ≈ %@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal arse"
+            "value": "Consum ≈ %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld ккал сожжено"
+            "value": "≈ %@ сожжено"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld kcal yakıldı"
+            "value": "≈ %@ yakıldı"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "≈ %lld ккал спалено"
+            "value": "≈ %@ спалено"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "消耗约 %lld kcal"
+            "value": "消耗约 %@"
           }
         }
       }
@@ -93181,562 +94761,562 @@
         }
       }
     },
-    "Log %@ · %lld kcal · %@": {
+    "Log %@ · %@ · %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تسجيل %1$@ · %2$lld kcal · %3$@"
+            "value": "تسجيل %1$@ · %2$@ · %3$@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ qeyd et · %2$lld kcal · %3$@"
+            "value": "%1$@ qeyd et · %2$@ · %3$@"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapsat %1$@ · %2$lld kcal · %3$@"
+            "value": "Zapsat %1$@ · %2$@ · %3$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ eintragen · %2$lld kcal · %3$@"
+            "value": "%1$@ eintragen · %2$@ · %3$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Registrar %1$@ · %2$lld kcal · %3$@"
+            "value": "Registrar %1$@ · %2$@ · %3$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enregistrer %1$@ · %2$lld kcal · %3$@"
+            "value": "Enregistrer %1$@ · %2$@ · %3$@"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ लॉग करें · %2$lld kcal · %3$@"
+            "value": "%1$@ लॉग करें · %2$@ · %3$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Registra %1$@ · %2$lld kcal · %3$@"
+            "value": "Registra %1$@ · %2$@ · %3$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@を記録 · %2$lld kcal · %3$@"
+            "value": "%1$@を記録 · %2$@ · %3$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ 기록 · %2$lld kcal · %3$@"
+            "value": "%1$@ 기록 · %2$@ · %3$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ loggen · %2$lld kcal · %3$@"
+            "value": "%1$@ loggen · %2$@ · %3$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapisz %1$@ · %2$lld kcal · %3$@"
+            "value": "Zapisz %1$@ · %2$@ · %3$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Registrar %1$@ · %2$lld kcal · %3$@"
+            "value": "Registrar %1$@ · %2$@ · %3$@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Înregistrează %1$@ · %2$lld kcal · %3$@"
+            "value": "Înregistrează %1$@ · %2$@ · %3$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записать %1$@ · %2$lld ккал · %3$@"
+            "value": "Записать %1$@ · %2$@ · %3$@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ kaydet · %2$lld kcal · %3$@"
+            "value": "%1$@ kaydet · %2$@ · %3$@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записати %1$@ · %2$lld ккал · %3$@"
+            "value": "Записати %1$@ · %2$@ · %3$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "记录 %1$@ · %2$lld kcal · %3$@"
+            "value": "记录 %1$@ · %2$@ · %3$@"
           }
         }
       }
     },
-    "Logged %@ · %lld kcal": {
+    "Logged %@ · %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تسجيل %1$@ · %2$lld kcal"
+            "value": "تم تسجيل %1$@ · %2$@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ qeyd edildi · %2$lld kcal"
+            "value": "%1$@ qeyd edildi · %2$@"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapsáno: %1$@ · %2$lld kcal"
+            "value": "Zapsáno: %1$@ · %2$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ eingetragen · %2$lld kcal"
+            "value": "%1$@ eingetragen · %2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ registrado · %2$lld kcal"
+            "value": "%1$@ registrado · %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ enregistré · %2$lld kcal"
+            "value": "%1$@ enregistré · %2$@"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ लॉग किया गया · %2$lld kcal"
+            "value": "%1$@ लॉग किया गया · %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ registrato · %2$lld kcal"
+            "value": "%1$@ registrato · %2$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@を記録しました · %2$lld kcal"
+            "value": "%1$@を記録しました · %2$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ 기록됨 · %2$lld kcal"
+            "value": "%1$@ 기록됨 · %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ gelogd · %2$lld kcal"
+            "value": "%1$@ gelogd · %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapisano: %1$@ · %2$lld kcal"
+            "value": "Zapisano: %1$@ · %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ registrado · %2$lld kcal"
+            "value": "%1$@ registrado · %2$@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ înregistrat · %2$lld kcal"
+            "value": "%1$@ înregistrat · %2$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записано: %1$@ · %2$lld ккал"
+            "value": "Записано: %1$@ · %2$@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ kaydedildi · %2$lld kcal"
+            "value": "%1$@ kaydedildi · %2$@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Записано: %1$@ · %2$lld ккал"
+            "value": "Записано: %1$@ · %2$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已记录 %1$@ · %2$lld kcal"
+            "value": "已记录 %1$@ · %2$@"
           }
         }
       }
     },
-    "Update %@ · %lld kcal": {
+    "Update %@ · %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تحديث %1$@ · %2$lld kcal"
+            "value": "تحديث %1$@ · %2$@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ yenilə · %2$lld kcal"
+            "value": "%1$@ yenilə · %2$@"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Upravit %1$@ · %2$lld kcal"
+            "value": "Upravit %1$@ · %2$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ändern · %2$lld kcal"
+            "value": "%1$@ ändern · %2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actualizar %1$@ · %2$lld kcal"
+            "value": "Actualizar %1$@ · %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Modifier %1$@ · %2$lld kcal"
+            "value": "Modifier %1$@ · %2$@"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ अपडेट करें · %2$lld kcal"
+            "value": "%1$@ अपडेट करें · %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aggiorna %1$@ · %2$lld kcal"
+            "value": "Aggiorna %1$@ · %2$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@を更新 · %2$lld kcal"
+            "value": "%1$@を更新 · %2$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ 수정 · %2$lld kcal"
+            "value": "%1$@ 수정 · %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ bijwerken · %2$lld kcal"
+            "value": "%1$@ bijwerken · %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zmień %1$@ · %2$lld kcal"
+            "value": "Zmień %1$@ · %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atualizar %1$@ · %2$lld kcal"
+            "value": "Atualizar %1$@ · %2$@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actualizează %1$@ · %2$lld kcal"
+            "value": "Actualizează %1$@ · %2$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменить %1$@ · %2$lld ккал"
+            "value": "Изменить %1$@ · %2$@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ güncelle · %2$lld kcal"
+            "value": "%1$@ güncelle · %2$@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Змінити %1$@ · %2$lld ккал"
+            "value": "Змінити %1$@ · %2$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "更新 %1$@ · %2$lld kcal"
+            "value": "更新 %1$@ · %2$@"
           }
         }
       }
     },
-    "Updated %@ · %lld kcal": {
+    "Updated %@ · %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تحديث %1$@ · %2$lld kcal"
+            "value": "تم تحديث %1$@ · %2$@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ yeniləndi · %2$lld kcal"
+            "value": "%1$@ yeniləndi · %2$@"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Upraveno: %1$@ · %2$lld kcal"
+            "value": "Upraveno: %1$@ · %2$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ geändert · %2$lld kcal"
+            "value": "%1$@ geändert · %2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ actualizado · %2$lld kcal"
+            "value": "%1$@ actualizado · %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ modifié · %2$lld kcal"
+            "value": "%1$@ modifié · %2$@"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ अपडेट किया गया · %2$lld kcal"
+            "value": "%1$@ अपडेट किया गया · %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ aggiornato · %2$lld kcal"
+            "value": "%1$@ aggiornato · %2$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@を更新しました · %2$lld kcal"
+            "value": "%1$@を更新しました · %2$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ 수정됨 · %2$lld kcal"
+            "value": "%1$@ 수정됨 · %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ bijgewerkt · %2$lld kcal"
+            "value": "%1$@ bijgewerkt · %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zmieniono: %1$@ · %2$lld kcal"
+            "value": "Zmieniono: %1$@ · %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ atualizado · %2$lld kcal"
+            "value": "%1$@ atualizado · %2$@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ actualizat · %2$lld kcal"
+            "value": "%1$@ actualizat · %2$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изменено: %1$@ · %2$lld ккал"
+            "value": "Изменено: %1$@ · %2$@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ güncellendi · %2$lld kcal"
+            "value": "%1$@ güncellendi · %2$@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Змінено: %1$@ · %2$lld ккал"
+            "value": "Змінено: %1$@ · %2$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已更新 %1$@ · %2$lld kcal"
+            "value": "已更新 %1$@ · %2$@"
           }
         }
       }
     },
-    "Delete %@ · %lld kcal": {
+    "Delete %@ · %@": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "حذف %1$@ · %2$lld kcal"
+            "value": "حذف %1$@ · %2$@"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ sil · %2$lld kcal"
+            "value": "%1$@ sil · %2$@"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smazat %1$@ · %2$lld kcal"
+            "value": "Smazat %1$@ · %2$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ löschen · %2$lld kcal"
+            "value": "%1$@ löschen · %2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eliminar %1$@ · %2$lld kcal"
+            "value": "Eliminar %1$@ · %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Supprimer %1$@ · %2$lld kcal"
+            "value": "Supprimer %1$@ · %2$@"
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ हटाएँ · %2$lld kcal"
+            "value": "%1$@ हटाएँ · %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elimina %1$@ · %2$lld kcal"
+            "value": "Elimina %1$@ · %2$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@を削除 · %2$lld kcal"
+            "value": "%1$@を削除 · %2$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ 삭제 · %2$lld kcal"
+            "value": "%1$@ 삭제 · %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ verwijderen · %2$lld kcal"
+            "value": "%1$@ verwijderen · %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Usuń %1$@ · %2$lld kcal"
+            "value": "Usuń %1$@ · %2$@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Excluir %1$@ · %2$lld kcal"
+            "value": "Excluir %1$@ · %2$@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Șterge %1$@ · %2$lld kcal"
+            "value": "Șterge %1$@ · %2$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Удалить %1$@ · %2$lld ккал"
+            "value": "Удалить %1$@ · %2$@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ sil · %2$lld kcal"
+            "value": "%1$@ sil · %2$@"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Видалити %1$@ · %2$lld ккал"
+            "value": "Видалити %1$@ · %2$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "删除 %1$@ · %2$lld kcal"
+            "value": "删除 %1$@ · %2$@"
           }
         }
       }
@@ -99987,6 +101567,321 @@
           "stringUnit": {
             "state": "translated",
             "value": "你今天摄入了 %1$lld / %2$lld kcal，还剩 %3$lld kcal！"
+          }
+        }
+      }
+    },
+    "You ate %lld of %lld kJ today. %lld remaining!": {
+      "comment": "Body of the daily summary notification for users who track energy in kilojoules: kJ eaten, the daily kJ goal, and kJ left. kJ is an abbreviation that does not change with the number; vary the remaining count by plural where the language needs it.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تناولت اليوم %1$lld من %2$lld kJ. المتبقي: %3$lld!"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu gün %1$lld / %2$lld kJ qəbul etdiniz. %3$lld kJ qaldı!"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dnešní příjem: %1$lld z %2$lld kJ. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zbývají %arg kJ!"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zbývá %arg kJ!"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zbývá %arg kJ!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zbývá %arg kJ!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast heute %1$lld von %2$lld kJ gegessen. Noch %3$lld übrig!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoy has comido %1$lld de %2$lld kJ. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "¡Te queda %arg!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "¡Te quedan %arg!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu as mangé %1$lld sur %2$lld kJ aujourd’hui. Il te reste %3$lld kJ !"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज आपने %2$lld में से %1$lld kJ लिए। %3$lld kJ बाकी!"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oggi hai mangiato %1$lld di %2$lld kJ. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Ne resta %arg!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Ne restano %arg!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日は%2$lld kJ中%1$lld kJを摂取しました。残り%3$lld kJです！"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 %2$lld kJ 중 %1$lld kJ을 섭취했습니다. %3$lld kJ 남았습니다!"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je hebt vandaag %1$lld van %2$lld kJ gegeten. Nog %3$lld over!"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dziś zjedzono %1$lld z %2$lld kJ. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zostały %arg kJ!"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zostało %arg kJ!"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Został %arg kJ!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Zostało %arg kJ!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você comeu %1$lld de %2$lld kJ hoje. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Resta %arg!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Restam %arg!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Azi ai mâncat %1$lld din %2$lld kJ. Mai ai %3$lld kJ!"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сегодня вы съели %1$lld из %2$lld кДж. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Осталось %arg кДж!"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Осталось %arg кДж!"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Остался %arg кДж!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Осталось %arg кДж!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün %1$lld / %2$lld kJ yediniz. %3$lld kJ kaldı!"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сьогодні ви з’їли %1$lld із %2$lld кДж. %#@remaining@"
+          },
+          "substitutions": {
+            "remaining": {
+              "argNum": 3,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "few": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Залишилося %arg кДж!"
+                    }
+                  },
+                  "many": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Залишилося %arg кДж!"
+                    }
+                  },
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Залишився %arg кДж!"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "Залишилося %arg кДж!"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你今天摄入了 %1$lld / %2$lld kJ，还剩 %3$lld kJ！"
           }
         }
       }

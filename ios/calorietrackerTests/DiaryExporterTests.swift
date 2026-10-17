@@ -178,6 +178,25 @@ struct DiaryExporterTests {
         return (date, entry)
     }
 
+    @Test func exportsStayInKilocaloriesAndTellKilojouleUsersSo() throws {
+        let day = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 2, hour: 9))!
+        let water = [WaterEntry(date: day, milliliters: 300)]
+        func markdown(_ unit: EnergyUnit) throws -> String {
+            let export = try #require(DiaryExporter.build(from: day, to: day, format: .markdown,
+                entries: [], profile: makeProfile(), waterEntries: water, energyUnit: unit))
+            return String(decoding: export.data, as: UTF8.self)
+        }
+        let note = "Energy values are in kcal (1 kcal = 4.184 kJ)."
+        #expect(try markdown(.kj).contains(note))
+        #expect(try markdown(.kj).contains("- Calories: 0 / 2000 kcal"))
+        #expect(try !markdown(.kcal).contains(note))
+        let json = try #require(DiaryExporter.build(from: day, to: day, format: .json,
+            entries: [], profile: makeProfile(), waterEntries: water, energyUnit: .kj)).data
+        let root = try #require(JSONSerialization.jsonObject(with: json) as? [String: Any])
+        let days = try #require(root["days"] as? [[String: Any]])
+        #expect((days[0]["targets"] as? [String: Any])?["calories"] as? Int == 2_000)
+    }
+
     private func makeProfile() -> UserProfile {
         UserProfile(
             name: "Exporter",

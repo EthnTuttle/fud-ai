@@ -25,6 +25,11 @@ struct LogFoodIntent: AppIntent {
         do {
             let entry = try await SiriLoggingService.analyzeAndLogFood(description: foodDescription)
             let protein = MacroValueFormatter.string(entry.protein)
+            let energyUnit = EnergyUnit.current
+            if energyUnit == .kj {
+                let kilojoules = energyUnit.displayValue(kcal: entry.calories)
+                return .result(dialog: "Logged \(entry.name): \(kilojoules) kilojoules and \(protein) grams protein.")
+            }
             return .result(dialog: "Logged \(entry.name): \(entry.calories) calories and \(protein) grams protein.")
         } catch {
             let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
@@ -45,6 +50,21 @@ struct CalorieSummaryIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let summary = SiriLoggingService.todayNutritionSummary()
         let protein = MacroValueFormatter.string(summary.protein)
+        let energyUnit = EnergyUnit.current
+
+        if energyUnit == .kj {
+            let eaten = energyUnit.displayValue(kcal: summary.calories)
+            guard summary.calorieGoal > 0 else {
+                return .result(
+                    dialog: "Today you have logged \(eaten) kilojoules and \(protein) grams protein."
+                )
+            }
+            let goal = energyUnit.displayValue(kcal: summary.calorieGoal)
+            let remaining = max(0, goal - eaten)
+            return .result(
+                dialog: "Today you have logged \(eaten) of \(goal) kilojoules. \(remaining) kilojoules remaining. Protein: \(protein) grams."
+            )
+        }
 
         if summary.calorieGoal > 0 {
             let remaining = max(0, summary.calorieGoal - summary.calories)

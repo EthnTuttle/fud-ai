@@ -569,16 +569,25 @@ struct CalorieGauge: View {
     // stored inputs change with the theme, so SwiftUI skips this view on theme
     // switches. Observing the setting re-renders it in place (state intact).
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     private var progress: Double {
         goal > 0 ? min(Double(eaten) / Double(goal), 1.0) : 0
     }
 
+    private var shownEaten: Int { energyUnit.displayValue(kcal: eaten) }
+    private var shownGoal: Int { energyUnit.displayValue(kcal: goal) }
+
     private var statusText: String {
         guard goal > 0 else { return String(localized: "No goal") }
-        if eaten < goal { return String(localized: "\((goal - eaten).formatted()) left") }
-        if eaten > goal { return String(localized: "\((eaten - goal).formatted()) over") }
+        if eaten < goal { return String(localized: "\((shownGoal - shownEaten).formatted()) left") }
+        if eaten > goal { return String(localized: "\((shownEaten - shownGoal).formatted()) over") }
         return String(localized: "Goal reached")
+    }
+
+    /// The dome's numbers carry no unit, so its heading names the unit in use.
+    private var heading: String {
+        energyUnit == .kj ? String(localized: "Kilojoules") : LocalizedDisplayText.text("Calories")
     }
 
     private var dashedStroke: StrokeStyle {
@@ -610,20 +619,20 @@ struct CalorieGauge: View {
 
             // Readout, lifted up into the dome so nothing is cropped at the bottom.
             VStack(spacing: 2) {
-                Text(LocalizedDisplayText.text("Calories"))
+                Text(heading)
                     .font(.system(.caption, design: .rounded, weight: .semibold))
                     .textCase(.uppercase)
                     .tracking(0.5)
                     .foregroundStyle(.secondary)
 
-                Text(eaten.formatted())
+                Text(shownEaten.formatted())
                     .font(.system(size: 50, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(colors: AppColors.calorieGradient,
                                        startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
                     .contentTransition(.numericText())
-                    .animation(.snappy, value: eaten)
+                    .animation(.snappy, value: shownEaten)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
 

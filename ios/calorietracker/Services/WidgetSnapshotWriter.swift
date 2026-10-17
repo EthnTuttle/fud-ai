@@ -53,7 +53,8 @@ enum WidgetSnapshotWriter {
             waterGoalMl: waterGoalMl,
             waterUnitRaw: UserDefaults.standard.string(forKey: WaterSettings.unitKey) ?? WaterUnit.defaultUnit.rawValue,
             themeStartHex: theme.startHex,
-            themeEndHex: theme.endHex
+            themeEndHex: theme.endHex,
+            energyUnitRaw: EnergyUnit.current.rawValue
         )
 
         if WidgetSnapshot.read() != snapshot {

@@ -19,6 +19,8 @@ struct ManualEntryView: View {
     @State private var mealType: MealType = .currentMeal
     @State private var submissionGate = FoodSubmissionGate()
     @FocusState private var focused: Field?
+    /// Calories are typed in the energy unit in use and stored as kcal.
+    @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
 
     let logDate: Date
     var onCancel: () -> Void
@@ -42,7 +44,7 @@ struct ManualEntryView: View {
                     field(label: "Name", text: $name, placeholder: "e.g. Homemade salad", keyboard: .default, focus: .name)
 
                     HStack(spacing: 10) {
-                        numberField(label: "Calories", text: $calories, focus: .calories)
+                        numberField(label: energyUnit == .kj ? "Kilojoules" : "Calories", text: $calories, focus: .calories)
                         numberField(label: "Protein (g)", text: $protein, focus: .protein)
                     }
 
@@ -84,7 +86,7 @@ struct ManualEntryView: View {
                         guard submissionGate.begin() else { return }
                         let entry = FoodEntry(
                             name: name.trimmingCharacters(in: .whitespaces),
-                            calories: Int(calories) ?? 0,
+                            calories: energyUnit.kcal(fromInput: calories) ?? 0,
                             protein: ServingUnitEditor.parseDecimal(protein) ?? 0,
                             carbs: ServingUnitEditor.parseDecimal(carbs) ?? 0,
                             fat: ServingUnitEditor.parseDecimal(fat) ?? 0,
