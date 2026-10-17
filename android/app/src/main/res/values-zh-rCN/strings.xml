@@ -800,4 +800,5 @@
     <string name="settings_save_photos_to_gallery">保存到照片</string>
     <string name="settings_save_photos_to_gallery_subtitle">记录时也将餐食照片保存到相册</string>
     <string name="settings_other_nutrients_note">与卡路里、蛋白质、碳水化合物和脂肪目标分开。</string>
+    <string name="label_date">日期</string>
 </resources>

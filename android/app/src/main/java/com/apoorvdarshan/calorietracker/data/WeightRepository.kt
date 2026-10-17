@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.data
 
 import com.apoorvdarshan.calorietracker.models.WeightEntry
+import com.apoorvdarshan.calorietracker.models.WeightGoal
 import com.apoorvdarshan.calorietracker.services.health.ExternalWeight
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectManager
 import kotlinx.coroutines.flow.Flow
@@ -54,15 +55,10 @@ class WeightRepository(
 
         val profile = profileRepository.current()
         val goal = profile?.goalWeightKg
-        if (profile != null && goal != null && previousLatest != null) {
-            val crossed = when (profile.goal) {
-                com.apoorvdarshan.calorietracker.models.WeightGoal.LOSE ->
-                    previousLatest.weightKg > goal && entry.weightKg <= goal
-                com.apoorvdarshan.calorietracker.models.WeightGoal.GAIN ->
-                    previousLatest.weightKg < goal && entry.weightKg >= goal
-                com.apoorvdarshan.calorietracker.models.WeightGoal.MAINTAIN -> false
-            }
-            if (crossed) return WeightGoalReachedEvent(entry)
+        if (profile != null && goal != null && previousLatest != null &&
+            crossesWeightGoal(entry, previousLatest, goal, profile.goal)
+        ) {
+            return WeightGoalReachedEvent(entry)
         }
         return null
     }
@@ -155,6 +151,22 @@ class WeightRepository(
 
     companion object {
         const val MAX_DELETED_WEIGHT_IDS = 1000
+    }
+}
+
+/** Only a new latest reading can reach the goal: a weigh-in logged for an earlier day is
+ *  history, not progress. */
+internal fun crossesWeightGoal(
+    entry: WeightEntry,
+    previousLatest: WeightEntry,
+    goalKg: Double,
+    goal: WeightGoal
+): Boolean {
+    if (entry.date < previousLatest.date) return false
+    return when (goal) {
+        WeightGoal.LOSE -> previousLatest.weightKg > goalKg && entry.weightKg <= goalKg
+        WeightGoal.GAIN -> previousLatest.weightKg < goalKg && entry.weightKg >= goalKg
+        WeightGoal.MAINTAIN -> false
     }
 }
 

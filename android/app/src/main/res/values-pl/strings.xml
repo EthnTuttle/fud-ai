@@ -808,4 +808,5 @@
     <string name="photo_save_permission_denied">Odmowa dostępu do zdjęć</string>
     <string name="settings_save_photos_to_gallery">Zapisuj w Zdjęciach</string>
     <string name="settings_save_photos_to_gallery_subtitle">Zapisuj też zdjęcia posiłków w galerii podczas logowania</string>
+    <string name="label_date">Data</string>
 </resources>
