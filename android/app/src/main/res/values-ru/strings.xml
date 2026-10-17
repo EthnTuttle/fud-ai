@@ -852,6 +852,15 @@
     <string name="empty_title">Нет подходящих упражнений</string>
     <string name="workout_empty_subtitle">Попробуйте другие фильтры — или создайте своё упражнение.</string>
     <string name="workout_create_exercise">Создать упражнение</string>
+    <string name="workout_filter_source">Источник</string>
+    <string name="workout_source_dataset">База данных</string>
+    <string name="workout_source_saved">Сохранённые</string>
+    <string name="workout_source_mine">Мои</string>
+    <string name="workout_mine_empty_title">Пока нет своих упражнений</string>
+    <string name="workout_mine_empty_subtitle">Здесь появятся созданные вами упражнения.</string>
+    <string name="workout_exercise_take_photo">Сделать снимок</string>
+    <string name="workout_exercise_camera_denied_title">Нужен доступ к камере</string>
+    <string name="workout_exercise_camera_denied_message">Чтобы фотографировать упражнения, разрешите Fud AI использовать камеру в системных настройках.</string>
     <string name="filter_all">Все</string>
     <string name="filter_all_count">Все %d</string>
     <string name="hide_details">Скрыть детали</string>

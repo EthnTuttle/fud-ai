@@ -1000,6 +1000,15 @@
     <string name="empty_title">Немає відповідних вправ</string>
     <string name="workout_empty_subtitle">Спробуйте інші фільтри — або створіть власну вправу.</string>
     <string name="workout_create_exercise">Створити вправу</string>
+    <string name="workout_filter_source">Джерело</string>
+    <string name="workout_source_dataset">База даних</string>
+    <string name="workout_source_saved">Збережені</string>
+    <string name="workout_source_mine">Мої</string>
+    <string name="workout_mine_empty_title">Ще немає власних вправ</string>
+    <string name="workout_mine_empty_subtitle">Тут з’являться створені вами вправи.</string>
+    <string name="workout_exercise_take_photo">Зробити знімок</string>
+    <string name="workout_exercise_camera_denied_title">Потрібен доступ до камери</string>
+    <string name="workout_exercise_camera_denied_message">Щоб фотографувати вправи, дозвольте Fud AI використовувати камеру в системних налаштуваннях.</string>
     <string name="filter_all">Усі</string>
     <string name="filter_all_count">Усі %d</string>
     <string name="hide_details">Сховати деталі</string>

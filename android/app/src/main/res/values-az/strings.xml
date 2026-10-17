@@ -714,6 +714,15 @@
     <string name="progress_workout_stat_days">Gün</string>
     <string name="progress_workout_no_range">Bu aralıqda hesablanmış məşq sərfiyyatı yoxdur</string>
     <string name="progress_workout_chart_description">Məşq sərfiyyatı qrafiki: %1$s–%2$s. Cəmi %3$d kkal; son %4$d kkal.</string>
+    <string name="workout_filter_source">Mənbə</string>
+    <string name="workout_source_dataset">Verilənlər bazası</string>
+    <string name="workout_source_saved">Saxlanılan</string>
+    <string name="workout_source_mine">Mənimkilər</string>
+    <string name="workout_mine_empty_title">Hələ fərdi məşq yoxdur</string>
+    <string name="workout_mine_empty_subtitle">Yaratdığınız məşqlər burada görünür.</string>
+    <string name="workout_exercise_take_photo">Şəkil çək</string>
+    <string name="workout_exercise_camera_denied_title">Kameraya giriş lazımdır</string>
+    <string name="workout_exercise_camera_denied_message">Məşq şəkilləri çəkmək üçün sistem ayarlarında Fud AI tətbiqinə kameradan istifadə icazəsi ver.</string>
     <string name="progress_steps_stat_total">Cəmi</string>
     <string name="progress_steps_stat_average">Orta</string>
     <string name="progress_steps_stat_best_day">Ən yaxşı gün</string>

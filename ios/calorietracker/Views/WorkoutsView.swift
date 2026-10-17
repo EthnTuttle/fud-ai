@@ -66,6 +66,7 @@ private struct ExerciseLibraryBrowserView: View {
     @State private var selectedMechanics: Set<String> = []
     @State private var selectedCategories: Set<String> = []
     @State private var selectedSort: ExerciseLibrarySort = .name
+    @State private var showsOnlyUserExercises = false
     @State private var isCreateExercisePresented = false
     @State private var editingExerciseRequest: EditingExerciseRequest?
     @State private var selectedDetailItem: ExerciseLibraryItem?
@@ -127,6 +128,7 @@ private struct ExerciseLibraryBrowserView: View {
             !selectedForces.isEmpty ||
             !selectedMechanics.isEmpty ||
             !selectedCategories.isEmpty ||
+            showsOnlyUserExercises ||
             selectedSort != .name
     }
 
@@ -142,7 +144,8 @@ private struct ExerciseLibraryBrowserView: View {
             forces: selectedForces,
             mechanics: selectedMechanics,
             categories: selectedCategories,
-            sort: selectedSort
+            sort: selectedSort,
+            onlyUserExercises: showsOnlyUserExercises
         )
     }
 
@@ -205,6 +208,7 @@ private struct ExerciseLibraryBrowserView: View {
         .onChange(of: selectedMechanics) { _, _ in refreshDisplayItems(); scheduleFilterPersist() }
         .onChange(of: selectedCategories) { _, _ in refreshDisplayItems(); scheduleFilterPersist() }
         .onChange(of: selectedSort) { _, _ in refreshDisplayItems(); scheduleFilterPersist() }
+        .onChange(of: showsOnlyUserExercises) { _, _ in refreshDisplayItems(); scheduleFilterPersist() }
         .onChange(of: selectedWorkoutSplit) {
             selectedSplitGroupTitles.removeAll()
             refreshDisplayItems()
@@ -319,6 +323,30 @@ private struct ExerciseLibraryBrowserView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 9) {
+                    filterMenuPill(
+                        title: String(
+                            localized: "workouts.filter.source",
+                            defaultValue: "Source",
+                            comment: "Exercise library filter title: all exercises or only ones the user created"
+                        ),
+                        value: showsOnlyUserExercises
+                            ? String(localized: "Mine")
+                            : String(
+                                localized: "workouts.filter.source.all",
+                                defaultValue: "All",
+                                comment: "Exercise library Source filter value when exercises from every source are shown"
+                            ),
+                        systemImage: "person.crop.circle",
+                        isActive: showsOnlyUserExercises
+                    ) {
+                        menuChoice(String(localized: "All Sources"), isSelected: !showsOnlyUserExercises) {
+                            showsOnlyUserExercises = false
+                        }
+                        menuChoice(String(localized: "Mine"), isSelected: showsOnlyUserExercises) {
+                            showsOnlyUserExercises = true
+                        }
+                    }
+
                     filterMenuPill(
                         title: bodyPartFilterTitle,
                         value: selectionTitle(selectedSplitGroupTitles),
@@ -504,7 +532,8 @@ private struct ExerciseLibraryBrowserView: View {
             categories: selectedCategories,
             sort: selectedSort,
             searchText: debouncedSearchText,
-            splitMuscles: splitMuscles
+            splitMuscles: splitMuscles,
+            onlyUserExercises: showsOnlyUserExercises
         )
 
         Task.detached(priority: .userInitiated) {
@@ -539,6 +568,7 @@ private struct ExerciseLibraryBrowserView: View {
         selectedMechanics.removeAll()
         selectedCategories.removeAll()
         selectedSort = .name
+        showsOnlyUserExercises = false
         refreshDisplayItems()
         scheduleFilterPersist()
     }
@@ -557,6 +587,7 @@ private struct ExerciseLibraryBrowserView: View {
         selectedMechanics = singleStoredSelection(state.mechanics)
         selectedCategories = singleStoredSelection(state.categories)
         selectedSort = state.sort
+        showsOnlyUserExercises = state.onlyUserExercises
     }
 
     private func normalizeSplitGroupSelection() {

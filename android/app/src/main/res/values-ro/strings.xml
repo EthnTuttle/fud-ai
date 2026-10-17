@@ -718,6 +718,15 @@
     <string name="progress_workout_stat_days">Zile</string>
     <string name="progress_workout_no_range">Nu există consumuri calculate pentru antrenamente în această perioadă</string>
     <string name="progress_workout_chart_description">Graficul consumului din antrenamente de la %1$s la %2$s. Total: %3$d kilocalorii; recent: %4$d kilocalorii.</string>
+    <string name="workout_filter_source">Sursă</string>
+    <string name="workout_source_dataset">Bază de date</string>
+    <string name="workout_source_saved">Salvate</string>
+    <string name="workout_source_mine">Ale mele</string>
+    <string name="workout_mine_empty_title">Încă nu ai exerciții personalizate</string>
+    <string name="workout_mine_empty_subtitle">Exercițiile pe care le creezi apar aici.</string>
+    <string name="workout_exercise_take_photo">Fă o fotografie</string>
+    <string name="workout_exercise_camera_denied_title">Este necesar accesul la cameră</string>
+    <string name="workout_exercise_camera_denied_message">Permite Fud AI să folosească camera din setările sistemului pentru a fotografia exercițiile.</string>
     <string name="progress_steps_stat_total">Total</string>
     <string name="progress_steps_stat_average">Medie</string>
     <string name="progress_steps_stat_best_day">Cea mai bună zi</string>

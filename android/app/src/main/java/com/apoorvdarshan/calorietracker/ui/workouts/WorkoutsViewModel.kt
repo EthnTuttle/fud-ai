@@ -185,6 +185,13 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         get() = _categories.value
         set(v) { _categories.value = v; saveSet(K_CATEGORIES, v) }
 
+    private val _onlyUserExercises = mutableStateOf(prefs.getBoolean(K_ONLY_USER_EXERCISES, false))
+
+    /** Library "Source" filter: true shows only exercises the user created. */
+    var onlyUserExercises: Boolean
+        get() = _onlyUserExercises.value
+        set(v) { _onlyUserExercises.value = v; prefs.edit().putBoolean(K_ONLY_USER_EXERCISES, v).apply() }
+
     private val _sort = mutableStateOf(
         runCatching { ExerciseSort.valueOf(prefs.getString(K_SORT, "") ?: "") }.getOrDefault(ExerciseSort.NAME)
     )
@@ -320,9 +327,8 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { workoutRepository?.toggleSaved(itemId) }
     }
 
-    internal fun pickerSource(): WorkoutPickerSource = runCatching {
-        WorkoutPickerSource.valueOf(prefs.getString(K_PICKER_SOURCE, "") ?: "")
-    }.getOrDefault(WorkoutPickerSource.DATASET)
+    internal fun pickerSource(): WorkoutPickerSource =
+        WorkoutPickerSource.fromStorage(prefs.getString(K_PICKER_SOURCE, null))
 
     internal fun setPickerSource(source: WorkoutPickerSource) {
         prefs.edit().putString(K_PICKER_SOURCE, source.name).apply()
@@ -551,7 +557,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
     val hasActiveFilters: Boolean
         get() = searchInput.isNotEmpty() || splitGroupTitles.isNotEmpty() || levels.isNotEmpty() || equipment.isNotEmpty() ||
             primaryMuscles.isNotEmpty() || secondaryMuscles.isNotEmpty() || forces.isNotEmpty() ||
-            mechanics.isNotEmpty() || categories.isNotEmpty() || sort != ExerciseSort.NAME
+            mechanics.isNotEmpty() || categories.isNotEmpty() || onlyUserExercises || sort != ExerciseSort.NAME
 
     private fun scheduleDebouncedSearch(value: String) {
         searchDebounceJob?.cancel()
@@ -580,6 +586,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         forces = emptySet()
         mechanics = emptySet()
         categories = emptySet()
+        onlyUserExercises = false
         sort = ExerciseSort.NAME
     }
 
@@ -599,6 +606,7 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         const val K_FORCES = "forces"
         const val K_MECHANICS = "mechanics"
         const val K_CATEGORIES = "categories"
+        const val K_ONLY_USER_EXERCISES = "only_user_exercises"
         const val K_SORT = "sort"
         const val K_PICKER_SOURCE = "picker.source"
         const val K_PICKER_FILTER_PREFIX = "picker.filter."

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import UIKit
 @testable import calorietracker
 
 @Suite struct UserExerciseStoreTests {
@@ -51,6 +52,25 @@ import Testing
         let updated = try #require(store.exerciseLibrary.exercises.first { $0.id == itemID })
         #expect(updated.name == "New Name")
         #expect(updated.primaryMuscles == ["Back"])
+    }
+
+    @Test func capturedPhotoIsDownscaledAndCancelsPendingRemoval() throws {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let capture = UIGraphicsImageRenderer(size: CGSize(width: 4_000, height: 3_000), format: format).image { context in
+            UIColor.systemOrange.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 4_000, height: 3_000))
+        }
+        var draft = UserExerciseDraft(name: "Landmine Press")
+        draft.removePhoto = true
+
+        let encoded = draft.setCapturedPhoto(capture)
+
+        #expect(encoded)
+        let data = try #require(draft.photoData)
+        let stored = try #require(UIImage(data: data))
+        #expect(!draft.removePhoto)
+        #expect(max(stored.size.width * stored.scale, stored.size.height * stored.scale) <= 1_600)
     }
 
     @Test func deleteUserExerciseRemovesTemplate() throws {

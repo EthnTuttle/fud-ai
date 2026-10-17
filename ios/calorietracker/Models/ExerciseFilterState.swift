@@ -12,6 +12,8 @@ struct ExerciseFilterState: Codable, Equatable {
     var mechanics: Set<String> = []
     var categories: Set<String> = []
     var sort: ExerciseLibrarySort = .name
+    /// Library "Source" filter: true shows only exercises the user created.
+    var onlyUserExercises = false
 
     init(
         searchText: String = "",
@@ -24,7 +26,8 @@ struct ExerciseFilterState: Codable, Equatable {
         forces: Set<String> = [],
         mechanics: Set<String> = [],
         categories: Set<String> = [],
-        sort: ExerciseLibrarySort = .name
+        sort: ExerciseLibrarySort = .name,
+        onlyUserExercises: Bool = false
     ) {
         self.searchText = searchText
         self.splitIdentifier = splitIdentifier
@@ -37,6 +40,7 @@ struct ExerciseFilterState: Codable, Equatable {
         self.mechanics = mechanics
         self.categories = categories
         self.sort = sort
+        self.onlyUserExercises = onlyUserExercises
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -51,6 +55,7 @@ struct ExerciseFilterState: Codable, Equatable {
         case mechanics
         case categories
         case sort
+        case onlyUserExercises
     }
 
     init(from decoder: Decoder) throws {
@@ -66,6 +71,7 @@ struct ExerciseFilterState: Codable, Equatable {
         mechanics = try container.decodeIfPresent(Set<String>.self, forKey: .mechanics) ?? []
         categories = try container.decodeIfPresent(Set<String>.self, forKey: .categories) ?? []
         sort = try container.decodeIfPresent(ExerciseLibrarySort.self, forKey: .sort) ?? .name
+        onlyUserExercises = try container.decodeIfPresent(Bool.self, forKey: .onlyUserExercises) ?? false
     }
 }
 

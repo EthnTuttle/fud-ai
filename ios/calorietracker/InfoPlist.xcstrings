@@ -7,109 +7,115 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يستخدم Fud AI الكاميرا لمسح الطعام والرموز الشريطية."
+            "value": "يستخدم Fud AI الكاميرا لمسح الطعام والرموز الشريطية ولالتقاط صور لتمارينك المخصصة."
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI qida və ştrix-kodları skan etmək üçün kameradan istifadə edir."
+            "value": "Fud AI qida və ştrix-kodları skan etmək, həmçinin fərdi məşqlərinizin şəklini çəkmək üçün kameradan istifadə edir."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fud AI používá fotoaparát ke skenování jídla a čárových kódů a k focení tvých vlastních cviků."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI verwendet die Kamera, um Lebensmittel und Barcodes zu scannen."
+            "value": "Fud AI verwendet die Kamera, um Lebensmittel und Barcodes zu scannen und Fotos deiner eigenen Übungen aufzunehmen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI uses the camera to scan food and barcodes."
+            "value": "Fud AI uses the camera to scan food and barcodes and to take photos of your custom exercises."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI usa la cámara para escanear alimentos y códigos de barras."
+            "value": "Fud AI usa la cámara para escanear alimentos y códigos de barras, y para tomar fotos de tus ejercicios personalizados."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI utilise l’appareil photo pour scanner les aliments et les codes-barres."
+            "value": "Fud AI utilise l’appareil photo pour scanner les aliments et les codes-barres, et pour photographier vos exercices personnalisés."
           }
         },
         "hi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI भोजन और बारकोड स्कैन करने के लिए कैमरे का उपयोग करता है।"
+            "value": "Fud AI भोजन और बारकोड स्कैन करने और आपके कस्टम व्यायामों की फ़ोटो लेने के लिए कैमरे का उपयोग करता है।"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI usa la fotocamera per scansionare alimenti e codici a barre."
+            "value": "Fud AI usa la fotocamera per scansionare alimenti e codici a barre e per fotografare i tuoi esercizi personalizzati."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AIは、食品やバーコードのスキャンにカメラを使用します。"
+            "value": "Fud AIは、食品やバーコードのスキャンと、自作の種目の写真撮影にカメラを使用します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI는 음식과 바코드를 스캔하기 위해 카메라를 사용합니다."
+            "value": "Fud AI는 음식과 바코드를 스캔하고 직접 만든 운동의 사진을 찍기 위해 카메라를 사용합니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI gebruikt de camera om voedsel en barcodes te scannen."
+            "value": "Fud AI gebruikt de camera om voedsel en barcodes te scannen en om foto’s van je eigen oefeningen te maken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI używa aparatu do skanowania żywności i kodów kreskowych."
+            "value": "Fud AI używa aparatu do skanowania żywności i kodów kreskowych oraz do robienia zdjęć Twoich własnych ćwiczeń."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Fud AI usa a câmera para escanear alimentos e códigos de barras."
+            "value": "O Fud AI usa a câmera para escanear alimentos e códigos de barras e para tirar fotos dos seus exercícios personalizados."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI folosește camera pentru a scana alimente și coduri de bare."
+            "value": "Fud AI folosește camera pentru a scana alimente și coduri de bare și pentru a fotografia exercițiile tale personalizate."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI использует камеру для сканирования продуктов и штрихкодов."
+            "value": "Fud AI использует камеру для сканирования продуктов и штрихкодов, а также для съёмки ваших собственных упражнений."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI використовує камеру для сканування продуктів и штрихкодов."
+            "value": "Fud AI використовує камеру для сканування продуктів і штрихкодів, а також для фотографування ваших власних вправ."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI 使用相机扫描食物和条形码。"
+            "value": "Fud AI 使用相机扫描食物和条形码，并为你的自定义动作拍照。"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fud AI, yiyecek ve barkodları taramak için kamerayı kullanır."
+            "value": "Fud AI, yiyecek ve barkodları taramak ve özel egzersizlerinizin fotoğrafını çekmek için kamerayı kullanır."
           }
         }
       }

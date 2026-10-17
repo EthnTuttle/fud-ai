@@ -713,6 +713,15 @@
     <string name="progress_workout_stat_days">일수</string>
     <string name="progress_workout_no_range">이 기간에 계산된 운동 소모량이 없습니다</string>
     <string name="progress_workout_chart_description">%1$s부터 %2$s까지의 운동 소모 차트. 총 %3$d킬로칼로리, 최근 %4$d킬로칼로리.</string>
+    <string name="workout_filter_source">출처</string>
+    <string name="workout_source_dataset">데이터베이스</string>
+    <string name="workout_source_saved">저장됨</string>
+    <string name="workout_source_mine">내 운동</string>
+    <string name="workout_mine_empty_title">아직 직접 만든 운동이 없습니다</string>
+    <string name="workout_mine_empty_subtitle">직접 만든 운동이 여기에 표시됩니다.</string>
+    <string name="workout_exercise_take_photo">사진 찍기</string>
+    <string name="workout_exercise_camera_denied_title">카메라 접근 권한이 필요합니다</string>
+    <string name="workout_exercise_camera_denied_message">운동 사진을 찍으려면 시스템 설정에서 Fud AI의 카메라 사용을 허용하세요.</string>
     <string name="progress_steps_stat_total">합계</string>
     <string name="progress_steps_stat_average">평균</string>
     <string name="progress_steps_stat_best_day">최고 기록일</string>

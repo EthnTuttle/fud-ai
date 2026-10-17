@@ -724,6 +724,15 @@
     <string name="progress_workout_stat_days">Dni</string>
     <string name="progress_workout_no_range">Brak obliczonych spałań treningowych w tym zakresie</string>
     <string name="progress_workout_chart_description">Wykres spalania treningowego od %1$s do %2$s. Razem %3$d kilokalorii; ostatnie %4$d kilokalorii.</string>
+    <string name="workout_filter_source">Źródło</string>
+    <string name="workout_source_dataset">Baza danych</string>
+    <string name="workout_source_saved">Zapisane</string>
+    <string name="workout_source_mine">Moje</string>
+    <string name="workout_mine_empty_title">Brak własnych ćwiczeń</string>
+    <string name="workout_mine_empty_subtitle">Utworzone przez Ciebie ćwiczenia pojawią się tutaj.</string>
+    <string name="workout_exercise_take_photo">Zrób zdjęcie</string>
+    <string name="workout_exercise_camera_denied_title">Potrzebny dostęp do aparatu</string>
+    <string name="workout_exercise_camera_denied_message">Aby robić zdjęcia ćwiczeń, zezwól Fud AI na korzystanie z aparatu w ustawieniach systemowych.</string>
     <string name="progress_steps_stat_total">Suma</string>
     <string name="progress_steps_stat_average">Średnia</string>
     <string name="progress_steps_stat_best_day">Najlepszy dzień</string>

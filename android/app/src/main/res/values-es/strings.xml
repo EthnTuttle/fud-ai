@@ -715,6 +715,15 @@
     <string name="progress_workout_stat_days">Días</string>
     <string name="progress_workout_no_range">No hay gastos de entreno calculados en este periodo</string>
     <string name="progress_workout_chart_description">Gráfico de gasto de entrenamientos del %1$s al %2$s. Total: %3$d kilocalorías; último: %4$d kilocalorías.</string>
+    <string name="workout_filter_source">Origen</string>
+    <string name="workout_source_dataset">Base de datos</string>
+    <string name="workout_source_saved">Guardados</string>
+    <string name="workout_source_mine">Míos</string>
+    <string name="workout_mine_empty_title">Aún no hay ejercicios personalizados</string>
+    <string name="workout_mine_empty_subtitle">Los ejercicios que crees aparecerán aquí.</string>
+    <string name="workout_exercise_take_photo">Hacer foto</string>
+    <string name="workout_exercise_camera_denied_title">Se necesita acceso a la cámara</string>
+    <string name="workout_exercise_camera_denied_message">Permite que Fud AI use la cámara en los ajustes del sistema para tomar fotos de ejercicios.</string>
     <string name="progress_steps_stat_total">Total</string>
     <string name="progress_steps_stat_average">Promedio</string>
     <string name="progress_steps_stat_best_day">Mejor día</string>

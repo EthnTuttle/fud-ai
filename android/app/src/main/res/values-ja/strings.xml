@@ -713,6 +713,15 @@
     <string name="progress_workout_stat_days">日数</string>
     <string name="progress_workout_no_range">この期間に計算済みのワークアウト消費はありません</string>
     <string name="progress_workout_chart_description">%1$sから%2$sまでのワークアウト消費グラフ。合計%3$dキロカロリー、最新%4$dキロカロリー。</string>
+    <string name="workout_filter_source">作成元</string>
+    <string name="workout_source_dataset">データベース</string>
+    <string name="workout_source_saved">保存済み</string>
+    <string name="workout_source_mine">自作</string>
+    <string name="workout_mine_empty_title">自作の種目はまだありません</string>
+    <string name="workout_mine_empty_subtitle">作成した種目がここに表示されます。</string>
+    <string name="workout_exercise_take_photo">写真を撮る</string>
+    <string name="workout_exercise_camera_denied_title">カメラへのアクセスが必要です</string>
+    <string name="workout_exercise_camera_denied_message">種目の写真を撮るには、システム設定でFud AIによるカメラの使用を許可してください。</string>
     <string name="progress_steps_stat_total">合計</string>
     <string name="progress_steps_stat_average">平均</string>
     <string name="progress_steps_stat_best_day">最高の日</string>
