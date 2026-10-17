@@ -59,6 +59,42 @@ enum WaterQuickAddPresets {
         let milliliters = unit.milliliters(fromDisplayedValue: value)
         return validRange.contains(milliliters) ? milliliters : nil
     }
+
+    /// Milliliters for each edited field, or nil for an invalid one. Fields still showing
+    /// their saved text keep the saved milliliters instead of round-tripping through fl oz.
+    static func resolvedMilliliters(
+        texts: [String],
+        savedTexts: [String],
+        savedMilliliters: [Int],
+        unit: WaterUnit
+    ) -> [Int?] {
+        texts.indices.map { index in
+            if savedTexts.indices.contains(index), savedMilliliters.indices.contains(index),
+               texts[index] == savedTexts[index] {
+                return savedMilliliters[index]
+            }
+            return milliliters(fromEditingText: texts[index], unit: unit)
+        }
+    }
+
+    /// The amounts to save when the edit screen closes, or nil while any of the three
+    /// fields is empty or out of range, so the saved presets stay as they were.
+    static func editedPresets(
+        texts: [String],
+        savedTexts: [String],
+        savedMilliliters: [Int],
+        unit: WaterUnit
+    ) -> [Int]? {
+        let resolved = resolvedMilliliters(
+            texts: texts,
+            savedTexts: savedTexts,
+            savedMilliliters: savedMilliliters,
+            unit: unit
+        )
+        let values = resolved.compactMap { $0 }
+        guard values.count == defaults.count, values.count == resolved.count else { return nil }
+        return values
+    }
 }
 
 enum WaterUnit: String, CaseIterable, Identifiable {

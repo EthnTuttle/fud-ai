@@ -198,7 +198,8 @@ struct WaterCustomAmountSheet: View {
     }
 }
 
-/// Edits the three Home + menu water amounts. Valid edits save right away.
+/// Edits the three Home + menu water amounts. Saves when the screen closes, and only if
+/// all three amounts are valid, so values half-typed while editing never reach the + menu.
 struct WaterQuickAddSettingsView: View {
     let unit: WaterUnit
 
@@ -210,11 +211,12 @@ struct WaterQuickAddSettingsView: View {
     @State private var texts: [String] = []
 
     private var resolvedMilliliters: [Int?] {
-        texts.indices.map { index in
-            texts[index] == originalTexts[index]
-                ? originalMilliliters[index]
-                : WaterQuickAddPresets.milliliters(fromEditingText: texts[index], unit: unit)
-        }
+        WaterQuickAddPresets.resolvedMilliliters(
+            texts: texts,
+            savedTexts: originalTexts,
+            savedMilliliters: originalMilliliters,
+            unit: unit
+        )
     }
 
     var body: some View {
@@ -259,19 +261,20 @@ struct WaterQuickAddSettingsView: View {
         .navigationTitle("Quick Add Amounts")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: load)
+        .onDisappear(perform: save)
         .onChange(of: texts) { _, newValue in
             let filtered = newValue.map { WaterQuickAddPresets.filteredInput($0, unit: unit) }
-            guard filtered == newValue else {
-                texts = filtered
-                return
-            }
-            save()
+            if filtered != newValue { texts = filtered }
         }
     }
 
     private func save() {
-        let values = resolvedMilliliters.compactMap { $0 }
-        guard !texts.isEmpty, values.count == texts.count else { return }
+        guard let values = WaterQuickAddPresets.editedPresets(
+            texts: texts,
+            savedTexts: originalTexts,
+            savedMilliliters: originalMilliliters,
+            unit: unit
+        ) else { return }
         let encoded = WaterQuickAddPresets.encode(values)
         if encoded != WaterQuickAddPresets.encode(WaterQuickAddPresets.decode(presetsRaw)) {
             presetsRaw = encoded

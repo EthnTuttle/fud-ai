@@ -36,6 +36,46 @@ struct WaterQuickAddPresetsTests {
         #expect(WaterQuickAddPresets.filteredInput("8,57", unit: .fluidOunces) == "8.5")
     }
 
+    @Test func editedPresetsSaveNothingWhileAnyFieldIsEmptyOrOutOfRange() {
+        let saved = [250, 500, 750]
+        let savedTexts = ["250", "500", "750"]
+        func edited(_ texts: [String]) -> [Int]? {
+            WaterQuickAddPresets.editedPresets(
+                texts: texts,
+                savedTexts: savedTexts,
+                savedMilliliters: saved,
+                unit: .milliliters
+            )
+        }
+        // Backspacing a field down to empty must not leave a truncated amount behind.
+        #expect(edited(["", "500", "750"]) == nil)
+        #expect(edited(["250", "0", "750"]) == nil)
+        #expect(edited(["250", "500", "5001"]) == nil)
+        #expect(edited(["300", "500", "750"]) == [300, 500, 750])
+        #expect(edited([]) == nil)
+    }
+
+    @Test func editedPresetsKeepUntouchedFluidOunceAmountsExact() {
+        let saved = [250, 500, 750]
+        let savedTexts = saved.map { WaterQuickAddPresets.editingText(forMilliliters: $0, unit: .fluidOunces) }
+        func edited(_ texts: [String]) -> [Int]? {
+            WaterQuickAddPresets.editedPresets(
+                texts: texts,
+                savedTexts: savedTexts,
+                savedMilliliters: saved,
+                unit: .fluidOunces
+            )
+        }
+        #expect(edited(savedTexts) == [250, 500, 750])
+        #expect(edited(["8", savedTexts[1], savedTexts[2]]) == [237, 500, 750])
+        #expect(WaterQuickAddPresets.resolvedMilliliters(
+            texts: ["8", "", savedTexts[2]],
+            savedTexts: savedTexts,
+            savedMilliliters: saved,
+            unit: .fluidOunces
+        ) == [237, nil, 750])
+    }
+
     @Test func summaryListsAmountsInTheUsersUnit() {
         #expect(WaterQuickAddPresets.summary([200, 400, 600], unit: .milliliters) == "200 · 400 · 600 ml")
     }
