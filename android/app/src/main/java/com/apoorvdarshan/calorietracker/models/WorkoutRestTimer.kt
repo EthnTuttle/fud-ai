@@ -70,11 +70,19 @@ data class WorkoutRestTimer(
         }
 
         /**
-         * A set counts as logged once its reps are filled in, so that edit starts rest. Only
-         * today's log rests; planning or back-filling another day does not.
+         * A set counts as logged once its reps are first filled in, so that edit starts rest.
+         * Only today's log rests; planning or back-filling another day does not. A set that
+         * already rested is being corrected (its reps cleared and typed again, or a keystroke
+         * that arrives before the first one is saved), which leaves the running rest alone.
          */
-        fun shouldStart(previousReps: String, newReps: String, restSeconds: Int, isToday: Boolean): Boolean =
-            restSeconds > 0 && isToday && previousReps.isBlank() && newReps.isNotBlank()
+        fun shouldStart(
+            previousReps: String,
+            newReps: String,
+            restSeconds: Int,
+            isToday: Boolean,
+            alreadyRested: Boolean = false
+        ): Boolean =
+            restSeconds > 0 && isToday && !alreadyRested && previousReps.isBlank() && newReps.isNotBlank()
 
         /**
          * The set stepper adds the next set prefilled from the one before it, so its reps never

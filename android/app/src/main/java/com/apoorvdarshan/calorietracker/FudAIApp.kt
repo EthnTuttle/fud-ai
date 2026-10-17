@@ -25,6 +25,7 @@ import com.apoorvdarshan.calorietracker.services.WorkoutFrameStore
 import com.apoorvdarshan.calorietracker.services.WidgetSnapshotWriter
 import com.apoorvdarshan.calorietracker.services.WorkoutRestAlarms
 import com.apoorvdarshan.calorietracker.services.WorkoutRestTimerController
+import com.apoorvdarshan.calorietracker.services.SharedPreferencesWorkoutRestTimerStore
 import com.apoorvdarshan.calorietracker.services.AdaptiveGoalResult
 import com.apoorvdarshan.calorietracker.services.DailyHealthEnergyEvidence
 import com.apoorvdarshan.calorietracker.services.GoalEvidence
@@ -353,7 +354,8 @@ class AppContainer(app: FudAIApp) {
                 notifications.scheduleWorkoutRest(timer.endsAt.toEpochMilli(), timer.exerciseName)
 
             override fun cancel() = notifications.cancelWorkoutRest()
-        }
+        },
+        store = SharedPreferencesWorkoutRestTimerStore(app)
     )
     val weeklyChallengeRepository = WeeklyChallengeRepository(app, keyStore)
     val cloudBackup = CloudBackupCoordinator(

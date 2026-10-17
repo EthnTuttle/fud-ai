@@ -737,7 +737,8 @@ struct WorkoutLogView: View {
         String(localized: "\(count) workouts")
     }
 
-    /// Logging a set (its reps filled in) on today's log starts the rest countdown.
+    /// Logging a set (its reps first filled in) on today's log starts the rest
+    /// countdown; clearing a logged set's reps and typing them again does not.
     private func logReps(_ value: String, setID: UUID, exercise: StrengthPlannedExercise) {
         let previousReps = currentReps(setID: setID, exerciseID: exercise.id)
         workoutStore.updateSet(exerciseID: exercise.id, setID: setID, on: selectedDate, reps: value)
@@ -745,7 +746,8 @@ struct WorkoutLogView: View {
             previousReps: previousReps,
             newReps: currentReps(setID: setID, exerciseID: exercise.id),
             restSeconds: workoutStore.preferences.restSeconds,
-            isToday: Calendar.current.isDateInToday(selectedDate)
+            isToday: Calendar.current.isDateInToday(selectedDate),
+            alreadyRested: restTimer.hasRested(setID: setID)
         ) else { return }
         startRest(after: setID, in: exercise)
     }

@@ -93,6 +93,85 @@ struct WorkoutRestTimerTests {
         // Off, or planning/back-filling another day.
         #expect(!WorkoutRestTimer.shouldStart(previousReps: "", newReps: "8", restSeconds: 0, isToday: true))
         #expect(!WorkoutRestTimer.shouldStart(previousReps: "", newReps: "8", restSeconds: 90, isToday: false))
+        // A set that already rested is being corrected: its reps cleared and typed again.
+        #expect(!WorkoutRestTimer.shouldStart(
+            previousReps: "", newReps: "8", restSeconds: 90, isToday: true, alreadyRested: true
+        ))
+    }
+
+    private func restDefaults() throws -> (UserDefaults, String) {
+        let suite = "WorkoutRestTimerTests.\(UUID().uuidString)"
+        return (try #require(UserDefaults(suiteName: suite)), suite)
+    }
+
+    private func notification(endingAt endsAt: Date) -> [AnyHashable: Any] {
+        [WorkoutRestTimerController.endsAtUserInfoKey: endsAt.timeIntervalSince1970]
+    }
+
+    @Test func aRunningRestIsSavedAndComesBackAfterARelaunch() throws {
+        let (defaults, suite) = try restDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let now = Date.now
+        let first = WorkoutRestTimerController(defaults: defaults, isAppActive: { true }, now: now)
+        #expect(!first.hasRested(setID: setID))
+        first.start(exerciseID: exerciseID, setID: setID, exerciseName: "Bench Press", durationSeconds: 90, now: now)
+        let running = try #require(first.timer)
+        #expect(first.hasRested(setID: setID))
+
+        // A relaunch before the end brings the countdown back, and the set still counts as rested.
+        let relaunched = WorkoutRestTimerController(defaults: defaults, isAppActive: { true }, now: now.addingTimeInterval(30))
+        #expect(relaunched.timer == running)
+        #expect(relaunched.hasRested(setID: setID))
+        // Its notification arriving while the app is open stays silent: the haptic follows.
+        #expect(!relaunched.presentsNotificationInForeground(userInfo: notification(endingAt: running.endsAt)))
+
+        relaunched.skip()
+        #expect(relaunched.timer == nil)
+        #expect(defaults.data(forKey: WorkoutRestTimerController.storageKey) == nil)
+        first.skip()
+    }
+
+    @Test func aRestThatEndedWhileTheAppWasClosedIsLeftToItsNotification() throws {
+        let (defaults, suite) = try restDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let saved = try timer(60)
+        defaults.set(try JSONEncoder().encode(saved), forKey: WorkoutRestTimerController.storageKey)
+
+        let controller = WorkoutRestTimerController(defaults: defaults, isAppActive: { true }, now: start.addingTimeInterval(90))
+        #expect(controller.timer == nil)
+        #expect(defaults.data(forKey: WorkoutRestTimerController.storageKey) == nil)
+        #expect(controller.hasRested(setID: setID))
+        // Its notification may still arrive once the app is open, and then it shows.
+        #expect(controller.presentsNotificationInForeground(userInfo: notification(endingAt: saved.endsAt)))
+        // Another rest's notification, or one without an end, stays silent.
+        #expect(!controller.presentsNotificationInForeground(
+            userInfo: notification(endingAt: saved.endsAt.addingTimeInterval(15))
+        ))
+        #expect(!controller.presentsNotificationInForeground(userInfo: [:]))
+    }
+
+    @Test func onlyARestThatEndedOutOfSightShowsItsNotificationInTheForeground() async throws {
+        for appIsActive in [false, true] {
+            let (defaults, suite) = try restDefaults()
+            defer { defaults.removePersistentDomain(forName: suite) }
+            let controller = WorkoutRestTimerController(defaults: defaults, isAppActive: { appIsActive })
+            // Started almost a full rest ago, so it ends a moment from now.
+            controller.start(
+                exerciseID: exerciseID,
+                setID: setID,
+                exerciseName: "Bench Press",
+                durationSeconds: 30,
+                now: Date.now.addingTimeInterval(-29.8)
+            )
+            let rest = try #require(controller.timer)
+            for _ in 0..<100 where controller.timer != nil {
+                try await Task.sleep(for: .milliseconds(50))
+            }
+            #expect(controller.timer == nil)
+            #expect(defaults.data(forKey: WorkoutRestTimerController.storageKey) == nil)
+            // Ended in front of the user, the haptic was the alert; out of sight, the notification is.
+            #expect(controller.presentsNotificationInForeground(userInfo: notification(endingAt: rest.endsAt)) == !appIsActive)
+        }
     }
 
     @Test func addingASetWithTheStepperFinishesThePreviousLoggedSet() throws {

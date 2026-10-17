@@ -95,6 +95,9 @@ class WorkoutRestTimerTest {
         // Off, or planning/back-filling another day.
         assertFalse(WorkoutRestTimer.shouldStart("", "8", restSeconds = 0, isToday = true))
         assertFalse(WorkoutRestTimer.shouldStart("", "8", restSeconds = 90, isToday = false))
+        // A set that already rested is being corrected: clearing its reps and typing them
+        // again, or a second keystroke that arrives before the first one is saved.
+        assertFalse(WorkoutRestTimer.shouldStart("", "8", restSeconds = 90, isToday = true, alreadyRested = true))
     }
 
     @Test

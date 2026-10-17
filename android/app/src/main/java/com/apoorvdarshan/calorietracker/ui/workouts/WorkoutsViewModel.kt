@@ -324,20 +324,26 @@ class WorkoutsViewModel(app: Application) : AndroidViewModel(app) {
         updateSet(exerciseId, setId, weight = value)
     }
 
-    /** Logging a set (its reps filled in) on today's log starts the rest countdown. */
+    /**
+     * Logging a set (its reps first filled in) on today's log starts the rest countdown. The
+     * shown reps lag behind the save, so whether the set already rested is what tells a quick
+     * second keystroke or a later correction apart from the first entry.
+     */
     fun updateReps(exerciseId: UUID, setId: UUID, value: String) {
         val exercise = diaryUiState.exercises.firstOrNull { it.id == exerciseId }
         val previousReps = exercise?.sets?.firstOrNull { it.id == setId }?.reps.orEmpty()
         updateSet(exerciseId, setId, reps = value)
         val restSeconds = diaryUiState.preferences.restTimerSeconds
+        val timer = restTimer ?: return
         if (exercise != null && !exercise.isCardio && WorkoutRestTimer.shouldStart(
                 previousReps = previousReps,
                 newReps = WorkoutSetInput.reps(value),
                 restSeconds = restSeconds,
-                isToday = diaryUiState.selectedDate == LocalDate.now()
+                isToday = diaryUiState.selectedDate == LocalDate.now(),
+                alreadyRested = timer.hasRested(setId)
             )
         ) {
-            restTimer?.start(exerciseId, setId, exercise.name, restSeconds)
+            timer.start(exerciseId, setId, exercise.name, restSeconds)
         }
     }
 

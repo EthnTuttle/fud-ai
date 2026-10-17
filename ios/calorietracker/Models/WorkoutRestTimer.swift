@@ -22,8 +22,9 @@ nonisolated enum WorkoutRestTimerSetting {
 }
 
 /// One rest period after a logged strength set. The countdown is anchored to
-/// wall-clock timestamps, so it stays exact while the app is in the background.
-struct WorkoutRestTimer: Equatable {
+/// wall-clock timestamps, so it stays exact while the app is in the background,
+/// and it is saved while it runs so a relaunch brings it back.
+struct WorkoutRestTimer: Equatable, Codable {
     static let extensionSeconds: TimeInterval = 15
     /// A countdown that ran out longer ago than this ended while the app was in
     /// the background; its notification already announced it.
@@ -69,10 +70,18 @@ struct WorkoutRestTimer: Equatable {
         isFinished(at: now) && now.timeIntervalSince(endsAt) < Self.inAppAlertWindow
     }
 
-    /// A set counts as logged once its reps are filled in, so that edit starts
-    /// rest. Only today's log rests; planning or back-filling another day does not.
-    static func shouldStart(previousReps: String, newReps: String, restSeconds: Int, isToday: Bool) -> Bool {
-        guard restSeconds > 0, isToday else { return false }
+    /// A set counts as logged once its reps are first filled in, so that edit
+    /// starts rest. Only today's log rests; planning or back-filling another day
+    /// does not. A set that already rested is being corrected (its reps cleared
+    /// and typed again), which leaves the running rest alone.
+    static func shouldStart(
+        previousReps: String,
+        newReps: String,
+        restSeconds: Int,
+        isToday: Bool,
+        alreadyRested: Bool = false
+    ) -> Bool {
+        guard restSeconds > 0, isToday, !alreadyRested else { return false }
         let wasLogged = !previousReps.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let isLogged = !newReps.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         return !wasLogged && isLogged

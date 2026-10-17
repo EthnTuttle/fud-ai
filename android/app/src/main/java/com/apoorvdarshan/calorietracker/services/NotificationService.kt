@@ -184,7 +184,8 @@ class NotificationService(private val context: Context) {
     /**
      * Arms the alert for a rest that ends while the app is in the background. Like the fasting
      * goal it uses an inexact alarm (no exact-alarm permission), so it can arrive a little after
-     * the countdown; the receiver skips it while the app is in the foreground.
+     * the countdown; in the foreground the receiver posts it only for a rest the app did not
+     * announce itself ([WorkoutRestTimerController.shouldNotify]).
      */
     fun scheduleWorkoutRest(endsAtMillis: Long, exerciseName: String) {
         if (endsAtMillis <= System.currentTimeMillis()) {
@@ -197,6 +198,7 @@ class NotificationService(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         ) {
             putExtra(EXTRA_REST_EXERCISE_NAME, exerciseName)
+            putExtra(EXTRA_REST_ENDS_AT, endsAtMillis)
         } ?: return
         val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, endsAtMillis, pending)
@@ -449,6 +451,7 @@ class NotificationService(private val context: Context) {
         const val CHANNEL_ANNOUNCEMENTS = "announcements"
         const val CHANNEL_WORKOUT_REST = "workout_rest"
         const val EXTRA_REST_EXERCISE_NAME = "rest_exercise_name"
+        const val EXTRA_REST_ENDS_AT = "rest_ends_at"
         const val EXTRA_CHANNEL = "channel"
         const val EXTRA_TITLE = "title"
         const val EXTRA_TEXT = "text"
@@ -516,20 +519,21 @@ class ProductHuntLaunchReceiver : BroadcastReceiver() {
 }
 
 /**
- * Fired by the rest-timer alarm. Posts only while the app is in the background (in the
- * foreground the countdown ends with a haptic) and only when the app's notifications are on.
+ * Fired by the rest-timer alarm. Posts only when the app's notifications are on, and in the
+ * foreground only for a rest the app did not announce with its haptic (a late alarm for a rest
+ * that ended in the background, or one saved before the process restarted).
  */
 class WorkoutRestReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val exerciseName = intent.getStringExtra(NotificationService.EXTRA_REST_EXERCISE_NAME).orEmpty()
+        val endsAtMillis = intent.getLongExtra(NotificationService.EXTRA_REST_ENDS_AT, 0L)
+        val container = (context.applicationContext as? FudAIApp)?.container ?: return
+        // Read on the main thread, where the rest controller changes.
+        if (!container.workoutRestTimer.shouldNotify(endsAtMillis)) return
         val pendingResult = goAsync()
-        val app = context.applicationContext as? FudAIApp
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val container = app?.container
-                val inForeground = container?.workoutRestTimer?.isAppInForeground == true
-                val enabled = container?.prefs?.notificationsEnabled?.first() == true
-                if (enabled && !inForeground) {
+                if (container.prefs.notificationsEnabled.first()) {
                     NotificationService(context).showWorkoutRestComplete(exerciseName)
                 }
             } finally {
