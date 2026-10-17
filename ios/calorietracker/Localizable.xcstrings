@@ -58886,6 +58886,12 @@
             "value": "Qida əlavə etməzdən əvvəl aktiv orucu bitirin və ya ləğv edin."
           }
         },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Před zapsáním jídla ukonči nebo zruš aktivní půst."
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",

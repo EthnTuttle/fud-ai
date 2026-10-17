@@ -26,6 +26,48 @@ struct LocalizationCatalogTests {
         "Fud AI is live on Product Hunt 🚀", "We just launched! Tap to vote and help more people find Fud AI.",
     ]
 
+    /// Every LocalizedError message localized for #507, with its format arguments.
+    static let errorKeys = [
+        // ChatService.ChatError, SpeechService.SpeechError
+        "No API key configured. Add your key in Settings → AI Provider.",
+        "Network error: %@",
+        "API error: %@",
+        "Could not understand the AI response. Please try again.",
+        "No API key configured for this speech provider. Add one in Settings → Speech-to-Text.",
+        "Could not read the recorded audio file.",
+        "Speech API error: %@",
+        "Unexpected response from the speech provider.",
+        // CloudBackupError
+        "This is not a Fud AI backup.",
+        "This backup needs a newer Fud AI.",
+        "Sign into iCloud in iOS Settings first.",
+        "No iCloud backup found.",
+        // DiaryImportError
+        "This file is too large to import.",
+        "This is not a valid Fud AI food diary JSON file.",
+        "This food diary format is not supported.",
+        "The selected diary does not contain any food or water entries.",
+        "The diary contains an invalid date or time: %@.",
+        "The diary contains an unknown meal type: %@.",
+        "The diary contains an invalid water entry.",
+        "The diary contains an invalid food entry: %@.",
+        // HostedAIServiceError
+        "Invalid hosted AI URL.",
+        "Hosted AI could not identify your subscription. Try Restore Purchases.",
+        "Could not understand the hosted AI response.",
+        "Hosted AI is temporarily unavailable. Please try again shortly.",
+        // OnDeviceAIError
+        "Apple Intelligence is unavailable: %@",
+        // SiriLoggingService
+        "Please say a weight, such as 75 kilograms or 165 pounds.",
+        "That does not look like a valid weight.",
+        "End or cancel your active fast before logging food.",
+        // LiveSocketError
+        "The provider refused the connection (HTTP %lld).",
+        "The connection closed (%@).",
+        "The provider sent a message the app can't read.",
+    ]
+
     // MARK: - Compiled bundles
 
     @Test func notificationTextIsTranslatedInEveryLanguage() throws {
@@ -68,6 +110,36 @@ struct LocalizationCatalogTests {
     }
 
     // MARK: - Error descriptions
+
+    @Test func errorTextIsTranslatedInEveryLanguage() throws {
+        let missing = "\u{0}missing"
+        for language in Self.appLanguages {
+            let bundle = try Self.languageBundle(language, in: .main)
+            for key in Self.errorKeys {
+                let translation = bundle.localizedString(forKey: key, value: missing, table: nil)
+                #expect(translation != missing, "\(language) is missing \(key)")
+                guard translation != missing else { continue }
+                // A translation that drops or retypes an argument would lose the detail
+                // (provider message, file text, status code) or crash String(format:).
+                #expect(
+                    Self.formatArguments(translation) == Self.formatArguments(key),
+                    "\(language) \(translation) does not match the arguments of \(key)"
+                )
+            }
+        }
+    }
+
+    @Test func translatedErrorDescriptionsKeepTheirDetails() throws {
+        for language in Self.appLanguages {
+            let bundle = try Self.languageBundle(language, in: .main)
+            let date = bundle.localizedString(forKey: "The diary contains an invalid date or time: %@.", value: nil, table: nil)
+            #expect(String(format: date, "2026-13-40").contains("2026-13-40"), "\(language): \(date)")
+            let api = bundle.localizedString(forKey: "API error: %@", value: nil, table: nil)
+            #expect(String(format: api, "quota hit").contains("quota hit"), "\(language): \(api)")
+            let refused = bundle.localizedString(forKey: "The provider refused the connection (HTTP %lld).", value: nil, table: nil)
+            #expect(String(format: refused, Int64(402)).contains("402"), "\(language): \(refused)")
+        }
+    }
 
     @Test func errorDescriptionsKeepTheirDetails() {
         #expect(DiaryImportError.invalidDate("2026-13-40").errorDescription?.contains("2026-13-40") == true)
