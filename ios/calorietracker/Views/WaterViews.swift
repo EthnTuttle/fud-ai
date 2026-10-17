@@ -198,6 +198,98 @@ struct WaterCustomAmountSheet: View {
     }
 }
 
+/// Edits the three Home + menu water amounts. Saves when the screen closes, and only if
+/// all three amounts are valid, so values half-typed while editing never reach the + menu.
+struct WaterQuickAddSettingsView: View {
+    let unit: WaterUnit
+
+    @AppStorage(WaterQuickAddPresets.key) private var presetsRaw = ""
+    /// Saved amounts and their text when the screen opened, so untouched fields keep
+    /// their exact milliliters instead of round-tripping through fl oz.
+    @State private var originalMilliliters: [Int] = []
+    @State private var originalTexts: [String] = []
+    @State private var texts: [String] = []
+
+    private var resolvedMilliliters: [Int?] {
+        WaterQuickAddPresets.resolvedMilliliters(
+            texts: texts,
+            savedTexts: originalTexts,
+            savedMilliliters: originalMilliliters,
+            unit: unit
+        )
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                ForEach(texts.indices, id: \.self) { index in
+                    HStack {
+                        Image(systemName: "drop.fill")
+                            .foregroundStyle(AppColors.calorie)
+                        TextField(
+                            "Amount \(index + 1)",
+                            text: $texts[index],
+                            prompt: Text(verbatim: WaterQuickAddPresets.editingText(
+                                forMilliliters: WaterQuickAddPresets.defaults[index],
+                                unit: unit
+                            ))
+                        )
+                        .keyboardType(unit == .milliliters ? .numberPad : .decimalPad)
+                        .accessibilityIdentifier("settings.water.quickAdd.\(index)")
+                        Text(unit.symbol)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } footer: {
+                VStack(alignment: .leading, spacing: 6) {
+                    if resolvedMilliliters.contains(where: { $0 == nil }) {
+                        Text("Enter an amount up to \(unit.formatted(milliliters: WaterQuickAddPresets.validRange.upperBound)).")
+                            .foregroundStyle(.red)
+                    }
+                    Text("Shown in the + menu for one-tap water logging.")
+                }
+            }
+
+            Section {
+                Button("Reset", role: .destructive) {
+                    presetsRaw = ""
+                    load()
+                }
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle("Quick Add Amounts")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: load)
+        .onDisappear(perform: save)
+        .onChange(of: texts) { _, newValue in
+            let filtered = newValue.map { WaterQuickAddPresets.filteredInput($0, unit: unit) }
+            if filtered != newValue { texts = filtered }
+        }
+    }
+
+    private func save() {
+        guard let values = WaterQuickAddPresets.editedPresets(
+            texts: texts,
+            savedTexts: originalTexts,
+            savedMilliliters: originalMilliliters,
+            unit: unit
+        ) else { return }
+        let encoded = WaterQuickAddPresets.encode(values)
+        if encoded != WaterQuickAddPresets.encode(WaterQuickAddPresets.decode(presetsRaw)) {
+            presetsRaw = encoded
+        }
+    }
+
+    private func load() {
+        let presets = WaterQuickAddPresets.decode(presetsRaw)
+        let editing = presets.map { WaterQuickAddPresets.editingText(forMilliliters: $0, unit: unit) }
+        originalMilliliters = presets
+        originalTexts = editing
+        texts = editing
+    }
+}
+
 struct WaterGoalPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let onSave: (Int) -> Void

@@ -176,6 +176,7 @@
     <string name="nav_progress">Progresso</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Ajustes</string>
+    <string name="nav_workouts">Treinos</string>
     <string name="nav_about">Sobre</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -558,6 +559,10 @@
     <string name="settings_week_monday">Segunda-feira</string>
     <string name="settings_week_sunday">Domingo</string>
     <string name="settings_notifications">Notificações</string>
+    <string name="settings_water_quick_add">Quantidades de adição rápida</string>
+    <string name="settings_water_quick_add_amount">Quantidade %1$d</string>
+    <string name="settings_water_quick_add_invalid">Insira uma quantidade de até %1$s.</string>
+    <string name="settings_water_quick_add_footer">Aparecem no menu + para registrar água com um toque.</string>
     <string name="settings_battery_opt">Otimização de bateria</string>
     <string name="settings_battery_opt_value">Adicionar Fud AI à lista de exceções</string>
 
@@ -837,6 +842,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). “Quantificação do efeito do desequilíbrio energético sobre o peso corporal.” Lancet 378(9793):826–837. A regra clássica de 3.500 kcal por libra tem origem em Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). “Revisão sistemática, meta-análise e meta-regressão do efeito da suplementação proteica sobre os ganhos de massa muscular e força induzidos pelo treinamento resistido.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">As estimativas se baseiam nos dados de treinamento do modelo de IA subjacente (USDA FoodData Central, rótulos de fabricantes e literatura científica). A precisão varia conforme o alimento, a visibilidade do tamanho da porção e o modelo do provedor. Sempre confira os rótulos dos alimentos que você registra com frequência.</string>
+    <string name="settings_add_menu_standalone">Métodos avulsos</string>
+    <string name="settings_add_menu_standalone_footer">Estes métodos aparecem diretamente no +, fora de qualquer grupo.</string>
+    <string name="settings_tab_bar">Barra de abas</string>
+    <string name="settings_tab_bar_section">Mostrar na barra de abas</string>
+    <string name="settings_tab_bar_footer">Início e Ajustes sempre aparecem.</string>
     <string name="about_litert_notices">Avisos de terceiros do LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Não foi possível carregar os avisos de terceiros do LiteRT-LM.</string>
     <string name="settings_model_source">Fonte do modelo</string>

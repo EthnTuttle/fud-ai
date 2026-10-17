@@ -176,6 +176,7 @@
     <string name="nav_progress">Progreso</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Ajustes</string>
+    <string name="nav_workouts">Entrenamientos</string>
     <string name="nav_about">Acerca de</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -558,6 +559,10 @@
     <string name="settings_week_monday">Lunes</string>
     <string name="settings_week_sunday">Domingo</string>
     <string name="settings_notifications">Notificaciones</string>
+    <string name="settings_water_quick_add">Cantidades de adición rápida</string>
+    <string name="settings_water_quick_add_amount">Cantidad %1$d</string>
+    <string name="settings_water_quick_add_invalid">Introduce una cantidad de hasta %1$s.</string>
+    <string name="settings_water_quick_add_footer">Se muestran en el menú + para registrar agua con un toque.</string>
     <string name="settings_battery_opt">Optimización de batería</string>
     <string name="settings_battery_opt_value">Añadir Fud AI a la lista blanca</string>
 
@@ -837,6 +842,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «Cuantificación del efecto del desequilibrio energético sobre el peso corporal». Lancet 378(9793):826–837. La regla clásica de 3500 kcal por libra procede de Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «Revisión sistemática, metaanálisis y metarregresión del efecto de la suplementación con proteínas sobre el aumento de masa muscular y fuerza inducido por el entrenamiento de resistencia». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Las estimaciones se basan en los datos de entrenamiento del modelo de IA subyacente (USDA FoodData Central, etiquetas de fabricantes y literatura científica). La precisión varía según el alimento, la visibilidad del tamaño de la porción y el modelo del proveedor. Contrasta siempre las etiquetas de los alimentos que registras con frecuencia.</string>
+    <string name="settings_add_menu_standalone">Métodos independientes</string>
+    <string name="settings_add_menu_standalone_footer">Estos métodos aparecen directamente bajo +, fuera de cualquier grupo.</string>
+    <string name="settings_tab_bar">Barra de pestañas</string>
+    <string name="settings_tab_bar_section">Mostrar en la barra de pestañas</string>
+    <string name="settings_tab_bar_footer">Inicio y Ajustes se muestran siempre.</string>
     <string name="about_litert_notices">Avisos de terceros de LiteRT-LM</string>
     <string name="about_litert_notices_load_error">No se pudieron cargar los avisos de terceros de LiteRT-LM.</string>
     <string name="settings_model_source">Fuente del modelo</string>

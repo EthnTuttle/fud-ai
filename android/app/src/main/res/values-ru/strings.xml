@@ -563,6 +563,10 @@
     <string name="settings_week_monday">Понедельник</string>
     <string name="settings_week_sunday">Воскресенье</string>
     <string name="settings_notifications">Уведомления</string>
+    <string name="settings_water_quick_add">Объёмы быстрого добавления</string>
+    <string name="settings_water_quick_add_amount">Объём %1$d</string>
+    <string name="settings_water_quick_add_invalid">Введите объём не более %1$s.</string>
+    <string name="settings_water_quick_add_footer">Показываются в меню «+», чтобы записывать воду одним касанием.</string>
     <string name="settings_battery_opt">Оптимизация батареи</string>
     <string name="settings_battery_opt_value">Добавить Fud AI в исключения</string>
 
@@ -1100,6 +1104,11 @@
     <string name="sort_standard">Завтрак → Обед → Ужин</string>
     <string name="sort_latest_first">Сначала последние</string>
     <string name="copy_meal_format">Копировать: %1$s</string>
+    <string name="settings_add_menu_standalone">Отдельные способы</string>
+    <string name="settings_add_menu_standalone_footer">Эти способы отображаются прямо в меню «+», вне групп.</string>
+    <string name="settings_tab_bar">Панель вкладок</string>
+    <string name="settings_tab_bar_section">Показывать на панели вкладок</string>
+    <string name="settings_tab_bar_footer">«Главная» и «Настройки» показываются всегда.</string>
     <string name="settings_fasting_tracking">Отслеживание голодания</string>
     <string name="settings_fasting_goal">Цель голодания по умолчанию</string>
     <string name="settings_fasting_goal_value">%1$d часов</string>

@@ -107,6 +107,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Tab
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
@@ -184,6 +185,7 @@ import com.apoorvdarshan.calorietracker.models.SpeechProvider
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightDisplayFormatter
 import com.apoorvdarshan.calorietracker.models.WeightGoal
+import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.models.WorkoutRpeScale
 import com.apoorvdarshan.calorietracker.models.WorkoutSplit
@@ -244,7 +246,7 @@ private enum class SettingsSheet {
     SPEECH_FALLBACK_PROVIDER, SPEECH_FALLBACK_LANGUAGE, SPEECH_FALLBACK_KEY,
     GENDER, BIRTHDAY, HEIGHT, WEIGHT, BODY_FAT, GOAL_BODY_FAT, ACTIVITY, GOAL, GOAL_WEIGHT, GOAL_SPEED,
     CALORIES, PROTEIN, CARBS, FAT, OPTIONAL_NUTRIENTS,
-    APPEARANCE, APP_LANGUAGE, WEEK_START, MEAL_TIMES, WATER_GOAL, WATER_UNIT, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE
+    APPEARANCE, APP_LANGUAGE, WEEK_START, MEAL_TIMES, WATER_GOAL, WATER_UNIT, WATER_QUICK_ADD, FASTING_GOAL, WORKOUT_SPLIT, WORKOUT_RPE
 }
 
 /** First tag from the AndroidX per-app locale list, or null to follow the system. */
@@ -1023,6 +1025,12 @@ fun SettingsScreen(
                     stringResource(R.string.settings_meal_times_customize),
                     icon = Icons.Outlined.QrCodeScanner
                 ) { nav.navigate(FudAIRoutes.PRODUCT_INFO) }
+                HorizontalDivider()
+                SettingRow(
+                    stringResource(R.string.settings_tab_bar),
+                    stringResource(R.string.settings_meal_times_customize),
+                    icon = Icons.Outlined.Tab
+                ) { nav.navigate(FudAIRoutes.TAB_BAR) }
             }
             }
 
@@ -1058,6 +1066,12 @@ fun SettingsScreen(
                         },
                         icon = Icons.Outlined.Straighten
                     ) { sheet = SettingsSheet.WATER_UNIT }
+                    HorizontalDivider()
+                    SettingRow(
+                        stringResource(R.string.settings_water_quick_add),
+                        WaterQuickAddPresets.summary(ui.waterQuickAddPresetsMl, ui.waterUnit),
+                        icon = Icons.Filled.WaterDrop
+                    ) { sheet = SettingsSheet.WATER_QUICK_ADD }
                 }
                 HorizontalDivider()
                 ToggleRow(
@@ -3246,6 +3260,14 @@ private fun SettingsSheets(
                     selected = { it == ui.waterUnit },
                     onSelect = { vm.setWaterUnit(it); onDismiss() }
                 )
+                SettingsSheet.WATER_QUICK_ADD -> WaterQuickAddSheet(
+                    current = ui.waterQuickAddPresetsMl,
+                    unit = ui.waterUnit,
+                    onSave = {
+                        vm.setWaterQuickAddPresetsMl(it)
+                        onDismiss()
+                    }
+                )
                 SettingsSheet.FASTING_GOAL -> FastingGoalSheet(
                     currentMinutes = ui.fastingDefaultGoalMinutes,
                     onSave = {
@@ -3777,6 +3799,69 @@ private fun WaterGoalSheet(current: Int, unit: WaterUnit, onSave: (Int) -> Unit)
     )
     Spacer(Modifier.height(16.dp))
     GradientSaveButton { onSave(unit.toMilliliters(goal.toDouble())) }
+    Spacer(Modifier.height(8.dp))
+}
+
+@Composable
+private fun WaterQuickAddSheet(current: List<Int>, unit: WaterUnit, onSave: (List<Int>) -> Unit) {
+    // Untouched fields keep their exact milliliters instead of round-tripping through fl oz.
+    val originalTexts = remember(current, unit) { current.map { WaterQuickAddPresets.editingText(it, unit) } }
+    var original by remember(current, unit) { mutableStateOf(current) }
+    var baseline by remember(current, unit) { mutableStateOf(originalTexts) }
+    var texts by remember(current, unit) { mutableStateOf(originalTexts) }
+    val resolved = texts.mapIndexed { index, text ->
+        if (text == baseline.getOrNull(index)) original.getOrNull(index)
+        else WaterQuickAddPresets.millilitersFromEditingText(text, unit)
+    }
+    val maxAmount = unit.format(WaterQuickAddPresets.ValidRange.last)
+
+    Text(stringResource(R.string.settings_water_quick_add), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(12.dp))
+    texts.forEachIndexed { index, text ->
+        val invalid = resolved[index] == null
+        OutlinedTextField(
+            value = text,
+            onValueChange = { value ->
+                texts = texts.toMutableList().also { it[index] = WaterQuickAddPresets.filteredInput(value, unit) }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .testTag("settings.water.quickAdd.$index"),
+            label = { Text(stringResource(R.string.settings_water_quick_add_amount, index + 1)) },
+            suffix = { Text(unit.symbol) },
+            isError = invalid,
+            supportingText = if (invalid) {
+                { Text(stringResource(R.string.settings_water_quick_add_invalid, maxAmount)) }
+            } else null,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = if (unit == WaterUnit.MILLILITERS) KeyboardType.Number else KeyboardType.Decimal
+            )
+        )
+    }
+    Spacer(Modifier.height(4.dp))
+    Text(
+        stringResource(R.string.settings_water_quick_add_footer),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    )
+    Spacer(Modifier.height(16.dp))
+    GradientSaveButton(enabled = resolved.all { it != null }) {
+        onSave(resolved.filterNotNull())
+    }
+    TextButton(
+        onClick = {
+            val defaults = WaterQuickAddPresets.Defaults
+            val defaultTexts = defaults.map { WaterQuickAddPresets.editingText(it, unit) }
+            original = defaults
+            baseline = defaultTexts
+            texts = defaultTexts
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(stringResource(R.string.action_reset), color = MaterialTheme.colorScheme.error)
+    }
     Spacer(Modifier.height(8.dp))
 }
 

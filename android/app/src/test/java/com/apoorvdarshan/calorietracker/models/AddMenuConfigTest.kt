@@ -116,8 +116,82 @@ class AddMenuConfigTest {
             )
         )
         val restored = config.withRestoredMethod(FoodLogMethod.VOICE)
-        assertEquals(listOf("camera", "voice"), restored.groups.single().methods)
-        assertEquals("g1", restored.groups.single().id)
+        assertEquals(listOf("camera", "voice"), restored.groups[0].methods)
+        assertEquals("g1", restored.groups[0].id)
+        // The editor keeps the newly added empty group until it is saved.
+        assertEquals(listOf("g2"), restored.groups.drop(1).map { it.id })
+        assertEquals(listOf("g1"), restored.sanitized().groups.map { it.id })
+    }
+
+    @Test
+    fun restoreHiddenMethodToStandaloneNextToGroups() {
+        val config = AddMenuConfig(
+            groups = listOf(
+                AddMenuGroupConfig(id = "g1", name = "Scan", methods = listOf("camera", "voice"))
+            ),
+            flatMethods = listOf("text")
+        )
+        val restored = config.withRestoredMethod(FoodLogMethod.VOICE, standalone = true)
+        assertEquals(listOf("camera"), restored.groups.single().methods)
+        assertEquals(listOf("text", "voice"), restored.flatMethods)
+    }
+
+    @Test
+    fun groupsAndStandaloneMethodsRoundTrip() {
+        val config = AddMenuConfig(
+            groups = listOf(
+                AddMenuGroupConfig(id = "g1", name = "Scan", methods = listOf("camera", "barcode"))
+            ),
+            flatMethods = listOf("voice", "camera", "text")
+        )
+        val decoded = AddMenuConfig.decode(AddMenuConfig.encode(config))
+        assertEquals(AddMenuConfig.CURRENT_VERSION, decoded.version)
+        assertEquals(listOf("camera", "barcode"), decoded.groups.single().methods)
+        // A method already in a group is not repeated under +.
+        assertEquals(listOf("voice", "text"), decoded.flatMethods)
+        assertEquals(
+            listOf(FoodLogMethod.CAMERA, FoodLogMethod.BARCODE, FoodLogMethod.VOICE, FoodLogMethod.TEXT),
+            decoded.visibleMethods()
+        )
+    }
+
+    @Test
+    fun versionOneGroupedMenuStillIgnoresItsFlatList() {
+        val raw = """
+            {"version":1,"groups":[{"id":"g1","name":"Quick","methods":["camera"]}],"flatMethods":["voice"]}
+        """.trimIndent()
+        val config = AddMenuConfig.decode(raw)
+        assertEquals(listOf("camera"), config.groups.single().methods)
+        assertEquals(emptyList<String>(), config.flatMethods)
+    }
+
+    @Test
+    fun versionOneFlatMenuDecodesUnchanged() {
+        val raw = """
+            {"version":1,"groups":[],"flatMethods":["voice","camera"]}
+        """.trimIndent()
+        val config = AddMenuConfig.decode(raw)
+        assertTrue(config.groups.isEmpty())
+        assertEquals(listOf("voice", "camera"), config.flatMethods)
+    }
+
+    @Test
+    fun editorSanitizeKeepsEmptyGroupsAndTypedNames() {
+        val config = AddMenuConfig(
+            groups = listOf(
+                AddMenuGroupConfig(id = "g1", name = "My ", methods = listOf("camera", "camera")),
+                AddMenuGroupConfig(id = "g2", name = "", methods = emptyList())
+            )
+        )
+        val editing = config.sanitized(forEditor = true)
+        assertEquals(listOf("g1", "g2"), editing.groups.map { it.id })
+        assertEquals("My ", editing.groups[0].name)
+        assertEquals(listOf("camera"), editing.groups[0].methods)
+        assertEquals(AddMenuConfig.DEFAULT_GROUP_FALLBACK_NAME, editing.groups[1].name)
+
+        val saved = config.sanitized()
+        assertEquals(listOf("g1"), saved.groups.map { it.id })
+        assertEquals("My", saved.groups.single().name)
     }
 
     @Test

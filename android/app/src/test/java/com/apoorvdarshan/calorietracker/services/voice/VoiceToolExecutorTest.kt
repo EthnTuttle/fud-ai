@@ -665,6 +665,23 @@ class VoiceToolExecutorTest {
     }
 
     @Test
+    fun hiddenTabsCannotBeOpenedAndAreReported() {
+        val executor = executor()
+        ports.hiddenScreens = setOf(VoiceScreen.COACH, VoiceScreen.WORKOUTS)
+
+        assertEquals("unsupported", executor.call("open_screen", args("screen" to "coach")).error())
+        assertTrue(ports.shownScreens.isEmpty())
+        assertTrue(executor.call("open_screen", args("screen" to "progress")).ok())
+        assertEquals(VoiceScreen.PROGRESS to null, ports.shownScreens.single())
+
+        val state = executor.call("get_app_state")
+        assertEquals(
+            listOf("coach", "workouts"),
+            state["hidden_screens"]!!.jsonArray.map { it.jsonPrimitive.content }
+        )
+    }
+
+    @Test
     fun waitingToolsReportCancellationTimeoutAndPermission() {
         val executor = executor()
         ports.barcode = BarcodeOutcome.Cancelled

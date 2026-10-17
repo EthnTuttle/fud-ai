@@ -176,6 +176,7 @@
     <string name="nav_progress">التقدم</string>
     <string name="nav_coach">المدرب</string>
     <string name="nav_settings">الإعدادات</string>
+    <string name="nav_workouts">التمارين</string>
     <string name="nav_about">حول</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -569,6 +570,10 @@
     <string name="settings_week_monday">الإثنين</string>
     <string name="settings_week_sunday">الأحد</string>
     <string name="settings_notifications">الإشعارات</string>
+    <string name="settings_water_quick_add">كميات الإضافة السريعة</string>
+    <string name="settings_water_quick_add_amount">الكمية %1$d</string>
+    <string name="settings_water_quick_add_invalid">أدخل كمية حتى %1$s.</string>
+    <string name="settings_water_quick_add_footer">تظهر في قائمة + لتسجيل الماء بنقرة واحدة.</string>
     <string name="settings_battery_opt">تحسين البطارية</string>
     <string name="settings_battery_opt_value">إضافة Fud AI للقائمة البيضاء</string>
 
@@ -852,6 +857,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). «التحديد الكمي لتأثير اختلال توازن الطاقة في وزن الجسم». Lancet 378(9793):826–837. تعود قاعدة 3,500 سعرة حرارية لكل رطل الكلاسيكية إلى Wishnofsky M (1958)، Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). «مراجعة منهجية وتحليل تلوي وانحدار تلوي لتأثير مكملات البروتين في الزيادات الناتجة عن تمارين المقاومة في كتلة العضلات وقوتها». Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">تعتمد التقديرات على بيانات تدريب نموذج الذكاء الاصطناعي الأساسي (USDA FoodData Central وملصقات القيم الغذائية من الشركات المصنّعة والمراجع العلمية). تختلف الدقة حسب الطعام ومدى وضوح حجم الحصة ونموذج المزوّد. تحقّق دائمًا من الملصقات للأطعمة التي تسجّلها كثيرًا.</string>
+    <string name="settings_add_menu_standalone">طرق مستقلة</string>
+    <string name="settings_add_menu_standalone_footer">تظهر هذه الطرق مباشرةً تحت +، خارج أي مجموعة.</string>
+    <string name="settings_tab_bar">شريط التبويبات</string>
+    <string name="settings_tab_bar_section">إظهار في شريط التبويبات</string>
+    <string name="settings_tab_bar_footer">تظهر الرئيسية والإعدادات دائمًا.</string>
     <string name="about_litert_notices">إشعارات الجهات الخارجية لـ LiteRT-LM</string>
     <string name="about_litert_notices_load_error">تعذّر تحميل إشعارات الجهات الخارجية لـ LiteRT-LM.</string>
     <string name="settings_model_source">مصدر النموذج</string>

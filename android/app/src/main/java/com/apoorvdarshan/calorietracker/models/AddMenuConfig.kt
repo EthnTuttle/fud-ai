@@ -17,11 +17,17 @@ data class AddMenuGroupConfig(
 data class AddMenuConfig(
     val version: Int = CURRENT_VERSION,
     val groups: List<AddMenuGroupConfig> = emptyList(),
+    /** Standalone methods shown directly under +, after the groups. With no groups this is the whole menu. */
     val flatMethods: List<String> = emptyList()
 ) {
     val usesFlatLayout: Boolean get() = groups.isEmpty()
 
-    fun sanitized(): AddMenuConfig {
+    /**
+     * Normalizes the menu for saving. [forEditor] keeps what the settings editor is still
+     * working on — empty groups and group names as typed — so adding a group or typing a
+     * space is not undone mid-edit.
+     */
+    fun sanitized(forEditor: Boolean = false): AddMenuConfig {
         val seen = mutableSetOf<FoodLogMethod>()
 
         fun filterMethods(raw: List<String>): List<String> {
@@ -38,20 +44,30 @@ data class AddMenuConfig(
 
         val trimmedGroups = groups.take(3).mapNotNull { group ->
             val methods = filterMethods(group.methods)
-            if (methods.isEmpty()) return@mapNotNull null
+            if (methods.isEmpty() && !forEditor) return@mapNotNull null
             AddMenuGroupConfig(
                 id = group.id.ifBlank { UUID.randomUUID().toString() },
-                name = group.name.trim().ifBlank { DEFAULT_GROUP_FALLBACK_NAME },
+                name = when {
+                    group.name.isBlank() -> DEFAULT_GROUP_FALLBACK_NAME
+                    forEditor -> group.name
+                    else -> group.name.trim()
+                },
                 methods = methods
             )
         }
 
-        return if (trimmedGroups.isEmpty()) {
-            copy(version = CURRENT_VERSION, groups = emptyList(), flatMethods = filterMethods(flatMethods))
-        } else {
-            copy(version = CURRENT_VERSION, groups = trimmedGroups, flatMethods = emptyList())
-        }
+        // Version 1 only showed the flat list when there were no groups.
+        val ignoresFlatMethods = version < 2 && trimmedGroups.any { it.methods.isNotEmpty() }
+        return copy(
+            version = CURRENT_VERSION,
+            groups = trimmedGroups,
+            flatMethods = if (ignoresFlatMethods) emptyList() else filterMethods(flatMethods)
+        )
     }
+
+    /** Every method on the menu, groups first, then the standalone methods. */
+    fun visibleMethods(): List<FoodLogMethod> =
+        resolvedGroups().flatMap { it.methods } + resolvedFlatMethods()
 
     fun resolvedGroups(): List<ResolvedAddMenuGroup> =
         groups.mapNotNull { group ->
@@ -68,8 +84,9 @@ data class AddMenuConfig(
         flatMethods.mapNotNull(FoodLogMethod::fromStorage)
 
     /**
-     * Puts a hidden method back on the menu.
+     * Puts a hidden method back on the menu, for the settings editor (empty groups stay).
      *
+     * - [standalone]: append to [flatMethods], directly under +.
      * - [groupIndex] set: add to that group (and drop the key from every other group).
      * - Flat layout: append to [flatMethods].
      * - Grouped layout with no index: last group, or the first group that already
@@ -77,35 +94,32 @@ data class AddMenuConfig(
      */
     fun withRestoredMethod(
         method: FoodLogMethod,
-        groupIndex: Int? = null
+        groupIndex: Int? = null,
+        standalone: Boolean = false
     ): AddMenuConfig {
         val key = method.storageKey
         val targetIndex = when {
+            standalone -> null
             groupIndex != null && groupIndex in groups.indices -> groupIndex
             usesFlatLayout -> null
-            groups.isEmpty() -> null
             groups.last().methods.isNotEmpty() -> groups.lastIndex
             else -> groups.indexOfFirst { it.methods.isNotEmpty() }.takeIf { it >= 0 }
                 ?: groups.lastIndex
         }
-        if (targetIndex == null) {
-            return copy(flatMethods = flatMethods + key).sanitized()
-        }
         val nextGroups = groups.mapIndexed { idx, group ->
-            if (idx == targetIndex) {
-                group.copy(methods = group.methods + key)
-            } else {
-                group.copy(methods = group.methods.filterNot { it == key })
-            }
+            val others = group.methods.filterNot { it == key }
+            if (idx == targetIndex) group.copy(methods = others + key) else group.copy(methods = others)
         }
+        val otherStandalone = flatMethods.filterNot { it == key }
         return copy(
             groups = nextGroups,
-            flatMethods = flatMethods.filterNot { it == key }
-        ).sanitized()
+            flatMethods = if (targetIndex == null) otherStandalone + key else otherStandalone
+        ).sanitized(forEditor = true)
     }
 
     companion object {
-        const val CURRENT_VERSION = 1
+        /** Version 2 shows [flatMethods] next to [groups]; version 1 ignored them whenever a group existed. */
+        const val CURRENT_VERSION = 2
         const val STORAGE_KEY = "addMenu.config"
 
         /** Stable identifiers for default group names — resolved to localized strings at display time. */

@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.apoorvdarshan.calorietracker.models.AddMenuConfig
+import com.apoorvdarshan.calorietracker.models.TabBarSettings
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
 import com.apoorvdarshan.calorietracker.models.BodyFatEntry
@@ -31,6 +32,7 @@ import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WidgetSnapshot
 import com.apoorvdarshan.calorietracker.models.WaterEntry
+import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.backup.CloudBackupPolicy
 import com.apoorvdarshan.calorietracker.backup.CloudBackupValue
 import com.apoorvdarshan.calorietracker.models.WaterUnit
@@ -336,6 +338,13 @@ class PreferencesStore(
 
     val waterUnit: Flow<WaterUnit> = ds.data.map { WaterUnit.fromStorage(it[Keys.WATER_UNIT]) }
     suspend fun setWaterUnit(v: WaterUnit) { ds.edit { it[Keys.WATER_UNIT] = v.storageValue } }
+
+    val waterQuickAddPresetsMl: Flow<List<Int>> = ds.data.map {
+        WaterQuickAddPresets.decode(it[Keys.WATER_QUICK_ADD_PRESETS])
+    }
+    suspend fun setWaterQuickAddPresetsMl(v: List<Int>) {
+        ds.edit { it[Keys.WATER_QUICK_ADD_PRESETS] = WaterQuickAddPresets.encode(v) }
+    }
 
     val waterReminderEnabled: Flow<Boolean> = ds.data.map { it[Keys.WATER_REMINDER_ENABLED] ?: false }
     suspend fun setWaterReminderEnabled(v: Boolean) { ds.edit { it[Keys.WATER_REMINDER_ENABLED] = v } }
@@ -673,6 +682,13 @@ class PreferencesStore(
 
     suspend fun setAddMenuConfig(config: AddMenuConfig) {
         ds.edit { it[Keys.ADD_MENU_CONFIG] = AddMenuConfig.encode(config) }
+    }
+
+    val hiddenTabs: Flow<Set<String>> = ds.data.map { TabBarSettings.decode(it[Keys.HIDDEN_TABS]) }
+
+    /** Shows or hides one tab, reading the other tabs' state inside the same edit. */
+    suspend fun setTabHidden(route: String, hidden: Boolean) {
+        ds.edit { it[Keys.HIDDEN_TABS] = TabBarSettings.withTabHidden(it[Keys.HIDDEN_TABS], route, hidden) }
     }
 
     suspend fun resetAddMenuConfig() {
@@ -1533,6 +1549,7 @@ class PreferencesStore(
         val WATER_TRACKING_ENABLED = booleanPreferencesKey("waterTrackingEnabled")
         val WATER_DAILY_GOAL_ML = intPreferencesKey("waterDailyGoalMl")
         val WATER_UNIT = stringPreferencesKey("waterUnit")
+        val WATER_QUICK_ADD_PRESETS = stringPreferencesKey(WaterQuickAddPresets.STORAGE_KEY)
         val WATER_REMINDER_ENABLED = booleanPreferencesKey("waterReminderEnabled")
         val WATER_REMINDER_HOUR = intPreferencesKey("waterReminderHour")
         val WATER_REMINDER_MINUTE = intPreferencesKey("waterReminderMinute")
@@ -1585,6 +1602,7 @@ class PreferencesStore(
         val QUICK_ACTION_2 = stringPreferencesKey("quickAction.slot2")
         val QUICK_ACTION_3 = stringPreferencesKey("quickAction.slot3")
         val ADD_MENU_CONFIG = stringPreferencesKey(AddMenuConfig.STORAGE_KEY)
+        val HIDDEN_TABS = stringPreferencesKey(TabBarSettings.STORAGE_KEY)
         val WORKOUT_STATE = stringPreferencesKey("workoutDiaryStateV1")
         val MEAL_BREAKFAST_START = intPreferencesKey("mealBreakfastStartMinutes")
         val MEAL_LUNCH_START = intPreferencesKey("mealLunchStartMinutes")

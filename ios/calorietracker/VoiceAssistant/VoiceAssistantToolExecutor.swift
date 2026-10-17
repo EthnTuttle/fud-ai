@@ -407,6 +407,11 @@ final class VoiceAssistantToolExecutor {
         if let section = host?.currentSettingsSection?.voiceAssistantSection, host?.currentScreen == .settings {
             payload["settings_section"] = section
         }
+        let hiddenTabs = TabBarSettings.hiddenTabs(in: appDefaults)
+        if !hiddenTabs.isEmpty {
+            // open_screen can't show these until the user turns them back on.
+            payload["hidden_screens"] = HideableTab.allCases.filter(hiddenTabs.contains).map(\.rawValue)
+        }
         if !calendar.isDate(diaryDay, inSameDayAs: today) {
             payload["diary_totals"] = totals(on: diaryDay)
         }
@@ -429,6 +434,12 @@ final class VoiceAssistantToolExecutor {
                 return Self.failure(.invalidArguments, "Unknown settings_section \(raw).")
             }
             section = parsed
+        }
+        if TabBarSettings.hiddenTab(for: screen, in: TabBarSettings.hiddenTabs(in: appDefaults)) != nil {
+            return Self.failure(
+                .unsupported,
+                "The user hid the \(screen.rawValue) tab. It can be shown again in Settings > App Settings > Tab Bar."
+            )
         }
         host?.open(screen, settingsSection: section)
         var payload: [String: Any] = ["ok": true, "screen": screen.rawValue]

@@ -18,6 +18,7 @@ import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.PendingFoodAnalysisDraft
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WaterEntry
+import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.models.WaterUnit
 import com.apoorvdarshan.calorietracker.services.CalorieBalanceDirection
 import com.apoorvdarshan.calorietracker.services.DailySummaryPolicy
@@ -79,6 +80,7 @@ data class HomeUiState(
     val waterTrackingEnabled: Boolean = false,
     val waterDailyGoalMl: Int = 2_000,
     val waterUnit: WaterUnit = WaterUnit.Default,
+    val waterQuickAddPresetsMl: List<Int> = WaterQuickAddPresets.Defaults,
     val waterTodayMl: Int = 0,
     val waterEntriesToday: List<WaterEntry> = emptyList(),
     val fastingTrackingEnabled: Boolean = false,
@@ -255,6 +257,10 @@ private val _stepsRefreshEpoch = MutableStateFlow(0)
 
         container.prefs.waterUnit
             .onEach { unit -> _ui.value = _ui.value.copy(waterUnit = unit) }
+            .launchIn(viewModelScope)
+
+        container.prefs.waterQuickAddPresetsMl
+            .onEach { presets -> _ui.value = _ui.value.copy(waterQuickAddPresetsMl = presets) }
             .launchIn(viewModelScope)
 
         container.prefs.fastingTrackingEnabled

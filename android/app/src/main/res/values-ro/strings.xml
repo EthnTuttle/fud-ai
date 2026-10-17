@@ -176,6 +176,7 @@
     <string name="nav_progress">Progres</string>
     <string name="nav_coach">Antrenor</string>
     <string name="nav_settings">Setări</string>
+    <string name="nav_workouts">Antrenamente</string>
     <string name="nav_about">Despre</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -560,6 +561,10 @@
     <string name="settings_week_monday">Luni</string>
     <string name="settings_week_sunday">Duminică</string>
     <string name="settings_notifications">Notificări</string>
+    <string name="settings_water_quick_add">Cantități pentru adăugare rapidă</string>
+    <string name="settings_water_quick_add_amount">Cantitatea %1$d</string>
+    <string name="settings_water_quick_add_invalid">Introdu o cantitate de până la %1$s.</string>
+    <string name="settings_water_quick_add_footer">Apar în meniul + pentru a înregistra apa cu o singură atingere.</string>
     <string name="settings_battery_opt">Optimizare baterie</string>
     <string name="settings_battery_opt_value">Adaugă Fud AI în lista albă</string>
 
@@ -840,6 +845,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). „Cuantificarea efectului dezechilibrului energetic asupra greutății corporale.” Lancet 378(9793):826–837. Regula clasică de 3.500 kcal per livră provine de la Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). „O analiză sistematică, meta-analiză și meta-regresie a efectului suplimentării cu proteine asupra creșterii masei musculare și forței induse de antrenamentul de rezistență.” Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Estimările se bazează pe datele de antrenare ale modelului AI subiacent (USDA FoodData Central, etichetele producătorilor și literatura științifică). Precizia variază în funcție de aliment, vizibilitatea dimensiunii porției și modelul furnizorului. Verifică întotdeauna etichetele alimentelor pe care le înregistrezi frecvent.</string>
+    <string name="settings_add_menu_standalone">Metode independente</string>
+    <string name="settings_add_menu_standalone_footer">Aceste metode apar direct sub +, în afara oricărui grup.</string>
+    <string name="settings_tab_bar">Bara de file</string>
+    <string name="settings_tab_bar_section">Afișează în bara de file</string>
+    <string name="settings_tab_bar_footer">Acasă și Setări sunt afișate mereu.</string>
     <string name="about_litert_notices">Notificări privind terții pentru LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Notificările privind terții pentru LiteRT-LM nu au putut fi încărcate.</string>
     <string name="settings_model_source">Sursa modelului</string>

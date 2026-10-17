@@ -152,6 +152,8 @@ interface VoiceAppPorts {
     fun diaryDate(): LocalDate
     fun workoutDiaryDate(): LocalDate?
     fun showScreen(screen: VoiceScreen, section: VoiceSettingsSection?)
+    /** Tabs the user hid from the bottom bar; `open_screen` can't show them. */
+    fun hiddenScreens(): Set<VoiceScreen> = emptySet()
     fun showDiaryDate(date: LocalDate)
     fun showFoodEntry(entry: FoodEntry)
 

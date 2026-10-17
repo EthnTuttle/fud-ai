@@ -84,6 +84,10 @@ val BottomTabs = listOf(
     BottomTab(FudAIRoutes.WORKOUTS, Icons.Filled.FitnessCenter, R.string.nav_workouts)
 )
 
+/** The Workouts tab icon for the current mode; Settings > Tab Bar shows the same one. */
+fun workoutsTabIcon(mode: WorkoutTabMode): ImageVector =
+    if (mode == WorkoutTabMode.LOG) Icons.Filled.SportsGymnastics else Icons.Filled.FitnessCenter
+
 private val BarHeight = 72.dp
 private val BarCorner = 36.dp
 private val PillCorner = 26.dp
@@ -109,18 +113,13 @@ fun FudAIBottomNavBar(
     currentRoute: String?,
     showAboutBadge: Boolean = false,
     workoutMode: WorkoutTabMode = WorkoutTabMode.Default,
+    hiddenRoutes: Set<String> = emptySet(),
     onTap: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val tabs = remember(workoutMode) {
-        BottomTabs.map { tab ->
-            if (tab.route != FudAIRoutes.WORKOUTS) tab else tab.copy(
-                icon = if (workoutMode == WorkoutTabMode.LOG) {
-                    Icons.Filled.SportsGymnastics
-                } else {
-                    Icons.Filled.FitnessCenter
-                }
-            )
+    val tabs = remember(workoutMode, hiddenRoutes) {
+        BottomTabs.filterNot { FudAIRoutes.isHiddenTab(it.route, hiddenRoutes) }.map { tab ->
+            if (tab.route != FudAIRoutes.WORKOUTS) tab else tab.copy(icon = workoutsTabIcon(workoutMode))
         }
     }
     val isDark = MaterialTheme.colorScheme.background.let {
@@ -299,7 +298,7 @@ fun FudAIBottomNavBar(
                         modifier = Modifier
                             .width(tabWidthDp)
                             .fillMaxHeight()
-                            .pointerInput(tabWidthPx, tabCount) {
+                            .pointerInput(tabWidthPx, tabs) {
                                 if (tabWidthPx <= 0f) return@pointerInput
                                 detectHorizontalDragGestures(
                                     onDragStart = { startDrag() },

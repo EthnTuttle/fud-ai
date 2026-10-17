@@ -176,6 +176,7 @@
     <string name="nav_progress">進捗</string>
     <string name="nav_coach">コーチ</string>
     <string name="nav_settings">設定</string>
+    <string name="nav_workouts">ワークアウト</string>
     <string name="nav_about">情報</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -556,6 +557,10 @@
     <string name="settings_week_monday">月曜日</string>
     <string name="settings_week_sunday">日曜日</string>
     <string name="settings_notifications">通知</string>
+    <string name="settings_water_quick_add">クイック追加の量</string>
+    <string name="settings_water_quick_add_amount">量 %1$d</string>
+    <string name="settings_water_quick_add_invalid">%1$s までの量を入力してください。</string>
+    <string name="settings_water_quick_add_footer">+ メニューに表示され、ワンタップで水分を記録できます。</string>
     <string name="settings_battery_opt">バッテリー最適化</string>
     <string name="settings_battery_opt_value">Fud AI を除外</string>
 
@@ -835,6 +840,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011).「エネルギー不均衡が体重に及ぼす影響の定量化。」Lancet 378(9793):826–837. 1ポンド当たり3,500 kcalという古典的な法則は、Wishnofsky M (1958), Am J Clin Nutr 6:542–546に由来します。</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018).「レジスタンストレーニングによる筋量と筋力の増加に対するたんぱく質補給の効果についての系統的レビュー、メタ解析、メタ回帰。」Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">推定値は、基盤となるAIモデルの学習データ（USDA FoodData Central、メーカーの栄養表示、科学文献）に基づきます。精度は食品、分量の見えやすさ、プロバイダーのモデルによって異なります。頻繁に記録する食品は必ずラベルと照合してください。</string>
+    <string name="settings_add_menu_standalone">単独の方法</string>
+    <string name="settings_add_menu_standalone_footer">これらの方法はグループに入らず、+ の直下に表示されます。</string>
+    <string name="settings_tab_bar">タブバー</string>
+    <string name="settings_tab_bar_section">タブバーに表示</string>
+    <string name="settings_tab_bar_footer">ホームと設定は常に表示されます。</string>
     <string name="about_litert_notices">LiteRT-LM のサードパーティに関する通知</string>
     <string name="about_litert_notices_load_error">LiteRT-LM のサードパーティに関する通知を読み込めませんでした。</string>
     <string name="settings_model_source">モデルの配布元</string>

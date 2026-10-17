@@ -128,6 +128,7 @@ struct ContentView: View {
     @State private var assistantNavigator = VoiceAssistantNavigator.shared
     @AppStorage(AppThemeColor.storageKey) private var appThemeColorRaw = AppThemeColor.defaultColor.rawValue
     @AppStorage(WorkoutTabMode.storageKey) private var workoutTabModeRaw = WorkoutTabMode.defaultMode.rawValue
+    @AppStorage(TabBarSettings.hiddenTabsKey) private var hiddenTabsRaw = ""
     @State private var appUpdateState: AppUpdateState = .idle
     @State private var selectedTab: AppTab = .home
     @State private var quickActionRequest: QuickActionRequest?
@@ -140,6 +141,10 @@ struct ContentView: View {
 
     private var workoutsTabIcon: String {
         WorkoutTabMode.mode(for: workoutTabModeRaw).tabIcon
+    }
+
+    private var hiddenTabs: Set<HideableTab> {
+        TabBarSettings.decode(hiddenTabsRaw)
     }
 
     var body: some View {
@@ -216,6 +221,12 @@ struct ContentView: View {
             .onChange(of: selectedTab, initial: true) { _, tab in
                 assistantNavigator.currentScreen = Self.screen(for: tab)
             }
+            .onChange(of: hiddenTabsRaw, initial: true) { _, _ in
+                // A tab hidden while it is selected falls back to Home.
+                if let tab = selectedTab.hideableTab, hiddenTabs.contains(tab) {
+                    selectedTab = .home
+                }
+            }
     }
 
     /// Hands the app's stores to the voice assistant.
@@ -239,7 +250,9 @@ struct ContentView: View {
 
     /// The voice assistant moves between tabs like the user would.
     private func applyAssistantScreenRequest() {
-        guard let screen = assistantNavigator.takeScreenRequest() else { return }
+        guard let screen = assistantNavigator.takeScreenRequest(),
+              TabBarSettings.hiddenTab(for: screen, in: hiddenTabs) == nil
+        else { return }
         selectedTab = switch screen {
         case .home: .home
         case .progress: .progress
@@ -277,19 +290,23 @@ struct ContentView: View {
                     Text("Home")
                 }
 
-            ProgressTabView()
-                .tag(AppTab.progress)
-                .tabItem {
-                    Image(systemName: "chart.bar.fill")
-                    Text("Progress")
-                }
+            if !hiddenTabs.contains(.progress) {
+                ProgressTabView()
+                    .tag(AppTab.progress)
+                    .tabItem {
+                        Image(systemName: "chart.bar.fill")
+                        Text("Progress")
+                    }
+            }
 
-            ChatView()
-                .tag(AppTab.coach)
-                .tabItem {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                    Text("Coach")
-                }
+            if !hiddenTabs.contains(.coach) {
+                ChatView()
+                    .tag(AppTab.coach)
+                    .tabItem {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                        Text("Coach")
+                    }
+            }
 
             ProfileView(
                 updateState: $appUpdateState,
@@ -304,12 +321,14 @@ struct ContentView: View {
                 }
                 .badge(appUpdateState.isUpdateAvailable ? "!" : nil)
 
-            WorkoutsView()
-                .tag(AppTab.workouts)
-                .tabItem {
-                    Image(systemName: workoutsTabIcon)
-                    Text("Workouts")
-                }
+            if !hiddenTabs.contains(.workouts) {
+                WorkoutsView()
+                    .tag(AppTab.workouts)
+                    .tabItem {
+                        Image(systemName: workoutsTabIcon)
+                        Text("Workouts")
+                    }
+            }
         }
     }
 
@@ -319,6 +338,9 @@ struct ContentView: View {
         case coach
         case settings
         case workouts
+
+        /// Nil for Home and Settings, which can't be hidden.
+        var hideableTab: HideableTab? { HideableTab(rawValue: rawValue) }
     }
 
     private func consumePendingLaunchRoutes() {
@@ -1157,9 +1179,12 @@ struct HomeView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(WaterQuickAddPresets.key) private var waterQuickAddPresetsRaw = ""
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
     @AppStorage(FastingSettings.notificationEnabledKey) private var fastingGoalNotificationEnabled = true
+    /// Observed so + menu edits in Settings refresh Home right away.
+    @AppStorage(AddMenuConfig.storageKey) private var addMenuConfigData: Data?
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @Environment(ProfileStore.self) private var profileStore
     @State private var homeBurnLine: String?
@@ -1394,20 +1419,14 @@ private var dailyStepsTaskKey: String {
         } label: {
             Label("Custom", systemImage: "slider.horizontal.3")
         }
-        Button {
-            logWater(750)
-        } label: {
-            Label("3 Glasses (~\(waterUnit.formatted(milliliters: 750)))", systemImage: "drop.fill")
-        }
-        Button {
-            logWater(500)
-        } label: {
-            Label("2 Glasses (~\(waterUnit.formatted(milliliters: 500)))", systemImage: "drop.fill")
-        }
-        Button {
-            logWater(250)
-        } label: {
-            Label("1 Glass (~\(waterUnit.formatted(milliliters: 250)))", systemImage: "drop.fill")
+        // Largest first, as the fixed 3/2/1 glass presets were.
+        let presets = WaterQuickAddPresets.decode(waterQuickAddPresetsRaw).reversed()
+        ForEach(Array(presets.enumerated()), id: \.offset) { _, milliliters in
+            Button {
+                logWater(milliliters)
+            } label: {
+                Label(waterUnit.formatted(milliliters: milliliters), systemImage: "drop.fill")
+            }
         }
     }
 
@@ -2731,23 +2750,22 @@ private var dailyStepsTaskKey: String {
 extension HomeView {
     @ViewBuilder
     var configuredFoodAddMenuContent: some View {
-        let config = AddMenuSettings.load()
-        if config.usesFlatLayout {
+        let config = AddMenuSettings.decode(addMenuConfigData)
+        ForEach(config.groups.filter { !$0.methods.isEmpty }) { group in
+            Section {
+                Menu {
+                    ForEach(group.methods) { method in
+                        addMenuButton(for: method)
+                    }
+                } label: {
+                    Label(group.name, systemImage: addMenuGroupIcon(for: group))
+                }
+            }
+        }
+        if !config.flatMethods.isEmpty {
             Section {
                 ForEach(config.flatMethods) { method in
                     addMenuButton(for: method)
-                }
-            }
-        } else {
-            ForEach(config.groups.filter { !$0.methods.isEmpty }) { group in
-                Section {
-                    Menu {
-                        ForEach(group.methods) { method in
-                            addMenuButton(for: method)
-                        }
-                    } label: {
-                        Label(group.name, systemImage: addMenuGroupIcon(for: group))
-                    }
                 }
             }
         }
@@ -4748,6 +4766,7 @@ struct ProfileView: View {
     @AppStorage(WaterSettings.enabledKey) private var waterTrackingEnabled = false
     @AppStorage(WaterSettings.dailyGoalKey) private var waterDailyGoal = WaterSettings.defaultDailyGoalMl
     @AppStorage(WaterSettings.unitKey) private var waterUnitRaw = WaterUnit.defaultUnit.rawValue
+    @AppStorage(WaterQuickAddPresets.key) private var waterQuickAddPresetsRaw = ""
     @AppStorage(FastingSettings.enabledKey) private var fastingTrackingEnabled = false
     @AppStorage(FastingSettings.defaultGoalMinutesKey) private var fastingDefaultGoalMinutes = FastingSettings.defaultGoalMinutes
 
@@ -5432,6 +5451,24 @@ struct ProfileView: View {
                         }
                     }
 
+                    NavigationLink {
+                        TabBarSettingsView()
+                    } label: {
+                        Label {
+                            HStack {
+                                Text("Tab Bar")
+                                Spacer()
+                                Text("Customize")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                        } icon: {
+                            Image(systemName: "dock.rectangle")
+                                .foregroundStyle(AppColors.calorie)
+                        }
+                    }
+                    .accessibilityIdentifier("settings.tabBar")
+
                 }
                 .listRowBackground(AppColors.appCard)
                 }
@@ -5514,6 +5551,27 @@ struct ProfileView: View {
                         .onChange(of: waterUnitRaw) { _, _ in
                             WidgetSnapshotWriter.publish(foods: foodStore.entries, profile: profile)
                         }
+
+                        NavigationLink {
+                            WaterQuickAddSettingsView(unit: waterUnit)
+                        } label: {
+                            Label {
+                                HStack {
+                                    Text("Quick Add Amounts")
+                                    Spacer()
+                                    Text(WaterQuickAddPresets.summary(
+                                        WaterQuickAddPresets.decode(waterQuickAddPresetsRaw),
+                                        unit: waterUnit
+                                    ))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                }
+                            } icon: {
+                                Image(systemName: "drop.circle")
+                                    .foregroundStyle(AppColors.calorie)
+                            }
+                        }
+                        .accessibilityIdentifier("settings.water.quickAdd")
                     }
 
                     HStack {

@@ -176,6 +176,7 @@
     <string name="nav_progress">Progrès</string>
     <string name="nav_coach">Coach</string>
     <string name="nav_settings">Réglages</string>
+    <string name="nav_workouts">Entraînements</string>
     <string name="nav_about">À propos</string>
 
     <!-- Day-of-week narrow letters (for week strip) -->
@@ -558,6 +559,10 @@
     <string name="settings_week_monday">Lundi</string>
     <string name="settings_week_sunday">Dimanche</string>
     <string name="settings_notifications">Notifications</string>
+    <string name="settings_water_quick_add">Quantités d’ajout rapide</string>
+    <string name="settings_water_quick_add_amount">Quantité %1$d</string>
+    <string name="settings_water_quick_add_invalid">Saisissez une quantité jusqu’à %1$s.</string>
+    <string name="settings_water_quick_add_footer">Affichées dans le menu + pour enregistrer l’eau d’un simple toucher.</string>
     <string name="settings_battery_opt">Optimisation de la batterie</string>
     <string name="settings_battery_opt_value">Mettre Fud AI en liste blanche</string>
 
@@ -837,6 +842,11 @@
     <string name="settings_calc_target_citation">Hall KD, et al. (2011). « Quantification de l’effet du déséquilibre énergétique sur le poids corporel. » Lancet 378(9793):826–837. La règle classique des 3 500 kcal par livre provient de Wishnofsky M (1958), Am J Clin Nutr 6:542–546.</string>
     <string name="settings_calc_split_citation">Morton RW, et al. (2018). « Revue systématique, méta-analyse et méta-régression de l’effet de la supplémentation en protéines sur les gains de masse musculaire et de force induits par l’entraînement en résistance. » Br J Sports Med 52(6):376–384.</string>
     <string name="settings_calc_micro_citation">Les estimations reposent sur les données d’entraînement du modèle d’IA sous-jacent (USDA FoodData Central, étiquettes des fabricants, littérature scientifique). Leur précision varie selon l’aliment, la visibilité de la taille de la portion et le modèle du fournisseur. Vérifiez toujours les étiquettes des aliments que vous enregistrez souvent.</string>
+    <string name="settings_add_menu_standalone">Méthodes indépendantes</string>
+    <string name="settings_add_menu_standalone_footer">Ces méthodes apparaissent directement sous +, hors de tout groupe.</string>
+    <string name="settings_tab_bar">Barre d’onglets</string>
+    <string name="settings_tab_bar_section">Afficher dans la barre d’onglets</string>
+    <string name="settings_tab_bar_footer">Accueil et Réglages sont toujours affichés.</string>
     <string name="about_litert_notices">Avis relatifs aux composants tiers de LiteRT-LM</string>
     <string name="about_litert_notices_load_error">Impossible de charger les avis relatifs aux composants tiers de LiteRT-LM.</string>
     <string name="settings_model_source">Source du modèle</string>

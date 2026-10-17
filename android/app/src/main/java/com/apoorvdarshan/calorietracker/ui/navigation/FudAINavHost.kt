@@ -53,6 +53,7 @@ import com.apoorvdarshan.calorietracker.models.QuickActionRequest
 import com.apoorvdarshan.calorietracker.ui.settings.AddMenuSettingsScreen
 import com.apoorvdarshan.calorietracker.ui.settings.ProductInfoSettingsScreen
 import com.apoorvdarshan.calorietracker.ui.settings.QuickActionsScreen
+import com.apoorvdarshan.calorietracker.ui.settings.TabBarSettingsScreen
 import com.apoorvdarshan.calorietracker.ui.voice.VoiceAssistantHost
 
 /**
@@ -106,7 +107,10 @@ fun FudAINavHost(
     // The expanded voice assistant dims the whole app, tab bar included; its compact
     // bubble sits above the bar.
     val voiceUi by container.voiceAssistant.ui.collectAsState()
-    val showTabs = selectedTabRoute != null && !analyzing && !(voiceUi.visible && voiceUi.expanded)
+    // Null until the stored choice is read, so a hidden tab never flashes in the bar.
+    val hiddenTabs by container.prefs.hiddenTabs.collectAsState(initial = null)
+    val showTabs = selectedTabRoute != null && hiddenTabs != null && !analyzing &&
+        !(voiceUi.visible && voiceUi.expanded)
     // Bumped when the Settings tab is re-tapped so SettingsScreen can pop back to the hub
     // (matches iOS TabView + NavigationStack reselect → root behavior).
     var settingsPopToRootTick by remember { mutableIntStateOf(0) }
@@ -180,6 +184,7 @@ fun FudAINavHost(
     // Shows a tab like a tap on the bar. It reads the live route, so requests from outside
     // composition (the voice assistant) act on what is on screen now.
     fun selectTab(target: String) {
+        if (FudAIRoutes.isHiddenTab(target, container.navigator.hiddenTabs.value)) return
         val route = nav.current()
         // Re-tapping Settings while already in Settings (hub category or a
         // nested settings/* destination) returns to the Settings hub — same
@@ -215,6 +220,15 @@ fun FudAINavHost(
     // What is on screen, for the voice assistant's get_app_state.
     LaunchedEffect(currentRoute) {
         container.navigator.currentRoute.value = currentRoute
+    }
+
+    // A tab hidden in Settings (or by a restored backup) can't stay on screen.
+    LaunchedEffect(hiddenTabs, currentRoute) {
+        val hidden = hiddenTabs ?: return@LaunchedEffect
+        container.navigator.hiddenTabs.value = hidden
+        if (FudAIRoutes.isHiddenTab(currentRoute, hidden)) {
+            nav.popBackStack(FudAIRoutes.HOME, inclusive = false)
+        }
     }
 
     // Tabs and Settings sections the voice assistant opens, performed like the user's taps.
@@ -256,6 +270,7 @@ fun FudAINavHost(
                     currentRoute = selectedTabRoute,
                     showAboutBadge = updateAvailable,
                     workoutMode = workoutMode,
+                    hiddenRoutes = hiddenTabs.orEmpty(),
                     onTap = ::selectTab
                 )
             }
@@ -310,6 +325,13 @@ fun FudAINavHost(
                 }
                 composable(FudAIRoutes.PRODUCT_INFO) {
                     ProductInfoSettingsScreen(container = container, onBack = { nav.popBackStack() })
+                }
+                composable(FudAIRoutes.TAB_BAR) {
+                    TabBarSettingsScreen(
+                        vm = settingsViewModel,
+                        workoutMode = workoutMode,
+                        onBack = { nav.popBackStack() }
+                    )
                 }
                 composable(FudAIRoutes.BODY_MEASUREMENTS) {
                     BodyMeasurementsScreen(container = container, onBack = { nav.popBackStack() })
