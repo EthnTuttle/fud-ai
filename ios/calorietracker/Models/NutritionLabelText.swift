@@ -21,6 +21,9 @@ nonisolated enum NutritionLabelText {
     nonisolated struct Fragment: Equatable, Sendable {
         var text: String
         var box: CGRect
+        /// The line's rise per unit of x, from the corners Vision reports, or
+        /// nil when unknown. See `lineSlope(topLeft:topRight:bottomLeft:bottomRight:)`.
+        var slope: CGFloat? = nil
     }
 
     static let columnSeparator = " | "
@@ -105,7 +108,7 @@ nonisolated enum NutritionLabelText {
         NUTRITION LABEL TEXT
         On-device text recognition read these lines from the nutrition label, top to bottom. "|" separates the label's columns.
         \(blocks.joined(separator: "\n"))
-        Prefer these recognized numbers over digits read from the image. Give each value to the nutrient named on the same line. Use the image to tell which column is per serving and which is per 100 g or 100 ml, and to correct clear recognition mistakes, such as "g" read as "9" or "O" read as "0". When the label lists a serving size and the user's note gives no other amount, analyze one serving.
+        Prefer these recognized numbers over digits read from the image. Give each value to the nutrient named on the same line. Use the image to tell which column is per serving and which is per 100 g or 100 ml, and to correct clear recognition mistakes, such as "g" read as "9" or "O" read as "0".
         """
     }
 
@@ -129,8 +132,14 @@ nonisolated enum NutritionLabelText {
         /// How far `cell` sits from the row's horizontally nearest cell, or nil
         /// when that is more than half the smaller text height. Comparing with
         /// the nearest cell lets a row follow tilt that leveling left over.
+        /// Nil as well when the row already has a cell in the same column, as
+        /// a steep photo's tall boxes can bring stacked names within reach.
         func distance(to cell: Cell) -> CGFloat? {
-            let midX = cell.fragment.box.midX
+            let box = cell.fragment.box
+            guard !cells.contains(where: { $0.fragment.box.minX < box.maxX && box.minX < $0.fragment.box.maxX }) else {
+                return nil
+            }
+            let midX = box.midX
             guard let nearest = cells.min(by: {
                 abs($0.fragment.box.midX - midX) < abs($1.fragment.box.midX - midX)
             }) else { return nil }
@@ -160,17 +169,37 @@ nonisolated enum NutritionLabelText {
     /// Steepest tilt tried, as rise per unit of x; about 15 degrees on a portrait photo.
     private static let maxSkew: CGFloat = 0.2
     private static let skewStep: CGFloat = 0.0025
+    /// A tilt far from the text lines' own slope wins only when it scores one
+    /// full pair more than the best tilt near it, plus this share of that score.
+    private static let farSkewMargin: CGFloat = 0.25
+
+    /// The rise per unit of x of a line whose corners Vision reports in
+    /// normalized coordinates: the mean of its top and bottom edges. Nil
+    /// when an edge does not run left to right, as with vertical text.
+    static func lineSlope(topLeft: CGPoint, topRight: CGPoint, bottomLeft: CGPoint, bottomRight: CGPoint) -> CGFloat? {
+        let topWidth = topRight.x - topLeft.x
+        let bottomWidth = bottomRight.x - bottomLeft.x
+        guard topWidth > 0, bottomWidth > 0 else { return nil }
+        let slope = ((topRight.y - topLeft.y) / topWidth + (bottomRight.y - bottomLeft.y) / bottomWidth) / 2
+        return slope.isFinite ? slope : nil
+    }
 
     /// Vertical center after removing `skew`.
     private static func level(of fragment: Fragment, skew: CGFloat) -> CGFloat {
         fragment.box.midY - skew * fragment.box.midX
     }
 
-    /// The tilt that best lines up side-by-side fragments into rows. Vision's
-    /// own line angles are unreliable (many lines come back level), so this
-    /// searches the photo's geometry instead. Each pair scores 1 when its
-    /// leveled centers match, falling to 0 at half the smaller text height.
-    /// Ties keep the smaller tilt, and a label with one column stays level.
+    /// The tilt that best lines up side-by-side fragments into rows. Each
+    /// pair scores 1 when its leveled centers match, falling to 0 at half the
+    /// smaller text height. A label with one column stays level.
+    ///
+    /// The pairs alone cannot tell a level label from one tilted by a whole
+    /// row: both line up almost every nutrient with a value, and with gaps in
+    /// a column, such as a %DV column, they line up just as many. So the
+    /// search prefers tilts near the slope of the text lines themselves:
+    /// within half a text height of it across the widest pair, so they cannot
+    /// carry a value to the next row. A tilt farther away wins only when it
+    /// lines up clearly more pairs (`farSkewMargin`).
     private static func estimatedSkew(of fragments: [Fragment]) -> CGFloat {
         // Fragments stacked in the same column never share a row, and pairs
         // too far apart vertically cannot line up at any tilt in range.
@@ -184,20 +213,54 @@ nonisolated enum NutritionLabelText {
                 if abs(dy) < maxSkew * abs(dx) + tolerance { pairs.append((dx, dy, tolerance)) }
             }
         }
+        guard let widest = pairs.map({ abs($0.dx) }).max(), widest > 0 else { return 0 }
         func score(_ skew: CGFloat) -> CGFloat {
             pairs.reduce(0) { total, pair in
                 let gap = abs(pair.dy - skew * pair.dx)
                 return gap < pair.tolerance ? total + 1 - gap / pair.tolerance : total
             }
         }
-        var best = (skew: CGFloat(0), score: score(0))
-        for step in 1...Int((maxSkew / skewStep).rounded()) {
-            for skew in [CGFloat(step) * skewStep, -CGFloat(step) * skewStep] {
-                let value = score(skew)
-                if value > best.score + 1e-9 { best = (skew, value) }
+        let expected = textLineSlope(of: fragments)
+        let tolerances = pairs.map(\.tolerance).sorted()
+        // Near tilts move even the widest pair by at most a typical
+        // tolerance, half a text height, away from the lines' slope.
+        let reach = tolerances[tolerances.count / 2] / widest
+        let steps = Int((maxSkew / skewStep).rounded())
+        // Nearest to the expected slope first, so ties keep the nearer tilt.
+        let skews = (-steps...steps).map { CGFloat($0) * skewStep }
+            .sorted { abs($0 - expected) < abs($1 - expected) }
+        var near: (skew: CGFloat, score: CGFloat)?
+        var far: (skew: CGFloat, score: CGFloat)?
+        for skew in skews {
+            let value = score(skew)
+            // The nearest tilt always counts as near, however small `reach` is.
+            if near == nil || abs(skew - expected) <= reach {
+                if value > (near?.score ?? -1) + 1e-9 { near = (skew, value) }
+            } else if value > (far?.score ?? -1) + 1e-9 {
+                far = (skew, value)
             }
         }
-        return best.skew
+        guard let near else { return 0 }
+        if let far, far.score >= near.score + 1 + farSkewMargin * near.score { return far.skew }
+        return near.skew
+    }
+
+    /// The text lines' own slope: the median of the slopes Vision reported,
+    /// weighted by line width, as wider lines give steadier angles. Vision
+    /// gives many short lines an exactly level box whatever the tilt, so a
+    /// slope of exactly 0 does not count. 0 when no line reports a slope.
+    private static func textLineSlope(of fragments: [Fragment]) -> CGFloat {
+        let lines = fragments.compactMap { fragment in
+            fragment.slope.flatMap { $0 == 0 ? nil : (slope: $0, weight: fragment.box.width) }
+        }.sorted { $0.slope < $1.slope }
+        let half = lines.reduce(0) { $0 + $1.weight } / 2
+        guard half > 0 else { return 0 }
+        var weight: CGFloat = 0
+        for line in lines {
+            weight += line.weight
+            if weight >= half { return min(max(line.slope, -maxSkew), maxSkew) }
+        }
+        return 0
     }
 
     // MARK: - Helpers

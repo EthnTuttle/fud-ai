@@ -38,7 +38,16 @@ enum NutritionLabelTextRecognizer {
         guard (try? handler.perform([request])) != nil else { return [] }
         return (request.results ?? []).compactMap { observation in
             observation.topCandidates(1).first.map {
-                NutritionLabelText.Fragment(text: $0.string, box: observation.boundingBox)
+                NutritionLabelText.Fragment(
+                    text: $0.string,
+                    box: observation.boundingBox,
+                    slope: NutritionLabelText.lineSlope(
+                        topLeft: observation.topLeft,
+                        topRight: observation.topRight,
+                        bottomLeft: observation.bottomLeft,
+                        bottomRight: observation.bottomRight
+                    )
+                )
             }
         }
     }
