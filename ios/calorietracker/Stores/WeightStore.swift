@@ -58,9 +58,11 @@ class WeightStore {
         entries.sorted { $0.date > $1.date }.first
     }
 
+    /// Entries logged on any calendar day `range` covers. `TimeRange.dateRange()`
+    /// bounds are day starts, so a plain `contains` dropped today's readings.
     func entries(in range: ClosedRange<Date>) -> [WeightEntry] {
         entries
-            .filter { range.contains($0.date) }
+            .filter { range.containsDay(of: $0.date) }
             .sorted { $0.date < $1.date }
     }
 
