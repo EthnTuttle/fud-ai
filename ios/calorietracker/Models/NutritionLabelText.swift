@@ -67,7 +67,8 @@ nonisolated enum NutritionLabelText {
                 rows.append(Row(cells: [cell]))
             }
         }
-        return rows.map(\.line)
+        let rightToLeft = isRightToLeft(kept.map(\.text))
+        return rows.map { $0.line(rightToLeft: rightToLeft) }
     }
 
     /// True when the rows read like a nutrition panel: an energy amount
@@ -147,20 +148,22 @@ nonisolated enum NutritionLabelText {
             return distance <= min(nearest.fragment.box.height, cell.fragment.box.height) / 2 ? distance : nil
         }
 
-        var line: String {
-            let fragments = cells.map(\.fragment)
-            let ordered = NutritionLabelText.isRightToLeft(fragments.map(\.text).joined())
-                ? fragments.sorted { $0.box.maxX > $1.box.maxX }
-                : fragments.sorted { $0.box.minX < $1.box.minX }
-            var parts: [String] = []
-            for fragment in ordered {
-                if let last = parts.last, last.last?.isNumber == true, NutritionLabelText.isBareUnit(fragment.text) {
-                    parts[parts.count - 1] = last + " " + fragment.text
+        func line(rightToLeft: Bool) -> String {
+            let fragments = cells.map(\.fragment).sorted { $0.box.minX < $1.box.minX }
+            // Units join their numbers from left to right, as printed: a Latin
+            // unit sits right of its number even in an Arabic or Hebrew row.
+            var parts: [(text: String, maxX: CGFloat)] = []
+            for fragment in fragments {
+                if let last = parts.last, last.text.last?.isNumber == true, NutritionLabelText.isBareUnit(fragment.text) {
+                    parts[parts.count - 1] = (last.text + " " + fragment.text, max(last.maxX, fragment.box.maxX))
                 } else {
-                    parts.append(fragment.text)
+                    parts.append((fragment.text, fragment.box.maxX))
                 }
             }
-            return parts.joined(separator: NutritionLabelText.columnSeparator)
+            if rightToLeft {
+                parts.sort { $0.maxX > $1.maxX }
+            }
+            return parts.map(\.text).joined(separator: NutritionLabelText.columnSeparator)
         }
     }
 
@@ -277,20 +280,28 @@ nonisolated enum NutritionLabelText {
         bareUnits.contains(text.lowercased())
     }
 
-    /// Arabic or Hebrew rows read right to left. A row counts as right to left
-    /// when it has more of those letters than Latin ones, so "الطاقة 250 kcal"
-    /// is right to left and a bilingual "Energy 250 kcal الطاقة" is not.
-    private static func isRightToLeft(_ text: String) -> Bool {
+    /// Arabic or Hebrew labels read right to left. A photo counts as right
+    /// to left when its words have more of those letters than Latin ones, so
+    /// "الطاقة 250 kcal" is right to left and a bilingual "Energy 250 kcal
+    /// الطاقة" is not. Numbers and units such as "kcal" read left to right in
+    /// every script, so they do not count. One direction for the whole photo
+    /// keeps each value column in the same place on every row.
+    private static func isRightToLeft(_ texts: [String]) -> Bool {
         var rightToLeft = 0
         var latin = 0
-        for scalar in text.unicodeScalars {
-            switch scalar.value {
-            case 0x0590...0x08FF, 0xFB1D...0xFDFF, 0xFE70...0xFEFF:
-                if scalar.properties.isAlphabetic { rightToLeft += 1 }
-            case 0x41...0x5A, 0x61...0x7A:
-                latin += 1
-            default:
-                break
+        for text in texts {
+            for word in text.split(whereSeparator: \.isWhitespace)
+            where !word.contains(where: \.isNumber) && !isBareUnit(String(word)) {
+                for scalar in word.unicodeScalars {
+                    switch scalar.value {
+                    case 0x0590...0x08FF, 0xFB1D...0xFDFF, 0xFE70...0xFEFF:
+                        if scalar.properties.isAlphabetic { rightToLeft += 1 }
+                    case 0x41...0x5A, 0x61...0x7A:
+                        latin += 1
+                    default:
+                        break
+                    }
+                }
             }
         }
         return rightToLeft > latin

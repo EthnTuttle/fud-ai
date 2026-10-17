@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Testing
+import UIKit
 @testable import calorietracker
 
 struct NutritionLabelTextTests {
@@ -264,6 +265,46 @@ struct NutritionLabelTextTests {
     }
 
     @Test
+    func joinsSplitUnitsToTheirNumbersInArabicRows() {
+        // Vision can read a Latin unit apart from its number. Printed left to
+        // right, each unit sits right of its own number, so reversing the
+        // row for Arabic must not move a unit onto the next column's value.
+        let lines = NutritionLabelText.lines(from: [
+            cell("100", x: 0.05, top: 0.2, width: 0.08),
+            cell("kcal", x: 0.14, top: 0.2, width: 0.08),
+            cell("250", x: 0.35, top: 0.2, width: 0.08),
+            cell("kcal", x: 0.44, top: 0.2, width: 0.08),
+            cell("الطاقة", x: 0.7, top: 0.2),
+            cell("3", x: 0.05, top: 0.25, width: 0.05),
+            cell("g", x: 0.11, top: 0.25, width: 0.03),
+            cell("7.5", x: 0.35, top: 0.25, width: 0.08),
+            cell("g", x: 0.44, top: 0.25, width: 0.03),
+            cell("البروتين", x: 0.7, top: 0.25),
+        ].reversed())
+        #expect(lines == [
+            "الطاقة | 250 kcal | 100 kcal",
+            "البروتين | 7.5 g | 3 g",
+        ])
+
+        // Every row of a photo reads in one direction, so a bilingual label
+        // keeps its value columns in the same order on each row.
+        let bilingual = NutritionLabelText.lines(from: [
+            cell("Energy", x: 0.02, top: 0.2, width: 0.15),
+            cell("250 kcal", x: 0.3, top: 0.2, width: 0.15),
+            cell("100 kcal", x: 0.5, top: 0.2, width: 0.15),
+            cell("الطاقة", x: 0.75, top: 0.2, width: 0.15),
+            cell("Fat", x: 0.02, top: 0.25, width: 0.15),
+            cell("9 g", x: 0.3, top: 0.25, width: 0.15),
+            cell("3.6 g", x: 0.5, top: 0.25, width: 0.15),
+            cell("الدهون", x: 0.75, top: 0.25, width: 0.15),
+        ])
+        #expect(bilingual == [
+            "الطاقة | 100 kcal | 250 kcal | Energy",
+            "الدهون | 3.6 g | 9 g | Fat",
+        ])
+    }
+
+    @Test
     func recognizesNutritionLabelsInSeveralScripts() {
         #expect(NutritionLabelText.isLikelyNutritionLabel(NutritionLabelText.lines(from: usLabel)))
         #expect(NutritionLabelText.isLikelyNutritionLabel([
@@ -348,8 +389,8 @@ struct NutritionLabelTextTests {
         #expect(!longSection.contains("Photo 2:"))
     }
 
-    @Test
-    func onlyOnDeviceModelsGetTheLabelText() throws {
+    @Test @MainActor
+    func onlyOnDeviceModelsGetTheLabelText() async throws {
         let base = GeminiService.multiPhotoAnalysisPrompt(progressiveMeal: false, description: "half the bag")
         let section = try #require(NutritionLabelText.promptSection(for: [
             NutritionLabelPhotoText(photoNumber: 1, lines: ["Calories | 230", "Protein 3g"]),
@@ -358,14 +399,50 @@ struct NutritionLabelTextTests {
         #expect(onDevice == base + "\n\n" + section)
         #expect(NutritionLabelText.prompt(base, adding: nil) == base)
 
-        #expect(AIProvider.appleIntelligence.runsOnDevice)
-        #expect(AIProvider.gemma4Local.runsOnDevice)
-        #expect(GeminiService.requestPrompt(base, onDevicePrompt: onDevice, for: .appleIntelligence) == onDevice)
-        #expect(GeminiService.requestPrompt(base, onDevicePrompt: onDevice, for: .gemma4Local) == onDevice)
-        #expect(GeminiService.requestPrompt(base, onDevicePrompt: nil, for: .gemma4Local) == base)
-        for provider in AIProvider.allCases where provider != .appleIntelligence && provider != .gemma4Local {
-            #expect(!provider.runsOnDevice, "\(provider)")
-            #expect(GeminiService.requestPrompt(base, onDevicePrompt: onDevice, for: provider) == base, "\(provider)")
+        #expect(Set(AIProvider.allCases.filter(\.runsOnDevice)) == [.appleIntelligence, .gemma4Local])
+        var reads = 0
+        let labelText = OnDeviceLabelText {
+            reads += 1
+            return section
+        }
+        for provider in AIProvider.allCases where !provider.runsOnDevice {
+            #expect(try await labelText.prompt(base, for: provider) == base, "\(provider)")
+        }
+        // A cloud request never waits for Vision.
+        #expect(reads == 0)
+
+        // An on-device fallback after a cloud provider fails gets the label
+        // text too, and the photos are read once per request.
+        #expect(try await labelText.prompt(base, for: .gemma4Local) == onDevice)
+        #expect(try await labelText.prompt(base, for: .appleIntelligence) == onDevice)
+        #expect(try await labelText.section() == section)
+        #expect(reads == 1)
+
+        let noLabel = OnDeviceLabelText { nil }
+        #expect(try await noLabel.prompt(base, for: .gemma4Local) == base)
+        #expect(try await noLabel.section() == nil)
+    }
+
+    @Test @MainActor
+    func cancelledLabelReadingCancelsTheScan() async throws {
+        let labelText = OnDeviceLabelText { throw CancellationError() }
+        await #expect(throws: CancellationError.self) {
+            try await labelText.prompt("Analyze", for: .gemma4Local)
+        }
+        // A cloud request does not read the photos, so it is not affected.
+        #expect(try await labelText.prompt("Analyze", for: .gemini) == "Analyze")
+
+        let photo = UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).image { context in
+            UIColor.white.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
+        }
+        // Both run on the main actor, so the scan is cancelled before it starts.
+        let scan = Task { @MainActor in
+            try await NutritionLabelTextRecognizer.labelText(in: [photo, photo])
+        }
+        scan.cancel()
+        await #expect(throws: CancellationError.self) {
+            try await scan.value
         }
     }
 }

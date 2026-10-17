@@ -436,7 +436,7 @@ struct GeminiService {
         let prompt = multiPhotoAnalysisPrompt(progressiveMeal: progressiveMeal, description: description)
 
         return try await runWithHostedQuota(.photoFood, skip: skipHostedMetering) {
-            let labelText = await onDeviceNutritionLabelText(in: images)
+            let labelText = OnDeviceLabelText(images: images)
             if let onDevice = try await analyzeFoodWithAppleIntelligenceIfSelected(
                 images: images,
                 description: description,
@@ -447,11 +447,7 @@ struct GeminiService {
                 result.progressiveMeal = progressiveMeal
                 return result
             }
-            let text = try await callAI(
-                prompt: prompt,
-                images: images,
-                onDevicePrompt: labelText.map { NutritionLabelText.prompt(prompt, adding: $0) }
-            )
+            let text = try await callAI(prompt: prompt, images: images, labelText: labelText)
             let analysis = try parseFoodAnalysis(from: text)
             var result = await addingFallbackServingUnits(to: analysis, image: images[0], description: description)
             result.progressiveMeal = progressiveMeal
@@ -855,22 +851,11 @@ struct GeminiService {
         }
     }
 
-    /// The prompt section with the nutrition label text Vision read from the
-    /// photos, when the photo model runs on this iPhone (#486). Hosted and
-    /// cloud requests skip the extra recognition and keep their prompt. Nil
-    /// when no photo looks like a nutrition label.
-    private static func onDeviceNutritionLabelText(in images: [UIImage]) async -> String? {
-        guard !AIModeSettings.isHosted else { return nil }
-        let provider = AIProviderSettings.currentConfig(requiresVision: true).provider
-        guard provider.runsOnDevice, provider.supportsVision else { return nil }
-        return NutritionLabelText.promptSection(for: await NutritionLabelTextRecognizer.labelText(in: images))
-    }
-
     private static func analyzeFoodWithAppleIntelligenceIfSelected(
         images: [UIImage],
         description: String?,
         progressiveMeal: Bool = false,
-        labelText: String? = nil
+        labelText: OnDeviceLabelText? = nil
     ) async throws -> FoodAnalysis? {
         guard !AIModeSettings.isHosted else { return nil }
         let primary = AIProviderSettings.currentConfig(requiresVision: true)
@@ -882,7 +867,7 @@ struct GeminiService {
                     images: images,
                     description: description,
                     progressiveMeal: progressiveMeal,
-                    labelText: labelText
+                    labelText: try await labelText?.section()
                 )
                 analysis.progressiveMeal = progressiveMeal
                 return analysis
@@ -936,19 +921,15 @@ struct GeminiService {
         return try await AIGate.runWithHostedQuota(action, work)
     }
 
-    /// The prompt sent to `provider`: `onDevicePrompt` for a model that runs on
-    /// this iPhone, `prompt` for every other provider (#486).
-    static func requestPrompt(_ prompt: String, onDevicePrompt: String?, for provider: AIProvider) -> String {
-        provider.runsOnDevice ? onDevicePrompt ?? prompt : prompt
-    }
-
-    /// - Parameter onDevicePrompt: replaces `prompt` only for a provider that runs on
-    ///   this iPhone, so a cloud fallback keeps the original request.
+    /// - Parameter labelText: adds the nutrition label text to `prompt` only
+    ///   for a provider that runs on this iPhone, whether it is the selected
+    ///   provider or the image fallback, so cloud requests keep the original
+    ///   prompt (#486).
     private static func callAI(
         prompt: String,
         images: [UIImage],
         jsonResponse: Bool = true,
-        onDevicePrompt: String? = nil
+        labelText: OnDeviceLabelText? = nil
     ) async throws -> String {
         if AIModeSettings.isHosted {
             let capped = Array(images.prefix(HostedAIConstants.maxHostedImages))
@@ -974,7 +955,7 @@ struct GeminiService {
                 model: primary.model,
                 baseURL: primary.baseURL,
                 apiKey: primary.apiKey,
-                prompt: requestPrompt(prompt, onDevicePrompt: onDevicePrompt, for: primary.provider),
+                prompt: try await labelText?.prompt(prompt, for: primary.provider) ?? prompt,
                 imageDataList: imageDataList,
                 jsonResponse: jsonResponse
             )
@@ -1001,7 +982,7 @@ struct GeminiService {
                     model: fallback.model,
                     baseURL: fallback.baseURL,
                     apiKey: fallback.apiKey,
-                    prompt: requestPrompt(prompt, onDevicePrompt: onDevicePrompt, for: fallback.provider),
+                    prompt: try await labelText?.prompt(prompt, for: fallback.provider) ?? prompt,
                     imageDataList: imageDataList,
                     jsonResponse: jsonResponse
                 )

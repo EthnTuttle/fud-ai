@@ -1,6 +1,7 @@
 #if canImport(FoundationModels)
 import Foundation
 import FoundationModels
+import ImageIO
 import UIKit
 
 enum OnDeviceAIError: LocalizedError {
@@ -71,7 +72,9 @@ struct OnDeviceAIService {
             prompt
             for (index, image) in images.enumerated() {
                 if let cgImage = image.cgImage {
-                    Attachment(cgImage)
+                    // The bitmap is stored as the camera captured it; the
+                    // orientation shows it upright.
+                    Attachment(cgImage, orientation: CGImagePropertyOrientation(image.imageOrientation))
                         .label("image-\(index)")
                 } else {
                     Attachment(image)
@@ -292,7 +295,10 @@ struct OnDeviceFoodService {
             )
             for (index, image) in images.enumerated() {
                 if let cgImage = image.cgImage {
-                    Attachment(cgImage)
+                    // The bitmap is stored as the camera captured it; the
+                    // orientation shows it upright, as Vision read the
+                    // label text (#486).
+                    Attachment(cgImage, orientation: CGImagePropertyOrientation(image.imageOrientation))
                         .label("image-\(index)")
                 } else {
                     Attachment(image)
