@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -41,6 +43,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
@@ -144,7 +149,7 @@ internal fun MealIngredientsCard(
 }
 
 @Composable
-private fun RecipeServingsRow(servings: Int, onChange: (Int) -> Unit) {
+internal fun RecipeServingsRow(servings: Int, onChange: (Int) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,11 +168,14 @@ private fun RecipeServingsRow(servings: Int, onChange: (Int) -> Unit) {
                 enabled = servings > RecipeServings.MIN,
                 onClick = { onChange(servings - 1) }
             )
+            // A polite live region, so TalkBack reads the new count after - or +.
             Text(
                 servings.toString(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .semantics { liveRegion = LiveRegionMode.Polite }
             )
             RecipeServingsStepButton(
                 icon = Icons.Filled.Add,
@@ -184,6 +192,7 @@ private fun RecipeServingsRow(servings: Int, onChange: (Int) -> Unit) {
     }
 }
 
+/** A real button with a 48dp touch target, so TalkBack and switch access treat it as one. */
 @Composable
 private fun RecipeServingsStepButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -191,16 +200,16 @@ private fun RecipeServingsStepButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Icon(
-        icon,
-        contentDescription = contentDescription,
-        modifier = Modifier
-            .size(32.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(4.dp),
-        tint = AppColors.Calorie.copy(alpha = if (enabled) 1f else 0.35f)
-    )
+    IconButton(
+        onClick = onClick,
+        enabled = enabled,
+        colors = IconButtonDefaults.iconButtonColors(
+            contentColor = AppColors.Calorie,
+            disabledContentColor = AppColors.Calorie.copy(alpha = 0.35f)
+        )
+    ) {
+        Icon(icon, contentDescription = contentDescription)
+    }
 }
 
 @Composable
