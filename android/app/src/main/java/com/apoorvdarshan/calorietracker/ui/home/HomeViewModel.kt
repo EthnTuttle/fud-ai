@@ -636,7 +636,7 @@ viewModelScope.launch {
                     if (savedLabel != null) {
                         val analysis = savedLabel.toAnalysis()
                         _ui.value = _ui.value.copy(savedLabelAnalysis = analysis)
-                        savePendingDraft(analysis, source = FoodSource.NUTRITION_LABEL)
+                        savePendingDraft(analysis, source = FoodSource.NUTRITION_LABEL, usesSavedBarcodeLabel = true)
                         return@launchAnalysis
                     }
                 }
@@ -1059,7 +1059,8 @@ viewModelScope.launch {
         analysis: FoodAnalysis,
         imageBytes: ByteArray? = null,
         imageBytesList: List<ByteArray> = imageBytes?.let(::listOf).orEmpty(),
-        source: FoodSource
+        source: FoodSource,
+        usesSavedBarcodeLabel: Boolean = false
     ) {
         retryAction = null
         draftSaveGeneration += 1
@@ -1095,7 +1096,8 @@ viewModelScope.launch {
                 analysis = analysis,
                 imageFilename = imageFilename,
                 additionalImageFilenames = additionalImageFilenames,
-                source = source
+                source = source,
+                usesSavedBarcodeLabel = usesSavedBarcodeLabel
             )
         )
         if (saveGeneration != draftSaveGeneration || _ui.value.pendingAnalysis !== analysis) {
@@ -1141,6 +1143,8 @@ viewModelScope.launch {
             pendingDraftImageFilename = draft.imageFilename,
             pendingDraftAdditionalImageFilenames = draft.additionalImageFilenames,
             pendingReviewSource = null,
+            // Keeps the saved-label notice on a review restored after the app was closed (#485).
+            savedLabelAnalysis = draft.savedLabelAnalysis,
             error = null
         )
     }
