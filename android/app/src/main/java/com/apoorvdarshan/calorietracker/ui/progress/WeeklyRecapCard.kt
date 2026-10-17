@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.models.EnergyUnit
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.WeightEntry
 import com.apoorvdarshan.calorietracker.models.WorkoutDayPlan
@@ -183,7 +184,8 @@ private fun WeeklyRecapStats(
     val dayCount = { days: Int -> "${numbers.format(days)}/${numbers.format(7)}" }
     val change = { now: Int, before: Int -> RecapTileDetail(WeeklyRecapCalculator.signedChange(now - before), now > before) }
     // Energy shows in the chosen unit (#520); the comparisons stay kcal.
-    val energy = WeeklyRecapCalculator.energyFigures(current, previous, calorieGoal, LocalEnergyUnit.current)
+    val unit = LocalEnergyUnit.current
+    val energy = WeeklyRecapCalculator.energyFigures(current, previous, calorieGoal, unit)
     val tiles = listOf(
         RecapTile(
             dayCount(current.loggedDays),
@@ -201,7 +203,10 @@ private fun WeeklyRecapStats(
             change(current.proteinGoalDays, previous.proteinGoalDays)
         ),
         RecapTile(
-            energy.averageCalories ?: "–",
+            // kcal keeps the bare number; kJ names its unit so "Avg calories" isn't misread.
+            current.averageCalories?.takeIf { unit == EnergyUnit.KJ }
+                ?.let { energyTextDisplayed(unit.displayValue(it)) }
+                ?: energy.averageCalories ?: "–",
             stringResource(R.string.weekly_recap_avg_calories),
             RecapTileDetail(stringResource(R.string.weekly_recap_target_format, energy.calorieGoal), false)
         ),

@@ -132,7 +132,10 @@ struct WeeklyRecapCard: View {
                 change: current.proteinGoalDays - previous.proteinGoalDays
             )
             WeeklyRecapStatTile(
-                value: energy.averageCalories ?? "–",
+                // kcal keeps the bare number; kJ names its unit so "Avg calories" isn't misread.
+                value: energyUnit == .kj
+                    ? (current.averageCalories.map { energyUnit.format(kcal: $0) } ?? "–")
+                    : (energy.averageCalories ?? "–"),
                 label: "Avg calories",
                 caption: String(localized: "Target \(energy.calorieGoal)")
             )
