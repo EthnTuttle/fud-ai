@@ -509,6 +509,42 @@
     <string name="progress_previous_period">Vorheriger Zeitraum</string>
     <string name="progress_next_period">Nächster Zeitraum</string>
 
+    <string name="weekly_recap_title">Wochenrückblick</string>
+    <string name="weekly_recap_previous_week">Vorherige Woche</string>
+    <string name="weekly_recap_next_week">Nächste Woche</string>
+    <string name="weekly_recap_days_logged">Erfasste Tage</string>
+    <string name="weekly_recap_calorie_target_days">Kalorien im Ziel</string>
+    <string name="weekly_recap_protein_goal_days">Proteinziel erreicht</string>
+    <string name="weekly_recap_avg_calories">Ø Kalorien</string>
+    <string name="weekly_recap_workouts">Trainings</string>
+    <string name="weekly_recap_active_burn">Aktiver Verbrauch</string>
+    <string name="weekly_recap_weight_change">Gewichtsänderung</string>
+    <string name="weekly_recap_target_format">Ziel %1$s</string>
+    <string name="weekly_recap_comparison_note">Änderungen im Vergleich zur Vorwoche.</string>
+    <string name="weekly_recap_empty">Diese Woche nichts erfasst</string>
+    <string name="weekly_recap_highlight_every_day">Jeden Tag erfasst</string>
+    <string name="weekly_recap_highlight_average_on_target">Ø Kalorien im Ziel</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Beste Serie: %1$d Tag am Stück</item>
+        <item quantity="other">Beste Serie: %1$d Tage am Stück</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d Training ggü. Vorwoche</item>
+        <item quantity="other">+%1$d Trainings ggü. Vorwoche</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d Tag im Kalorienziel ggü. Vorwoche</item>
+        <item quantity="other">+%1$d Tage im Kalorienziel ggü. Vorwoche</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d Tag mit Proteinziel ggü. Vorwoche</item>
+        <item quantity="other">+%1$d Tage mit Proteinziel ggü. Vorwoche</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d erfasster Tag ggü. Vorwoche</item>
+        <item quantity="other">+%1$d erfasste Tage ggü. Vorwoche</item>
+    </plurals>
+
     <string name="progress_weight_section">Gewicht</string>
     <string name="progress_log_weight">Gewicht erfassen</string>
     <string name="progress_stat_current">Aktuell</string>

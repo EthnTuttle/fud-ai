@@ -508,6 +508,37 @@
     <string name="progress_previous_period">前の期間</string>
     <string name="progress_next_period">次の期間</string>
 
+    <string name="weekly_recap_title">週間まとめ</string>
+    <string name="weekly_recap_previous_week">前の週</string>
+    <string name="weekly_recap_next_week">次の週</string>
+    <string name="weekly_recap_days_logged">記録した日</string>
+    <string name="weekly_recap_calorie_target_days">カロリー目標内</string>
+    <string name="weekly_recap_protein_goal_days">タンパク質目標達成</string>
+    <string name="weekly_recap_avg_calories">平均カロリー</string>
+    <string name="weekly_recap_workouts">ワークアウト</string>
+    <string name="weekly_recap_active_burn">アクティブ消費</string>
+    <string name="weekly_recap_weight_change">体重の変化</string>
+    <string name="weekly_recap_target_format">目標 %1$s</string>
+    <string name="weekly_recap_comparison_note">変化は前の週との比較です。</string>
+    <string name="weekly_recap_empty">この週は記録がありません</string>
+    <string name="weekly_recap_highlight_every_day">毎日記録しました</string>
+    <string name="weekly_recap_highlight_average_on_target">平均カロリーが目標内</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="other">最長連続記録：%1$d日</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="other">前の週よりワークアウトが +%1$d 回</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="other">前の週よりカロリー目標内の日が +%1$d 日</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="other">前の週よりタンパク質目標達成日が +%1$d 日</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="other">前の週より記録した日が +%1$d 日</item>
+    </plurals>
+
     <string name="progress_weight_section">体重</string>
     <string name="progress_log_weight">体重を記録</string>
     <string name="progress_stat_current">現在</string>

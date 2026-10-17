@@ -105,8 +105,23 @@ struct ProgressPeriodNavigator: View {
     let canGoForward: Bool
     let onPrevious: () -> Void
     let onNext: () -> Void
+    var previousLabel: LocalizedStringKey = "Previous period"
+    var nextLabel: LocalizedStringKey = "Next period"
+    /// Inside another card: a tinted fill instead of a second card frame.
+    var isEmbedded = false
 
     var body: some View {
+        if isEmbedded {
+            arrows.background(
+                AppColors.calorie.opacity(0.055),
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+        } else {
+            arrows.progressCardStyle(cornerRadius: 14)
+        }
+    }
+
+    private var arrows: some View {
         HStack(spacing: 4) {
             Button(action: onPrevious) {
                 Image(systemName: "chevron.backward")
@@ -114,7 +129,7 @@ struct ProgressPeriodNavigator: View {
                     .frame(width: 44, height: 36)
                     .contentShape(Rectangle())
             }
-            .accessibilityLabel(Text("Previous period"))
+            .accessibilityLabel(Text(previousLabel))
 
             Text(label)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
@@ -130,11 +145,10 @@ struct ProgressPeriodNavigator: View {
                     .contentShape(Rectangle())
             }
             .disabled(!canGoForward)
-            .accessibilityLabel(Text("Next period"))
+            .accessibilityLabel(Text(nextLabel))
         }
         .tint(AppColors.calorie)
         .padding(.horizontal, 4)
-        .progressCardStyle(cornerRadius: 14)
     }
 }
 
@@ -247,7 +261,7 @@ private struct ProgressCardStyle: ViewModifier {
     }
 }
 
-private extension View {
+extension View {
     func progressCardStyle(cornerRadius: CGFloat = 20) -> some View {
         modifier(ProgressCardStyle(cornerRadius: cornerRadius))
     }

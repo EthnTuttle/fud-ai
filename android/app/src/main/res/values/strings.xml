@@ -576,6 +576,42 @@
     <string name="progress_previous_period">Previous period</string>
     <string name="progress_next_period">Next period</string>
 
+    <string name="weekly_recap_title">Weekly Recap</string>
+    <string name="weekly_recap_previous_week">Previous week</string>
+    <string name="weekly_recap_next_week">Next week</string>
+    <string name="weekly_recap_days_logged">Days logged</string>
+    <string name="weekly_recap_calorie_target_days">Calories on target</string>
+    <string name="weekly_recap_protein_goal_days">Protein goal reached</string>
+    <string name="weekly_recap_avg_calories">Avg calories</string>
+    <string name="weekly_recap_workouts">Workouts</string>
+    <string name="weekly_recap_active_burn">Active burn</string>
+    <string name="weekly_recap_weight_change">Weight change</string>
+    <string name="weekly_recap_target_format">Target %1$s</string>
+    <string name="weekly_recap_comparison_note">Changes are compared with the previous week.</string>
+    <string name="weekly_recap_empty">Nothing logged this week</string>
+    <string name="weekly_recap_highlight_every_day">Logged every day</string>
+    <string name="weekly_recap_highlight_average_on_target">Average calories on target</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Best streak: %1$d day in a row</item>
+        <item quantity="other">Best streak: %1$d days in a row</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d workout vs previous week</item>
+        <item quantity="other">+%1$d workouts vs previous week</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d day on calorie target vs previous week</item>
+        <item quantity="other">+%1$d days on calorie target vs previous week</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d protein goal day vs previous week</item>
+        <item quantity="other">+%1$d protein goal days vs previous week</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d day logged vs previous week</item>
+        <item quantity="other">+%1$d days logged vs previous week</item>
+    </plurals>
+
     <string name="progress_weight_section">Weight</string>
     <string name="progress_log_weight">Log Weight</string>
     <string name="progress_stat_current">Current</string>

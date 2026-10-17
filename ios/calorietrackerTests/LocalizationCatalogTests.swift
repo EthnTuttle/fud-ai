@@ -69,7 +69,42 @@ struct LocalizationCatalogTests {
         "The provider sent a message the app can't read.",
     ]
 
+    /// Every Weekly Recap string on Progress (#431).
+    static let weeklyRecapKeys = [
+        "Weekly Recap", "Previous week", "Next week",
+        "Days logged", "Calories on target", "Protein goal reached", "Avg calories", "Workouts",
+        "Active burn", "Weight change", "Target %@", "Changes are compared with the previous week.",
+        "Nothing logged this week", "Logged every day", "Average calories on target",
+        "Best streak: %lld days in a row", "+%lld workouts vs previous week",
+        "+%lld days on calorie target vs previous week", "+%lld protein goal days vs previous week",
+        "+%lld days logged vs previous week",
+    ]
+
     // MARK: - Compiled bundles
+
+    @Test func weeklyRecapIsTranslatedInEveryLanguage() throws {
+        for language in Self.appLanguages {
+            let bundle = try Self.languageBundle(language, in: .main)
+            for key in Self.weeklyRecapKeys {
+                #expect(Self.hasTranslation(key, in: bundle), "\(language) is missing \(key)")
+            }
+            let target = bundle.localizedString(forKey: "Target %@", value: nil, table: nil)
+            #expect(String(format: target, "2,000").contains("2,000"), "\(language): \(target)")
+        }
+    }
+
+    @Test func weeklyRecapHighlightsFollowPluralRules() throws {
+        let workouts = "+%lld workouts vs previous week"
+        #expect(try Self.format(workouts, "en", 1) == "+1 workout vs previous week")
+        #expect(try Self.format(workouts, "ru", 1) == "+1 тренировка к предыдущей неделе")
+        #expect(try Self.format(workouts, "ru", 3) == "+3 тренировки к предыдущей неделе")
+        #expect(try Self.format(workouts, "ru", 5) == "+5 тренировок к предыдущей неделе")
+        let streak = "Best streak: %lld days in a row"
+        #expect(try Self.format(streak, "pl", 3) == "Najlepsza seria: 3 dni z rzędu")
+        #expect(try Self.format(streak, "cs", 5) == "Nejlepší série: 5 dní v řadě")
+        #expect(try Self.format(streak, "ro", 21) == "Cea mai bună serie: 21 de zile la rând")
+        #expect(try Self.format("+%lld days logged vs previous week", "uk", 2) == "+2 дні із записами до попереднього тижня")
+    }
 
     @Test func notificationTextIsTranslatedInEveryLanguage() throws {
         for language in Self.appLanguages {

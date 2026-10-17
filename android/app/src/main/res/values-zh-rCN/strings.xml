@@ -508,6 +508,37 @@
     <string name="progress_previous_period">上一时段</string>
     <string name="progress_next_period">下一时段</string>
 
+    <string name="weekly_recap_title">每周回顾</string>
+    <string name="weekly_recap_previous_week">上一周</string>
+    <string name="weekly_recap_next_week">下一周</string>
+    <string name="weekly_recap_days_logged">记录天数</string>
+    <string name="weekly_recap_calorie_target_days">热量达标</string>
+    <string name="weekly_recap_protein_goal_days">蛋白质达标</string>
+    <string name="weekly_recap_avg_calories">平均热量</string>
+    <string name="weekly_recap_workouts">锻炼</string>
+    <string name="weekly_recap_active_burn">活动消耗</string>
+    <string name="weekly_recap_weight_change">体重变化</string>
+    <string name="weekly_recap_target_format">目标 %1$s</string>
+    <string name="weekly_recap_comparison_note">变化与上一周相比。</string>
+    <string name="weekly_recap_empty">本周没有记录</string>
+    <string name="weekly_recap_highlight_every_day">每天都有记录</string>
+    <string name="weekly_recap_highlight_average_on_target">平均热量达标</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="other">最佳连续记录：连续 %1$d 天</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="other">比上一周多 %1$d 次锻炼</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="other">比上一周多 %1$d 天热量达标</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="other">比上一周多 %1$d 天蛋白质达标</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="other">比上一周多记录 %1$d 天</item>
+    </plurals>
+
     <string name="progress_weight_section">体重</string>
     <string name="progress_log_weight">记录体重</string>
     <string name="progress_stat_current">当前</string>

@@ -508,6 +508,37 @@
     <string name="progress_previous_period">이전 기간</string>
     <string name="progress_next_period">다음 기간</string>
 
+    <string name="weekly_recap_title">주간 요약</string>
+    <string name="weekly_recap_previous_week">이전 주</string>
+    <string name="weekly_recap_next_week">다음 주</string>
+    <string name="weekly_recap_days_logged">기록한 날</string>
+    <string name="weekly_recap_calorie_target_days">칼로리 목표 달성</string>
+    <string name="weekly_recap_protein_goal_days">단백질 목표 달성</string>
+    <string name="weekly_recap_avg_calories">평균 칼로리</string>
+    <string name="weekly_recap_workouts">운동</string>
+    <string name="weekly_recap_active_burn">활동 소모</string>
+    <string name="weekly_recap_weight_change">체중 변화</string>
+    <string name="weekly_recap_target_format">목표 %1$s</string>
+    <string name="weekly_recap_comparison_note">변화는 이전 주와 비교한 값입니다.</string>
+    <string name="weekly_recap_empty">이번 주에는 기록이 없습니다</string>
+    <string name="weekly_recap_highlight_every_day">매일 기록했어요</string>
+    <string name="weekly_recap_highlight_average_on_target">평균 칼로리가 목표 범위 안</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="other">최고 연속 기록: %1$d일 연속</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="other">이전 주보다 운동 +%1$d회</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="other">이전 주보다 칼로리 목표 달성일 +%1$d일</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="other">이전 주보다 단백질 목표 달성일 +%1$d일</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="other">이전 주보다 기록한 날 +%1$d일</item>
+    </plurals>
+
     <string name="progress_weight_section">체중</string>
     <string name="progress_log_weight">체중 기록</string>
     <string name="progress_stat_current">현재</string>

@@ -151,6 +151,7 @@ import kotlin.math.roundToInt
  * including the per-section components in ProgressComponents.swift.
  *
  * Layout (top -> bottom):
+ *   0. WeeklyRecapCard — the last completed week vs the one before (WeeklyRecapCard.kt)
  *   1. Segmented TimeRange picker — 1W / 1M / 3M / 6M / 1Y / All
  *   2. WeightChartSection — Weight title + Log Weight pill + StatBadges
  *      (Current, Goal, Net Change, Average) + line chart with green dashed goal rule
@@ -226,6 +227,8 @@ private fun MyProgressContent(container: AppContainer) {
         initial = OptionalNutrientGoals.Default
     )
     val includeToday by container.prefs.progressIncludeToday.collectAsState(initial = true)
+    val weekStartsOnMonday by container.prefs.weekStartsOnMonday.collectAsState(initial = true)
+    val workoutDayPlans by container.workoutRepository.dayPlans.collectAsState(initial = emptyMap())
     // null until DataStore answers, so a restored Steps selection isn't reset early.
     val healthConnectEnabled by container.prefs.healthConnectEnabled.collectAsState(initial = null)
     val prefsScope = rememberCoroutineScope()
@@ -250,6 +253,10 @@ private fun MyProgressContent(container: AppContainer) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     val weightMetric = weightUnit == "kg"
+    // The Weekly Recap's time zone and "today", re-read on each return to the app,
+    // so a finished week rolls over and travel regroups late-night entries.
+    val recapZone = remember(foregroundEpoch) { ZoneId.systemDefault() }
+    val recapToday = remember(foregroundEpoch) { LocalDate.now(recapZone) }
 
     var range by rememberSaveable { mutableStateOf(TimeRange.WEEK) }
     // Whole windows stepped back from the current one. Session-only and keyed on
@@ -379,6 +386,24 @@ private fun MyProgressContent(container: AppContainer) {
             ),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
+            // 0. Recap of the last completed week (#431); waits for the profile's targets.
+            ui.profile?.let { profile ->
+                item {
+                    WeeklyRecapCard(
+                        foods = foods,
+                        weights = ui.entries,
+                        burnSessions = ui.workoutBurnSessions,
+                        dayPlans = workoutDayPlans,
+                        calorieGoal = profile.effectiveCalories,
+                        proteinGoal = profile.effectiveProtein,
+                        useMetric = weightMetric,
+                        firstDayOfWeek = WeeklyRecapCalculator.firstDayOfWeek(weekStartsOnMonday),
+                        today = recapToday,
+                        zone = recapZone
+                    )
+                }
+            }
+
             // 1. Segmented TimeRange picker
             item { TimeRangePicker(selected = range, onSelect = { range = it }) }
 
@@ -713,45 +738,72 @@ private fun <T> IosStyleSegmentedControl(
  * value inspectors.
  */
 @Composable
-private fun PeriodNavigator(
+internal fun PeriodNavigator(
     start: LocalDate,
     end: LocalDate,
     canGoForward: Boolean,
     onPrevious: () -> Unit,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    previousDescription: String = stringResource(R.string.progress_previous_period),
+    nextDescription: String = stringResource(R.string.progress_next_period),
+    /** Inside another card: a tinted fill instead of a second glass surface. */
+    embedded: Boolean = false
 ) {
     val context = LocalContext.current
     val label = remember(start, end) { formatProgressPeriod(context, start, end) }
-    FudGlassSurface(
-        modifier = Modifier.fillMaxWidth(),
-        cornerRadius = 14.dp,
-        padding = 0.dp
-    ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onPrevious) {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = stringResource(R.string.progress_previous_period),
-                    tint = AppColors.Calorie
-                )
-            }
-            Text(
-                label,
-                modifier = Modifier.weight(1f),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+    if (embedded) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(AppColors.Calorie.copy(alpha = 0.055f))
+        ) {
+            PeriodNavigatorRow(label, canGoForward, onPrevious, onNext, previousDescription, nextDescription)
+        }
+    } else {
+        FudGlassSurface(
+            modifier = Modifier.fillMaxWidth(),
+            cornerRadius = 14.dp,
+            padding = 0.dp
+        ) {
+            PeriodNavigatorRow(label, canGoForward, onPrevious, onNext, previousDescription, nextDescription)
+        }
+    }
+}
+
+@Composable
+private fun PeriodNavigatorRow(
+    label: String,
+    canGoForward: Boolean,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    previousDescription: String,
+    nextDescription: String
+) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        IconButton(onClick = onPrevious) {
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = previousDescription,
+                tint = AppColors.Calorie
             )
-            IconButton(onClick = onNext, enabled = canGoForward) {
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(R.string.progress_next_period),
-                    tint = if (canGoForward) AppColors.Calorie
-                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
-            }
+        }
+        Text(
+            label,
+            modifier = Modifier.weight(1f),
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        IconButton(onClick = onNext, enabled = canGoForward) {
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = nextDescription,
+                tint = if (canGoForward) AppColors.Calorie
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
         }
     }
 }
@@ -2184,7 +2236,7 @@ private fun formatWeight(kg: Double, useMetric: Boolean): String =
     if (useMetric) String.format(Locale.US, "%.1f kg", kg)
     else String.format(Locale.US, "%.1f lbs", kg * 2.20462)
 
-private fun formatWeightChange(deltaKg: Double, useMetric: Boolean): String {
+internal fun formatWeightChange(deltaKg: Double, useMetric: Boolean): String {
     val displayValue = if (useMetric) deltaKg else deltaKg * 2.20462
     val roundedValue = if (Math.abs(displayValue) < 0.05) 0.0 else displayValue
     val sign = if (roundedValue > 0) "+" else ""

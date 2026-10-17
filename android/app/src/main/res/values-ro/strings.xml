@@ -511,6 +511,47 @@
     <string name="progress_previous_period">Perioada anterioară</string>
     <string name="progress_next_period">Perioada următoare</string>
 
+    <string name="weekly_recap_title">Rezumat săptămânal</string>
+    <string name="weekly_recap_previous_week">Săptămâna anterioară</string>
+    <string name="weekly_recap_next_week">Săptămâna următoare</string>
+    <string name="weekly_recap_days_logged">Zile înregistrate</string>
+    <string name="weekly_recap_calorie_target_days">Calorii în țintă</string>
+    <string name="weekly_recap_protein_goal_days">Țintă proteine atinsă</string>
+    <string name="weekly_recap_avg_calories">Calorii medii</string>
+    <string name="weekly_recap_workouts">Antrenamente</string>
+    <string name="weekly_recap_active_burn">Ardere activă</string>
+    <string name="weekly_recap_weight_change">Variația greutății</string>
+    <string name="weekly_recap_target_format">Țintă %1$s</string>
+    <string name="weekly_recap_comparison_note">Schimbările sunt comparate cu săptămâna anterioară.</string>
+    <string name="weekly_recap_empty">Nimic înregistrat săptămâna aceasta</string>
+    <string name="weekly_recap_highlight_every_day">Ai înregistrat în fiecare zi</string>
+    <string name="weekly_recap_highlight_average_on_target">Calorii medii în țintă</string>
+    <plurals name="weekly_recap_highlight_streak">
+        <item quantity="one">Cea mai bună serie: %1$d zi la rând</item>
+        <item quantity="few">Cea mai bună serie: %1$d zile la rând</item>
+        <item quantity="other">Cea mai bună serie: %1$d de zile la rând</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_workouts">
+        <item quantity="one">+%1$d antrenament față de săptămâna anterioară</item>
+        <item quantity="few">+%1$d antrenamente față de săptămâna anterioară</item>
+        <item quantity="other">+%1$d de antrenamente față de săptămâna anterioară</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_calorie_days">
+        <item quantity="one">+%1$d zi în ținta de calorii față de săptămâna anterioară</item>
+        <item quantity="few">+%1$d zile în ținta de calorii față de săptămâna anterioară</item>
+        <item quantity="other">+%1$d de zile în ținta de calorii față de săptămâna anterioară</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_protein_days">
+        <item quantity="one">+%1$d zi cu ținta de proteine față de săptămâna anterioară</item>
+        <item quantity="few">+%1$d zile cu ținta de proteine față de săptămâna anterioară</item>
+        <item quantity="other">+%1$d de zile cu ținta de proteine față de săptămâna anterioară</item>
+    </plurals>
+    <plurals name="weekly_recap_highlight_more_logged_days">
+        <item quantity="one">+%1$d zi înregistrată față de săptămâna anterioară</item>
+        <item quantity="few">+%1$d zile înregistrate față de săptămâna anterioară</item>
+        <item quantity="other">+%1$d de zile înregistrate față de săptămâna anterioară</item>
+    </plurals>
+
     <string name="progress_weight_section">Greutate</string>
     <string name="progress_log_weight">Înregistrează greutatea</string>
     <string name="progress_stat_current">Actual</string>
