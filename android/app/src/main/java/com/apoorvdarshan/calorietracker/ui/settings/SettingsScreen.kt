@@ -291,8 +291,7 @@ internal enum class SettingsCategory(
 ) {
     PERSONAL_INFO(R.string.settings_section_personal, Icons.Outlined.Person),
     GOALS_NUTRITION(R.string.settings_section_goals, Icons.Outlined.TrackChanges),
-    TRACKING_REMINDERS(R.string.settings_section_tracking_reminders, Icons.Outlined.Timer),
-    NOTIFICATIONS(R.string.settings_notifications, Icons.Outlined.Notifications),
+    TRACKING_NOTIFICATIONS(R.string.settings_section_tracking_notifications, Icons.Outlined.Notifications),
     AI_ACCESS(R.string.settings_category_ai_access, Icons.Outlined.WorkspacePremium),
     AI_PROVIDERS(R.string.settings_category_ai_providers, Icons.Outlined.SmartToy),
     SPEECH_TO_TEXT(R.string.settings_section_speech, Icons.Outlined.Mic),
@@ -332,8 +331,7 @@ internal enum class SettingsCategory(
         get() = when (this) {
             PERSONAL_INFO -> VoiceSettingsSection.PROFILE
             GOALS_NUTRITION -> VoiceSettingsSection.GOALS
-            TRACKING_REMINDERS -> VoiceSettingsSection.REMINDERS
-            NOTIFICATIONS -> VoiceSettingsSection.NOTIFICATIONS
+            TRACKING_NOTIFICATIONS -> VoiceSettingsSection.NOTIFICATIONS
             AI_ACCESS, AI_PROVIDERS -> VoiceSettingsSection.AI_PROVIDERS
             SPEECH_TO_TEXT -> VoiceSettingsSection.SPEECH
             VOICE_ASSISTANT -> VoiceSettingsSection.VOICE_ASSISTANT
@@ -352,8 +350,8 @@ internal enum class SettingsCategory(
         fun forVoiceSection(section: VoiceSettingsSection): SettingsCategory = when (section) {
             VoiceSettingsSection.PROFILE -> PERSONAL_INFO
             VoiceSettingsSection.GOALS -> GOALS_NUTRITION
-            VoiceSettingsSection.REMINDERS -> TRACKING_REMINDERS
-            VoiceSettingsSection.NOTIFICATIONS -> NOTIFICATIONS
+            // Tracking and notifications share one page (#432); REMINDERS still opens it.
+            VoiceSettingsSection.REMINDERS, VoiceSettingsSection.NOTIFICATIONS -> TRACKING_NOTIFICATIONS
             VoiceSettingsSection.AI_PROVIDERS -> AI_PROVIDERS
             VoiceSettingsSection.SPEECH -> SPEECH_TO_TEXT
             VoiceSettingsSection.APPEARANCE -> APP_PREFERENCES
@@ -1047,7 +1045,9 @@ fun SettingsScreen(
             }
             }
 
-            if (selectedCategory == SettingsCategory.TRACKING_REMINDERS) {
+            // Tracking first, then notifications, so one page holds the features and the
+            // reminders that depend on them (#432).
+            if (selectedCategory == SettingsCategory.TRACKING_NOTIFICATIONS) {
             SectionCard {
                 SettingRow(
                     stringResource(R.string.settings_meal_times),
@@ -1102,6 +1102,29 @@ fun SettingsScreen(
                     ) { sheet = SettingsSheet.FASTING_GOAL }
                 }
             }
+            SectionCard {
+                ToggleRow(
+                    stringResource(R.string.settings_notifications),
+                    ui.notificationsEnabled,
+                    icon = Icons.Outlined.Notifications,
+                    switchModifier = Modifier.testTag("settings.notifications.enabled"),
+                    onChange = ::onNotificationsToggle
+                )
+                if (ui.notificationsEnabled) {
+                    HorizontalDivider()
+                    NotificationTypeRows(
+                        ui = ui,
+                        vm = vm,
+                        onDailySummaryChange = ::onDailySummaryToggle
+                    )
+                    HorizontalDivider()
+                    SettingRow(
+                        stringResource(R.string.settings_battery_opt),
+                        stringResource(R.string.settings_battery_opt_value),
+                        icon = Icons.Outlined.BatteryAlert
+                    ) { openBatteryOptimizationSettings() }
+                }
+            }
             }
 
             // Workout is permanently available. Keep its live preferences in the
@@ -1144,26 +1167,6 @@ fun SettingsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                 )
             }
-            }
-
-            if (selectedCategory == SettingsCategory.NOTIFICATIONS) {
-                SectionCard {
-                    ToggleRow(stringResource(R.string.settings_notifications), ui.notificationsEnabled, icon = Icons.Outlined.Notifications, onChange = ::onNotificationsToggle)
-                    if (ui.notificationsEnabled) {
-                        HorizontalDivider()
-                        NotificationTypeRows(
-                            ui = ui,
-                            vm = vm,
-                            onDailySummaryChange = ::onDailySummaryToggle
-                        )
-                        HorizontalDivider()
-                        SettingRow(
-                            stringResource(R.string.settings_battery_opt),
-                            stringResource(R.string.settings_battery_opt_value),
-                            icon = Icons.Outlined.BatteryAlert
-                        ) { openBatteryOptimizationSettings() }
-                    }
-                }
             }
 
             if (selectedCategory == SettingsCategory.AI_ACCESS) {

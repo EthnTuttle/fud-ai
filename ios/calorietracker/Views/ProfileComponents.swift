@@ -1093,9 +1093,11 @@ struct NutritionPickerSheet: View {
     }
 }
 
-// MARK: - Notification Settings View
+// MARK: - Notification Settings Sections
 
-struct NotificationSettingsView: View {
+/// The notification sections of Settings → Tracking & Notifications, shown below
+/// the tracking rows inside ProfileView's list (#432).
+struct NotificationSettingsSections: View {
     @Environment(NotificationManager.self) private var notificationManager
     @Environment(FastingStore.self) private var fastingStore
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
@@ -1137,194 +1139,189 @@ struct NotificationSettingsView: View {
     @AppStorage(FastingSettings.notificationEnabledKey) private var fastingGoalNotificationEnabled = true
 
     var body: some View {
-        List {
-            // Master toggle
-            Section {
-                Toggle(isOn: $notificationsEnabled) {
-                    Label {
-                        Text("Notifications")
-                    } icon: {
-                        Image(systemName: "bell.fill")
-                            .foregroundStyle(AppColors.calorie)
-                    }
+        // Master toggle
+        Section {
+            Toggle(isOn: $notificationsEnabled) {
+                Label {
+                    Text("Notifications")
+                } icon: {
+                    Image(systemName: "bell.fill")
+                        .foregroundStyle(AppColors.calorie)
                 }
-                .tint(AppColors.calorie)
-                .onChange(of: notificationsEnabled) { _, enabled in
-                    if enabled {
-                        Task {
-                            let granted = await notificationManager.requestAuthorization()
-                            if !granted {
-                                notificationsEnabled = false
-                            } else {
-                                applyMealReminders()
-                                applyWaterReminder()
-                                applyFastingGoalNotification()
-                                await notificationManager.scheduleProductHuntLaunchReminderIfNeeded()
-                            }
+            }
+            .tint(AppColors.calorie)
+            .accessibilityIdentifier("settings.notifications.enabled")
+            .task {
+                await notificationManager.refreshAuthorizationStatus()
+            }
+            .onChange(of: notificationsEnabled) { _, enabled in
+                if enabled {
+                    Task {
+                        let granted = await notificationManager.requestAuthorization()
+                        if !granted {
+                            notificationsEnabled = false
+                        } else {
+                            applyMealReminders()
+                            applyWaterReminder()
+                            applyFastingGoalNotification()
+                            await notificationManager.scheduleProductHuntLaunchReminderIfNeeded()
                         }
-                    } else {
-                        notificationManager.cancelAllNotifications()
                     }
+                } else {
+                    notificationManager.cancelAllNotifications()
                 }
-            } footer: {
-                if notificationManager.authorizationStatus == .denied {
-                    Button {
-                        if let url = URL(string: UIApplication.openSettingsURLString) {
-                            UIApplication.shared.open(url)
-                        }
-                    } label: {
-                        Text("Notifications are disabled in system settings. Tap to open Settings.")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(AppColors.calorie)
+            }
+        } footer: {
+            if notificationManager.authorizationStatus == .denied {
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
                     }
+                } label: {
+                    Text("Notifications are disabled in system settings. Tap to open Settings.")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(AppColors.calorie)
                 }
+            }
+        }
+        .listRowBackground(AppColors.appCard)
+
+        if notificationsEnabled {
+            // Meal Reminders
+            Section("Meal Reminders") {
+                NotificationTimeRow(
+                    label: "Breakfast",
+                    icon: "sunrise.fill",
+                    isEnabled: $breakfastEnabled,
+                    hour: $breakfastHour,
+                    minute: $breakfastMinute
+                )
+                .onChange(of: breakfastEnabled) { _, _ in applyMealReminders() }
+                .onChange(of: breakfastHour) { _, _ in applyMealReminders() }
+                .onChange(of: breakfastMinute) { _, _ in applyMealReminders() }
+
+                NotificationTimeRow(
+                    label: "Lunch",
+                    icon: "sun.max.fill",
+                    isEnabled: $lunchEnabled,
+                    hour: $lunchHour,
+                    minute: $lunchMinute
+                )
+                .onChange(of: lunchEnabled) { _, _ in applyMealReminders() }
+                .onChange(of: lunchHour) { _, _ in applyMealReminders() }
+                .onChange(of: lunchMinute) { _, _ in applyMealReminders() }
+
+                NotificationTimeRow(
+                    label: "Dinner",
+                    icon: "moon.fill",
+                    isEnabled: $dinnerEnabled,
+                    hour: $dinnerHour,
+                    minute: $dinnerMinute
+                )
+                .onChange(of: dinnerEnabled) { _, _ in applyMealReminders() }
+                .onChange(of: dinnerHour) { _, _ in applyMealReminders() }
+                .onChange(of: dinnerMinute) { _, _ in applyMealReminders() }
             }
             .listRowBackground(AppColors.appCard)
 
-            if notificationsEnabled {
-                // Meal Reminders
-                Section("Meal Reminders") {
+            if waterTrackingEnabled {
+                Section("Water") {
                     NotificationTimeRow(
-                        label: "Breakfast",
-                        icon: "sunrise.fill",
-                        isEnabled: $breakfastEnabled,
-                        hour: $breakfastHour,
-                        minute: $breakfastMinute
+                        label: "Water Reminder",
+                        icon: "drop.fill",
+                        isEnabled: $waterReminderEnabled,
+                        hour: $waterReminderHour,
+                        minute: $waterReminderMinute
                     )
-                    .onChange(of: breakfastEnabled) { _, _ in applyMealReminders() }
-                    .onChange(of: breakfastHour) { _, _ in applyMealReminders() }
-                    .onChange(of: breakfastMinute) { _, _ in applyMealReminders() }
-
-                    NotificationTimeRow(
-                        label: "Lunch",
-                        icon: "sun.max.fill",
-                        isEnabled: $lunchEnabled,
-                        hour: $lunchHour,
-                        minute: $lunchMinute
-                    )
-                    .onChange(of: lunchEnabled) { _, _ in applyMealReminders() }
-                    .onChange(of: lunchHour) { _, _ in applyMealReminders() }
-                    .onChange(of: lunchMinute) { _, _ in applyMealReminders() }
-
-                    NotificationTimeRow(
-                        label: "Dinner",
-                        icon: "moon.fill",
-                        isEnabled: $dinnerEnabled,
-                        hour: $dinnerHour,
-                        minute: $dinnerMinute
-                    )
-                    .onChange(of: dinnerEnabled) { _, _ in applyMealReminders() }
-                    .onChange(of: dinnerHour) { _, _ in applyMealReminders() }
-                    .onChange(of: dinnerMinute) { _, _ in applyMealReminders() }
+                    .onChange(of: waterReminderEnabled) { _, _ in applyWaterReminder() }
+                    .onChange(of: waterReminderHour) { _, _ in applyWaterReminder() }
+                    .onChange(of: waterReminderMinute) { _, _ in applyWaterReminder() }
                 }
                 .listRowBackground(AppColors.appCard)
+            }
 
-                if waterTrackingEnabled {
-                    Section("Water") {
-                        NotificationTimeRow(
-                            label: "Water Reminder",
-                            icon: "drop.fill",
-                            isEnabled: $waterReminderEnabled,
-                            hour: $waterReminderHour,
-                            minute: $waterReminderMinute
-                        )
-                        .onChange(of: waterReminderEnabled) { _, _ in applyWaterReminder() }
-                        .onChange(of: waterReminderHour) { _, _ in applyWaterReminder() }
-                        .onChange(of: waterReminderMinute) { _, _ in applyWaterReminder() }
-                    }
-                    .listRowBackground(AppColors.appCard)
-                }
-
-                if fastingTrackingEnabled {
-                    Section {
-                        Toggle(isOn: $fastingGoalNotificationEnabled) {
-                            Label {
-                                Text("Goal Reached")
-                            } icon: {
-                                Image(systemName: "timer")
-                                    .foregroundStyle(AppColors.calorie)
-                            }
-                        }
-                        .tint(AppColors.calorie)
-                        .onChange(of: fastingGoalNotificationEnabled) { _, _ in
-                            applyFastingGoalNotification()
-                        }
-                    } header: {
-                        Text("Fasting")
-                    } footer: {
-                        Text("Notifies you once when the active fast reaches its goal. The timer continues until you end it.")
-                            .font(.system(.caption, design: .rounded))
-                    }
-                    .listRowBackground(AppColors.appCard)
-                }
-
-                // Smart Notifications
+            if fastingTrackingEnabled {
                 Section {
-                    NotificationTimeRow(
-                        label: "Streak Reminder",
-                        icon: "flame.fill",
-                        isEnabled: $streakEnabled,
-                        hour: $streakHour,
-                        minute: $streakMinute
-                    )
-
-                    NotificationTimeRow(
-                        label: "Daily Summary",
-                        icon: "chart.bar.fill",
-                        isEnabled: $summaryEnabled,
-                        hour: $summaryHour,
-                        minute: $summaryMinute
-                    )
-
-                    NotificationTimeRow(
-                        label: "Log Weight",
-                        icon: "scalemass.fill",
-                        isEnabled: $weightLogEnabled,
-                        hour: $weightLogHour,
-                        minute: $weightLogMinute
-                    )
-
-                    NotificationTimeRow(
-                        label: "Log Body Fat",
-                        icon: "percent",
-                        isEnabled: $bodyFatLogEnabled,
-                        hour: $bodyFatLogHour,
-                        minute: $bodyFatLogMinute
-                    )
-                } header: {
-                    Text("Smart Notifications")
-                } footer: {
-                    Text("All four reminders are smart — they skip firing on days you've already logged. Body fat default is off since most users don't measure daily.")
-                        .font(.system(.caption, design: .rounded))
-                }
-                .listRowBackground(AppColors.appCard)
-
-                // App Updates
-                Section {
-                    Toggle(isOn: $appUpdatesEnabled) {
+                    Toggle(isOn: $fastingGoalNotificationEnabled) {
                         Label {
-                            Text("App Updates")
+                            Text("Goal Reached")
                         } icon: {
-                            Image(systemName: "arrow.down.circle.fill")
+                            Image(systemName: "timer")
                                 .foregroundStyle(AppColors.calorie)
                         }
                     }
                     .tint(AppColors.calorie)
+                    .onChange(of: fastingGoalNotificationEnabled) { _, _ in
+                        applyFastingGoalNotification()
+                    }
                 } header: {
-                    Text("App")
+                    Text("Fasting")
                 } footer: {
-                    Text("Get notified when a new version is available. Tap the notification to open the App Store.")
+                    Text("Notifies you once when the active fast reaches its goal. The timer continues until you end it.")
                         .font(.system(.caption, design: .rounded))
                 }
                 .listRowBackground(AppColors.appCard)
             }
-        }
-        .scrollContentBackground(.hidden)
-        .background(AppColors.appBackground)
-        .navigationTitle("Notifications")
-        .navigationBarTitleDisplayMode(.inline)
-        .task {
-            await notificationManager.refreshAuthorizationStatus()
+
+            // Smart Notifications
+            Section {
+                NotificationTimeRow(
+                    label: "Streak Reminder",
+                    icon: "flame.fill",
+                    isEnabled: $streakEnabled,
+                    hour: $streakHour,
+                    minute: $streakMinute
+                )
+
+                NotificationTimeRow(
+                    label: "Daily Summary",
+                    icon: "chart.bar.fill",
+                    isEnabled: $summaryEnabled,
+                    hour: $summaryHour,
+                    minute: $summaryMinute
+                )
+
+                NotificationTimeRow(
+                    label: "Log Weight",
+                    icon: "scalemass.fill",
+                    isEnabled: $weightLogEnabled,
+                    hour: $weightLogHour,
+                    minute: $weightLogMinute
+                )
+
+                NotificationTimeRow(
+                    label: "Log Body Fat",
+                    icon: "percent",
+                    isEnabled: $bodyFatLogEnabled,
+                    hour: $bodyFatLogHour,
+                    minute: $bodyFatLogMinute
+                )
+            } header: {
+                Text("Smart Notifications")
+            } footer: {
+                Text("All four reminders are smart — they skip firing on days you've already logged. Body fat default is off since most users don't measure daily.")
+                    .font(.system(.caption, design: .rounded))
+            }
+            .listRowBackground(AppColors.appCard)
+
+            // App Updates
+            Section {
+                Toggle(isOn: $appUpdatesEnabled) {
+                    Label {
+                        Text("App Updates")
+                    } icon: {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundStyle(AppColors.calorie)
+                    }
+                }
+                .tint(AppColors.calorie)
+            } header: {
+                Text("App")
+            } footer: {
+                Text("Get notified when a new version is available. Tap the notification to open the App Store.")
+                    .font(.system(.caption, design: .rounded))
+            }
+            .listRowBackground(AppColors.appCard)
         }
     }
 

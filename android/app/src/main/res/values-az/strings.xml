@@ -522,7 +522,7 @@
     <string name="settings_section_goals">Hədəflər və Qidalanma</string>
     <string name="settings_section_daily_targets">Gündəlik Hədəflər</string>
     <string name="settings_section_app">Tətbiq Parametrləri</string>
-    <string name="settings_section_tracking_reminders">İzləmə və Xatırlatmalar</string>
+    <string name="settings_section_tracking_notifications">İzləmə və Bildirişlər</string>
     <string name="settings_category_ai_providers">Süni İntellekt Təminatçıları və Ehtiyat Seçimlər</string>
     <string name="settings_section_workout">Məşq</string>
     <string name="settings_section_ai">AI Təminatçısı</string>

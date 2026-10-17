@@ -932,7 +932,7 @@ class VoiceToolExecutor(
             fail(ToolError.INVALID_ARGUMENTS, "goal_hours must be between 1 and 168.")
         }
         if (!ports.trackingPrefs().fastingEnabled) {
-            fail(ToolError.UNSUPPORTED, "Fasting tracking is off. The user can turn it on in Settings, Tracking & Reminders.")
+            fail(ToolError.UNSUPPORTED, "Fasting tracking is off. The user can turn it on in Settings, Tracking & Notifications.")
         }
         if (ports.activeFast() != null) fail(ToolError.INVALID_ARGUMENTS, "A fast is already running.")
         val goalHours = (minutes / 60.0).roundToInt()
