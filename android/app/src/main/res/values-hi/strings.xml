@@ -746,6 +746,8 @@
     <string name="workout_exercise_take_photo">फ़ोटो लें</string>
     <string name="workout_exercise_camera_denied_title">कैमरा की अनुमति चाहिए</string>
     <string name="workout_exercise_camera_denied_message">व्यायाम की फ़ोटो लेने के लिए सिस्टम सेटिंग में Fud AI को कैमरा इस्तेमाल करने की अनुमति दें।</string>
+    <string name="workout_exercise_ai_fill">AI से भरें</string>
+    <string name="workout_exercise_ai_fill_hint">“AI से भरें” यह फ़ोटो आपके AI प्रदाता को भेजता है। सहेजने से पहले सुझाए गए विवरण जाँच लें।</string>
     <string name="progress_steps_stat_total">कुल</string>
     <string name="progress_steps_stat_average">औसत</string>
     <string name="progress_steps_stat_best_day">सबसे अच्छा दिन</string>

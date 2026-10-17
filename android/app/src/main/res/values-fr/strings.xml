@@ -747,6 +747,8 @@
     <string name="workout_exercise_take_photo">Prendre une photo</string>
     <string name="workout_exercise_camera_denied_title">Accès à l’appareil photo requis</string>
     <string name="workout_exercise_camera_denied_message">Autorisez Fud AI à utiliser l’appareil photo dans les paramètres du système pour photographier vos exercices.</string>
+    <string name="workout_exercise_ai_fill">Remplir avec l’IA</string>
+    <string name="workout_exercise_ai_fill_hint">La fonction Remplir avec l’IA envoie cette photo à votre fournisseur d’IA. Vérifiez les informations proposées avant d’enregistrer.</string>
     <string name="progress_steps_stat_total">Total</string>
     <string name="progress_steps_stat_average">Moyenne</string>
     <string name="progress_steps_stat_best_day">Meilleur jour</string>

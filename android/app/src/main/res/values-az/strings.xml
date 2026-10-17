@@ -746,6 +746,8 @@
     <string name="workout_exercise_take_photo">Şəkil çək</string>
     <string name="workout_exercise_camera_denied_title">Kameraya giriş lazımdır</string>
     <string name="workout_exercise_camera_denied_message">Məşq şəkilləri çəkmək üçün sistem ayarlarında Fud AI tətbiqinə kameradan istifadə icazəsi ver.</string>
+    <string name="workout_exercise_ai_fill">Sİ ilə doldur</string>
+    <string name="workout_exercise_ai_fill_hint">«Sİ ilə doldur» bu şəkli Sİ provayderinə göndərir. Yadda saxlamazdan əvvəl təklif olunan məlumatları yoxla.</string>
     <string name="progress_steps_stat_total">Cəmi</string>
     <string name="progress_steps_stat_average">Orta</string>
     <string name="progress_steps_stat_best_day">Ən yaxşı gün</string>

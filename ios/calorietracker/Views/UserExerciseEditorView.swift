@@ -18,6 +18,10 @@ struct UserExerciseEditorView: View {
     @State private var photoLoadGeneration = 0
     @State private var isCameraPresented = false
     @State private var capturedImage: UIImage?
+    @State private var isFillingWithAI = false
+    @State private var aiFillError: String?
+    @State private var aiFillRequestID: UUID?
+    @State private var aiFillTask: Task<Void, Never>?
 
     private var isEditing: Bool { existingItemID != nil }
 
@@ -36,13 +40,22 @@ struct UserExerciseEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Photo") {
+                Section {
                     photoSection
+                } header: {
+                    Text("Photo")
+                } footer: {
+                    if previewImage != nil {
+                        aiFillFooter
+                    }
                 }
 
+                // The fields "Fill with AI" writes are locked while it runs, so its
+                // reply never overwrites an edit made in the meantime.
                 Section("Basics") {
                     TextField("Name", text: $draft.name)
                         .textInputAutocapitalization(.words)
+                        .disabled(isFillingWithAI)
 
                     Picker("Level", selection: $draft.rawLevel) {
                         ForEach(levelOptions, id: \.self) { Text($0).tag($0) }
@@ -51,15 +64,19 @@ struct UserExerciseEditorView: View {
                     Picker("Category", selection: $draft.category) {
                         ForEach(categoryOptions, id: \.self) { Text($0).tag($0) }
                     }
+                    .disabled(isFillingWithAI)
                 }
 
                 Section("Muscles & equipment") {
                     musclePicker(title: "Primary muscles", selection: $draft.primaryMuscles, options: catalog.availablePrimaryMuscles)
+                        .disabled(isFillingWithAI)
                     musclePicker(title: "Secondary muscles", selection: $draft.secondaryMuscles, options: catalog.availableSecondaryMuscles)
+                        .disabled(isFillingWithAI)
 
                     Picker("Equipment", selection: $draft.rawEquipment) {
                         ForEach(equipmentOptions, id: \.self) { Text($0).tag($0) }
                     }
+                    .disabled(isFillingWithAI)
 
                     Picker("Force", selection: $draft.force) {
                         ForEach(forceOptions, id: \.self) { Text($0).tag($0) }
@@ -73,6 +90,7 @@ struct UserExerciseEditorView: View {
                 Section("Instructions") {
                     TextEditor(text: $draft.instructions)
                         .frame(minHeight: 120)
+                        .disabled(isFillingWithAI)
                 }
 
                 if isEditing {
@@ -90,8 +108,9 @@ struct UserExerciseEditorView: View {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
+                    // Waits for a running AI fill, so its suggestions are never dropped.
                     Button("Save") { save() }
-                        .disabled(draft.trimmedName.isEmpty || isPhotoLoading)
+                        .disabled(draft.trimmedName.isEmpty || isPhotoLoading || isFillingWithAI)
                 }
             }
             .task(id: existingItemID) {
@@ -128,6 +147,9 @@ struct UserExerciseEditorView: View {
                 Text("This removes the exercise from your library. Logged workouts keep their history.")
             }
         }
+        .onDisappear {
+            cancelAIFill()
+        }
     }
 
     @ViewBuilder
@@ -158,7 +180,7 @@ struct UserExerciseEditorView: View {
         PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
             Label(previewImage == nil ? "Choose photo" : "Replace photo", systemImage: "photo")
         }
-        .disabled(isPhotoLoading)
+        .disabled(isPhotoLoading || isFillingWithAI)
 
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
             Button {
@@ -166,11 +188,27 @@ struct UserExerciseEditorView: View {
             } label: {
                 Label("Take photo", systemImage: "camera")
             }
-            .disabled(isPhotoLoading)
+            .disabled(isPhotoLoading || isFillingWithAI)
+        }
+
+        if previewImage != nil {
+            Button {
+                fillWithAI()
+            } label: {
+                HStack {
+                    Label("Fill with AI", systemImage: "sparkles")
+                    if isFillingWithAI {
+                        Spacer()
+                        ProgressView()
+                    }
+                }
+            }
+            .disabled(isPhotoLoading || isFillingWithAI)
         }
 
         if previewImage != nil {
             Button("Remove photo", role: .destructive) {
+                cancelAIFill()
                 photoLoadGeneration += 1
                 previewImage = nil
                 selectedPhotoItem = nil
@@ -178,7 +216,17 @@ struct UserExerciseEditorView: View {
                 draft.removePhoto = true
                 isPhotoLoading = false
             }
-            .disabled(isPhotoLoading)
+            .disabled(isPhotoLoading || isFillingWithAI)
+        }
+    }
+
+    private var aiFillFooter: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let aiFillError {
+                Text(aiFillError)
+                    .foregroundStyle(.red)
+            }
+            Text("Fill with AI sends this photo to your AI provider. Review the suggested details before saving.")
         }
     }
 
@@ -226,6 +274,15 @@ struct UserExerciseEditorView: View {
         ["Unspecified"] + catalog.availableMechanics.filter { $0 != "Unspecified" }
     }
 
+    private var aiFillOptions: UserExerciseAIFill.Options {
+        UserExerciseAIFill.Options(
+            categories: categoryOptions,
+            equipment: equipmentOptions.filter { $0 != "Unspecified" },
+            primaryMuscles: catalog.availablePrimaryMuscles,
+            secondaryMuscles: catalog.availableSecondaryMuscles
+        )
+    }
+
     private func toggleMuscle(_ muscle: String, in selection: Binding<[String]>) {
         if selection.wrappedValue.contains(muscle) {
             selection.wrappedValue.removeAll { $0 == muscle }
@@ -248,6 +305,7 @@ struct UserExerciseEditorView: View {
             primaryMuscles: template.primaryMuscles,
             secondaryMuscles: template.secondaryMuscles
         )
+        cancelAIFill()
         let generation = photoLoadGeneration + 1
         photoLoadGeneration = generation
         isPhotoLoading = true
@@ -278,6 +336,7 @@ struct UserExerciseEditorView: View {
         }
         await MainActor.run {
             guard photoLoadGeneration == generation else { return }
+            cancelAIFill()
             previewImage = image
             draft.photoData = data
             draft.removePhoto = false
@@ -287,6 +346,7 @@ struct UserExerciseEditorView: View {
 
     private func useCapturedPhoto(_ image: UIImage) {
         guard draft.setCapturedPhoto(image) else { return }
+        cancelAIFill()
         // Supersedes any library photo that is still loading.
         photoLoadGeneration += 1
         selectedPhotoItem = nil
@@ -294,8 +354,44 @@ struct UserExerciseEditorView: View {
         isPhotoLoading = false
     }
 
+    /// Prefills the form from the photo. The user reviews the fields and saves as usual.
+    private func fillWithAI() {
+        guard let image = previewImage, !isFillingWithAI else { return }
+        let requestID = UUID()
+        let options = aiFillOptions
+        aiFillRequestID = requestID
+        aiFillError = nil
+        isFillingWithAI = true
+        aiFillTask = Task { @MainActor in
+            do {
+                let suggestion = try await GeminiService.suggestUserExercise(image: image, options: options)
+                try Task.checkCancellation()
+                guard aiFillRequestID == requestID else { return }
+                draft.apply(suggestion)
+            } catch is CancellationError {
+                return
+            } catch {
+                guard aiFillRequestID == requestID, !Task.isCancelled else { return }
+                aiFillError = GeminiService.analysisErrorMessage(error)
+            }
+            if aiFillRequestID == requestID {
+                aiFillRequestID = nil
+                isFillingWithAI = false
+            }
+        }
+    }
+
+    /// A new or removed photo makes a running fill and its error stale.
+    private func cancelAIFill() {
+        aiFillTask?.cancel()
+        aiFillTask = nil
+        aiFillRequestID = nil
+        aiFillError = nil
+        isFillingWithAI = false
+    }
+
     private func save() {
-        guard let saved = workoutStore.saveUserExercise(draft, existingItemID: existingItemID) else { return }
+        guard !isFillingWithAI, let saved = workoutStore.saveUserExercise(draft, existingItemID: existingItemID) else { return }
         onSaved?(saved)
         dismiss()
     }

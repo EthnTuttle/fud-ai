@@ -746,6 +746,8 @@
     <string name="workout_exercise_take_photo">Maak foto</string>
     <string name="workout_exercise_camera_denied_title">Toegang tot de camera nodig</string>
     <string name="workout_exercise_camera_denied_message">Geef Fud AI in de systeeminstellingen toegang tot de camera om foto’s van oefeningen te maken.</string>
+    <string name="workout_exercise_ai_fill">Invullen met AI</string>
+    <string name="workout_exercise_ai_fill_hint">Invullen met AI stuurt deze foto naar je AI-provider. Controleer de voorgestelde gegevens voordat je opslaat.</string>
     <string name="progress_steps_stat_total">Totaal</string>
     <string name="progress_steps_stat_average">Gemiddelde</string>
     <string name="progress_steps_stat_best_day">Beste dag</string>

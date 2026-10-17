@@ -89503,6 +89503,230 @@
         }
       }
     },
+    "Fill with AI": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التعبئة بالذكاء الاصطناعي"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sİ ilə doldur"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vyplnit pomocí AI"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit KI ausfüllen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rellenar con IA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplir avec l’IA"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI से भरें"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compila con l’IA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AIで入力"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI로 채우기"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invullen met AI"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzupełnij z AI"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preencher com IA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completează cu AI"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заполнить с помощью ИИ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapay zekayla doldur"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заповнити за допомогою ШІ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 AI 填写"
+          }
+        }
+      }
+    },
+    "Fill with AI sends this photo to your AI provider. Review the suggested details before saving.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترسل ميزة «التعبئة بالذكاء الاصطناعي» هذه الصورة إلى مزوّد الذكاء الاصطناعي لديك. راجع التفاصيل المقترحة قبل الحفظ."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Sİ ilə doldur» bu şəkli Sİ provayderinə göndərir. Yadda saxlamazdan əvvəl təklif olunan məlumatları yoxla."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funkce Vyplnit pomocí AI odešle tuto fotku vašemu poskytovateli AI. Před uložením navržené údaje zkontrolujte."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Mit KI ausfüllen“ sendet dieses Foto an deinen KI-Anbieter. Prüfe die vorgeschlagenen Angaben vor dem Speichern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rellenar con IA envía esta foto a tu proveedor de IA. Revisa los datos sugeridos antes de guardar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fonction Remplir avec l’IA envoie cette photo à votre fournisseur d’IA. Vérifiez les informations proposées avant d’enregistrer."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“AI से भरें” यह फ़ोटो आपके AI प्रदाता को भेजता है। सहेजने से पहले सुझाए गए विवरण जाँच लें।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compila con l’IA invia questa foto al tuo fornitore di IA. Controlla i dettagli suggeriti prima di salvare."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「AIで入力」はこの写真をご利用のAIプロバイダに送信します。保存する前に、提案された内容を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI로 채우기는 이 사진을 사용 중인 AI 제공업체로 보냅니다. 저장하기 전에 제안된 내용을 확인하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invullen met AI stuurt deze foto naar je AI-provider. Controleer de voorgestelde gegevens voordat je opslaat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funkcja Uzupełnij z AI wysyła to zdjęcie do Twojego dostawcy AI. Przed zapisaniem sprawdź proponowane dane."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preencher com IA envia esta foto para o seu provedor de IA. Revise os detalhes sugeridos antes de salvar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completează cu AI trimite această fotografie furnizorului tău de AI. Verifică detaliile sugerate înainte de salvare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Функция «Заполнить с помощью ИИ» отправляет это фото вашему провайдеру ИИ. Проверьте предложенные данные перед сохранением."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapay zekayla doldur, bu fotoğrafı yapay zeka sağlayıcınıza gönderir. Kaydetmeden önce önerilen bilgileri gözden geçirin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Функція «Заповнити за допомогою ШІ» надсилає це фото вашому провайдеру ШІ. Перевірте запропоновані дані перед збереженням."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“用 AI 填写”会将这张照片发送给你的 AI 服务提供商。保存前请检查建议的信息。"
+          }
+        }
+      }
+    },
     "Close camera": {
       "localizations": {
         "ar": {

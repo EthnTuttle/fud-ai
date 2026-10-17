@@ -500,6 +500,18 @@ class FoodAnalysisService(
         return FoodJsonParser.parseAllergensFromLabReport(callAi(prompt, images))
     }
 
+    /**
+     * Identifies the exercise in a custom-exercise photo. Metadata is limited to [options];
+     * the result only prefills the editor and is never saved here.
+     */
+    suspend fun suggestUserExercise(
+        imageBytes: ByteArray,
+        options: UserExerciseAiFill.Options
+    ): UserExerciseAiFill.Suggestion {
+        if (imageBytes.isEmpty()) throw AiError.ImageConversionFailed
+        return UserExerciseAiFill.parse(callAi(UserExerciseAiFill.prompt(options), imageBytes), options)
+    }
+
     // -- Internal dispatch ------------------------------------------------
 
     private suspend fun callAi(prompt: String, imageBytes: ByteArray?): String {

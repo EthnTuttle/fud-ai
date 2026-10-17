@@ -1035,6 +1035,8 @@
     <string name="workout_exercise_take_photo">Fotoğraf çek</string>
     <string name="workout_exercise_camera_denied_title">Kamera erişimi gerekli</string>
     <string name="workout_exercise_camera_denied_message">Egzersiz fotoğrafı çekmek için sistem ayarlarından Fud AI\'nın kamerayı kullanmasına izin verin.</string>
+    <string name="workout_exercise_ai_fill">Yapay zekayla doldur</string>
+    <string name="workout_exercise_ai_fill_hint">Yapay zekayla doldur, bu fotoğrafı yapay zeka sağlayıcınıza gönderir. Kaydetmeden önce önerilen bilgileri gözden geçirin.</string>
     <string name="filter_all">Tümü</string>
     <string name="filter_all_count">Tümü %d</string>
     <string name="hide_details">Detayları gizle</string>

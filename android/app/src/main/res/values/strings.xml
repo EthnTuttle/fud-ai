@@ -1045,6 +1045,8 @@
     <string name="workout_exercise_take_photo">Take photo</string>
     <string name="workout_exercise_camera_denied_title">Camera access needed</string>
     <string name="workout_exercise_camera_denied_message">Allow Fud AI to use the camera in system settings to take exercise photos.</string>
+    <string name="workout_exercise_ai_fill">Fill with AI</string>
+    <string name="workout_exercise_ai_fill_hint">Fill with AI sends this photo to your AI provider. Review the suggested details before saving.</string>
     <string name="filter_all">All</string>
     <string name="filter_all_count">All %d</string>
     <string name="hide_details">Hide details</string>
