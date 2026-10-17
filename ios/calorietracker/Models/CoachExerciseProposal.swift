@@ -28,6 +28,8 @@ struct CoachExerciseProposal: Identifiable, Codable, Equatable {
     var primaryMuscles: [String] = []
     var secondaryMuscles: [String] = []
     var instructions: [String] = []
+    /// Add to day: the Gregorian ISO day (yyyy-MM-dd) Coach proposed. This is not a diary key:
+    /// the diary keys days in the phone's calendar, so read and write it through `day`.
     var dateKey: String?
     var sets: Int?
     var reps: Int?
@@ -46,6 +48,28 @@ struct CoachExerciseProposal: Identifiable, Codable, Equatable {
             return itemID == other.itemID && dateKey == other.dateKey && sets == other.sets
                 && reps == other.reps && durationMinutes == other.durationMinutes
         }
+    }
+
+    /// Coach reads and writes dates as Gregorian ISO days whatever calendar the phone uses, and
+    /// a saved card has to keep its day even if that setting changes later.
+    static func dateKey(for date: Date) -> String {
+        StrengthWorkoutDate.key(for: date, calendar: isoCalendar)
+    }
+
+    /// The start of the proposed day, which the diary turns into its own key.
+    var day: Date? {
+        dateKey.flatMap { StrengthWorkoutDate.date(for: $0, calendar: Self.isoCalendar) }
+    }
+
+    /// The diary's key for the proposed day, in the calendar the diary uses.
+    func diaryDateKey(calendar: Calendar = .current) -> String? {
+        day.map { StrengthWorkoutStore.dateKey(for: $0, calendar: calendar) }
+    }
+
+    private static var isoCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        return calendar
     }
 
     /// What the model is told about this card on later turns, so it knows what the user did.
@@ -130,8 +154,7 @@ enum CoachExerciseProposalApplier {
             guard let item = store.exerciseLibrary.exercises.first(where: { $0.id == proposal.itemID }) else {
                 throw ApplyError.exerciseMissing
             }
-            guard let dateKey = proposal.dateKey,
-                  let date = StrengthWorkoutStore.date(for: dateKey),
+            guard let date = proposal.day,
                   let entryID = proposal.entryID
             else { throw ApplyError.saveFailed }
             guard store.addPlannedExercise(plannedExercise(for: proposal, item: item, entryID: entryID), on: date) else {

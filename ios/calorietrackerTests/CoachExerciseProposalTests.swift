@@ -110,12 +110,12 @@ struct CoachExerciseProposalTests {
         #expect(try error([:]) == "catalog_id is required.")
         #expect(try error(["catalog_id": "Zercher_Squat"])?.hasPrefix("Unknown catalog_id \"Zercher_Squat\".") == true)
         #expect(try error(["catalog_id": "Leg_Press", "date": "next week"]) == "date must be an ISO date yyyy-MM-dd.")
-        #expect(try error(["catalog_id": "Leg_Press", "date": ProposalFixture.dateKey(days: 400)]) == "date must be within one year of today.")
+        #expect(try error(["catalog_id": "Leg_Press", "date": ProposalFixture.isoDate(days: 400)]) == "date must be within one year of today.")
         #expect(try error(["catalog_id": "Leg_Press", "sets": 0]) == "sets must be a whole number from 1 to 12.")
         #expect(try error(["catalog_id": "Leg_Press", "sets": 13]) == "sets must be a whole number from 1 to 12.")
         #expect(try error(["catalog_id": "Leg_Press", "reps": 2.5]) == "reps must be a whole number from 1 to 999.")
         #expect(try error(["catalog_id": "Leg_Press", "reps": true]) == "reps must be a whole number from 1 to 999.")
-        #expect(try error(["catalog_id": "Leg_Press", "date": ProposalFixture.dateKey(days: 1), "reps": 10])?.hasPrefix("reps and duration_minutes record performed work") == true)
+        #expect(try error(["catalog_id": "Leg_Press", "date": ProposalFixture.isoDate(days: 1), "reps": 10])?.hasPrefix("reps and duration_minutes record performed work") == true)
         #expect(try error(["catalog_id": "Running_Treadmill", "sets": 3]) == "Running, Treadmill is cardio: use duration_minutes instead of sets or reps.")
         #expect(collector.proposals.isEmpty)
 
@@ -123,17 +123,17 @@ struct CoachExerciseProposalTests {
             "catalog_id": "Leg_Press", "sets": "3", "reps": 10.0,
         ]))
         let details = try #require(today["proposal"] as? [String: Any])
-        #expect(details["date"] as? String == ProposalFixture.dateKey(days: 0))
+        #expect(details["date"] as? String == ProposalFixture.isoDate(days: 0))
         #expect(details["sets"] as? Int == 3)
         #expect(details["reps"] as? Int == 10)
         #expect(details["already_in_diary_that_day"] as? Bool == true)
 
         let planned = try ProposalFixture.json(tools.execute(name: "propose_add_exercise_to_day", arguments: [
-            "catalog_id": "user_exercise_hammer", "date": ProposalFixture.dateKey(days: 3), "sets": 4,
+            "catalog_id": "user_exercise_hammer", "date": ProposalFixture.isoDate(days: 3), "sets": 4,
         ]))
         #expect(planned["error"] == nil)
         let cardio = try ProposalFixture.json(tools.execute(name: "propose_add_exercise_to_day", arguments: [
-            "catalog_id": "Running_Treadmill", "date": ProposalFixture.dateKey(days: -2), "duration_minutes": 25,
+            "catalog_id": "Running_Treadmill", "date": ProposalFixture.isoDate(days: -2), "duration_minutes": 25,
         ]))
         #expect(cardio["error"] == nil)
         #expect(collector.proposals.map(\.name) == ["Leg Press", "Hammer Strength Chest Press", "Running, Treadmill"])
@@ -158,6 +158,29 @@ struct CoachExerciseProposalTests {
 
         collector.reset()
         #expect(collector.proposals.isEmpty)
+    }
+
+    @Test func proposedDaysMatchTheDiaryUnderEveryPhoneCalendar() throws {
+        let collector = CoachExerciseProposalCollector()
+        let tools = ProposalFixture.tools(collector)
+        let today = Calendar.current.startOfDay(for: Date())
+        _ = tools.execute(name: "propose_add_exercise_to_day", arguments: [
+            "catalog_id": "Leg_Press", "date": ProposalFixture.isoDate(days: 0), "sets": 3,
+        ])
+        let proposal = try #require(collector.proposals.first)
+        #expect(proposal.dateKey == ProposalFixture.isoDate(days: 0))
+        #expect(proposal.day == today)
+
+        // The diary keys days in the phone's calendar, so a Thai, Japanese or Saudi phone uses a
+        // different year than the Gregorian date Coach sends. Both must name the same day.
+        for identifier in [Calendar.Identifier.buddhist, .japanese, .islamicUmmAlQura] {
+            var calendar = Calendar(identifier: identifier)
+            calendar.timeZone = .current
+            let diaryKey = StrengthWorkoutStore.dateKey(for: today, calendar: calendar)
+            #expect(diaryKey != proposal.dateKey)
+            #expect(proposal.diaryDateKey(calendar: calendar) == diaryKey)
+            #expect(StrengthWorkoutStore.date(for: diaryKey, calendar: calendar) == proposal.day)
+        }
     }
 
     // MARK: - Nothing is written until the user confirms
@@ -221,14 +244,13 @@ struct CoachExerciseProposalTests {
         try ProposalFixture.withStore { store, _ in
             let collector = CoachExerciseProposalCollector()
             let tools = ProposalFixture.tools(collector, library: store.exerciseLibrary.exercises)
-            let yesterday = ProposalFixture.dateKey(days: -1)
             _ = tools.execute(name: "propose_add_exercise_to_day", arguments: [
-                "catalog_id": "Running_Treadmill", "date": yesterday, "duration_minutes": 25,
+                "catalog_id": "Running_Treadmill", "date": ProposalFixture.isoDate(days: -1), "duration_minutes": 25,
             ])
             let proposal = try #require(collector.proposals.first)
             try CoachExerciseProposalApplier.apply(proposal, to: store)
 
-            let day = try #require(StrengthWorkoutStore.date(for: yesterday))
+            let day = try #require(StrengthWorkoutStore.date(for: ProposalFixture.dateKey(days: -1)))
             let entry = try #require(store.exercises(for: day).first)
             #expect(entry.sets.isEmpty)
             #expect(entry.timer?.savedDurationSeconds == 1_500)
@@ -344,9 +366,18 @@ private enum ProposalFixture {
         )
     }
 
+    /// The diary's key for a day relative to today.
     static func dateKey(days: Int) -> String {
-        let day = Calendar.current.date(byAdding: .day, value: days, to: Calendar.current.startOfDay(for: Date())) ?? Date()
-        return StrengthWorkoutStore.dateKey(for: day)
+        StrengthWorkoutStore.dateKey(for: day(days))
+    }
+
+    /// The Gregorian ISO date Coach sends for a day relative to today.
+    static func isoDate(days: Int) -> String {
+        CoachExerciseProposal.dateKey(for: day(days))
+    }
+
+    private static func day(_ days: Int) -> Date {
+        Calendar.current.date(byAdding: .day, value: days, to: Calendar.current.startOfDay(for: Date())) ?? Date()
     }
 
     /// An empty workout store in its own defaults suite. Its library is the bundled catalog,

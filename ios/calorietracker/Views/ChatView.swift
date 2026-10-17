@@ -1152,7 +1152,7 @@ private struct CoachProposalCard: View {
                 lines.append(String(localized: "Secondary muscles: \(muscles)", comment: "Coach chat card detail; the argument is a comma-separated list of muscles."))
             }
         case .addToDay:
-            if let dateKey = proposal.dateKey, let date = StrengthWorkoutStore.date(for: dateKey) {
+            if let date = proposal.day {
                 let day = date.formatted(date: .abbreviated, time: .omitted)
                 lines.append(String(localized: "Date: \(day)", comment: "Coach chat card detail; the argument is the workout diary date."))
             }

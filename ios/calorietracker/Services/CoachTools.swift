@@ -765,7 +765,7 @@ struct CoachTools {
             category: Self.libraryMetadata(item.category),
             equipment: Self.libraryMetadata(item.rawEquipment),
             primaryMuscles: item.primaryMuscles,
-            dateKey: Self.iso(day),
+            dateKey: CoachExerciseProposal.dateKey(for: day),
             sets: sets,
             reps: reps,
             durationMinutes: minutes,
@@ -791,8 +791,9 @@ struct CoachTools {
             if let sets = proposal.sets { details["sets"] = sets }
             if let reps = proposal.reps { details["reps"] = reps }
             if let minutes = proposal.durationMinutes { details["duration_minutes"] = minutes }
+            let diaryKey = proposal.diaryDateKey()
             let alreadyThere = workoutPlans.contains { plan in
-                plan.dateKey == proposal.dateKey && plan.exercises.contains { $0.itemID == proposal.itemID }
+                plan.dateKey == diaryKey && plan.exercises.contains { $0.itemID == proposal.itemID }
             }
             if alreadyThere { details["already_in_diary_that_day"] = true }
         }
