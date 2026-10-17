@@ -3,9 +3,9 @@ package com.apoorvdarshan.calorietracker
 import com.apoorvdarshan.calorietracker.services.health.HealthCapabilities
 import com.apoorvdarshan.calorietracker.ui.progress.TimeRange
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
 
 class HealthReadSyncTest {
     private fun caps(weight: Boolean = true, bodyFat: Boolean = true, history: Boolean = false) =
@@ -26,13 +26,33 @@ class HealthReadSyncTest {
     fun grantingHistoryAccessLaterReRunsTheWeightBackfill() {
         // Token seeded before history access: Health Connect hid weigh-ins older than
         // 30 days before the first grant, and the token only reports new changes.
-        val seeded = healthReadTokenTypes(caps(history = false))
+        val withoutHistory = healthReadTokenTypes(caps(history = false))
+        val withHistory = healthReadTokenTypes(caps(history = true))
+        val seeded = healthReadSeededTypes(withoutHistory)
+
+        // Deletions were remembered since this token's backfill, so a full re-import is safe.
+        assertEquals(HealthReadSync.FULL_BACKFILL, healthReadSync(hasToken = true, seeded, withHistory))
+        assertEquals(HealthReadSync.CHANGES, healthReadSync(hasToken = true, healthReadSeededTypes(withHistory), withHistory))
+        // Revoking history later must not force another full import.
+        assertEquals(HealthReadSync.CHANGES, healthReadSync(hasToken = true, healthReadSeededTypes(withHistory), withoutHistory))
+        assertEquals(HealthReadSync.FULL_BACKFILL, healthReadSync(hasToken = false, emptySet(), withHistory))
+    }
+
+    @Test
+    fun historyGrantedOverATokenFromBeforeDeletionsWereRememberedOnlyImportsOlderRecords() {
+        // Seeded by an earlier build: weigh-ins deleted back then have no remembered id, and
+        // a full re-import of the window that backfill saw would bring them back.
+        val earlierBuild = setOf("weight", "bodyfat")
         val withHistory = healthReadTokenTypes(caps(history = true))
 
-        assertTrue(healthReadsNeedBackfill(seeded, withHistory))
-        assertFalse(healthReadsNeedBackfill(withHistory, withHistory))
-        // Revoking history later must not force another full import.
-        assertFalse(healthReadsNeedBackfill(withHistory, seeded))
+        assertEquals(HealthReadSync.OLDER_HISTORY_ONLY, healthReadSync(hasToken = true, earlierBuild, withHistory))
+        assertEquals(HealthReadSync.CHANGES, healthReadSync(hasToken = true, healthReadTypesWithHistory(earlierBuild), withHistory))
+        // A metric that became readable still needs its whole history.
+        assertEquals(HealthReadSync.FULL_BACKFILL, healthReadSync(hasToken = true, setOf("weight"), withHistory))
+
+        // Only records nothing could read before history access: older than 30 days before install.
+        val installed = Instant.parse("2026-03-01T10:00:00Z")
+        assertEquals(Instant.parse("2026-01-30T10:00:00Z"), healthRecordsHiddenWithoutHistoryBefore(installed))
     }
 
     @Test
