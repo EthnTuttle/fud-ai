@@ -131,6 +131,8 @@ open class FudAIApp : Application() {
         // Prune only unreferenced files; logged foods, saved meals, and pending
         // analysis drafts remain untouched.
         appScope.launch { container.imageStore.cleanupLegacyThumbnailDirectory() }
+        // A Drive restore the system killed leaves its staged photos behind.
+        appScope.launch { container.imageStore.discardAbandonedStaging() }
         appScope.launch { container.foodRepository.pruneOrphanedImages() }
         appScope.launch { container.weeklyChallengeRepository.retryPendingRemoteDeletion() }
         container.prefs.mealSchedule
@@ -339,7 +341,10 @@ class AppContainer(app: FudAIApp) {
     val fastingRepository = FastingRepository(prefs)
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
     val weeklyChallengeRepository = WeeklyChallengeRepository(app, keyStore)
-    val cloudBackup = CloudBackupCoordinator(app, prefs, imageStore, keyStore)
+    val cloudBackup = CloudBackupCoordinator(
+        app, prefs, imageStore, keyStore,
+        pruneUnusedPhotos = { foodRepository.pruneOrphanedImages() },
+    )
 
     val localGemma = LocalGemmaRuntime(app, localModels)
     val localWhisper = LocalWhisperRuntime(app, localModels)
