@@ -129,6 +129,15 @@ struct WeightHistoryTests {
         #expect(restored.map(\.id) == [ownID])
     }
 
+    @Test func firstAnchoredWeightImportOnlyStoresItsAnchorAfterACompletedBackfill() {
+        // Existing installs already backfilled the full history; scanning it again
+        // would re-add readings deleted before tombstones existed.
+        #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 9, typesVersion: 9) == .anchorOnly)
+        #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 0, typesVersion: 9) == .fullHistory)
+        #expect(HealthKitManager.weightChangesImport(hasAnchor: false, backfilledVersion: 8, typesVersion: 9) == .fullHistory)
+        #expect(HealthKitManager.weightChangesImport(hasAnchor: true, backfilledVersion: 9, typesVersion: 9) == .newSamples)
+    }
+
     // MARK: - Chart range
 
     @Test func progressRangesIncludeReadingsLoggedToday() throws {
