@@ -1,0 +1,8 @@
+# Zapstore publication config for the community build of Fud AI.
+# Original source: https://github.com/apoorvdarshan/fud-ai (MIT license)
+# Community fork:    https://github.com/EthnTuttle/fud-ai
+repository: https://github.com/EthnTuttle/fud-ai
+pubkey: npub160t5zfxalddaccdc7xx30sentwa5lrr3rq4rtm38x99ynf8t0vwsvzyjc9
+release_source: ./android/app/build/outputs/apk/release/app-release.apk
+metadata_sources:
+  - github
