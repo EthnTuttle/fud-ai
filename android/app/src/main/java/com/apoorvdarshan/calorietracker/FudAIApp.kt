@@ -9,6 +9,8 @@ import com.apoorvdarshan.calorietracker.data.ChatRepository
 import com.apoorvdarshan.calorietracker.data.ExerciseRepository
 import com.apoorvdarshan.calorietracker.data.FoodRepository
 import com.apoorvdarshan.calorietracker.data.FastingRepository
+import com.apoorvdarshan.calorietracker.data.ExerciseSessionSource
+import com.apoorvdarshan.calorietracker.data.ImportedHealthWorkoutRepository
 import com.apoorvdarshan.calorietracker.data.KeyStore
 import com.apoorvdarshan.calorietracker.data.PreferencesStore
 import com.apoorvdarshan.calorietracker.data.ProfileRepository
@@ -38,6 +40,7 @@ import com.apoorvdarshan.calorietracker.services.ai.ChatService
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysisService
 import com.apoorvdarshan.calorietracker.services.health.HealthCapabilities
 import com.apoorvdarshan.calorietracker.services.health.HealthConnectManager
+import com.apoorvdarshan.calorietracker.services.health.HealthExerciseSession
 import com.apoorvdarshan.calorietracker.services.hosted.AiAccessMode
 import com.apoorvdarshan.calorietracker.services.hosted.BillingManager
 import com.apoorvdarshan.calorietracker.services.hosted.HostedAiAccess
@@ -346,6 +349,21 @@ class AppContainer(app: FudAIApp) {
     val waterRepository = WaterRepository(prefs)
     val fastingRepository = FastingRepository(prefs)
     val workoutRepository = WorkoutRepository(prefs, workoutHealthSync)
+    /** Read-only workouts other apps (Garmin Connect, Strava, …) shared with Health Connect. */
+    val importedHealthWorkoutRepository = ImportedHealthWorkoutRepository(
+        store = prefs,
+        source = object : ExerciseSessionSource {
+            // Unavailable reads as a failed probe, never as revoked access (which clears imports).
+            override suspend fun exerciseReadGranted(): Boolean? =
+                if (health.isAvailable()) health.exerciseReadGrant() else null
+            override suspend fun activeCaloriesReadable(): Boolean = health.hasActiveEnergyRead()
+            override suspend fun readSessions(from: Instant, to: Instant): List<HealthExerciseSession>? =
+                health.readExternalExerciseSessions(from, to)
+            override suspend fun activeCalories(session: HealthExerciseSession, from: Instant) =
+                health.readSessionActiveCalories(session, from)
+            override fun appLabel(packageName: String): String? = health.appLabel(packageName)
+        }
+    )
     /** The rest countdown after a logged set; main-thread scoped so the UI and its end agree. */
     val workoutRestTimer = WorkoutRestTimerController(
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
@@ -424,6 +442,10 @@ class AppContainer(app: FudAIApp) {
      */
     suspend fun syncHealthConnectReads() {
         if (healthReadSyncInFlight) return
+        // Ahead of the toggle and capability guards below: revoking every Health Connect
+        // permission, or Exercise while the toggle is off, returns before the import step,
+        // yet other apps' workouts copied in earlier must still go (#479). Removal only.
+        importedHealthWorkoutRepository.removeIfAccessRevoked()
         if (!prefs.healthConnectEnabled.first()) return
         if (!health.isAvailable()) return
 
@@ -435,7 +457,7 @@ class AppContainer(app: FudAIApp) {
         val caps = health.capabilities()
         val workoutBurnRead = health.hasActiveEnergyRead()
         if (!caps.weightRead && !caps.bodyFatRead && !caps.nutritionRead &&
-            !workoutBurnRead && !caps.activeEnergyWrite
+            !workoutBurnRead && !caps.activeEnergyWrite && !caps.exerciseRead
         ) return
 
         healthReadSyncInFlight = true
@@ -462,69 +484,80 @@ class AppContainer(app: FudAIApp) {
                 workoutRepository.synchronizeWithHealth()
             }
 
-            if (!caps.weightRead && !caps.bodyFatRead) return
+            syncExternalBodyReadings(caps)
 
-            val desiredTypes = healthReadTokenTypes(caps)
-            // If a read type (or history access) was granted AFTER the token was seeded, the
-            // existing token never observes the newly readable records. Drop the token so we
-            // re-enter the backfill branch and import that history + re-seed a token covering
-            // everything now granted — or, when only history is new, import just the older
-            // records (see HealthReadSync.OLDER_HISTORY_ONLY) and keep the token.
-            val seededTypes = prefs.healthChangesTokenTypes.first()
-            when (healthReadSync(prefs.healthChangesToken.first() != null, seededTypes, desiredTypes)) {
-                HealthReadSync.FULL_BACKFILL -> prefs.clearHealthChangesToken()
-                // A failed read retries on the next sync. The token waits too: readings it
-                // would import in between could move the import's cutoff.
-                HealthReadSync.OLDER_HISTORY_ONLY -> if (!importHealthHistoryOlderThanToken(caps, seededTypes)) return
-                HealthReadSync.CHANGES -> Unit
-            }
-
-            val token = prefs.healthChangesToken.first()
-            if (token == null) {
-                // First sync: backfill history so existing scale data and older weigh-ins show
-                // up. Matches Progress "All"; without history access Health Connect itself
-                // still caps other apps' records at 30 days before the first grant.
-                val now = Instant.now()
-                val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
-                var readEverything = true
-                if (caps.weightRead) {
-                    val weights = health.readWeights(from, now)
-                    if (weights != null) weightRepository.importExternalWeights(weights) else readEverything = false
-                }
-                if (caps.bodyFatRead) {
-                    val bodyFats = health.readBodyFats(from, now)
-                    if (bodyFats != null) bodyFatRepository.importExternalBodyFats(bodyFats) else readEverything = false
-                }
-                // A token seeded now would never deliver what a failed read missed; leave it
-                // unset so the next sync runs the backfill again (imports are deduped).
-                if (!readEverything) return
-                // Seed a token covering only the types we can actually read.
-                val recordTypes = buildSet {
-                    if (caps.weightRead) add(androidx.health.connect.client.records.WeightRecord::class)
-                    if (caps.bodyFatRead) add(androidx.health.connect.client.records.BodyFatRecord::class)
-                }
-                health.getChangesToken(recordTypes)?.let {
-                    prefs.setHealthChangesToken(it)
-                    prefs.setHealthChangesTokenTypes(healthReadSeededTypes(desiredTypes))
-                }
-            } else {
-                var next: String? = null
-                if (caps.weightRead) {
-                    val result = health.consumeWeightChanges(token)
-                    if (result == null) { prefs.clearHealthChangesToken(); return }
-                    weightRepository.importExternalWeights(result.first)
-                    next = result.second
-                }
-                if (caps.bodyFatRead) {
-                    val result = health.consumeBodyFatChanges(token)
-                    if (result == null) { prefs.clearHealthChangesToken(); return }
-                    bodyFatRepository.importExternalBodyFats(result.first)
-                    next = result.second ?: next
-                }
-                next?.let { prefs.setHealthChangesToken(it) }
-            }
+            // Other apps' exercise sessions, read-only (#479). Gated on its own optional
+            // permission: it imports when granted and removes the copies once revoked. After
+            // weigh-ins, since a first import can spend a whole sync's calorie-lookup budget.
+            importedHealthWorkoutRepository.synchronize()
         } finally {
             healthReadSyncInFlight = false
+        }
+    }
+
+    /** Weigh-ins and body-fat readings other apps (e.g. a scale) wrote to Health Connect:
+     *  a changes-token pull, or a backfill when there is no token yet. */
+    private suspend fun syncExternalBodyReadings(caps: HealthCapabilities) {
+        if (!caps.weightRead && !caps.bodyFatRead) return
+
+        val desiredTypes = healthReadTokenTypes(caps)
+        // If a read type (or history access) was granted AFTER the token was seeded, the
+        // existing token never observes the newly readable records. Drop the token so we
+        // re-enter the backfill branch and import that history + re-seed a token covering
+        // everything now granted — or, when only history is new, import just the older
+        // records (see HealthReadSync.OLDER_HISTORY_ONLY) and keep the token.
+        val seededTypes = prefs.healthChangesTokenTypes.first()
+        when (healthReadSync(prefs.healthChangesToken.first() != null, seededTypes, desiredTypes)) {
+            HealthReadSync.FULL_BACKFILL -> prefs.clearHealthChangesToken()
+            // A failed read retries on the next sync. The token waits too: readings it
+            // would import in between could move the import's cutoff.
+            HealthReadSync.OLDER_HISTORY_ONLY -> if (!importHealthHistoryOlderThanToken(caps, seededTypes)) return
+            HealthReadSync.CHANGES -> Unit
+        }
+
+        val token = prefs.healthChangesToken.first()
+        if (token == null) {
+            // First sync: backfill history so existing scale data and older weigh-ins show
+            // up. Matches Progress "All"; without history access Health Connect itself
+            // still caps other apps' records at 30 days before the first grant.
+            val now = Instant.now()
+            val from = now.minus(Duration.ofDays(HEALTH_BODY_BACKFILL_DAYS))
+            var readEverything = true
+            if (caps.weightRead) {
+                val weights = health.readWeights(from, now)
+                if (weights != null) weightRepository.importExternalWeights(weights) else readEverything = false
+            }
+            if (caps.bodyFatRead) {
+                val bodyFats = health.readBodyFats(from, now)
+                if (bodyFats != null) bodyFatRepository.importExternalBodyFats(bodyFats) else readEverything = false
+            }
+            // A token seeded now would never deliver what a failed read missed; leave it
+            // unset so the next sync runs the backfill again (imports are deduped).
+            if (!readEverything) return
+            // Seed a token covering only the types we can actually read.
+            val recordTypes = buildSet {
+                if (caps.weightRead) add(androidx.health.connect.client.records.WeightRecord::class)
+                if (caps.bodyFatRead) add(androidx.health.connect.client.records.BodyFatRecord::class)
+            }
+            health.getChangesToken(recordTypes)?.let {
+                prefs.setHealthChangesToken(it)
+                prefs.setHealthChangesTokenTypes(healthReadSeededTypes(desiredTypes))
+            }
+        } else {
+            var next: String? = null
+            if (caps.weightRead) {
+                val result = health.consumeWeightChanges(token)
+                if (result == null) { prefs.clearHealthChangesToken(); return }
+                weightRepository.importExternalWeights(result.first)
+                next = result.second
+            }
+            if (caps.bodyFatRead) {
+                val result = health.consumeBodyFatChanges(token)
+                if (result == null) { prefs.clearHealthChangesToken(); return }
+                bodyFatRepository.importExternalBodyFats(result.first)
+                next = result.second ?: next
+            }
+            next?.let { prefs.setHealthChangesToken(it) }
         }
     }
 
