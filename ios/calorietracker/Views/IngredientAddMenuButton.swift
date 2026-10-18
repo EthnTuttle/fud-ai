@@ -3,10 +3,13 @@ import PhotosUI
 
 extension GeminiService.FoodAnalysis {
     /// One ingredient line for add-ingredient flows (nested ingredients stay collapsed).
+    /// An unknown weight stays 0 g, like `FoodEntry.asMealIngredient()`: such an analysis
+    /// carries a serving count (a saved label restored without its mass) or a placeholder
+    /// in `servingSizeGrams`.
     func asMealIngredient() -> MealIngredient {
         MealIngredient(
             name: name,
-            grams: servingSizeGrams.isFinite && servingSizeGrams > 0 ? servingSizeGrams : 0,
+            grams: servingSizeIsKnown && servingSizeGrams.isFinite && servingSizeGrams > 0 ? servingSizeGrams : 0,
             calories: calories,
             protein: protein,
             carbs: carbs,

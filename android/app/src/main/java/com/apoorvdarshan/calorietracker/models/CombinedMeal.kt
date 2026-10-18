@@ -16,10 +16,14 @@ fun FoodEntry.toMealIngredient(): MealIngredient = MealIngredient(
     emoji = emoji
 )
 
-/** Map an analysis result to one ingredient line (nested ingredients stay collapsed). */
+/**
+ * Map an analysis result to one ingredient line (nested ingredients stay collapsed). An unknown
+ * weight stays 0 g, like [FoodEntry.toMealIngredient]: such an analysis carries a serving count
+ * (a saved label restored without its mass) or a placeholder in [FoodAnalysis.servingSizeGrams].
+ */
 fun FoodAnalysis.toMealIngredient(): MealIngredient = MealIngredient(
     name = name,
-    grams = servingSizeGrams.takeIf { it.isFinite() && it > 0.0 } ?: 0.0,
+    grams = servingSizeGrams.takeIf { servingSizeIsKnown && it.isFinite() && it > 0.0 } ?: 0.0,
     calories = calories,
     protein = protein,
     carbs = carbs,

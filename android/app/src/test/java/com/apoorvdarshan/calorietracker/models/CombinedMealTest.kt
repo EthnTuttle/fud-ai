@@ -66,6 +66,34 @@ class CombinedMealTest {
     }
 
     @Test
+    fun unknownWeightAnalysisStaysZeroGramsAsAnIngredient() {
+        // A saved barcode label restored without its mass reviews as 2 servings, not 2 g (#533).
+        val savedLabel = FoodEntry(
+            name = "Granola",
+            calories = 380,
+            protein = 8.0,
+            carbs = 60.0,
+            fat = 12.0,
+            source = FoodSource.NUTRITION_LABEL,
+            servingSizeGrams = null,
+            selectedServingQuantity = 2.0
+        )
+        val review = savedLabel.toReviewAnalysis()
+        assertEquals(2.0, review.servingSizeGrams, 0.0)
+
+        val ingredient = review.toMealIngredient()
+        assertEquals(0.0, ingredient.grams, 0.0)
+        assertEquals(380, ingredient.calories)
+        assertEquals(savedLabel.toMealIngredient().grams, ingredient.grams, 0.0)
+
+        val unknownAi = FoodAnalysis(
+            name = "Sandwich", calories = 400, protein = 20.0, carbs = 40.0, fat = 15.0,
+            servingSizeGrams = 1.0, servingSizeIsKnown = false
+        )
+        assertEquals(0.0, unknownAi.toMealIngredient().grams, 0.0)
+    }
+
+    @Test
     fun combineTotalsAndUsesLatestMealMetadata() {
         val older = FoodEntry(
             name = "Eggs",
