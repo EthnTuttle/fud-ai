@@ -980,11 +980,15 @@ viewModelScope.launch {
 
     /** Same order as the Home scan: Open Food Facts, the saved label (#485), then USDA (#533). */
     suspend fun lookupIngredientBarcode(barcode: String): FoodAnalysis =
-        BarcodeProductLookup.lookup(
-            barcode = barcode,
-            usdaApiKey = container.keyStore.usdaFoodDataCentralApiKey(),
-            savedLabelEntries = { container.foodRepository.entries.first() }
-        ).analysis
+        BarcodeProductLookup.ingredientAnalysis(
+            keyRejectedMessage = container.appContext.getString(R.string.error_barcode_usda_key_rejected)
+        ) {
+            BarcodeProductLookup.lookup(
+                barcode = barcode,
+                usdaApiKey = container.keyStore.usdaFoodDataCentralApiKey(),
+                savedLabelEntries = { container.foodRepository.entries.first() }
+            )
+        }
 
     fun combineIntoMeal(ids: Set<UUID>, onDone: (FoodEntry?) -> Unit = {}) {
         if (ids.size < 2) {

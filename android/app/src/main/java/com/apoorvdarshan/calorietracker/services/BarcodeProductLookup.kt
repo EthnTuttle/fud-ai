@@ -59,4 +59,17 @@ object BarcodeProductLookup {
         } ?: throw openFoodFactsError
         return Outcome.Product(OpenFoodFactsService.LookupResult(analysis = usdaAnalysis, productImageBytes = null))
     }
+
+    /**
+     * The analysis for Add Ingredient, which shows only an error's message. A refused USDA key
+     * has no message of its own, so it is rethrown with [keyRejectedMessage]; every other
+     * failure passes through unchanged.
+     */
+    suspend fun ingredientAnalysis(keyRejectedMessage: String, lookup: suspend () -> Outcome): FoodAnalysis =
+        try {
+            lookup().analysis
+        } catch (error: FoodDataCentralService.LookupException) {
+            if (error.failure != FoodDataCentralService.LookupFailure.INVALID_API_KEY) throw error
+            throw IllegalStateException(keyRejectedMessage, error)
+        }
 }

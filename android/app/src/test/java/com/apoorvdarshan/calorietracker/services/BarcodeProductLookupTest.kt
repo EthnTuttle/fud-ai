@@ -156,6 +156,33 @@ class BarcodeProductLookupTest {
     }
 
     @Test
+    fun addIngredientShowsTheRefusedKeyMessage() {
+        foodDataCentral = { FoodDataCentralServiceTest.json(403, """{"error":{"code":"API_KEY_INVALID"}}""") }
+
+        try {
+            runBlocking { BarcodeProductLookup.ingredientAnalysis(KEY_REJECTED) { lookup(KEY) } }
+            fail("Expected the refused key")
+        } catch (error: IllegalStateException) {
+            assertEquals(KEY_REJECTED, error.message)
+            val cause = error.cause as FoodDataCentralService.LookupException
+            assertEquals(FoodDataCentralService.LookupFailure.INVALID_API_KEY, cause.failure)
+        }
+    }
+
+    @Test
+    fun addIngredientKeepsOtherOutcomes() = runBlocking {
+        foodDataCentral = { FoodDataCentralServiceTest.json(200, FoodDataCentralServiceTest.CHEERIOS_SEARCH) }
+        assertEquals("Cheerios Cereal", BarcodeProductLookup.ingredientAnalysis(KEY_REJECTED) { lookup(KEY) }.name)
+
+        try {
+            BarcodeProductLookup.ingredientAnalysis(KEY_REJECTED) { lookup(null) }
+            fail("Expected the Open Food Facts miss")
+        } catch (error: OpenFoodFactsService.LookupException) {
+            assertEquals(OpenFoodFactsService.LookupFailure.PRODUCT_NOT_FOUND, error.failure)
+        }
+    }
+
+    @Test
     fun otherOpenFoodFactsFailuresDoNotFallBack() {
         openFoodFacts = { FoodDataCentralServiceTest.json(429, """{"status":0}""") }
 
@@ -182,6 +209,7 @@ class BarcodeProductLookupTest {
 
     private companion object {
         const val KEY = "fdc-test-key-123"
+        const val KEY_REJECTED = "Check your USDA key"
         const val CODE = "016000275287"
         const val OPEN_FOOD_FACTS_PRODUCT =
             """{"status":1,"product":{"product_name":"Open Food Facts Oats","serving_quantity":40,""" +
