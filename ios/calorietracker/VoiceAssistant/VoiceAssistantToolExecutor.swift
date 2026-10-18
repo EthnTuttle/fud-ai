@@ -56,13 +56,20 @@ protocol VoiceAssistantToolHost: AnyObject {
 protocol VoiceAssistantAnalyzing {
     func analyzeImages(_ images: [UIImage], note: String?) async throws -> GeminiService.FoodAnalysis
     func analyzeText(_ description: String) async throws -> GeminiService.FoodAnalysis
-    func lookUpBarcode(_ code: String) async throws -> (analysis: GeminiService.FoodAnalysis, image: UIImage?)
+    /// Open Food Facts, then the label saved for the code (#485), then USDA (#533).
+    func lookUpBarcode(
+        _ code: String,
+        savedLabelEntries: [FoodEntry]
+    ) async throws -> (analysis: GeminiService.FoodAnalysis, image: UIImage?, source: FoodSource)
     func parseWorkout(_ description: String, date: Date, unit: WeightUnit, library: [ExerciseLibraryItem]) async throws -> WorkoutTextDraft
 }
 
 /// The same calls the camera, text and barcode flows on Home make, so the user's
 /// AI settings apply and hosted analysis spends hosted actions as usual.
 struct VoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
+    /// Tests stub the barcode hosts; the app uses the shared session.
+    var session: URLSession = .shared
+
     func analyzeImages(_ images: [UIImage], note: String?) async throws -> GeminiService.FoodAnalysis {
         try await GeminiService.analyzeFood(images: images, description: note)
     }
@@ -71,10 +78,23 @@ struct VoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
         try await GeminiService.analyzeTextInput(description: description)
     }
 
-    func lookUpBarcode(_ code: String) async throws -> (analysis: GeminiService.FoodAnalysis, image: UIImage?) {
-        let outcome = try await BarcodeProductLookup.lookup(barcode: code, usdaAPIKey: FoodDataCentralSettings.apiKey)
-        guard case .product(let lookup) = outcome else { return (outcome.analysis, nil) }
-        return (lookup.analysis, lookup.productImageData.flatMap(UIImage.init(data:)))
+    func lookUpBarcode(
+        _ code: String,
+        savedLabelEntries: [FoodEntry]
+    ) async throws -> (analysis: GeminiService.FoodAnalysis, image: UIImage?, source: FoodSource) {
+        let outcome = try await BarcodeProductLookup.lookup(
+            barcode: code,
+            savedLabelEntries: savedLabelEntries,
+            usdaAPIKey: FoodDataCentralSettings.apiKey,
+            session: session
+        )
+        switch outcome {
+        case .product(let lookup):
+            return (lookup.analysis, lookup.productImageData.flatMap(UIImage.init(data:)), .barcode)
+        case .savedLabel:
+            // Logged as a label again, like Home, so the barcode keeps its saved label.
+            return (outcome.analysis, nil, .nutritionLabel)
+        }
     }
 
     func parseWorkout(_ description: String, date: Date, unit: WeightUnit, library: [ExerciseLibraryItem]) async throws -> WorkoutTextDraft {
@@ -554,8 +574,8 @@ final class VoiceAssistantToolExecutor {
         case .value(let code):
             guard !isCancelled else { return Self.failure(.cancelled, "Cancelled.") }
             do {
-                let lookup = try await analyzer.lookUpBarcode(code)
-                var result = foodDraft(lookup.analysis, images: lookup.image.map { [$0] } ?? [], source: .barcode)
+                let lookup = try await analyzer.lookUpBarcode(code, savedLabelEntries: stores.food.entries)
+                var result = foodDraft(lookup.analysis, images: lookup.image.map { [$0] } ?? [], source: lookup.source)
                 result["barcode"] = code
                 return result
             } catch let error as OpenFoodFactsService.LookupError {

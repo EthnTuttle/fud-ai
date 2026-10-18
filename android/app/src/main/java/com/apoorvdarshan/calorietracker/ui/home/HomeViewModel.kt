@@ -16,6 +16,7 @@ import com.apoorvdarshan.calorietracker.models.HomeTopNutrient
 import com.apoorvdarshan.calorietracker.models.MealType
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.PendingFoodAnalysisDraft
+import com.apoorvdarshan.calorietracker.models.toReviewAnalysis
 import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WaterEntry
 import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
@@ -638,7 +639,7 @@ viewModelScope.launch {
                         source = FoodSource.BARCODE
                     )
                     is BarcodeProductLookup.Outcome.SavedLabel -> {
-                        val analysis = outcome.entry.toAnalysis()
+                        val analysis = outcome.analysis
                         _ui.value = _ui.value.copy(savedLabelAnalysis = analysis)
                         savePendingDraft(analysis, source = FoodSource.NUTRITION_LABEL, usesSavedBarcodeLabel = true)
                     }
@@ -949,7 +950,7 @@ viewModelScope.launch {
     fun reviewSavedMeal(template: FoodEntry) {
         labelScanBarcode.clear()
         draftSaveGeneration += 1
-        val analysis = template.toAnalysis()
+        val analysis = template.toReviewAnalysis()
         val bytesList = template.allImageFilenames.mapNotNull {
             runCatching { container.imageStore.file(it).readBytes() }.getOrNull()
         }
@@ -977,8 +978,13 @@ viewModelScope.launch {
     suspend fun analyzeIngredientImage(bytes: ByteArray): FoodAnalysis =
         container.foodAnalysis.analyzeAuto(bytes)
 
+    /** Same order as the Home scan: Open Food Facts, the saved label (#485), then USDA (#533). */
     suspend fun lookupIngredientBarcode(barcode: String): FoodAnalysis =
-        BarcodeProductLookup.lookupProduct(barcode, container.keyStore.usdaFoodDataCentralApiKey()).analysis
+        BarcodeProductLookup.lookup(
+            barcode = barcode,
+            usdaApiKey = container.keyStore.usdaFoodDataCentralApiKey(),
+            savedLabelEntries = { container.foodRepository.entries.first() }
+        ).analysis
 
     fun combineIntoMeal(ids: Set<UUID>, onDone: (FoodEntry?) -> Unit = {}) {
         if (ids.size < 2) {
@@ -1237,51 +1243,3 @@ viewModelScope.launch {
         }
     }
 }
-
-/**
- * Map a logged FoodEntry back into a FoodAnalysis so the FoodResultSheet
- * (which only knows how to render a FoodAnalysis) can review a saved meal
- * before re-logging. A missing original mass is represented as one logged
- * serving, never as a fabricated 100g amount.
- */
-private fun FoodEntry.toAnalysis(): FoodAnalysis = FoodAnalysis(
-    name = name,
-    calories = calories,
-    protein = protein,
-    carbs = carbs,
-    fat = fat,
-    servingSizeGrams = reviewServingReference,
-    emoji = emoji,
-    sugar = sugar,
-    addedSugar = addedSugar,
-    fiber = fiber,
-    saturatedFat = saturatedFat,
-    monounsaturatedFat = monounsaturatedFat,
-    polyunsaturatedFat = polyunsaturatedFat,
-    cholesterol = cholesterol,
-    caffeine = caffeine,
-    supplementalNutrients = supplementalNutrients,
-    sodium = sodium,
-    potassium = potassium,
-    transFat = transFat,
-    calcium = calcium,
-    iron = iron,
-    magnesium = magnesium,
-    zinc = zinc,
-    vitaminA = vitaminA,
-    vitaminC = vitaminC,
-    vitaminD = vitaminD,
-    vitaminB12 = vitaminB12,
-    vitaminE = vitaminE,
-    vitaminK = vitaminK,
-    folate = folate,
-    omega3 = omega3,
-    servingUnitOptions = reviewServingUnitOptions,
-    selectedServingUnit = reviewSelectedServingUnit,
-    selectedServingQuantity = reviewSelectedServingQuantity,
-    servingSizeIsKnown = hasKnownServingSize,
-    customNote = customNote,
-    progressiveMeal = progressiveMeal,
-    ingredients = ingredients,
-    productMetadata = productMetadata
-)

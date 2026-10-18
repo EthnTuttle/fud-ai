@@ -193,10 +193,14 @@ class AndroidVoiceAppPorts(
     override suspend fun analyzeFoodText(description: String): FoodAnalysis =
         container.foodAnalysis.analyzeText(description)
 
-    override suspend fun lookupBarcode(barcode: String): BarcodeProduct {
-        val lookup = BarcodeProductLookup.lookupProduct(barcode, container.keyStore.usdaFoodDataCentralApiKey())
-        return BarcodeProduct(lookup.analysis, lookup.productImageBytes)
-    }
+    /** Same order as the Home scan: Open Food Facts, the saved label (#485), then USDA (#533). */
+    override suspend fun lookupBarcode(barcode: String): BarcodeProduct = BarcodeProduct.from(
+        BarcodeProductLookup.lookup(
+            barcode = barcode,
+            usdaApiKey = container.keyStore.usdaFoodDataCentralApiKey(),
+            savedLabelEntries = { container.foodRepository.entries.first() }
+        )
+    )
 
     // MARK: - Water, fasting and body
 

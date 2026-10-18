@@ -19,9 +19,10 @@ enum BarcodeProductLookup {
 
     /// Throws the Open Food Facts error when no later source has the product,
     /// except that a key FoodData Central refuses is reported so it can be fixed.
+    /// Every barcode flow passes the diary, so saved labels always come before USDA.
     static func lookup(
         barcode: String,
-        savedLabelEntries: [FoodEntry] = [],
+        savedLabelEntries: [FoodEntry],
         usdaAPIKey: String?,
         includesProductImage: Bool = true,
         session: URLSession = .shared

@@ -554,7 +554,7 @@ class VoiceToolExecutor(
         } catch (error: Throwable) {
             return ToolResults.error(ToolError.ANALYSIS_FAILED, "The barcode lookup failed. Please try again.")
         }
-        return foodDraft(product.analysis, listOfNotNull(product.imageBytes), FoodSource.BARCODE) {
+        return foodDraft(product.analysis, listOfNotNull(product.imageBytes), product.source) {
             put("barcode", code)
         }
     }

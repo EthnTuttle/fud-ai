@@ -4,6 +4,7 @@ import com.apoorvdarshan.calorietracker.models.BarcodeLabelMemory
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodProductMetadata
 import com.apoorvdarshan.calorietracker.models.FoodSource
+import com.apoorvdarshan.calorietracker.services.voice.BarcodeProduct
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.Dispatcher
@@ -74,6 +75,42 @@ class BarcodeProductLookupTest {
 
         assertEquals("My label", outcome.entry.name)
         assertTrue(paths.none { it.startsWith("/fdc/") })
+    }
+
+    @Test
+    fun voiceAndIngredientScansGetTheSavedLabel() = runBlocking {
+        val label = FoodEntry(
+            name = "My label",
+            calories = 150,
+            protein = 5.0,
+            carbs = 20.0,
+            fat = 4.0,
+            timestamp = Instant.ofEpochSecond(1_000),
+            source = FoodSource.NUTRITION_LABEL,
+            servingSizeGrams = 40.0,
+            productMetadata = BarcodeLabelMemory.labelMetadata(null, "0016000275287")
+        )
+
+        val outcome = lookup(KEY, labels = listOf(label))
+        val product = BarcodeProduct.from(outcome)
+
+        assertEquals("My label", outcome.analysis.name)
+        assertEquals(150, outcome.analysis.calories)
+        assertEquals(40.0, outcome.analysis.servingSizeGrams, 0.001)
+        assertEquals("0016000275287", outcome.analysis.productMetadata?.barcode)
+        assertEquals(FoodSource.NUTRITION_LABEL, product.source)
+        assertNull(product.imageBytes)
+        assertTrue(paths.none { it.startsWith("/fdc/") })
+    }
+
+    @Test
+    fun scannedProductsStayBarcodeLogs() = runBlocking {
+        openFoodFacts = { FoodDataCentralServiceTest.json(200, OPEN_FOOD_FACTS_PRODUCT) }
+
+        val product = BarcodeProduct.from(lookup(KEY))
+
+        assertEquals("Open Food Facts Oats", product.analysis.name)
+        assertEquals(FoodSource.BARCODE, product.source)
     }
 
     @Test

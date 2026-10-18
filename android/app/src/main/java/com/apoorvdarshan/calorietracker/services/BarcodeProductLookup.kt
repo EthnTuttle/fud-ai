@@ -2,6 +2,7 @@ package com.apoorvdarshan.calorietracker.services
 
 import com.apoorvdarshan.calorietracker.models.BarcodeLabelMemory
 import com.apoorvdarshan.calorietracker.models.FoodEntry
+import com.apoorvdarshan.calorietracker.models.toReviewAnalysis
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 
 /**
@@ -12,19 +13,27 @@ import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
  */
 object BarcodeProductLookup {
     sealed interface Outcome {
-        data class Product(val result: OpenFoodFactsService.LookupResult) : Outcome
-        data class SavedLabel(val entry: FoodEntry) : Outcome
+        val analysis: FoodAnalysis
+
+        data class Product(val result: OpenFoodFactsService.LookupResult) : Outcome {
+            override val analysis: FoodAnalysis get() = result.analysis
+        }
+
+        data class SavedLabel(val entry: FoodEntry) : Outcome {
+            override val analysis: FoodAnalysis get() = entry.toReviewAnalysis()
+        }
     }
 
     /**
      * Throws the Open Food Facts [OpenFoodFactsService.LookupException] when no later source has
      * the product, except that a key FoodData Central refuses is reported as a
-     * [FoodDataCentralService.LookupException] so it can be fixed.
+     * [FoodDataCentralService.LookupException] so it can be fixed. Every barcode flow passes the
+     * diary, so saved labels always come before USDA.
      */
     suspend fun lookup(
         barcode: String,
         usdaApiKey: String?,
-        savedLabelEntries: suspend () -> List<FoodEntry> = { emptyList() },
+        savedLabelEntries: suspend () -> List<FoodEntry>,
         openFoodFacts: suspend (String) -> OpenFoodFactsService.LookupResult = {
             OpenFoodFactsService.lookupWithImage(it)
         },
@@ -50,9 +59,4 @@ object BarcodeProductLookup {
         } ?: throw openFoodFactsError
         return Outcome.Product(OpenFoodFactsService.LookupResult(analysis = usdaAnalysis, productImageBytes = null))
     }
-
-    /** Open Food Facts, then USDA, for flows that do not reuse saved labels (voice, add ingredient). */
-    suspend fun lookupProduct(barcode: String, usdaApiKey: String?): OpenFoodFactsService.LookupResult =
-        // Without saved label entries the outcome is always a product.
-        (lookup(barcode, usdaApiKey) as Outcome.Product).result
 }

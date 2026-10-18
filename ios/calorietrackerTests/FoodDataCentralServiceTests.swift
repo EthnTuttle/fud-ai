@@ -352,6 +352,35 @@ struct BarcodeProductLookupTests {
         #expect(hosts == ["world.openfoodfacts.org"])
     }
 
+    @Test func voiceAssistantScanUsesTheSavedLabelBeforeUSDA() async throws {
+        var hosts: [String] = []
+        let session = makeSession { request in
+            hosts.append(request.url?.host ?? "")
+            return json(request, 404, #"{"status":0}"#)
+        }
+        defer { finish(session) }
+        let label = FoodEntry(
+            name: "My label",
+            calories: 150,
+            protein: 5,
+            carbs: 20,
+            fat: 4,
+            source: .nutritionLabel,
+            servingSizeGrams: 40,
+            productMetadata: BarcodeLabelMemory.labelMetadata(nil, barcode: "0016000275287")
+        )
+
+        let lookup = try await VoiceAssistantAnalyzer(session: session)
+            .lookUpBarcode(Self.code, savedLabelEntries: [label])
+
+        #expect(lookup.analysis.name == "My label")
+        #expect(lookup.analysis.calories == 150)
+        #expect(lookup.analysis.productMetadata?.barcode == "0016000275287")
+        #expect(lookup.source == .nutritionLabel)
+        #expect(lookup.image == nil)
+        #expect(hosts == ["world.openfoodfacts.org"])
+    }
+
     // MARK: - Helpers
 
     private static let openFoodFactsProduct = #"""
