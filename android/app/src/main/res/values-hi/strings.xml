@@ -561,6 +561,8 @@
     <string name="nutrition_label_valine">वेलिन</string>
     <string name="nutrition_amino_acids_ai_estimate">अमीनो एसिड (AI अनुमान)</string>
     <string name="nutrition_amino_acids_reference">संदर्भ %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">संदर्भ (मेथियोनीन + सिस्टीन) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">संदर्भ (फेनिलएलनिन + टायरोसिन) %1$s</string>
     <string name="nutrition_amino_acids_note">अमीनो एसिड चालू रहते हुए विश्लेषित खाद्य पदार्थों के AI अनुमान। संदर्भ मान आपके शरीर के वज़न के लिए WHO/FAO/UNU 2007 की वयस्क आवश्यकता पर आधारित हैं। ये संदर्भ हैं, लक्ष्य नहीं।</string>
     <string name="nutrition_label_sodium">सोडियम</string>
     <string name="nutrition_label_potassium">पोटैशियम</string>

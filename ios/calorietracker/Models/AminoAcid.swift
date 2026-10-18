@@ -45,7 +45,7 @@ enum AminoAcid: String, CaseIterable, Identifiable, Sendable {
 
     /// WHO/FAO/UNU 2007 (WHO Technical Report Series 935) adult requirement in
     /// mg per kg of body weight per day. Methionine uses the methionine + cysteine
-    /// value and phenylalanine the phenylalanine + tyrosine value.
+    /// value and phenylalanine the phenylalanine + tyrosine value (see `referenceLabel`).
     nonisolated var referenceMgPerKgPerDay: Double {
         switch self {
         case .histidine: 10
@@ -65,6 +65,19 @@ enum AminoAcid: String, CaseIterable, Identifiable, Sendable {
     nonisolated func referenceGrams(bodyWeightKg: Double) -> Double? {
         guard bodyWeightKg.isFinite, bodyWeightKg > 0 else { return nil }
         return referenceMgPerKgPerDay * bodyWeightKg / 1_000
+    }
+
+    /// The reference line under this amino acid in Nutrition Details. Methionine and
+    /// phenylalanine use the combined methionine + cysteine and phenylalanine + tyrosine
+    /// requirements, so their labels name both amino acids and the reference does not read
+    /// as one for methionine or phenylalanine alone.
+    nonisolated func referenceLabel(grams: Double) -> LocalizedStringResource {
+        let value = AminoAcidEstimates.formattedGrams(grams)
+        return switch self {
+        case .methionine: LocalizedStringResource("Reference (methionine + cysteine) \(value) g")
+        case .phenylalanine: LocalizedStringResource("Reference (phenylalanine + tyrosine) \(value) g")
+        default: LocalizedStringResource("Reference \(value) g")
+        }
     }
 }
 

@@ -567,6 +567,8 @@
     <string name="nutrition_label_valine">Walina</string>
     <string name="nutrition_amino_acids_ai_estimate">Aminokwasy (szacunek AI)</string>
     <string name="nutrition_amino_acids_reference">Wartość referencyjna %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Wartość referencyjna (metionina + cysteina) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Wartość referencyjna (fenyloalanina + tyrozyna) %1$s</string>
     <string name="nutrition_amino_acids_note">Szacunki AI z posiłków analizowanych przy włączonych aminokwasach. Wartości referencyjne to zapotrzebowanie dorosłych wg WHO/FAO/UNU 2007 dla Twojej masy ciała. To punkt odniesienia, a nie cel.</string>
     <string name="nutrition_label_sodium">Sód</string>
     <string name="nutrition_label_potassium">Potas</string>

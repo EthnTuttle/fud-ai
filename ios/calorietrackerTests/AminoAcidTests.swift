@@ -178,6 +178,31 @@ struct AminoAcidTests {
         #expect(AminoAcid.leucine.referenceGrams(bodyWeightKg: .nan) == nil)
     }
 
+    @Test func combinedReferencesNameBothAminoAcids() throws {
+        // WHO/FAO/UNU gives these two as methionine + cysteine and phenylalanine + tyrosine.
+        let combined: [AminoAcid: String] = [
+            .methionine: "Reference (methionine + cysteine) %@ g",
+            .phenylalanine: "Reference (phenylalanine + tyrosine) %@ g",
+        ]
+        for aminoAcid in AminoAcid.allCases {
+            let label = aminoAcid.referenceLabel(grams: 1.05)
+            #expect(label.key == (combined[aminoAcid] ?? "Reference %@ g"), "\(aminoAcid)")
+            #expect(String(localized: label).contains("1.05"), "\(aminoAcid)")
+        }
+
+        let missing = "\u{0}missing"
+        for language in LocalizationCatalogTests.appLanguages {
+            let bundle = try LocalizationCatalogTests.languageBundle(language, in: .main)
+            for key in combined.values {
+                let translation = bundle.localizedString(forKey: key, value: missing, table: nil)
+                #expect(translation != missing, "\(language) is missing \(key)")
+                guard translation != missing else { continue }
+                #expect(translation.contains("+") || translation.contains("＋"), "\(language): \(translation)")
+                #expect(String(format: translation, "1.05").contains("1.05"), "\(language): \(translation)")
+            }
+        }
+    }
+
     @Test func promptsOnlyAskForAminoAcidsWhenTheSettingIsOn() {
         let off = GeminiService.foodNutrientInstruction(includingAminoAcids: false)
         let on = GeminiService.foodNutrientInstruction(includingAminoAcids: true)

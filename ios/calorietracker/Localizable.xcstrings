@@ -190580,6 +190580,230 @@
           }
         }
       }
+    },
+    "Reference (methionine + cysteine) %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المرجع (الميثيونين + السيستين) %@ g"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstinad (metionin + sistein) %@ g"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference (methionin + cystein) %@ g"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenz (Methionin + Cystein) %@ g"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia (metionina + cisteína) %@ g"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence (méthionine + cystéine) %@ g"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "संदर्भ (मेथियोनीन + सिस्टीन) %@ g"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento (metionina + cisteina) %@ g"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参考値（メチオニン＋システイン）%@ g"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참고값 (메티오닌 + 시스테인) %@ g"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referentie (methionine + cysteïne) %@ g"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartość referencyjna (metionina + cysteina) %@ g"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referência (metionina + cisteína) %@ g"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referință (metionină + cisteină) %@ g"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ориентир (метионин + цистеин) %@ г"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referans (metiyonin + sistein) %@ g"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Орієнтир (метіонін + цистеїн) %@ г"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参考值（甲硫氨酸 + 半胱氨酸）%@ g"
+          }
+        }
+      }
+    },
+    "Reference (phenylalanine + tyrosine) %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المرجع (الفينيل ألانين + التيروسين) %@ g"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstinad (fenilalanin + tirozin) %@ g"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference (fenylalanin + tyrosin) %@ g"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenz (Phenylalanin + Tyrosin) %@ g"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia (fenilalanina + tirosina) %@ g"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence (phénylalanine + tyrosine) %@ g"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "संदर्भ (फेनिलएलनिन + टायरोसिन) %@ g"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento (fenilalanina + tirosina) %@ g"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参考値（フェニルアラニン＋チロシン）%@ g"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "참고값 (페닐알라닌 + 티로신) %@ g"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referentie (fenylalanine + tyrosine) %@ g"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartość referencyjna (fenyloalanina + tyrozyna) %@ g"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referência (fenilalanina + tirosina) %@ g"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referință (fenilalanină + tirozină) %@ g"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ориентир (фенилаланин + тирозин) %@ г"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referans (fenilalanin + tirozin) %@ g"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Орієнтир (фенілаланін + тирозин) %@ г"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参考值（苯丙氨酸 + 酪氨酸）%@ g"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

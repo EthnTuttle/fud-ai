@@ -561,6 +561,8 @@
     <string name="nutrition_label_valine">Valin</string>
     <string name="nutrition_amino_acids_ai_estimate">Aminosäuren (KI-Schätzung)</string>
     <string name="nutrition_amino_acids_reference">Referenz %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Referenz (Methionin + Cystein) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Referenz (Phenylalanin + Tyrosin) %1$s</string>
     <string name="nutrition_amino_acids_note">KI-Schätzungen aus Lebensmitteln, die bei aktivierten Aminosäuren analysiert wurden. Die Referenzwerte nutzen den Erwachsenenbedarf nach WHO/FAO/UNU 2007 für dein Körpergewicht. Sie sind eine Referenz, kein Ziel.</string>
     <string name="nutrition_label_sodium">Natrium</string>
     <string name="nutrition_label_potassium">Kalium</string>

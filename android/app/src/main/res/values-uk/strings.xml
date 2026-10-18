@@ -531,6 +531,8 @@
     <string name="nutrition_label_valine">Валін</string>
     <string name="nutrition_amino_acids_ai_estimate">Амінокислоти (оцінка ШІ)</string>
     <string name="nutrition_amino_acids_reference">Орієнтир %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Орієнтир (метіонін + цистеїн) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Орієнтир (фенілаланін + тирозин) %1$s</string>
     <string name="nutrition_amino_acids_note">Оцінки ШІ для страв, проаналізованих з увімкненими амінокислотами. Довідкові значення ґрунтуються на потребі дорослих за ВООЗ/ФАО/УООН 2007 для вашої ваги. Це орієнтир, а не ціль.</string>
     <string name="nutrition_label_sodium">Натрій</string>
     <string name="nutrition_label_potassium">Калій</string>

@@ -17,19 +17,28 @@ import kotlin.math.roundToLong
  *
  * [referenceMgPerKgPerDay] is the WHO/FAO/UNU 2007 (WHO Technical Report Series 935) adult
  * requirement. Methionine uses the methionine + cysteine value and phenylalanine the
- * phenylalanine + tyrosine value.
+ * phenylalanine + tyrosine value, so their [referenceLabelRes] names both amino acids and the
+ * combined reference is not mistaken for one for methionine or phenylalanine alone.
  */
 enum class AminoAcid(
     val storageKey: String,
     val displayNameRes: Int,
-    val referenceMgPerKgPerDay: Double
+    val referenceMgPerKgPerDay: Double,
+    /** Format for the reference line in Nutrition Details; its argument is the grams with unit. */
+    val referenceLabelRes: Int = R.string.nutrition_amino_acids_reference
 ) {
     HISTIDINE("histidine", R.string.nutrition_label_histidine, 10.0),
     ISOLEUCINE("isoleucine", R.string.nutrition_label_isoleucine, 20.0),
     LEUCINE("leucine", R.string.nutrition_label_leucine, 39.0),
     LYSINE("lysine", R.string.nutrition_label_lysine, 30.0),
-    METHIONINE("methionine", R.string.nutrition_label_methionine, 15.0),
-    PHENYLALANINE("phenylalanine", R.string.nutrition_label_phenylalanine, 25.0),
+    METHIONINE(
+        "methionine", R.string.nutrition_label_methionine, 15.0,
+        R.string.nutrition_amino_acids_reference_methionine_cysteine
+    ),
+    PHENYLALANINE(
+        "phenylalanine", R.string.nutrition_label_phenylalanine, 25.0,
+        R.string.nutrition_amino_acids_reference_phenylalanine_tyrosine
+    ),
     THREONINE("threonine", R.string.nutrition_label_threonine, 15.0),
     TRYPTOPHAN("tryptophan", R.string.nutrition_label_tryptophan, 4.0),
     VALINE("valine", R.string.nutrition_label_valine, 26.0);

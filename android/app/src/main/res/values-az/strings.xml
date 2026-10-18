@@ -561,6 +561,8 @@
     <string name="nutrition_label_valine">Valin</string>
     <string name="nutrition_amino_acids_ai_estimate">Amin turşuları (AI təxmini)</string>
     <string name="nutrition_amino_acids_reference">İstinad %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">İstinad (metionin + sistein) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">İstinad (fenilalanin + tirozin) %1$s</string>
     <string name="nutrition_amino_acids_note">Amin turşuları aktiv olarkən analiz edilmiş qidalardan AI təxminləri. İstinad dəyərləri bədən çəkinizə görə WHO/FAO/UNU 2007 böyüklər üçün tələbatından istifadə edir. Bunlar hədəf deyil, istinaddır.</string>
     <string name="nutrition_label_sodium">Natrium</string>
     <string name="nutrition_label_potassium">Kalium</string>

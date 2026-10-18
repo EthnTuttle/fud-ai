@@ -525,6 +525,8 @@
     <string name="nutrition_label_valine">Valine</string>
     <string name="nutrition_amino_acids_ai_estimate">Amino acids (AI estimate)</string>
     <string name="nutrition_amino_acids_reference">Reference %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Reference (methionine + cysteine) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Reference (phenylalanine + tyrosine) %1$s</string>
     <string name="nutrition_amino_acids_note">AI estimates from foods analyzed while Amino acids is on. Reference values use the WHO/FAO/UNU 2007 adult requirement for your body weight. They are a reference, not a target.</string>
     <string name="nutrition_label_sodium">Sodium</string>
     <string name="nutrition_label_potassium">Potassium</string>

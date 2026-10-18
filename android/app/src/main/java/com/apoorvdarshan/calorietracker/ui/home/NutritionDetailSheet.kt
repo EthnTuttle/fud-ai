@@ -268,7 +268,8 @@ fun NutritionDetailSheet(
                             AminoAcidDetailRow(
                                 label = stringResource(aminoAcid.displayNameRes),
                                 grams = aminoAcidTotals[aminoAcid],
-                                referenceGrams = profile?.weightKg?.let(aminoAcid::referenceGrams)
+                                referenceGrams = profile?.weightKg?.let(aminoAcid::referenceGrams),
+                                referenceLabelRes = aminoAcid.referenceLabelRes
                             )
                         }
                     }
@@ -577,7 +578,7 @@ private fun DetailRow(
 
 /** Daily amino acid estimate with its WHO/FAO/UNU reference (#491), never shown as a goal. */
 @Composable
-private fun AminoAcidDetailRow(label: String, grams: Double?, referenceGrams: Double?) {
+private fun AminoAcidDetailRow(label: String, grams: Double?, referenceGrams: Double?, referenceLabelRes: Int) {
     val gramUnit = stringResource(R.string.unit_g)
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -590,7 +591,7 @@ private fun AminoAcidDetailRow(label: String, grams: Double?, referenceGrams: Do
             if (referenceGrams != null) {
                 Text(
                     stringResource(
-                        R.string.nutrition_amino_acids_reference,
+                        referenceLabelRes,
                         "${AminoAcidEstimates.formattedGrams(referenceGrams)} $gramUnit"
                     ),
                     fontSize = 12.sp,

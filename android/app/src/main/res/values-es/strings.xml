@@ -562,6 +562,8 @@
     <string name="nutrition_label_valine">Valina</string>
     <string name="nutrition_amino_acids_ai_estimate">Aminoácidos (estimación de IA)</string>
     <string name="nutrition_amino_acids_reference">Referencia %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Referencia (metionina + cisteína) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Referencia (fenilalanina + tirosina) %1$s</string>
     <string name="nutrition_amino_acids_note">Estimaciones de IA de alimentos analizados con Aminoácidos activado. Los valores de referencia usan el requerimiento para adultos de OMS/FAO/UNU 2007 según tu peso corporal. Son una referencia, no un objetivo.</string>
     <string name="nutrition_label_sodium">Sodio</string>
     <string name="nutrition_label_potassium">Potasio</string>

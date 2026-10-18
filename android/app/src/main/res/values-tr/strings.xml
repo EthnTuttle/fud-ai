@@ -528,6 +528,8 @@
     <string name="nutrition_label_valine">Valin</string>
     <string name="nutrition_amino_acids_ai_estimate">Amino asitler (Yapay Zeka tahmini)</string>
     <string name="nutrition_amino_acids_reference">Referans %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Referans (metiyonin + sistein) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Referans (fenilalanin + tirozin) %1$s</string>
     <string name="nutrition_amino_acids_note">Amino asitler açıkken analiz edilen yiyeceklerden Yapay Zeka tahminleri. Referans değerler, vücut ağırlığınıza göre WHO/FAO/UNU 2007 yetişkin gereksinimini kullanır. Bunlar hedef değil, referanstır.</string>
     <string name="nutrition_label_sodium">Sodyum</string>
     <string name="nutrition_label_potassium">Potasyum</string>

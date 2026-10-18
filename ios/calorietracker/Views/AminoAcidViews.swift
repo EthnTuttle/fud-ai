@@ -39,7 +39,7 @@ private struct AminoAcidDetailRow: View {
                 Text(aminoAcid.displayName)
                     .font(.system(.body, design: .rounded))
                 if let referenceGrams {
-                    Text("Reference \(AminoAcidEstimates.formattedGrams(referenceGrams)) g")
+                    Text(aminoAcid.referenceLabel(grams: referenceGrams))
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.secondary)
                 }

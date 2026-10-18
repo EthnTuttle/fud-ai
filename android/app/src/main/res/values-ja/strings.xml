@@ -560,6 +560,8 @@
     <string name="nutrition_label_valine">バリン</string>
     <string name="nutrition_amino_acids_ai_estimate">アミノ酸（AI推定）</string>
     <string name="nutrition_amino_acids_reference">参考値 %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">参考値（メチオニン＋システイン）%1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">参考値（フェニルアラニン＋チロシン）%1$s</string>
     <string name="nutrition_amino_acids_note">アミノ酸がオンの間に分析した食品のAI推定値です。参考値は、体重に基づくWHO/FAO/UNU 2007の成人必要量です。目標ではなく参考値です。</string>
     <string name="nutrition_label_sodium">ナトリウム</string>
     <string name="nutrition_label_potassium">カリウム</string>

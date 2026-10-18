@@ -563,6 +563,8 @@
     <string name="nutrition_label_valine">Valină</string>
     <string name="nutrition_amino_acids_ai_estimate">Aminoacizi (estimare AI)</string>
     <string name="nutrition_amino_acids_reference">Referință %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Referință (metionină + cisteină) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Referință (fenilalanină + tirozină) %1$s</string>
     <string name="nutrition_amino_acids_note">Estimări AI din alimentele analizate cu Aminoacizi activat. Valorile de referință folosesc necesarul pentru adulți OMS/FAO/UNU 2007 pentru greutatea ta corporală. Sunt o referință, nu o țintă.</string>
     <string name="nutrition_label_sodium">Sodiu</string>
     <string name="nutrition_label_potassium">Potasiu</string>

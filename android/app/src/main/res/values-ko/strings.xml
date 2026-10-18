@@ -560,6 +560,8 @@
     <string name="nutrition_label_valine">발린</string>
     <string name="nutrition_amino_acids_ai_estimate">아미노산 (AI 추정)</string>
     <string name="nutrition_amino_acids_reference">참고값 %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">참고값 (메티오닌 + 시스테인) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">참고값 (페닐알라닌 + 티로신) %1$s</string>
     <string name="nutrition_amino_acids_note">아미노산이 켜져 있는 동안 분석한 음식의 AI 추정치입니다. 참고값은 체중에 따른 WHO/FAO/UNU 2007 성인 필요량을 사용합니다. 목표가 아닌 참고값입니다.</string>
     <string name="nutrition_label_sodium">나트륨</string>
     <string name="nutrition_label_potassium">칼륨</string>

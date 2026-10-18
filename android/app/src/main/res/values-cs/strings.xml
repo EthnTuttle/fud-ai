@@ -1382,6 +1382,8 @@
     <string name="nutrition_label_valine">Valin</string>
     <string name="nutrition_amino_acids_ai_estimate">Aminokyseliny (odhad AI)</string>
     <string name="nutrition_amino_acids_reference">Reference %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Reference (methionin + cystein) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Reference (fenylalanin + tyrosin) %1$s</string>
     <string name="nutrition_amino_acids_note">Odhady AI z jídel analyzovaných se zapnutými aminokyselinami. Referenční hodnoty vycházejí z potřeby dospělých podle WHO/FAO/UNU 2007 pro tvou tělesnou hmotnost. Jde o referenci, ne o cíl.</string>
     <string name="settings_fasting_tracking">Sledování půstu</string>
     <string name="settings_walk_run_quick_log">Chůze a běh</string>

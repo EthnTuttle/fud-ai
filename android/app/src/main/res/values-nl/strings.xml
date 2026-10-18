@@ -561,6 +561,8 @@
     <string name="nutrition_label_valine">Valine</string>
     <string name="nutrition_amino_acids_ai_estimate">Aminozuren (AI-schatting)</string>
     <string name="nutrition_amino_acids_reference">Referentie %1$s</string>
+    <string name="nutrition_amino_acids_reference_methionine_cysteine">Referentie (methionine + cysteïne) %1$s</string>
+    <string name="nutrition_amino_acids_reference_phenylalanine_tyrosine">Referentie (fenylalanine + tyrosine) %1$s</string>
     <string name="nutrition_amino_acids_note">AI-schattingen van voedsel dat is geanalyseerd terwijl Aminozuren aan stond. Referentiewaarden gebruiken de WHO/FAO/UNU 2007-behoefte voor volwassenen bij je lichaamsgewicht. Het is een referentie, geen doel.</string>
     <string name="nutrition_label_sodium">Natrium</string>
     <string name="nutrition_label_potassium">Kalium</string>

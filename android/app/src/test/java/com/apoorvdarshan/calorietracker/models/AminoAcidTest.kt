@@ -1,12 +1,15 @@
 package com.apoorvdarshan.calorietracker.models
 
+import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.services.ai.NutritionLabelAnalysis
+import com.apoorvdarshan.calorietracker.services.voice.RepoFiles
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class AminoAcidTest {
     @Test
@@ -162,6 +165,37 @@ class AminoAcidTest {
         assertNull(AminoAcid.LEUCINE.referenceGrams(0.0))
         assertNull(AminoAcid.LEUCINE.referenceGrams(-60.0))
         assertNull(AminoAcid.LEUCINE.referenceGrams(Double.NaN))
+    }
+
+    @Test
+    fun combinedReferencesNameBothAminoAcids() {
+        // WHO/FAO/UNU gives these two as methionine + cysteine and phenylalanine + tyrosine.
+        val combined = mapOf(
+            AminoAcid.METHIONINE to R.string.nutrition_amino_acids_reference_methionine_cysteine,
+            AminoAcid.PHENYLALANINE to R.string.nutrition_amino_acids_reference_phenylalanine_tyrosine
+        )
+        AminoAcid.values().forEach { aminoAcid ->
+            assertEquals(
+                aminoAcid.name,
+                combined[aminoAcid] ?: R.string.nutrition_amino_acids_reference,
+                aminoAcid.referenceLabelRes
+            )
+        }
+
+        val res = RepoFiles.find("src/main/res")
+        val folders = res.listFiles { file -> file.name == "values" || file.name.startsWith("values-") }!!
+            .filter { File(it, "strings.xml").isFile }
+        assertEquals(19, folders.size)
+        for (folder in folders) {
+            val text = File(folder, "strings.xml").readText()
+            for (name in listOf(
+                "nutrition_amino_acids_reference_methionine_cysteine",
+                "nutrition_amino_acids_reference_phenylalanine_tyrosine"
+            )) {
+                val value = Regex("<string name=\"$name\">(.*?)</string>").find(text)?.groupValues?.get(1)
+                assertTrue("${folder.name} is missing $name", value != null && "%1\$s" in value && ("+" in value || "＋" in value))
+            }
+        }
     }
 
     @Test
