@@ -72,7 +72,8 @@ struct VoiceAssistantAnalyzer: VoiceAssistantAnalyzing {
     }
 
     func lookUpBarcode(_ code: String) async throws -> (analysis: GeminiService.FoodAnalysis, image: UIImage?) {
-        let lookup = try await OpenFoodFactsService.lookupWithImage(barcode: code)
+        let outcome = try await BarcodeProductLookup.lookup(barcode: code, usdaAPIKey: FoodDataCentralSettings.apiKey)
+        guard case .product(let lookup) = outcome else { return (outcome.analysis, nil) }
         return (lookup.analysis, lookup.productImageData.flatMap(UIImage.init(data:)))
     }
 
@@ -566,6 +567,8 @@ final class VoiceAssistantToolExecutor {
                 default:
                     return Self.failure(.analysisFailed, "The barcode lookup failed.", extra: ["barcode": code, "detail": error.localizedDescription])
                 }
+            } catch FoodDataCentralService.LookupError.invalidAPIKey {
+                return Self.failure(.notFound, "That product isn't in Open Food Facts, and USDA FoodData Central rejected the API key saved in Settings > Product Information. Offer to photograph the nutrition label or describe the food.", extra: ["barcode": code])
             } catch {
                 return analysisFailure(error)
             }

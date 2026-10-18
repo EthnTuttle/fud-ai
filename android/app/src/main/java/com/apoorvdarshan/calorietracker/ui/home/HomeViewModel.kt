@@ -20,8 +20,10 @@ import com.apoorvdarshan.calorietracker.models.UserProfile
 import com.apoorvdarshan.calorietracker.models.WaterEntry
 import com.apoorvdarshan.calorietracker.models.WaterQuickAddPresets
 import com.apoorvdarshan.calorietracker.models.WaterUnit
+import com.apoorvdarshan.calorietracker.services.BarcodeProductLookup
 import com.apoorvdarshan.calorietracker.services.CalorieBalanceDirection
 import com.apoorvdarshan.calorietracker.services.DailySummaryPolicy
+import com.apoorvdarshan.calorietracker.services.FoodDataCentralService
 import com.apoorvdarshan.calorietracker.services.OpenFoodFactsService
 import com.apoorvdarshan.calorietracker.ui.components.autoSaveMealPhotoIfEnabled
 import com.apoorvdarshan.calorietracker.services.ai.AiError
@@ -621,31 +623,30 @@ viewModelScope.launch {
             )
             discardPendingDraft(previousDraftImages)
             try {
-                val lookup = OpenFoodFactsService.lookupWithImage(barcode)
-                savePendingDraft(
-                    analysis = lookup.analysis,
-                    imageBytes = lookup.productImageBytes,
-                    source = FoodSource.BARCODE
+                // Open Food Facts wins when it has nutrition; otherwise reuse the label the
+                // user scanned for this barcode before (#485), then USDA (#533).
+                val outcome = BarcodeProductLookup.lookup(
+                    barcode = barcode,
+                    usdaApiKey = container.keyStore.usdaFoodDataCentralApiKey(),
+                    savedLabelEntries = { container.foodRepository.entries.first() }
                 )
+                ensureActive()
+                when (outcome) {
+                    is BarcodeProductLookup.Outcome.Product -> savePendingDraft(
+                        analysis = outcome.result.analysis,
+                        imageBytes = outcome.result.productImageBytes,
+                        source = FoodSource.BARCODE
+                    )
+                    is BarcodeProductLookup.Outcome.SavedLabel -> {
+                        val analysis = outcome.entry.toAnalysis()
+                        _ui.value = _ui.value.copy(savedLabelAnalysis = analysis)
+                        savePendingDraft(analysis, source = FoodSource.NUTRITION_LABEL, usesSavedBarcodeLabel = true)
+                    }
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: OpenFoodFactsService.LookupException) {
                 ensureActive()
-                // Open Food Facts wins when it has nutrition; otherwise reuse the
-                // label the user scanned for this barcode before (#485).
-                if (BarcodeLabelMemory.allowsFallback(error.failure)) {
-                    val savedLabel = BarcodeLabelMemory.latestLabelEntry(
-                        barcode,
-                        container.foodRepository.entries.first()
-                    )
-                    ensureActive()
-                    if (savedLabel != null) {
-                        val analysis = savedLabel.toAnalysis()
-                        _ui.value = _ui.value.copy(savedLabelAnalysis = analysis)
-                        savePendingDraft(analysis, source = FoodSource.NUTRITION_LABEL, usesSavedBarcodeLabel = true)
-                        return@launchAnalysis
-                    }
-                }
                 val offersScanLabel = error.failure == OpenFoodFactsService.LookupFailure.MISSING_NUTRITION ||
                     error.failure == OpenFoodFactsService.LookupFailure.PRODUCT_NOT_FOUND
                 scanLabelOfferBarcode = barcode.takeIf { offersScanLabel }
@@ -653,6 +654,15 @@ viewModelScope.launch {
                     analyzing = false,
                     error = barcodeLookupErrorMessage(error),
                     errorOffersScanLabel = offersScanLabel
+                )
+            } catch (error: FoodDataCentralService.LookupException) {
+                ensureActive()
+                // A refused USDA key only follows an Open Food Facts miss, so the label scan still helps.
+                scanLabelOfferBarcode = barcode
+                _ui.value = _ui.value.copy(
+                    analyzing = false,
+                    error = container.appContext.getString(R.string.error_barcode_usda_key_rejected),
+                    errorOffersScanLabel = true
                 )
             } catch (e: Throwable) {
                 ensureActive()
@@ -968,7 +978,7 @@ viewModelScope.launch {
         container.foodAnalysis.analyzeAuto(bytes)
 
     suspend fun lookupIngredientBarcode(barcode: String): FoodAnalysis =
-        OpenFoodFactsService.lookupWithImage(barcode).analysis
+        BarcodeProductLookup.lookupProduct(barcode, container.keyStore.usdaFoodDataCentralApiKey()).analysis
 
     fun combineIntoMeal(ids: Set<UUID>, onDone: (FoodEntry?) -> Unit = {}) {
         if (ids.size < 2) {

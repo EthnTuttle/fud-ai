@@ -126,7 +126,11 @@ struct IngredientAddMenuButton: View {
                 onScan: { code in
                     showBarcode = false
                     runAnalysis {
-                        try await OpenFoodFactsService.lookup(barcode: code)
+                        try await BarcodeProductLookup.lookup(
+                            barcode: code,
+                            usdaAPIKey: FoodDataCentralSettings.apiKey,
+                            includesProductImage: false
+                        ).analysis
                     }
                 },
                 onCancel: { showBarcode = false }

@@ -20,7 +20,7 @@ import com.apoorvdarshan.calorietracker.models.WorkoutTextDraft
 import com.apoorvdarshan.calorietracker.models.WorkoutTextExercise
 import com.apoorvdarshan.calorietracker.models.WorkoutWeightUnit
 import com.apoorvdarshan.calorietracker.services.AndroidAppIconManager
-import com.apoorvdarshan.calorietracker.services.OpenFoodFactsService
+import com.apoorvdarshan.calorietracker.services.BarcodeProductLookup
 import com.apoorvdarshan.calorietracker.services.ai.CoachTools
 import com.apoorvdarshan.calorietracker.services.ai.FoodAnalysis
 import com.apoorvdarshan.calorietracker.services.hosted.AiAccessMode
@@ -194,7 +194,7 @@ class AndroidVoiceAppPorts(
         container.foodAnalysis.analyzeText(description)
 
     override suspend fun lookupBarcode(barcode: String): BarcodeProduct {
-        val lookup = OpenFoodFactsService.lookupWithImage(barcode)
+        val lookup = BarcodeProductLookup.lookupProduct(barcode, container.keyStore.usdaFoodDataCentralApiKey())
         return BarcodeProduct(lookup.analysis, lookup.productImageBytes)
     }
 
