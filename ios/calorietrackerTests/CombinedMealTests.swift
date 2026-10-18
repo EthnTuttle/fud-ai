@@ -41,6 +41,33 @@ struct CombinedMealTests {
         #expect(ingredient.protein == 30)
     }
 
+    @Test func unknownWeightAnalysisStaysZeroGramsAsAnIngredient() {
+        // A saved barcode label restored without its mass reviews as 2 servings, not 2 g (#533).
+        let savedLabel = FoodEntry(
+            name: "Granola",
+            calories: 380,
+            protein: 8,
+            carbs: 60,
+            fat: 12,
+            source: .nutritionLabel,
+            servingSizeGrams: nil,
+            selectedServingQuantity: 2
+        )
+        let review = savedLabel.reviewAnalysis
+        #expect(review.servingSizeGrams == 2)
+
+        let ingredient = review.asMealIngredient()
+        #expect(ingredient.grams == 0)
+        #expect(ingredient.calories == 380)
+        #expect(ingredient.grams == savedLabel.asMealIngredient().grams)
+
+        var unknownAI = GeminiService.FoodAnalysis(
+            name: "Sandwich", calories: 400, protein: 20, carbs: 40, fat: 15, servingSizeGrams: 1
+        )
+        unknownAI.servingSizeIsKnown = false
+        #expect(unknownAI.asMealIngredient().grams == 0)
+    }
+
     @Test func combineTotalsUsesLatestMealMetadata() {
         let older = FoodEntry(
             name: "Eggs",

@@ -5,9 +5,11 @@ import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.MealIngredient
 import com.apoorvdarshan.calorietracker.models.MealType
+import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.WorkoutClarification
 import com.apoorvdarshan.calorietracker.models.WorkoutTextDraft
 import com.apoorvdarshan.calorietracker.models.WorkoutTextExercise
+import com.apoorvdarshan.calorietracker.models.toReviewAnalysis
 import com.apoorvdarshan.calorietracker.services.ai.AiError
 import com.apoorvdarshan.calorietracker.services.ai.AiErrorKind
 import kotlinx.coroutines.runBlocking
@@ -705,6 +707,49 @@ class VoiceToolExecutorTest {
         val picked = executor.call("pick_photos", args("note" to "lunch"))
         assertTrue(picked.ok())
         assertEquals(1, picked["photos"]!!.jsonPrimitive.int)
+    }
+
+    @Test
+    fun savedLabelScansLogAsNutritionLabels() {
+        val executor = executor(confirmSaves = false)
+        ports.barcodeProduct = BarcodeProduct(ports.analysis.copy(name = "My label"), null, FoodSource.NUTRITION_LABEL)
+
+        val scanned = executor.call("scan_barcode")
+        assertEquals("My label", scanned["name"]!!.jsonPrimitive.content)
+        assertTrue(executor.call("log_food", args("draft_id" to scanned["draft_id"]!!.jsonPrimitive.content)).ok())
+
+        assertEquals(FoodSource.NUTRITION_LABEL, ports.foods.single().source)
+    }
+
+    @Test
+    fun savedLabelsOfUnknownWeightKeepTheirServingCount() {
+        val executor = executor(confirmSaves = false)
+        // 380 kcal for two servings of a label whose weight was never known.
+        val label = FoodEntry(
+            name = "Two cookies",
+            calories = 380,
+            protein = 4.0,
+            carbs = 52.0,
+            fat = 18.0,
+            source = FoodSource.NUTRITION_LABEL,
+            selectedServingUnit = "serving",
+            selectedServingQuantity = 2.0
+        )
+        ports.barcodeProduct = BarcodeProduct(label.toReviewAnalysis(), null, FoodSource.NUTRITION_LABEL)
+
+        for ((servings, calories, count) in listOf(Triple(1.0, 380, 2.0), Triple(2.0, 760, 4.0))) {
+            val scanned = executor.call("scan_barcode")
+            val draftId = scanned["draft_id"]!!.jsonPrimitive.content
+            val logged = executor.call("log_food", args("draft_id" to draftId, "servings" to servings))
+            assertTrue(logged.ok())
+            val id = logged["entry_ids"]!!.jsonArray.single().jsonPrimitive.content
+            val entry = ports.foods.single { it.id.toString() == id }
+            assertEquals(calories, entry.calories)
+            assertNull(entry.servingSizeGrams)
+            assertEquals("serving", entry.selectedServingUnit)
+            assertEquals(count, entry.selectedServingQuantity!!, 0.0)
+            assertEquals(listOf(ServingUnitOption.loggedServing(count)), entry.reviewServingUnitOptions)
+        }
     }
 
     @Test
