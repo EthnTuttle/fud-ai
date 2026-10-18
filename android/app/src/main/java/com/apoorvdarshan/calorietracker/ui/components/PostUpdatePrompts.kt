@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FudAILinks
 import com.apoorvdarshan.calorietracker.services.ProductHuntLaunchReminder
@@ -109,6 +110,8 @@ fun PostUpdatePromptsHost(container: AppContainer, enabled: Boolean) {
      * RevenueCat refresh, or plans that are not purchasable yet, leave it for later.
      */
     suspend fun shouldShowHostedUpsell(): Boolean {
+        // Community build: never show the Hosted Plus/Pro upsell.
+        if (CommunityBuild.ENABLED) return false
         if (prefs.hasSeenHostedUpsellPrompt.first()) return false
         val billing = container.billing
         if (!billing.isAvailable || !billing.refreshCustomerInfo()) return false

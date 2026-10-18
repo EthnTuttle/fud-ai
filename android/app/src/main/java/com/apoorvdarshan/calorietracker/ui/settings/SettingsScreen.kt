@@ -173,6 +173,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
 import com.apoorvdarshan.calorietracker.models.AutoBalanceMacro
@@ -346,7 +347,9 @@ internal enum class SettingsCategory(
         }
 
     companion object {
-        val preferenceEntries = entries.filter { it.aboutCategory == null }
+        val preferenceEntries = entries.filter {
+            it.aboutCategory == null && (!CommunityBuild.ENABLED || it != AI_ACCESS)
+        }
         val appInfoEntries = entries.filter { it.aboutCategory != null }
 
         /** Where the voice assistant's settings section opens; About lands on App Updates. */

@@ -60,7 +60,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.apoorvdarshan.calorietracker"
+        applicationId = "com.ethntuttle.fudaicommunity"
         minSdk = 26
         targetSdk = 36
         versionCode = 42

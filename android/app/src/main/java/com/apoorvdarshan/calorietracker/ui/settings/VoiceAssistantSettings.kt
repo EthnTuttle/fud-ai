@@ -71,6 +71,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.data.VoiceAssistantPreferences
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -279,7 +280,12 @@ internal fun VoiceAssistantSettings(container: AppContainer, onOpenAiProviders: 
                 when (current) {
                     VoiceSheet.PROVIDER -> VoiceListSheet(
                         title = stringResource(R.string.voice_settings_provider),
-                        items = VoiceProviderChoice.entries,
+                        // Community build: the Hosted (Plus/Pro) voice option is not purchasable.
+                        items = if (CommunityBuild.ENABLED) {
+                            VoiceProviderChoice.entries.filter { it != VoiceProviderChoice.HOSTED }
+                        } else {
+                            VoiceProviderChoice.entries
+                        },
                         label = { choiceLabel(it) },
                         subtitle = { choice -> choiceSubtitle(choice, keys, entitlement.isEntitled) },
                         selected = { it == prefs.choice }

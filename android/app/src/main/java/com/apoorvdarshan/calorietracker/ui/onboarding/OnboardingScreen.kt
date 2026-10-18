@@ -109,6 +109,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.activity.compose.BackHandler
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.ActivityLevel
 import com.apoorvdarshan.calorietracker.models.AIProvider
@@ -253,7 +254,7 @@ fun OnboardingScreen(container: AppContainer, onComplete: () -> Unit) {
                 OnboardingStep.PROVIDER -> ProviderStep(
                     phase = ui.aiPhase,
                     hostedPlanName = hostedPlanName,
-                    hostedAvailable = container.billing.isAvailable,
+                    hostedAvailable = container.billing.isAvailable && !CommunityBuild.ENABLED,
                     onSelectHosted = vm::selectHostedSetup,
                     onViewHostedPlans = vm::showHostedPlans,
                     provider = ui.aiProvider,

@@ -70,6 +70,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.FudAILinks
 import androidx.compose.ui.unit.dp
@@ -217,7 +218,8 @@ fun AboutSettingsRows(category: AboutSettingsCategory, billing: BillingManager? 
             AboutSettingsCategory.SUPPORT -> {
                 // Tips go through Google Play Billing (Play Payments policy: no
                 // links to outside payment methods in an app that sells digital goods).
-                if (billing != null && billing.isAvailable) {
+                // Community build: the tip jar (Play Billing) is disabled.
+                if (!CommunityBuild.ENABLED && billing != null && billing.isAvailable) {
                     TipJarRows(billing)
                     Hairline()
                 }
@@ -227,6 +229,14 @@ fun AboutSettingsRows(category: AboutSettingsCategory, billing: BillingManager? 
                 Hairline()
                 AboutRow(Icons.Filled.StarRate, stringResource(R.string.about_star_github)) {
                     open("https://github.com/apoorvdarshan/fud-ai")
+                }
+                Hairline()
+                AboutRow(
+                    Icons.Filled.Code,
+                    stringResource(R.string.about_this_build),
+                    subtitle = stringResource(R.string.about_this_build_desc)
+                ) {
+                    open("https://github.com/EthnTuttle/fud-ai")
                 }
                 Hairline()
                 AboutRow(Icons.Filled.ThumbUp, stringResource(R.string.about_vote_ph)) {

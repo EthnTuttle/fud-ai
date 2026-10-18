@@ -35,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateChecker
 import com.apoorvdarshan.calorietracker.services.update.AndroidUpdateState
 import com.apoorvdarshan.calorietracker.ui.coach.CoachScreen
@@ -367,8 +368,10 @@ fun FudAINavHost(
                 VoiceAssistantHost(container = container)
             }
             // Paywall, credits, and out-of-quota UI for Hosted AI, reachable from any screen
-            // (including onboarding).
-            HostedUiHost(container = container)
+            // (including onboarding). Disabled in community builds without paid features.
+            if (!CommunityBuild.ENABLED) {
+                HostedUiHost(container = container)
+            }
         }
     }
     }

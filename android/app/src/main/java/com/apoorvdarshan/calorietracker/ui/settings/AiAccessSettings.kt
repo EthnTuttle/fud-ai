@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.apoorvdarshan.calorietracker.AppContainer
+import com.apoorvdarshan.calorietracker.CommunityBuild
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.services.hosted.AiAccessMode
 import com.apoorvdarshan.calorietracker.services.hosted.HostedAiConstants
@@ -52,6 +53,8 @@ import kotlinx.coroutines.launch
 /** Settings → AI Access: BYOK vs Hosted (Plus/Pro), plan and usage, purchases. */
 @Composable
 internal fun AiAccessSettings(container: AppContainer) {
+    // Community build: hosted AI (Plus/Pro), credits, and purchases are disabled.
+    if (CommunityBuild.ENABLED) return
     val billing = container.billing
     val router = container.hostedUi
     val mode by container.prefs.aiAccessMode.collectAsState(initial = AiAccessMode.BYOK)
