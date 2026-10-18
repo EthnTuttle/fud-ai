@@ -298,6 +298,52 @@ class ImportedHealthWorkoutRepositoryTest {
     }
 
     @Test
+    fun nestedSessionKeepsItsCaloriesUntilTheEnclosingSessionShowsThem() = runBlocking {
+        val walk = session("walk", start = "2026-10-12T06:30:00Z", minutes = 20, origin = "com.sec.android.app.shealth")
+        val store = FakeImportedStore()
+        val source = FakeSource(sessions = listOf(walk), calories = mapOf("walk" to SessionCalorieLookup.Resolved(90)))
+        val repository = repository(store, source)
+        repository.synchronize()
+
+        // Garmin Connect syncs a hike around the walk later, and its first lookup fails.
+        val hike = session("hike", start = "2026-10-12T06:00:00Z", minutes = 120, origin = "com.garmin.android.apps.connectmobile")
+        source.sessions = listOf(walk, hike)
+        source.calories = mapOf("hike" to SessionCalorieLookup.Failed)
+        repository.synchronize()
+        assertEquals(90, store.items.value.first { it.id == "walk" }.activeCalories)
+        assertNull(store.items.value.first { it.id == "hike" }.activeCalories)
+
+        // Once the hike's calories cover that time, the walk stops counting it.
+        source.calories = mapOf("hike" to SessionCalorieLookup.Resolved(700))
+        repository.synchronize()
+        assertNull(store.items.value.first { it.id == "walk" }.activeCalories)
+        assertEquals(700, store.items.value.first { it.id == "hike" }.activeCalories)
+    }
+
+    @Test
+    fun caloriesFromAWiderWindowAreNotShownOnceTheWindowShrinks() = runBlocking {
+        val ride = session("ride", start = "2026-10-01T07:30:00Z", minutes = 90)
+        val store = FakeImportedStore()
+        val source = FakeSource(sessions = listOf(ride), calories = mapOf("ride" to SessionCalorieLookup.Resolved(500)))
+        val repository = repository(store, source)
+        repository.synchronize()
+
+        // An earlier run now claims 07:30-07:45, and the ride's new lookup fails: its 500 kcal
+        // still include that time, so they wait for the lookup instead of counting it twice.
+        val run = session("run", start = "2026-10-01T07:00:00Z", minutes = 45, origin = "com.garmin.android.apps.connectmobile")
+        source.sessions = listOf(ride, run)
+        source.calories = mapOf("ride" to SessionCalorieLookup.Failed, "run" to SessionCalorieLookup.Resolved(300))
+        repository.synchronize()
+        assertNull(store.items.value.first { it.id == "ride" }.activeCalories)
+        assertEquals(300, store.items.value.first { it.id == "run" }.activeCalories)
+
+        source.calories = mapOf("ride" to SessionCalorieLookup.Resolved(410))
+        repository.synchronize()
+        assertEquals(410, store.items.value.first { it.id == "ride" }.activeCalories)
+        assertEquals(300, store.items.value.first { it.id == "run" }.activeCalories)
+    }
+
+    @Test
     fun everySessionGetsALookupEvenWhenMoreThanOneSyncsBudgetNeedOne() = runBlocking {
         val budget = ImportedHealthWorkoutRepository.MAX_CALORIE_LOOKUPS_PER_SYNC
         // More sessions than one sync may look up, one a day so none overlap.
@@ -423,7 +469,9 @@ class ImportedHealthWorkoutRepositoryTest {
         sourcePackage = "com.strava",
         sourceName = "Strava",
         diaryDateKey = day,
-        caloriesCheckedForModifiedMs = checkedFor
+        caloriesCheckedForModifiedMs = checkedFor,
+        // A stored value covers the window it was resolved over.
+        caloriesWindowStartMs = startedAt.toEpochMilli().takeIf { calories != null }
     )
 
     private class FakeImportedStore(initial: List<ImportedHealthWorkout> = emptyList()) : ImportedHealthWorkoutStore {

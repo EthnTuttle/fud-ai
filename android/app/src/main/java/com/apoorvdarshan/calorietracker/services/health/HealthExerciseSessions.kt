@@ -101,6 +101,12 @@ internal fun withoutDuplicateSessions(
     return sessions.filter { it.recordId in keptIds }
 }
 
+/** Earliest first, the longer first on a shared start: the order earlier sessions claim shared time in. */
+internal val calorieWindowOrder: Comparator<HealthExerciseSession> =
+    compareBy<HealthExerciseSession> { it.startTime }
+        .thenByDescending { it.endTime }
+        .thenBy { it.recordId }
+
 /**
  * Where each session's calorie window starts (by record id), so sessions that still overlap
  * never count the same time twice: the session's own start, or the latest end among sessions
@@ -110,12 +116,7 @@ internal fun withoutDuplicateSessions(
 internal fun calorieWindowStarts(sessions: List<HealthExerciseSession>): Map<String, Instant> {
     val starts = HashMap<String, Instant>()
     var coveredUntil: Instant? = null
-    val ordered = sessions.sortedWith(
-        compareBy<HealthExerciseSession> { it.startTime }
-            .thenByDescending { it.endTime }
-            .thenBy { it.recordId }
-    )
-    for (session in ordered) {
+    for (session in sessions.sortedWith(calorieWindowOrder)) {
         val covered = coveredUntil
         starts[session.recordId] = if (covered != null && covered.isAfter(session.startTime)) {
             minOf(covered, session.endTime)

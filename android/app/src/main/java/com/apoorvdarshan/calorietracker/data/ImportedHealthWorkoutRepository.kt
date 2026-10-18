@@ -3,6 +3,7 @@ package com.apoorvdarshan.calorietracker.data
 import com.apoorvdarshan.calorietracker.models.ImportedHealthWorkout
 import com.apoorvdarshan.calorietracker.services.health.HealthExerciseSession
 import com.apoorvdarshan.calorietracker.services.health.SessionCalorieLookup
+import com.apoorvdarshan.calorietracker.services.health.calorieWindowOrder
 import com.apoorvdarshan.calorietracker.services.health.calorieWindowStarts
 import com.apoorvdarshan.calorietracker.services.health.withoutDuplicateSessions
 import kotlinx.coroutines.flow.Flow
@@ -137,30 +138,56 @@ class ImportedHealthWorkoutRepository(
             emptySet()
         }
 
-        val labels = mutableMapOf<String, String?>()
-        val zoneId = zone()
-        val fetched = sessions.mapNotNull { session ->
-            val stored = previous[session.recordId]
+        val fresh = HashMap<String, CalorieCheck>()
+        val failed = HashSet<String>()
+        for (session in sessions) {
+            if (session.recordId !in lookUp) continue
             val from = windowStarts.getValue(session.recordId)
+            when (val lookup = source.activeCalories(session, from)) {
+                is SessionCalorieLookup.Resolved -> fresh[session.recordId] =
+                    CalorieCheck(lookup.activeCalories, session.lastModified.toEpochMilli(), from.toEpochMilli(), nowMs)
+                SessionCalorieLookup.Failed -> failed += session.recordId
+            }
+        }
+
+        // What each row shows, earliest first. A shown value covers its window from
+        // windowStartMs to the session's end; no two shown windows may overlap, so a value
+        // left over from a wider window waits for its lookup instead of counting shared time
+        // twice, and time counts as covered by an earlier session only once that session
+        // shows a value for it.
+        val checks = HashMap<String, CalorieCheck>()
+        var shownUntil: Instant? = null
+        for (session in sessions.sortedWith(calorieWindowOrder)) {
+            val id = session.recordId
+            val stored = previous[id]
             val kept = CalorieCheck(
                 calories = stored?.activeCalories,
                 checkedForModifiedMs = stored?.caloriesCheckedForModifiedMs,
                 windowStartMs = stored?.caloriesWindowStartMs,
-                checkedAtMs = stored?.caloriesCheckedAtEpochMs
+                // A failed lookup retries behind sessions not tried as recently.
+                checkedAtMs = if (id in failed) nowMs else stored?.caloriesCheckedAtEpochMs
             )
-            val resolved = { calories: Int? ->
-                CalorieCheck(calories, session.lastModified.toEpochMilli(), from.toEpochMilli(), nowMs)
+            val shown = shownUntil
+            val check = fresh[id] ?: when {
+                // Wholly inside earlier sessions whose shown calories already cover this time.
+                !windowStarts.getValue(id).isBefore(session.endTime) &&
+                    shown != null && !shown.isBefore(session.endTime) ->
+                    CalorieCheck(null, session.lastModified.toEpochMilli(), session.endTime.toEpochMilli(), nowMs)
+                kept.windowStartMs != null && (shown == null || kept.windowStartMs >= shown.toEpochMilli()) -> kept
+                // Unknown until a lookup resolves its current window.
+                else -> CalorieCheck(null, null, null, kept.checkedAtMs)
             }
-            val check = when {
-                // Wholly inside earlier sessions, whose calories already cover this time.
-                !from.isBefore(session.endTime) -> resolved(null)
-                session.recordId !in lookUp -> kept
-                else -> when (val lookup = source.activeCalories(session, from)) {
-                    is SessionCalorieLookup.Resolved -> resolved(lookup.activeCalories)
-                    // Keep the last value and retry, behind sessions not tried as recently.
-                    SessionCalorieLookup.Failed -> kept.copy(checkedAtMs = nowMs)
-                }
+            checks[id] = check
+            if (check.windowStartMs != null && (shown == null || session.endTime.isAfter(shown))) {
+                shownUntil = session.endTime
             }
+        }
+
+        val labels = mutableMapOf<String, String?>()
+        val zoneId = zone()
+        val fetched = sessions.mapNotNull { session ->
+            val stored = previous[session.recordId]
+            val check = checks.getValue(session.recordId)
             val origin = session.originPackage
             val label = if (origin in labels) labels[origin] else source.appLabel(origin).also { labels[origin] = it }
             session.toImportedHealthWorkout(
