@@ -185,9 +185,10 @@ struct AminoAcidTests {
             .phenylalanine: "Reference (phenylalanine + tyrosine) %@ g",
         ]
         for aminoAcid in AminoAcid.allCases {
-            let label = aminoAcid.referenceLabel(grams: 1.05)
+            // formattedGrams keeps one decimal from 1 g up, so use a value it shows unchanged.
+            let label = aminoAcid.referenceLabel(grams: 1.5)
             #expect(label.key == (combined[aminoAcid] ?? "Reference %@ g"), "\(aminoAcid)")
-            #expect(String(localized: label).contains("1.05"), "\(aminoAcid)")
+            #expect(String(localized: label).contains(AminoAcidEstimates.formattedGrams(1.5)), "\(aminoAcid)")
         }
 
         let missing = "\u{0}missing"
