@@ -75,6 +75,42 @@ class AminoAcidTest {
     }
 
     @Test
+    fun reviewAndEditSavesKeepSmallAminoAcidEstimates() {
+        // A medium banana: these all rounded to 0.0 or 0.1 when every extra used 0.1 g.
+        val analyzed = mapOf(
+            "tryptophan" to 0.04, "methionine" to 0.011, "histidine" to 0.09, "valine" to 0.0564, "creatine" to 0.44
+        )
+
+        val saved = AminoAcidEstimates.roundedSupplementalNutrients(analyzed)
+        assertEquals(0.04, saved.getValue("tryptophan"), 0.0)
+        assertEquals(0.011, saved.getValue("methionine"), 0.0)
+        assertEquals(0.09, saved.getValue("histidine"), 0.0)
+        assertEquals(0.056, saved.getValue("valine"), 0.0)
+        assertEquals(0.4, saved.getValue("creatine"), 0.0)
+
+        val halfServing = AminoAcidEstimates.roundedSupplementalNutrients(analyzed, factor = 0.5)
+        assertEquals(0.02, halfServing.getValue("tryptophan"), 0.0)
+        assertEquals(0.028, halfServing.getValue("valine"), 0.0)
+        assertEquals(0.2, halfServing.getValue("creatine"), 0.0)
+        assertEquals(0.02, AminoAcidEstimates.roundedSupplementalNutrient("tryptophan", 0.04 * 0.5), 0.0)
+    }
+
+    @Test
+    fun labelServingsKeepSmallAminoAcidEstimates() {
+        val serving = NutritionLabelAnalysis(
+            name = "Banana chips",
+            caloriesPer100g = 520.0,
+            proteinPer100g = 2.3,
+            carbsPer100g = 58.0,
+            fatPer100g = 34.0,
+            supplementalNutrientsPer100g = mapOf("tryptophan" to 0.011, "creatine" to 0.44)
+        ).scaled(118.0)
+
+        assertEquals(0.013, serving.supplementalNutrients.getValue("tryptophan"), 0.0)
+        assertEquals(0.5, serving.supplementalNutrients.getValue("creatine"), 0.0)
+    }
+
+    @Test
     fun entriesWithoutAminoAcidsDecodeAndNewOnesRoundTrip() {
         val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
         val legacy = json.encodeToString(

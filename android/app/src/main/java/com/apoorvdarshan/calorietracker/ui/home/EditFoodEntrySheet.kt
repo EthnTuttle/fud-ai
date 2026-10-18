@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.AminoAcid
+import com.apoorvdarshan.calorietracker.models.AminoAcidEstimates
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.applyingIngredientChanges
 import com.apoorvdarshan.calorietracker.services.MealShare
@@ -249,7 +250,11 @@ fun EditFoodEntrySheet(
         polyunsaturatedFat = scaledD(currentBaseEntry.polyunsaturatedFat),
         cholesterol = scaledD(currentBaseEntry.cholesterol),
         caffeine = scaledD(currentBaseEntry.caffeine),
-        supplementalNutrients = currentBaseEntry.supplementalNutrients.mapValues { (_, value) -> scaledD(value) ?: 0.0 },
+        supplementalNutrients = if (scale == 1.0) {
+            currentBaseEntry.supplementalNutrients
+        } else {
+            AminoAcidEstimates.roundedSupplementalNutrients(currentBaseEntry.supplementalNutrients, scale)
+        },
         sodium = scaledD(currentBaseEntry.sodium),
         potassium = scaledD(currentBaseEntry.potassium),
         transFat = scaledD(currentBaseEntry.transFat),
@@ -410,8 +415,11 @@ fun EditFoodEntrySheet(
         }
         val aminoAcidRows = if (aminoAcidsEnabled) {
             AminoAcid.values().mapNotNull { aminoAcid ->
-                scaledD(currentBaseEntry.supplementalNutrients[aminoAcid.storageKey])?.let { value ->
-                    stringResource(aminoAcid.displayNameRes) to value
+                currentBaseEntry.supplementalNutrients[aminoAcid.storageKey]?.let { value ->
+                    val scaled = if (scale == 1.0) value else {
+                        AminoAcidEstimates.roundedSupplementalNutrient(aminoAcid.storageKey, value * scale)
+                    }
+                    stringResource(aminoAcid.displayNameRes) to scaled
                 }
             }
         } else {
@@ -661,7 +669,7 @@ fun EditFoodEntrySheet(
                                 SheetAminoAcidHeader()
                                 aminoAcidRows.forEach { (label, value) ->
                                     SheetHairline()
-                                    SheetNutritionRow(label, String.format("%.1f", value), gUnit, dim = true)
+                                    SheetNutritionRow(label, AminoAcidEstimates.formattedGrams(value), gUnit, dim = true)
                                 }
                             }
                         }

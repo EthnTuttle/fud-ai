@@ -69,6 +69,7 @@ import com.apoorvdarshan.calorietracker.services.FoodImageDecoder
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.R
 import com.apoorvdarshan.calorietracker.models.AminoAcid
+import com.apoorvdarshan.calorietracker.models.AminoAcidEstimates
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
@@ -437,7 +438,7 @@ fun FoodResultSheet(
         polyunsaturatedFat = scaledD(editablePolyunsaturatedFat),
         cholesterol = scaledD(editableCholesterol),
         caffeine = scaledD(editableCaffeine),
-        supplementalNutrients = editableSupplementalNutrients.mapValues { (_, value) -> scaledD(value) ?: 0.0 },
+        supplementalNutrients = AminoAcidEstimates.roundedSupplementalNutrients(editableSupplementalNutrients, scale),
         sodium = scaledD(editableSodium),
         potassium = scaledD(editablePotassium),
         transFat = scaledD(editableTransFat),
@@ -795,12 +796,14 @@ fun FoodResultSheet(
                             SheetHairline()
                             SheetAminoAcidHeader()
                             AminoAcid.values().forEach { aminoAcid ->
-                                val value = scaledD(editableSupplementalNutrients[aminoAcid.storageKey])
+                                val value = editableSupplementalNutrients[aminoAcid.storageKey]?.let {
+                                    AminoAcidEstimates.roundedSupplementalNutrient(aminoAcid.storageKey, it * scale)
+                                }
                                 SheetHairline()
                                 ReviewNutritionValueRow(
                                     label = stringResource(aminoAcid.displayNameRes),
-                                    displayValue = displayD(value),
-                                    editValue = editD(value),
+                                    displayValue = value?.let(AminoAcidEstimates::formattedGrams) ?: emDashText,
+                                    editValue = value?.let(AminoAcidEstimates::formattedGrams).orEmpty(),
                                     unit = gUnit,
                                     unlocked = nutritionUnlocked,
                                     dim = true,

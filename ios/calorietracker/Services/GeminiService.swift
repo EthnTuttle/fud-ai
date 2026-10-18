@@ -111,7 +111,7 @@ struct GeminiService {
                 polyunsaturatedFat: polyunsaturatedFatPer100g.map { round($0 * scale * 10) / 10 },
                 cholesterol: cholesterolPer100g.map { round($0 * scale * 10) / 10 },
                 caffeine: caffeinePer100g.map { round($0 * scale * 10) / 10 },
-                supplementalNutrients: supplementalNutrientsPer100g.mapValues { round($0 * scale * 10) / 10 },
+                supplementalNutrients: AminoAcidEstimates.roundedSupplementalNutrients(supplementalNutrientsPer100g, scaledBy: scale),
                 sodium: sodiumPer100g.map { round($0 * scale * 10) / 10 },
                 potassium: potassiumPer100g.map { round($0 * scale * 10) / 10 },
                 transFat: transFatPer100g.map { round($0 * scale * 10) / 10 },

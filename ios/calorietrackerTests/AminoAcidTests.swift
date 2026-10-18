@@ -63,6 +63,69 @@ struct AminoAcidTests {
         #expect(doubled.supplementalNutrients[AminoAcid.lysine.storageKey] == 1.6)
     }
 
+    @Test func reviewAndEditSavesKeepSmallAminoAcidEstimates() {
+        // A medium banana: these all rounded to 0.0 or 0.1 when every extra used 0.1 g.
+        let analyzed: [String: Double] = [
+            AminoAcid.tryptophan.storageKey: 0.04,
+            AminoAcid.methionine.storageKey: 0.011,
+            AminoAcid.histidine.storageKey: 0.09,
+            AminoAcid.valine.storageKey: 0.0564,
+            "creatine": 0.44,
+        ]
+
+        let saved = AminoAcidEstimates.roundedSupplementalNutrients(analyzed)
+        #expect(saved[AminoAcid.tryptophan.storageKey] == 0.04)
+        #expect(saved[AminoAcid.methionine.storageKey] == 0.011)
+        #expect(saved[AminoAcid.histidine.storageKey] == 0.09)
+        #expect(saved[AminoAcid.valine.storageKey] == 0.056)
+        #expect(saved["creatine"] == 0.4)
+
+        let halfServing = AminoAcidEstimates.roundedSupplementalNutrients(analyzed, scaledBy: 0.5)
+        #expect(halfServing[AminoAcid.tryptophan.storageKey] == 0.02)
+        #expect(halfServing[AminoAcid.valine.storageKey] == 0.028)
+        #expect(halfServing["creatine"] == 0.2)
+    }
+
+    @Test func voiceLoggedEntriesKeepSmallAminoAcidEstimates() {
+        var analysis = GeminiService.FoodAnalysis(name: "Banana", calories: 105, protein: 1.3, carbs: 27, fat: 0.4, servingSizeGrams: 118)
+        analysis.supplementalNutrients = [AminoAcid.tryptophan.storageKey: 0.04, AminoAcid.methionine.storageKey: 0.011]
+
+        let entry = VoiceAssistantFoodBuilder.entry(
+            from: analysis, images: [], source: .textInput, servings: 1, timestamp: Date(), mealType: .snack
+        )
+        #expect(entry.supplementalNutrients[AminoAcid.tryptophan.storageKey] == 0.04)
+        #expect(entry.supplementalNutrients[AminoAcid.methionine.storageKey] == 0.011)
+
+        let doubled = entry.voiceAssistantCopy(factor: 2)
+        #expect(doubled.supplementalNutrients[AminoAcid.tryptophan.storageKey] == 0.08)
+        #expect(doubled.supplementalNutrients[AminoAcid.methionine.storageKey] == 0.022)
+    }
+
+    @Test func labelServingsAndExportsKeepSmallAminoAcidEstimates() throws {
+        let label = try GeminiService.parseNutritionLabel(from: """
+        {"name":"Banana chips","calories_per_100g":520,"protein_per_100g":2.3,"carbs_per_100g":58,"fat_per_100g":34,
+         "serving_size_grams":30,"tryptophan_per_100g":0.011,"unit_options":[]}
+        """)
+        #expect(label.scaled(to: 118).supplementalNutrients[AminoAcid.tryptophan.storageKey] == 0.013)
+
+        let date = Date(timeIntervalSince1970: 1_752_840_000)
+        let entry = FoodEntry(
+            name: "Banana", calories: 105, protein: 1.3, carbs: 27, fat: 0.4, timestamp: date,
+            source: .textInput, mealType: .snack,
+            supplementalNutrients: [AminoAcid.tryptophan.storageKey: 0.011, "creatine": 5.04]
+        )
+        let export = try #require(DiaryExporter.build(
+            from: date, to: date, format: .json, entries: [entry], profile: UserProfile.default
+        ))
+        let root = try #require(JSONSerialization.jsonObject(with: export.data) as? [String: Any])
+        let days = try #require(root["days"] as? [[String: Any]])
+        let meals = try #require(days.first?["meals"] as? [[String: Any]])
+        let items = try #require(meals.first?["items"] as? [[String: Any]])
+        let extras = try #require(items.first?["supplemental_nutrients_g"] as? [String: Double])
+        #expect(extras[AminoAcid.tryptophan.storageKey] == 0.011)
+        #expect(extras["creatine"] == 5)
+    }
+
     @Test func oldEntriesDecodeWithoutAminoAcidsAndNewOnesRoundTrip() throws {
         let legacy = Data("""
         {"id":"\(UUID().uuidString)","name":"Toast","calories":80,"protein":3,"carbs":15,"fat":1,

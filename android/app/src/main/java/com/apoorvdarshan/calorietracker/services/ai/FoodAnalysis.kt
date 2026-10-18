@@ -131,9 +131,7 @@ data class NutritionLabelAnalysis(
             polyunsaturatedFat = s(polyunsaturatedFatPer100g),
             cholesterol = s(cholesterolPer100g),
             caffeine = s(caffeinePer100g),
-            supplementalNutrients = supplementalNutrientsPer100g.mapValues { (_, value) ->
-                round(value * scale * 10) / 10
-            },
+            supplementalNutrients = AminoAcidEstimates.roundedSupplementalNutrients(supplementalNutrientsPer100g, scale),
             sodium = s(sodiumPer100g),
             potassium = s(potassiumPer100g),
             transFat = s(transFatPer100g),

@@ -105,7 +105,7 @@ struct FoodResultView: View {
     private var scaledCholesterol: Double? { editableCholesterol.map { round($0 * scale * 10) / 10 } }
     private var scaledCaffeine: Double? { editableCaffeine.map { round($0 * scale * 10) / 10 } }
     private var scaledSupplementalNutrients: [String: Double] {
-        editableSupplementalNutrients.mapValues { round($0 * scale * 10) / 10 }
+        AminoAcidEstimates.roundedSupplementalNutrients(editableSupplementalNutrients, scaledBy: scale)
     }
     private var scaledSodium: Double? { editableSodium.map { round($0 * scale * 10) / 10 } }
     private var scaledPotassium: Double? { editablePotassium.map { round($0 * scale * 10) / 10 } }
@@ -670,8 +670,8 @@ struct FoodResultView: View {
                                     let value = scaledSupplementalNutrients[aminoAcid.storageKey]
                                     ReviewNutritionValueRow(
                                         label: aminoAcid.englishName,
-                                        displayValue: displayText(value),
-                                        editValue: editText(value),
+                                        displayValue: value.map(AminoAcidEstimates.formattedGrams) ?? "—",
+                                        editValue: value.map(AminoAcidEstimates.formattedGrams) ?? "",
                                         unit: "g",
                                         isUnlocked: nutritionUnlocked,
                                         dim: true,
@@ -1733,13 +1733,14 @@ struct OptionalNutritionDisplayRow: View {
     let label: String
     let value: Double?
     let unit: String
+    var format: (Double) -> String = { String(format: "%.1f", $0) }
 
     var body: some View {
         HStack {
             Text(LocalizedDisplayText.text(label))
                 .foregroundStyle(.secondary)
             Spacer()
-            Text(value.map { String(format: "%.1f", $0) } ?? "—")
+            Text(value.map(format) ?? "—")
                 .fontWeight(.medium)
             Text(unit)
                 .foregroundStyle(.secondary)

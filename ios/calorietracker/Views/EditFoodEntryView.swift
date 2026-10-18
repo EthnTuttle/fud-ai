@@ -84,7 +84,9 @@ struct EditFoodEntryView: View {
     private var scaledCholesterol: Double? { baseCholesterol.map { scale == 1 ? $0 : round($0 * scale * 10) / 10 } }
     private var scaledCaffeine: Double? { baseCaffeine.map { scale == 1 ? $0 : round($0 * scale * 10) / 10 } }
     private var scaledSupplementalNutrients: [String: Double] {
-        baseSupplementalNutrients.mapValues { scale == 1 ? $0 : round($0 * scale * 10) / 10 }
+        scale == 1
+            ? baseSupplementalNutrients
+            : AminoAcidEstimates.roundedSupplementalNutrients(baseSupplementalNutrients, scaledBy: scale)
     }
     private var scaledSodium: Double? { baseSodium.map { scale == 1 ? $0 : round($0 * scale * 10) / 10 } }
     private var scaledPotassium: Double? { basePotassium.map { scale == 1 ? $0 : round($0 * scale * 10) / 10 } }
@@ -518,7 +520,8 @@ struct EditFoodEntryView: View {
                                     OptionalNutritionDisplayRow(
                                         label: aminoAcid.englishName,
                                         value: scaledSupplementalNutrients[aminoAcid.storageKey],
-                                        unit: "g"
+                                        unit: "g",
+                                        format: AminoAcidEstimates.formattedGrams
                                     )
                                 }
                             }

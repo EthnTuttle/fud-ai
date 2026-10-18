@@ -128,6 +128,23 @@ enum AminoAcidEstimates {
         return totals
     }
 
+    /// `FoodEntry.supplementalNutrients` keys that hold amino acid estimates.
+    nonisolated static let storageKeys = Set(AminoAcid.allCases.map(\.storageKey))
+
+    /// Scales and rounds `FoodEntry.supplementalNutrients` wherever they are reviewed, edited,
+    /// scaled from a label, logged by voice or exported. The other extras keep 0.1 g, but one
+    /// food often has only a few hundredths of a gram of an amino acid (a banana has about
+    /// 0.01 g tryptophan), so amino acid estimates keep milligrams instead of rounding to 0.
+    nonisolated static func roundedSupplementalNutrients(
+        _ values: [String: Double],
+        scaledBy factor: Double = 1
+    ) -> [String: Double] {
+        Dictionary(uniqueKeysWithValues: values.map { key, value in
+            let steps = storageKeys.contains(key) ? 1_000.0 : 10.0
+            return (key, (value * factor * steps).rounded() / steps)
+        })
+    }
+
     /// Small amino acid amounts (tryptophan references are a few tenths of a gram) keep two decimals.
     nonisolated static func formattedGrams(_ grams: Double) -> String {
         String(format: grams < 1 ? "%.2f" : "%.1f", grams)

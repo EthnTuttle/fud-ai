@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import java.util.Locale
+import kotlin.math.roundToLong
 
 /**
  * The nine essential amino acids (#491). With the opt-in Amino acids setting on, AI food
@@ -92,6 +93,23 @@ object AminoAcidEstimates {
             }
         }
         return totals
+    }
+
+    /** [FoodEntry.supplementalNutrients] keys that hold amino acid estimates. */
+    private val storageKeys: Set<String> = AminoAcid.values().map { it.storageKey }.toSet()
+
+    /**
+     * Scales and rounds [FoodEntry.supplementalNutrients] wherever they are reviewed, edited,
+     * scaled from a label or exported. The other extras keep 0.1 g, but one food often has only a
+     * few hundredths of a gram of an amino acid (a banana has about 0.01 g tryptophan), so amino
+     * acid estimates keep milligrams instead of rounding to 0. Mirrors iOS.
+     */
+    fun roundedSupplementalNutrients(values: Map<String, Double>, factor: Double = 1.0): Map<String, Double> =
+        values.mapValues { (key, value) -> roundedSupplementalNutrient(key, value * factor) }
+
+    fun roundedSupplementalNutrient(key: String, value: Double): Double {
+        val steps = if (key in storageKeys) 1_000.0 else 10.0
+        return (value * steps).roundToLong() / steps
     }
 
     /** Small amounts (tryptophan references are a few tenths of a gram) keep two decimals. */
