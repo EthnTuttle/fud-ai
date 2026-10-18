@@ -158,6 +158,21 @@ class FoodDataCentralServiceTest {
     }
 
     @Test
+    fun keysAHeaderCannotCarryAreRefusedWithoutARequest() {
+        // A pasted zero-width space or line break, and non-ASCII text, would make OkHttp throw.
+        for (key in listOf("fdc​test", "fdc\ntest", "clé-de-test")) {
+            try {
+                runBlocking { lookup("016000275287", apiKey = key) }
+                fail("Expected the key to be refused: $key")
+            } catch (error: FoodDataCentralService.LookupException) {
+                assertEquals(FoodDataCentralService.LookupFailure.INVALID_API_KEY, error.failure)
+                assertNull(error.httpStatus)
+            }
+        }
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
     fun allCapsNamesKeepEnglishCasingInTurkishAndAzerbaijani() = runBlocking {
         val original = Locale.getDefault()
         try {

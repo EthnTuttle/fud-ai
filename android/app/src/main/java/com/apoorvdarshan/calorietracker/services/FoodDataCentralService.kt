@@ -78,6 +78,9 @@ object FoodDataCentralService {
         val variants = gtinQueryVariants(code)
         val key = apiKey.trim()
         if (key.isEmpty() || variants.isEmpty()) return@withContext null
+        // OkHttp throws for header values outside printable ASCII, such as a pasted zero-width
+        // space. No api.data.gov key has those, so report it like a key FDC refuses.
+        if (key.any { it !in '\u0021'..'\u007e' }) throw LookupException(LookupFailure.INVALID_API_KEY)
 
         val body = buildJsonObject {
             // Words are OR'ed, so one request covers every way FDC may store the code.
