@@ -1,6 +1,7 @@
 package com.apoorvdarshan.calorietracker.services.health
 
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToInt
 
@@ -57,6 +58,73 @@ internal fun ExerciseSessionRecord.toExternalHealthExerciseSession(
         deviceName = healthDeviceName(metadata.device?.manufacturer, metadata.device?.model),
         lapDistanceMeters = lapMeters.takeIf { it.isNotEmpty() }?.sum()
     )
+}
+
+/** Share of the longer session two sessions must have in common to be one workout recorded twice. */
+internal const val DUPLICATE_SESSION_SHARED_FRACTION = 0.8
+
+/**
+ * Whether [a] and [b] are one workout recorded twice, typically by the watch's app and an app
+ * that copies from it (Garmin Connect and Strava): they share at least
+ * [DUPLICATE_SESSION_SHARED_FRACTION] of the longer session's time. One person cannot do two
+ * workouts at once, so the recording app and exercise type do not matter.
+ */
+internal fun isSameWorkout(a: HealthExerciseSession, b: HealthExerciseSession): Boolean {
+    val shared = Duration.between(maxOf(a.startTime, b.startTime), minOf(a.endTime, b.endTime)).toMillis()
+    if (shared <= 0) return false
+    val longer = maxOf(
+        Duration.between(a.startTime, a.endTime).toMillis(),
+        Duration.between(b.startTime, b.endTime).toMillis()
+    )
+    return shared >= DUPLICATE_SESSION_SHARED_FRACTION * longer
+}
+
+/**
+ * [sessions] with one session per workout, in their original order. Of the copies of one
+ * workout ([isSameWorkout]), one already imported ([importedIds]) stays, so the row does not
+ * switch apps when a copy is edited; otherwise the first one written wins (the recording app,
+ * ahead of apps that copy from it).
+ */
+internal fun withoutDuplicateSessions(
+    sessions: List<HealthExerciseSession>,
+    importedIds: Set<String>
+): List<HealthExerciseSession> {
+    val kept = ArrayList<HealthExerciseSession>()
+    sessions.sortedWith(
+        compareByDescending<HealthExerciseSession> { it.recordId in importedIds }
+            .thenBy { it.lastModified }
+            .thenBy { it.recordId }
+    ).forEach { candidate ->
+        if (kept.none { isSameWorkout(it, candidate) }) kept += candidate
+    }
+    val keptIds = kept.mapTo(HashSet()) { it.recordId }
+    return sessions.filter { it.recordId in keptIds }
+}
+
+/**
+ * Where each session's calorie window starts (by record id), so sessions that still overlap
+ * never count the same time twice: the session's own start, or the latest end among sessions
+ * that started before it, whichever is later. A session that lies wholly inside earlier ones
+ * gets its own end: an empty window, so no calories of its own.
+ */
+internal fun calorieWindowStarts(sessions: List<HealthExerciseSession>): Map<String, Instant> {
+    val starts = HashMap<String, Instant>()
+    var coveredUntil: Instant? = null
+    val ordered = sessions.sortedWith(
+        compareBy<HealthExerciseSession> { it.startTime }
+            .thenByDescending { it.endTime }
+            .thenBy { it.recordId }
+    )
+    for (session in ordered) {
+        val covered = coveredUntil
+        starts[session.recordId] = if (covered != null && covered.isAfter(session.startTime)) {
+            minOf(covered, session.endTime)
+        } else {
+            session.startTime
+        }
+        if (covered == null || session.endTime.isAfter(covered)) coveredUntil = session.endTime
+    }
+    return starts
 }
 
 /** "Garmin Forerunner 265" from manufacturer + model, without repeating a manufacturer the model already names. */

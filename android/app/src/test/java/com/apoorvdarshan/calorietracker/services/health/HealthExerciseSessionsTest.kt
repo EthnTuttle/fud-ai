@@ -7,8 +7,11 @@ import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Length
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Duration
 import java.time.Instant
 
 class HealthExerciseSessionsTest {
@@ -102,6 +105,59 @@ class HealthExerciseSessionsTest {
         assertNull(attributedSessionActiveCalories(sameOriginKcal = 0.0, allWindowKcal = 100.0, ownWindowKcal = 300.0))
         assertNull(attributedSessionActiveCalories(sameOriginKcal = null, allWindowKcal = null, ownWindowKcal = null))
         assertNull(attributedSessionActiveCalories(sameOriginKcal = Double.NaN, allWindowKcal = Double.NaN, ownWindowKcal = 0.0))
+    }
+
+    @Test
+    fun sessionsSharingMostOfTheLongerOnesTimeAreOneWorkout() {
+        val garmin = exercise("garmin", "06:30", minutes = 60)
+        // Strava's copy, trimmed by a few minutes at each end.
+        assertTrue(isSameWorkout(garmin, exercise("strava", "06:33", minutes = 54)))
+        // A short walk inside a long hike, and two sessions that only touch, are not.
+        assertFalse(isSameWorkout(garmin, exercise("walk", "06:40", minutes = 20)))
+        assertFalse(isSameWorkout(garmin, exercise("next", "07:30", minutes = 30)))
+        assertFalse(isSameWorkout(garmin, exercise("half", "07:00", minutes = 60)))
+    }
+
+    @Test
+    fun duplicatesKeepTheImportedCopyElseTheFirstWritten() {
+        val garmin = exercise("garmin", "06:30", minutes = 60, modifiedAfterMinutes = 2)
+        val strava = exercise("strava", "06:30", minutes = 60, modifiedAfterMinutes = 9)
+        val ride = exercise("ride", "18:00", minutes = 40)
+
+        // Garmin Connect wrote the run first; Strava copied it later. Input order is kept.
+        assertEquals(listOf("ride", "garmin"), withoutDuplicateSessions(listOf(strava, ride, garmin), emptySet()).map { it.recordId })
+        // Strava's copy was imported before Garmin's arrived: it stays.
+        assertEquals(listOf("strava", "ride"), withoutDuplicateSessions(listOf(strava, ride, garmin), setOf("strava")).map { it.recordId })
+    }
+
+    @Test
+    fun calorieWindowsSplitOverlappingSessions() {
+        val hike = exercise("hike", "06:00", minutes = 120)
+        val walk = exercise("walk", "06:30", minutes = 20)
+        val ride = exercise("ride", "07:30", minutes = 90)
+        val evening = exercise("evening", "18:00", minutes = 30)
+
+        val starts = calorieWindowStarts(listOf(ride, evening, walk, hike))
+
+        assertEquals(hike.startTime, starts["hike"])
+        assertEquals(walk.endTime, starts["walk"])
+        assertEquals(hike.endTime, starts["ride"])
+        assertEquals(evening.startTime, starts["evening"])
+    }
+
+    private fun exercise(id: String, at: String, minutes: Long, modifiedAfterMinutes: Long = 5): HealthExerciseSession {
+        val startTime = Instant.parse("2026-10-12T$at:00Z")
+        val endTime = startTime.plus(Duration.ofMinutes(minutes))
+        return HealthExerciseSession(
+            recordId = id,
+            exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
+            startTime = startTime,
+            endTime = endTime,
+            originPackage = "com.$id",
+            lastModified = endTime.plus(Duration.ofMinutes(modifiedAfterMinutes)),
+            deviceName = null,
+            lapDistanceMeters = null
+        )
     }
 
     private fun session(

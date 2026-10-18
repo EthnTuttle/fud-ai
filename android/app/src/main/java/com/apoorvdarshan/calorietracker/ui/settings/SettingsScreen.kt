@@ -1536,7 +1536,7 @@ fun SettingsScreen(
                         icon = Icons.Outlined.FitnessCenter
                     ) {
                         pendingHealthPermissionAction = HealthConnectPermissionAction.SYNC
-                        healthConnectLauncher.launch(container.health.connectPermissions)
+                        healthConnectLauncher.launch(container.health.exerciseImportPermissions)
                     }
                 }
                 // Users who connected before history access was requested only see weigh-ins

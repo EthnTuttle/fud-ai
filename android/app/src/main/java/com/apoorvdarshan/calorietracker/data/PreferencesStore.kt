@@ -440,6 +440,24 @@ class PreferencesStore(
         updateJsonList(Keys.IMPORTED_HEALTH_WORKOUTS, ImportedHealthWorkout.serializer(), transform)
     }
 
+    override suspend fun updateImportedHealthWorkoutsIfSyncEnabled(
+        transform: (List<ImportedHealthWorkout>) -> List<ImportedHealthWorkout>
+    ): Boolean {
+        val key = Keys.IMPORTED_HEALTH_WORKOUTS
+        val serializer = ImportedHealthWorkout.serializer()
+        var applied = false
+        ds.edit { prefs ->
+            // Same transaction as the write: a wipe (Delete All Data) or the toggle turning
+            // off while the import was reading Health Connect leaves the store as it is.
+            if (prefs[Keys.HEALTH_CONNECT_ENABLED] != true) return@edit
+            val decoded = decodeList(prefs[key], serializer, key.name)
+            preserveIfUnreadable(prefs, key, decoded)
+            prefs[key] = json.encodeToString(ListSerializer(serializer), transform(decoded.itemsOrEmpty))
+            applied = true
+        }
+        return applied
+    }
+
     /// Food entries whose Health Connect write was never confirmed, retried on the next
     /// foreground sync. Comma-joined UUIDs, matching [healthChangesTokenTypes] — UUIDs
     /// cannot contain a comma, so the encoding is unambiguous.

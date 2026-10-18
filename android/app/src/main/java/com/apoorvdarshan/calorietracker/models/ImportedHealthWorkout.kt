@@ -37,8 +37,14 @@ data class ImportedHealthWorkout(
     val diaryDateKey: String,
     /** Health Connect's last-modified time for the session, epoch milliseconds. */
     val lastModifiedEpochMs: Long = 0,
-    /** [lastModifiedEpochMs] when [activeCalories] was last looked up; null retries the lookup. */
-    val caloriesCheckedForModifiedMs: Long? = null
+    /** [lastModifiedEpochMs] when [activeCalories] was last resolved; a mismatch looks them up again. */
+    val caloriesCheckedForModifiedMs: Long? = null,
+    /** Start of the window [activeCalories] was resolved over, epoch ms: [startedAt], or later
+     *  when an earlier overlapping session already counts that time. */
+    val caloriesWindowStartMs: Long? = null,
+    /** When the calories were last looked up, successfully or not, epoch ms. Orders the per-sync
+     *  lookup budget (least recently checked first) and the periodic refresh; null is never. */
+    val caloriesCheckedAtEpochMs: Long? = null
 ) {
     val durationMinutes: Int get() = maxOf(1, ceil(durationSeconds / 60.0).toInt())
 

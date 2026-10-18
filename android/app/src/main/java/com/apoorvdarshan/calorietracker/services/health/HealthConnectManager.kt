@@ -230,6 +230,10 @@ class HealthConnectManager(
     val connectPermissions: Set<String>
         get() = permissions + if (supportsNutritionHistory()) setOf(historyRead) else emptySet()
 
+    /** What Settings' optional Exercise access row requests: only the Exercise read, so
+     *  granting it never re-asks for permissions the user declined in the connect flow. */
+    val exerciseImportPermissions: Set<String> = setOf(exerciseRead)
+
     /** Requested only when Daily Summary is enabled. Keeping it out of [permissions]
      *  avoids asking every Health Connect user for background access. */
     val dailySummaryPermissions: Set<String>
@@ -752,14 +756,17 @@ class HealthConnectManager(
     }
 
     /**
-     * Active calories for one imported session (see [attributedSessionActiveCalories]): the
-     * recording app's own Active Calories Burned over the session, else every other app's
-     * active energy in that window minus Fud AI's own calculated burns. Health Connect's
-     * aggregation de-duplicates overlapping sources and prorates partial records.
+     * Active calories for one imported session over [from, session end) (see
+     * [attributedSessionActiveCalories]): the recording app's own Active Calories Burned in that
+     * window, else every other app's active energy in it minus Fud AI's own calculated burns.
+     * [from] is the session start, or later when an earlier overlapping session already counts
+     * that time ([calorieWindowStarts]). Health Connect's aggregation de-duplicates overlapping
+     * sources and prorates partial records.
      */
-    suspend fun readSessionActiveCalories(session: HealthExerciseSession): SessionCalorieLookup {
+    suspend fun readSessionActiveCalories(session: HealthExerciseSession, from: Instant): SessionCalorieLookup {
         val c = client ?: return SessionCalorieLookup.Failed
-        val window = TimeRangeFilter.between(session.startTime, session.endTime)
+        if (!from.isBefore(session.endTime)) return SessionCalorieLookup.Resolved(null)
+        val window = TimeRangeFilter.between(from, session.endTime)
         val metric = ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL
         return try {
             val sameOrigin = c.aggregate(
