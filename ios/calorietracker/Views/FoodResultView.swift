@@ -39,6 +39,7 @@ struct FoodResultView: View {
     @State private var isQuantityEditing = false
     @State private var nutritionUnlocked = false
     @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
+    @AppStorage(AminoAcidSettings.enabledKey) private var aminoAcidsEnabled = false
     @State private var editableCalories: Int
     @State private var editableProtein: Double
     @State private var editableCarbs: Double
@@ -662,6 +663,29 @@ struct FoodResultView: View {
                                         }
                                     }
                                 )
+                            }
+                            if aminoAcidsEnabled {
+                                AminoAcidEstimateHeader()
+                                ForEach(AminoAcid.allCases) { aminoAcid in
+                                    let value = scaledSupplementalNutrients[aminoAcid.storageKey]
+                                    ReviewNutritionValueRow(
+                                        label: aminoAcid.englishName,
+                                        displayValue: displayText(value),
+                                        editValue: editText(value),
+                                        unit: "g",
+                                        isUnlocked: nutritionUnlocked,
+                                        dim: true,
+                                        onEdit: { text in
+                                            updateOptionalBaseDouble(from: text) { value in
+                                                if let value {
+                                                    editableSupplementalNutrients[aminoAcid.storageKey] = value
+                                                } else {
+                                                    editableSupplementalNutrients.removeValue(forKey: aminoAcid.storageKey)
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                         .tint(AppColors.calorie)

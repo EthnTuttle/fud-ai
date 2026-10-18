@@ -71,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.models.AminoAcid
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.applyingIngredientChanges
 import com.apoorvdarshan.calorietracker.services.MealShare
@@ -108,6 +109,8 @@ import kotlin.math.roundToInt
 fun EditFoodEntrySheet(
     entry: FoodEntry,
     preferGramsByDefault: Boolean = false,
+    /** Opt-in amino acid estimates (#491) add their rows to More Nutrition. */
+    aminoAcidsEnabled: Boolean = false,
     profile: UserProfile? = null,
     isFavorite: Boolean,
     container: com.apoorvdarshan.calorietracker.AppContainer,
@@ -405,6 +408,15 @@ fun EditFoodEntrySheet(
                 gUnit
             )
         }
+        val aminoAcidRows = if (aminoAcidsEnabled) {
+            AminoAcid.values().mapNotNull { aminoAcid ->
+                scaledD(currentBaseEntry.supplementalNutrients[aminoAcid.storageKey])?.let { value ->
+                    stringResource(aminoAcid.displayNameRes) to value
+                }
+            }
+        } else {
+            emptyList()
+        }
 
         Box(modifier = Modifier.fillMaxWidth()) {
             LazyColumn(
@@ -624,7 +636,7 @@ fun EditFoodEntrySheet(
             // chevron-down when expanded; matches iOS DisclosureGroup behavior.
             // (gUnit / mgUnit / micros hoisted above the LazyColumn so the
             // composable reads happen in @Composable scope.)
-            if (micros.any { it.second != null }) {
+            if (micros.any { it.second != null } || aminoAcidRows.isNotEmpty()) {
                 item {
                     SheetPillRow(onClick = { moreNutritionExpanded = !moreNutritionExpanded }) {
                         Text(stringResource(R.string.sheet_more_nutrition), fontSize = 17.sp, modifier = Modifier.weight(1f))
@@ -643,6 +655,14 @@ fun EditFoodEntrySheet(
                             present.forEachIndexed { idx, (label, value, unit) ->
                                 if (idx > 0) SheetHairline()
                                 SheetNutritionRow(label, String.format("%.1f", value), unit, dim = true)
+                            }
+                            if (aminoAcidRows.isNotEmpty()) {
+                                if (present.isNotEmpty()) SheetHairline()
+                                SheetAminoAcidHeader()
+                                aminoAcidRows.forEach { (label, value) ->
+                                    SheetHairline()
+                                    SheetNutritionRow(label, String.format("%.1f", value), gUnit, dim = true)
+                                }
                             }
                         }
                     }

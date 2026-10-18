@@ -13,6 +13,7 @@ struct EditFoodEntryView: View {
     // Base values (the entry's nutrition at its logged serving size)
     @State private var baseCalories: Int
     @AppStorage(EnergyUnit.storageKey) private var energyUnit = EnergyUnit.defaultUnit
+    @AppStorage(AminoAcidSettings.enabledKey) private var aminoAcidsEnabled = false
     @State private var baseProtein: Double
     @State private var baseCarbs: Double
     @State private var baseFat: Double
@@ -510,6 +511,16 @@ struct EditFoodEntryView: View {
                                     value: scaledSupplementalNutrients[nutrient.rawValue],
                                     unit: "g"
                                 )
+                            }
+                            if aminoAcidsEnabled {
+                                AminoAcidEstimateHeader()
+                                ForEach(AminoAcid.allCases) { aminoAcid in
+                                    OptionalNutritionDisplayRow(
+                                        label: aminoAcid.englishName,
+                                        value: scaledSupplementalNutrients[aminoAcid.storageKey],
+                                        unit: "g"
+                                    )
+                                }
                             }
                         }
                         .tint(AppColors.calorie)

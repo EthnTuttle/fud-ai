@@ -1,5 +1,6 @@
 package com.apoorvdarshan.calorietracker.services.ai
 
+import com.apoorvdarshan.calorietracker.models.AminoAcidEstimates
 import com.apoorvdarshan.calorietracker.models.ServingUnitOption
 import com.apoorvdarshan.calorietracker.models.OptionalNutrientGoals
 import com.apoorvdarshan.calorietracker.models.MealIngredient
@@ -253,7 +254,7 @@ internal object FoodJsonParser {
             caffeine = optDouble("caffeine"),
             supplementalNutrients = SupplementalNutrient.values().mapNotNull { nutrient ->
                 optDouble(nutrient.apiKey)?.let { nutrient.storageKey to it }
-            }.toMap(),
+            }.toMap() + AminoAcidEstimates.parse(extractedJson, limitGrams = responseServingSizeGrams),
             sodium = optDouble("sodium"),
             potassium = optDouble("potassium"),
             transFat = optDouble("trans_fat"),
@@ -401,7 +402,7 @@ internal object FoodJsonParser {
             caffeinePer100g = optDouble("caffeine_per_100g"),
             supplementalNutrientsPer100g = SupplementalNutrient.values().mapNotNull { nutrient ->
                 optDouble("${nutrient.apiKey}_per_100g")?.let { nutrient.storageKey to it }
-            }.toMap(),
+            }.toMap() + AminoAcidEstimates.parse(extractedJson, keySuffix = "_per_100g", limitGrams = 100.0),
             sodiumPer100g = optDouble("sodium_per_100g"),
             potassiumPer100g = optDouble("potassium_per_100g"),
             transFatPer100g = optDouble("trans_fat_per_100g"),

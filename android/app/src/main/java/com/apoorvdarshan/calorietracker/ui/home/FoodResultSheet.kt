@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.sp
 import com.apoorvdarshan.calorietracker.services.FoodImageDecoder
 import com.apoorvdarshan.calorietracker.services.FoodImageStore
 import com.apoorvdarshan.calorietracker.R
+import com.apoorvdarshan.calorietracker.models.AminoAcid
 import com.apoorvdarshan.calorietracker.models.FoodEntry
 import com.apoorvdarshan.calorietracker.models.FoodSource
 import com.apoorvdarshan.calorietracker.models.MacroValueFormatter
@@ -106,6 +107,8 @@ fun FoodResultSheet(
     analysis: FoodAnalysis,
     imageBytesList: List<ByteArray> = emptyList(),
     preferGramsByDefault: Boolean = false,
+    /** Opt-in amino acid estimates (#491) add their rows to More Nutrition. */
+    aminoAcidsEnabled: Boolean = false,
     profile: UserProfile? = null,
     dayEntries: List<FoodEntry> = emptyList(),
     allEntries: List<FoodEntry> = dayEntries,
@@ -787,6 +790,30 @@ fun FoodResultSheet(
                                 dim = true,
                                 onEdit = spec.onEdit
                             )
+                        }
+                        if (aminoAcidsEnabled) {
+                            SheetHairline()
+                            SheetAminoAcidHeader()
+                            AminoAcid.values().forEach { aminoAcid ->
+                                val value = scaledD(editableSupplementalNutrients[aminoAcid.storageKey])
+                                SheetHairline()
+                                ReviewNutritionValueRow(
+                                    label = stringResource(aminoAcid.displayNameRes),
+                                    displayValue = displayD(value),
+                                    editValue = editD(value),
+                                    unit = gUnit,
+                                    unlocked = nutritionUnlocked,
+                                    dim = true,
+                                    onEdit = { text ->
+                                        val base = baseOptionalFromText(text)
+                                        editableSupplementalNutrients = if (base == null) {
+                                            editableSupplementalNutrients - aminoAcid.storageKey
+                                        } else {
+                                            editableSupplementalNutrients + (aminoAcid.storageKey to base)
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
