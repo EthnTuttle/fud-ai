@@ -66,13 +66,26 @@ class ImportedHealthWorkoutRepository(
         list.sortedWith(newestFirst)
     }
 
+    /**
+     * Removes the imported copies once a successful permission probe shows Exercise access is
+     * gone, and never imports. It needs no other Health Connect permission and ignores Fud AI's
+     * Health Connect toggle, so the foreground sync runs it ahead of those guards: revoking every
+     * Fud AI permission, or Exercise while the toggle is off, skips [synchronize] but must still
+     * remove them. A failed probe keeps them; with nothing imported it does not probe at all.
+     * Returns whether copies were removed.
+     */
+    suspend fun removeIfAccessRevoked(): Boolean = mutex.withLock {
+        if (store.importedHealthWorkouts.first().isEmpty()) return@withLock false
+        if (source.exerciseReadGranted() != false) return@withLock false
+        clearImports()
+        true
+    }
+
     suspend fun synchronize(): HealthWorkoutImportResult = mutex.withLock {
         val granted = source.exerciseReadGranted() ?: return@withLock HealthWorkoutImportResult.SKIPPED
         if (!granted) {
             // Access was declined or revoked: drop the copies made while it was granted.
-            if (store.importedHealthWorkouts.first().isNotEmpty()) {
-                store.updateImportedHealthWorkouts { emptyList() }
-            }
+            clearImports()
             return@withLock HealthWorkoutImportResult.PERMISSION_DENIED
         }
 
@@ -121,6 +134,13 @@ class ImportedHealthWorkoutRepository(
 
         store.updateImportedHealthWorkouts { current -> reconcileImportedWorkouts(current, fetched, queryStart) }
         HealthWorkoutImportResult.SYNCED
+    }
+
+    /** Caller holds [mutex]. */
+    private suspend fun clearImports() {
+        if (store.importedHealthWorkouts.first().isNotEmpty()) {
+            store.updateImportedHealthWorkouts { emptyList() }
+        }
     }
 
     companion object {

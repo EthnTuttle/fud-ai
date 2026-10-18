@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -60,6 +61,47 @@ class ImportedHealthWorkoutRepositoryTest {
         assertTrue(store.items.value.isEmpty())
         assertEquals(0, source.sessionReads)
         assertEquals(0, source.calorieLookups)
+    }
+
+    @Test
+    fun revokedAccessRemovesImportsOutsideTheSync() = runBlocking {
+        // Every Fud AI permission revoked, or Exercise revoked while Fud AI's Health Connect
+        // toggle is off: the foreground sync returns before synchronize(), so removal runs on
+        // its own and must not need any other permission.
+        val store = FakeImportedStore(listOf(stored("garmin-run"), stored("strava-ride")))
+        val source = FakeSource(granted = false)
+
+        assertTrue(repository(store, source).removeIfAccessRevoked())
+
+        assertTrue(store.items.value.isEmpty())
+        assertEquals(0, source.sessionReads)
+        assertEquals(0, source.calorieLookups)
+    }
+
+    @Test
+    fun removalKeepsImportsWhenAccessRemainsOrTheProbeFails() = runBlocking {
+        val kept = listOf(stored("garmin-run"))
+
+        // Still granted (e.g. only Fud AI's toggle is off): kept, and nothing is imported.
+        val granted = FakeImportedStore(kept)
+        val grantedSource = FakeSource(sessions = listOf(session("new")))
+        assertFalse(repository(granted, grantedSource).removeIfAccessRevoked())
+        assertEquals(kept, granted.items.value)
+        assertEquals(0, grantedSource.sessionReads)
+
+        // A failed probe or unavailable Health Connect is not a revocation.
+        val probeFailed = FakeImportedStore(kept)
+        assertFalse(repository(probeFailed, FakeSource(granted = null)).removeIfAccessRevoked())
+        assertEquals(kept, probeFailed.items.value)
+    }
+
+    @Test
+    fun removalDoesNotProbeWhenNothingWasImported() = runBlocking {
+        val source = FakeSource(granted = false)
+
+        assertFalse(repository(FakeImportedStore(), source).removeIfAccessRevoked())
+
+        assertEquals(0, source.permissionProbes)
     }
 
     @Test
@@ -256,11 +298,15 @@ class ImportedHealthWorkoutRepositoryTest {
         var calories: Map<String, SessionCalorieLookup> = emptyMap(),
         var activeCaloriesReadable: Boolean = true
     ) : ExerciseSessionSource {
+        var permissionProbes = 0
         var sessionReads = 0
         var calorieLookups = 0
         var lastQuery: Pair<Instant, Instant>? = null
 
-        override suspend fun exerciseReadGranted(): Boolean? = granted
+        override suspend fun exerciseReadGranted(): Boolean? {
+            permissionProbes++
+            return granted
+        }
         override suspend fun activeCaloriesReadable(): Boolean = activeCaloriesReadable
         override suspend fun readSessions(from: Instant, to: Instant): List<HealthExerciseSession>? {
             sessionReads++

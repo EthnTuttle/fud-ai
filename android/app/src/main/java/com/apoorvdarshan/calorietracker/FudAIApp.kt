@@ -353,7 +353,9 @@ class AppContainer(app: FudAIApp) {
     val importedHealthWorkoutRepository = ImportedHealthWorkoutRepository(
         store = prefs,
         source = object : ExerciseSessionSource {
-            override suspend fun exerciseReadGranted(): Boolean? = health.exerciseReadGrant()
+            // Unavailable reads as a failed probe, never as revoked access (which clears imports).
+            override suspend fun exerciseReadGranted(): Boolean? =
+                if (health.isAvailable()) health.exerciseReadGrant() else null
             override suspend fun activeCaloriesReadable(): Boolean = health.hasActiveEnergyRead()
             override suspend fun readSessions(from: Instant, to: Instant): List<HealthExerciseSession>? =
                 health.readExternalExerciseSessions(from, to)
@@ -440,6 +442,10 @@ class AppContainer(app: FudAIApp) {
      */
     suspend fun syncHealthConnectReads() {
         if (healthReadSyncInFlight) return
+        // Ahead of the toggle and capability guards below: revoking every Health Connect
+        // permission, or Exercise while the toggle is off, returns before the import step,
+        // yet other apps' workouts copied in earlier must still go (#479). Removal only.
+        importedHealthWorkoutRepository.removeIfAccessRevoked()
         if (!prefs.healthConnectEnabled.first()) return
         if (!health.isAvailable()) return
 
