@@ -281,11 +281,15 @@ object FoodDataCentralService {
         return description ?: brand ?: "Barcode $barcode"
     }
 
-    /** Many Branded descriptions are all caps ("HONEY NUT CHEERIOS"); show them in title case. */
-    private fun displayCase(value: String): String {
+    /**
+     * Many Branded descriptions are all caps ("HONEY NUT CHEERIOS"); show them in title case.
+     * FDC names are English, so the casing ignores the device language: in Turkish or
+     * Azerbaijani, "I" would otherwise become a dotless "ı" ("Cheerıos").
+     */
+    internal fun displayCase(value: String): String {
         if (value.any { it.isLowerCase() }) return value
-        return value.lowercase(Locale.getDefault()).split(' ').joinToString(" ") { word ->
-            word.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+        return value.lowercase(Locale.US).split(' ').joinToString(" ") { word ->
+            word.replaceFirstChar { it.titlecase(Locale.US) }
         }
     }
 

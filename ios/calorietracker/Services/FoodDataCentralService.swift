@@ -301,7 +301,7 @@ enum FoodDataCentralService {
     private static func productName(from food: [String: Any], barcode: String) -> String {
         let description = text(food["description"]).map { displayCase($0) }
         let brand = (text(food["brandName"]) ?? text(food["brandOwner"])).map { displayCase($0) }
-        if let description, let brand, !description.localizedCaseInsensitiveContains(brand) {
+        if let description, let brand, description.range(of: brand, options: .caseInsensitive, locale: englishCasingLocale) == nil {
             return "\(brand) \(description)"
         }
         return description ?? brand ?? String(
@@ -313,9 +313,13 @@ enum FoodDataCentralService {
     }
 
     /// Many Branded descriptions are all caps ("HONEY NUT CHEERIOS"); show them in title case.
-    private static func displayCase(_ value: String) -> String {
-        value.contains(where: \.isLowercase) ? value : value.localizedCapitalized
+    /// FDC names are English, so the casing ignores the device language: in Turkish or
+    /// Azerbaijani, "I" would otherwise become a dotless "ı" ("Cheerıos").
+    static func displayCase(_ value: String) -> String {
+        value.contains(where: \.isLowercase) ? value : value.capitalized(with: englishCasingLocale)
     }
+
+    private static let englishCasingLocale = Locale(identifier: "en_US_POSIX")
 
     private static func text(_ value: Any?) -> String? {
         guard let string = (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !string.isEmpty else {

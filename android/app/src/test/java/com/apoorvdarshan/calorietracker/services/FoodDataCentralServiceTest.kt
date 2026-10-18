@@ -22,6 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import java.util.Locale
 
 /**
  * USDA FoodData Central as the second barcode source (#533). Responses come from
@@ -153,6 +154,33 @@ class FoodDataCentralServiceTest {
             val error = failure()
             assertEquals(FoodDataCentralService.LookupFailure.INVALID_API_KEY, error.failure)
             assertEquals(status, error.httpStatus)
+        }
+    }
+
+    @Test
+    fun allCapsNamesKeepEnglishCasingInTurkishAndAzerbaijani() = runBlocking {
+        val original = Locale.getDefault()
+        try {
+            for (language in listOf("tr", "az")) {
+                Locale.setDefault(Locale.forLanguageTag(language))
+                assertEquals("Honey Nut Cheerios", FoodDataCentralService.displayCase("HONEY NUT CHEERIOS"))
+
+                server.enqueue(
+                    json(
+                        200,
+                        """
+                        {"foods":[{
+                            "dataType":"Branded","gtinUpc":"016000275287","description":"HONEY NUT CHEERIOS",
+                            "brandOwner":"GENERAL MILLS","servingSize":28,"servingSizeUnit":"g",
+                            "foodNutrients":[{"nutrientId":1008,"unitName":"KCAL","value":393}]
+                        }]}
+                        """.trimIndent()
+                    )
+                )
+                assertEquals("General Mills Honey Nut Cheerios", lookup("016000275287")!!.name)
+            }
+        } finally {
+            Locale.setDefault(original)
         }
     }
 

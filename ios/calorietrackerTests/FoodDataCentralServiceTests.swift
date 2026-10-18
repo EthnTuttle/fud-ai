@@ -197,6 +197,28 @@ struct FoodDataCentralServiceTests {
         #expect(abs(result.carbs - 26) < 0.0001)
     }
 
+    @Test func allCapsNamesGetEnglishTitleCaseWhateverTheDeviceLanguage() async throws {
+        // Locale-sensitive casing would give "Cheerıos" and "Mılls" in Turkish and Azerbaijani.
+        #expect(FoodDataCentralService.displayCase("HONEY NUT CHEERIOS") == "Honey Nut Cheerios")
+        #expect(FoodDataCentralService.displayCase("Honey Nut CHEERIOS") == "Honey Nut CHEERIOS")
+
+        let session = makeSession { request in
+            json(request, 200, #"""
+            {"foods":[{
+                "dataType":"Branded","gtinUpc":"016000275287","description":"Honey Nut CHEERIOS","brandName":"CHEERIOS",
+                "servingSize":28,"servingSizeUnit":"g",
+                "foodNutrients":[{"nutrientId":1008,"unitName":"KCAL","value":393}]
+            }]}
+            """#)
+        }
+        defer { finish(session) }
+
+        let found = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
+
+        // The brand is already in the name, whatever its casing, so it is not repeated.
+        #expect(try #require(found).name == "Honey Nut CHEERIOS")
+    }
+
     @Test func productMetadataKeepsTheSourceAndDecodesOlderAndNewerLogs() throws {
         let legacy = #"{"barcode":"123","allergens":[],"traces":[],"labels":[],"categories":[]}"#
         let decoded = try JSONDecoder().decode(FoodProductMetadata.self, from: Data(legacy.utf8))
