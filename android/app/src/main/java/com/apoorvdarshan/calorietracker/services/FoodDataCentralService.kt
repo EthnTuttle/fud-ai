@@ -147,13 +147,43 @@ object FoodDataCentralService {
 
     // Mapping
 
+    /** The amount a mapped result describes. */
+    private sealed interface Amount {
+        /** One label serving of a known weight; label and per-100 g values both convert to it. */
+        data class Serving(val grams: Double) : Amount
+
+        /**
+         * One label serving whose weight FDC does not give: label values only, kept as one logged
+         * serving like a Health Connect restore, never as a made-up weight.
+         */
+        data object UnknownServing : Amount
+
+        /** 100 g: only the per-100 g Branded values, when there is no serving weight. */
+        data object HundredGrams : Amount
+    }
+
     private fun analysis(food: JsonObject, barcode: String): FoodAnalysis? {
-        val servingGrams = maxOf(servingGrams(food) ?: 100.0, 1.0)
-        val nutrients = Nutrients(
-            entries = food["foodNutrients"] as? JsonArray ?: JsonArray(emptyList()),
-            labelNutrients = food["labelNutrients"] as? JsonObject ?: JsonObject(emptyMap()),
-            scale = servingGrams / 100.0
-        )
+        val entries = food["foodNutrients"] as? JsonArray ?: JsonArray(emptyList())
+        val label = food["labelNutrients"] as? JsonObject ?: JsonObject(emptyMap())
+        val amount: Amount
+        val nutrients: Nutrients
+        val grams = servingGrams(food)
+        if (grams != null) {
+            amount = Amount.Serving(grams)
+            nutrients = Nutrients(entries, label, scale = grams / 100.0)
+        } else {
+            // Label values are per serving and Branded values per 100 g; without the serving
+            // weight neither converts to the other, so only one set is used.
+            val perServing = Nutrients(JsonArray(emptyList()), label, scale = 0.0)
+            val per100g = Nutrients(entries, JsonObject(emptyMap()), scale = 1.0)
+            if (perServing.coreValueCount() > 0 && perServing.coreValueCount() >= per100g.coreValueCount()) {
+                amount = Amount.UnknownServing
+                nutrients = perServing
+            } else {
+                amount = Amount.HundredGrams
+                nutrients = per100g
+            }
+        }
 
         val calories = nutrients.calories()
         val protein = nutrients.grams(listOf(1003), label = "protein")
@@ -161,7 +191,31 @@ object FoodDataCentralService {
         val fat = nutrients.grams(listOf(1004), label = "fat")
         if (calories == null && protein == null && carbs == null && fat == null) return null
 
-        val servingOption = ServingUnitOption(unit = "serving", gramsPerUnit = servingGrams, quantity = 1.0)
+        val servingSizeGrams: Double
+        val servingUnitOptions: List<ServingUnitOption>
+        val selectedServingUnit: String
+        val selectedServingQuantity: Double
+        when (amount) {
+            is Amount.Serving -> {
+                servingSizeGrams = amount.grams
+                servingUnitOptions = listOf(ServingUnitOption(unit = "serving", gramsPerUnit = amount.grams, quantity = 1.0))
+                selectedServingUnit = "serving"
+                selectedServingQuantity = 1.0
+            }
+            // Like FoodEntry.toReviewAnalysis for an unknown mass: the basis is a serving count.
+            Amount.UnknownServing -> {
+                servingSizeGrams = 1.0
+                servingUnitOptions = listOf(ServingUnitOption.loggedServing(1.0))
+                selectedServingUnit = "serving"
+                selectedServingQuantity = 1.0
+            }
+            Amount.HundredGrams -> {
+                servingSizeGrams = 100.0
+                servingUnitOptions = emptyList()
+                selectedServingUnit = ServingUnitOption.grams.unit
+                selectedServingQuantity = 100.0
+            }
+        }
         val metadata = FoodProductMetadata(
             barcode = barcode,
             ingredientsText = IngredientLabelParser.markingAllergens(plain = food.string("ingredients"), markup = null),
@@ -174,7 +228,7 @@ object FoodDataCentralService {
             protein = protein ?: 0.0,
             carbs = carbs ?: 0.0,
             fat = fat ?: 0.0,
-            servingSizeGrams = servingGrams,
+            servingSizeGrams = servingSizeGrams,
             emoji = "🏷️",
             sugar = rounded(nutrients.grams(listOf(2000, 1063), label = "sugars")),
             addedSugar = rounded(nutrients.grams(listOf(1235), label = "addedSugar")),
@@ -198,16 +252,17 @@ object FoodDataCentralService {
             vitaminE = milligrams(nutrients.grams(listOf(1109))),
             vitaminK = micrograms(nutrients.grams(listOf(1185))),
             folate = micrograms(nutrients.grams(listOf(1190, 1177))),
-            servingUnitOptions = listOf(servingOption),
-            selectedServingUnit = servingOption.unit,
-            selectedServingQuantity = 1.0,
+            servingUnitOptions = servingUnitOptions,
+            selectedServingUnit = selectedServingUnit,
+            selectedServingQuantity = selectedServingQuantity,
+            servingSizeIsKnown = amount != Amount.UnknownServing,
             productMetadata = metadata
         )
     }
 
     /**
-     * Nutrient amounts for one serving. Label values (already per serving) win; otherwise the
-     * per-100 g Branded values are scaled to the serving. Only the first entry for a nutrient
+     * Nutrient amounts for the mapped amount. Label values (already per serving) win; otherwise
+     * the per-100 g Branded values are multiplied by [scale]. Only the first entry for a nutrient
      * counts, since FDC can list older panels after it.
      */
     private class Nutrients(entries: JsonArray, private val labelNutrients: JsonObject, private val scale: Double) {
@@ -231,6 +286,14 @@ object FoodDataCentralService {
             }
             return amounts[1062]?.takeIf { it.second == "KJ" }?.let { it.first * 0.23900573614 * scale }
         }
+
+        /** How many of calories, protein, carbs and fat this set has. */
+        fun coreValueCount(): Int = listOfNotNull(
+            calories(),
+            grams(listOf(1003), label = "protein"),
+            grams(listOf(1005, 1050), label = "carbohydrates"),
+            grams(listOf(1004), label = "fat")
+        ).size
 
         /** Vitamin D given only in International Units (1 IU = 0.025 µg). */
         fun vitaminDFromIu(): Double? =
@@ -256,7 +319,14 @@ object FoodDataCentralService {
             (labelNutrients[key] as? JsonObject)?.number("value")?.takeIf { it >= 0 }
     }
 
-    private fun servingGrams(food: JsonObject): Double? {
+    /**
+     * The serving weight in grams (millilitres count as grams), or null when FDC does not give
+     * one. Any positive weight is kept as given, even below 1 g.
+     */
+    private fun servingGrams(food: JsonObject): Double? =
+        weight(food)?.takeIf { it.isFinite() && it > 0.0 }
+
+    private fun weight(food: JsonObject): Double? {
         val size = food.number("servingSize")?.takeIf { it > 0 }
         val unit = food.string("servingSizeUnit")?.lowercase(Locale.US)
         if (size != null && unit != null) {

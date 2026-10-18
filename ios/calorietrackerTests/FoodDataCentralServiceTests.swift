@@ -2,440 +2,543 @@ import Foundation
 import Testing
 @testable import calorietracker
 
-/// USDA FoodData Central as the second barcode source (#533). Responses come from
-/// `FoodDataCentralFixtures`, a trimmed recording of a real Branded Foods search.
-@Suite("USDA FoodData Central barcode lookup", .serialized)
+/// Every test below swaps the one static `StubFoodDataURLProtocol.handler`, so both suites
+/// sit under this serialized parent: `.serialized` also covers nested suites, so no test
+/// can replace another suite's handler while that test awaits its response.
+@Suite("USDA FoodData Central and barcode lookup", .serialized)
 @MainActor
-struct FoodDataCentralServiceTests {
-    private static let key = "fdc-test-key-123"
+struct FoodDataCentralNetworkTests {
+    /// USDA FoodData Central as the second barcode source (#533). Responses come from
+    /// `FoodDataCentralFixtures`, a trimmed recording of a real Branded Foods search.
+    @Suite("USDA FoodData Central barcode lookup")
+    @MainActor
+    struct FoodDataCentralServiceTests {
+        private static let key = "fdc-test-key-123"
 
-    @Test func exactGTINMatchMapsTheRecordedBrandedFood() async throws {
-        let session = makeSession { request in json(request, 200, FoodDataCentralFixtures.cheeriosSearch) }
-        defer { finish(session) }
+        @Test func exactGTINMatchMapsTheRecordedBrandedFood() async throws {
+            let session = makeSession { request in json(request, 200, FoodDataCentralFixtures.cheeriosSearch) }
+            defer { finish(session) }
 
-        let found = try await FoodDataCentralService.lookup(barcode: " 016000275287 ", apiKey: Self.key, session: session)
-        let result = try #require(found)
+            let found = try await FoodDataCentralService.lookup(barcode: " 016000275287 ", apiKey: Self.key, session: session)
+            let result = try #require(found)
 
-        // The first food in the response has another GTIN; only the exact match is used.
-        #expect(result.name == "Cheerios Cereal")
-        #expect(result.servingSizeGrams == 20)
-        #expect(result.servingUnitOptions == [ServingUnitOption(unit: "serving", gramsPerUnit: 20, quantity: 1)])
-        #expect(result.selectedServingUnit == "serving")
-        // Branded values are per 100 g, scaled to the 20 g serving.
-        #expect(result.calories == 72)
-        #expect(abs(result.protein - 2.56) < 0.0001)
-        #expect(abs(result.carbs - 14.88) < 0.0001)
-        #expect(abs(result.fat - 1.282) < 0.0001)
-        #expect(result.sugar == 1.0)
-        #expect(result.addedSugar == 1.0)
-        #expect(result.fiber == 2.1)
-        #expect(result.saturatedFat == 0.3)
-        #expect(result.transFat == 0)
-        #expect(result.cholesterol == 0)
-        #expect(result.sodium == 97.4)
-        #expect(result.potassium == 128.2)
-        #expect(result.calcium == 66.6)
-        #expect(result.iron == 6.5)
-        // FDC lists older label panels after the current one; the first entry wins.
-        #expect(result.magnesium == 140)
-        #expect(result.zinc == 5.2)
-        #expect(result.vitaminC == 18)
-        // Only International Units are given for vitamin D (205 IU x 0.025 µg, per 20 g).
-        #expect(result.vitaminD == 1.0)
-        #expect(result.vitaminA == nil)
-        #expect(result.vitaminB12 == 1.5)
-        #expect(result.folate == 100)
+            // The first food in the response has another GTIN; only the exact match is used.
+            #expect(result.name == "Cheerios Cereal")
+            #expect(result.servingSizeGrams == 20)
+            #expect(result.servingUnitOptions == [ServingUnitOption(unit: "serving", gramsPerUnit: 20, quantity: 1)])
+            #expect(result.selectedServingUnit == "serving")
+            // Branded values are per 100 g, scaled to the 20 g serving.
+            #expect(result.calories == 72)
+            #expect(abs(result.protein - 2.56) < 0.0001)
+            #expect(abs(result.carbs - 14.88) < 0.0001)
+            #expect(abs(result.fat - 1.282) < 0.0001)
+            #expect(result.sugar == 1.0)
+            #expect(result.addedSugar == 1.0)
+            #expect(result.fiber == 2.1)
+            #expect(result.saturatedFat == 0.3)
+            #expect(result.transFat == 0)
+            #expect(result.cholesterol == 0)
+            #expect(result.sodium == 97.4)
+            #expect(result.potassium == 128.2)
+            #expect(result.calcium == 66.6)
+            #expect(result.iron == 6.5)
+            // FDC lists older label panels after the current one; the first entry wins.
+            #expect(result.magnesium == 140)
+            #expect(result.zinc == 5.2)
+            #expect(result.vitaminC == 18)
+            // Only International Units are given for vitamin D (205 IU x 0.025 µg, per 20 g).
+            #expect(result.vitaminD == 1.0)
+            #expect(result.vitaminA == nil)
+            #expect(result.vitaminB12 == 1.5)
+            #expect(result.folate == 100)
 
-        let metadata = try #require(result.productMetadata)
-        #expect(metadata.barcode == "016000275287")
-        #expect(metadata.dataSource == FoodDataCentralService.dataSourceID)
-        #expect(metadata.dataSourceName == "USDA FoodData Central")
-        #expect(metadata.categories == ["Processed Cereal Products"])
-        #expect(metadata.ingredientsText?.hasPrefix("WHOLE GRAIN OATS, CORN STARCH") == true)
-        #expect(metadata.imageURL == nil)
-    }
-
-    @Test func keyIsSentOnlyInTheHeader() async throws {
-        var captured: URLRequest?
-        let session = makeSession { request in
-            captured = request
-            return json(request, 200, FoodDataCentralFixtures.cheeriosSearch)
-        }
-        defer { finish(session) }
-
-        _ = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: "  \(Self.key)\n", session: session)
-
-        let request = try #require(captured)
-        #expect(request.httpMethod == "POST")
-        #expect(request.url == FoodDataCentralService.searchURL)
-        #expect(request.url?.query == nil)
-        #expect(request.url?.absoluteString.contains(Self.key) == false)
-        #expect(request.value(forHTTPHeaderField: "X-Api-Key") == Self.key)
-        #expect(request.timeoutInterval == FoodDataCentralService.requestTimeout)
-
-        let body = try #require(bodyJSON(of: request))
-        #expect(body["dataType"] as? [String] == ["Branded"])
-        #expect(body["requireAllWords"] as? Bool == false)
-        let words = (body["query"] as? String)?.split(separator: " ").map(String.init)
-        #expect(words == ["016000275287", "16000275287", "0016000275287", "00016000275287"])
-        #expect(String(data: try JSONSerialization.data(withJSONObject: body), encoding: .utf8)?.contains(Self.key) == false)
-    }
-
-    @Test func gtinVariantsCoverStrippedAndPaddedForms() {
-        #expect(FoodDataCentralService.gtinQueryVariants(for: "016000275287") == [
-            "016000275287", "16000275287", "0016000275287", "00016000275287",
-        ])
-        #expect(FoodDataCentralService.gtinQueryVariants(for: "40170725") == [
-            "40170725", "000040170725", "0000040170725", "00000040170725",
-        ])
-        #expect(FoodDataCentralService.gtinQueryVariants(for: "0000000000000000123").first == "123")
-        for invalid in ["", "abc", "12 34", "000000", "123456789012345", "١٢٣٤"] {
-            #expect(FoodDataCentralService.gtinQueryVariants(for: invalid).isEmpty, "\(invalid)")
+            let metadata = try #require(result.productMetadata)
+            #expect(metadata.barcode == "016000275287")
+            #expect(metadata.dataSource == FoodDataCentralService.dataSourceID)
+            #expect(metadata.dataSourceName == "USDA FoodData Central")
+            #expect(metadata.categories == ["Processed Cereal Products"])
+            #expect(metadata.ingredientsText?.hasPrefix("WHOLE GRAIN OATS, CORN STARCH") == true)
+            #expect(metadata.imageURL == nil)
         }
 
-        #expect(FoodDataCentralService.matchesGTIN("00016000275287", scanned: "016000275287"))
-        #expect(FoodDataCentralService.matchesGTIN("016000275287", scanned: "0016000275287"))
-        #expect(!FoodDataCentralService.matchesGTIN("00016000275288", scanned: "016000275287"))
-        #expect(!FoodDataCentralService.matchesGTIN("160002752870", scanned: "016000275287"))
-        #expect(!FoodDataCentralService.matchesGTIN(nil, scanned: "016000275287"))
-    }
-
-    @Test func foodsWithoutAnExactGTINAreNeverUsed() async throws {
-        let session = makeSession { request in json(request, 200, FoodDataCentralFixtures.cheeriosSearch) }
-        defer { finish(session) }
-
-        let result = try await FoodDataCentralService.lookup(barcode: "016000275280", apiKey: Self.key, session: session)
-
-        #expect(result == nil)
-    }
-
-    @Test func blankKeyOrNonGTINCodeSendsNothing() async throws {
-        let session = makeSession { request in
-            Issue.record("Nothing should be sent: \(request)")
-            throw URLError(.badURL)
-        }
-        defer { finish(session) }
-
-        let blankKey = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: " \n", session: session)
-        let letters = try await FoodDataCentralService.lookup(barcode: "ABC-123", apiKey: Self.key, session: session)
-        let zeros = try await FoodDataCentralService.lookup(barcode: "0000", apiKey: Self.key, session: session)
-        #expect(blankKey == nil)
-        #expect(letters == nil)
-        #expect(zeros == nil)
-    }
-
-    @Test func refusedKeyIsReportedAsInvalid() async {
-        for status in [401, 403] {
+        @Test func keyIsSentOnlyInTheHeader() async throws {
+            var captured: URLRequest?
             let session = makeSession { request in
-                json(request, status, #"{"error":{"code":"API_KEY_INVALID","message":"An invalid api_key was supplied."}}"#)
+                captured = request
+                return json(request, 200, FoodDataCentralFixtures.cheeriosSearch)
             }
-            await expectError(.invalidAPIKey, session: session)
-            finish(session)
+            defer { finish(session) }
+
+            _ = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: "  \(Self.key)\n", session: session)
+
+            let request = try #require(captured)
+            #expect(request.httpMethod == "POST")
+            #expect(request.url == FoodDataCentralService.searchURL)
+            #expect(request.url?.query == nil)
+            #expect(request.url?.absoluteString.contains(Self.key) == false)
+            #expect(request.value(forHTTPHeaderField: "X-Api-Key") == Self.key)
+            #expect(request.timeoutInterval == FoodDataCentralService.requestTimeout)
+
+            let body = try #require(bodyJSON(of: request))
+            #expect(body["dataType"] as? [String] == ["Branded"])
+            #expect(body["requireAllWords"] as? Bool == false)
+            let words = (body["query"] as? String)?.split(separator: " ").map(String.init)
+            #expect(words == ["016000275287", "16000275287", "0016000275287", "00016000275287"])
+            #expect(String(data: try JSONSerialization.data(withJSONObject: body), encoding: .utf8)?.contains(Self.key) == false)
+        }
+
+        @Test func gtinVariantsCoverStrippedAndPaddedForms() {
+            #expect(FoodDataCentralService.gtinQueryVariants(for: "016000275287") == [
+                "016000275287", "16000275287", "0016000275287", "00016000275287",
+            ])
+            #expect(FoodDataCentralService.gtinQueryVariants(for: "40170725") == [
+                "40170725", "000040170725", "0000040170725", "00000040170725",
+            ])
+            #expect(FoodDataCentralService.gtinQueryVariants(for: "0000000000000000123").first == "123")
+            for invalid in ["", "abc", "12 34", "000000", "123456789012345", "١٢٣٤"] {
+                #expect(FoodDataCentralService.gtinQueryVariants(for: invalid).isEmpty, "\(invalid)")
+            }
+
+            #expect(FoodDataCentralService.matchesGTIN("00016000275287", scanned: "016000275287"))
+            #expect(FoodDataCentralService.matchesGTIN("016000275287", scanned: "0016000275287"))
+            #expect(!FoodDataCentralService.matchesGTIN("00016000275288", scanned: "016000275287"))
+            #expect(!FoodDataCentralService.matchesGTIN("160002752870", scanned: "016000275287"))
+            #expect(!FoodDataCentralService.matchesGTIN(nil, scanned: "016000275287"))
+        }
+
+        @Test func foodsWithoutAnExactGTINAreNeverUsed() async throws {
+            let session = makeSession { request in json(request, 200, FoodDataCentralFixtures.cheeriosSearch) }
+            defer { finish(session) }
+
+            let result = try await FoodDataCentralService.lookup(barcode: "016000275280", apiKey: Self.key, session: session)
+
+            #expect(result == nil)
+        }
+
+        @Test func blankKeyOrNonGTINCodeSendsNothing() async throws {
+            let session = makeSession { request in
+                Issue.record("Nothing should be sent: \(request)")
+                throw URLError(.badURL)
+            }
+            defer { finish(session) }
+
+            let blankKey = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: " \n", session: session)
+            let letters = try await FoodDataCentralService.lookup(barcode: "ABC-123", apiKey: Self.key, session: session)
+            let zeros = try await FoodDataCentralService.lookup(barcode: "0000", apiKey: Self.key, session: session)
+            #expect(blankKey == nil)
+            #expect(letters == nil)
+            #expect(zeros == nil)
+        }
+
+        @Test func refusedKeyIsReportedAsInvalid() async {
+            for status in [401, 403] {
+                let session = makeSession { request in
+                    json(request, status, #"{"error":{"code":"API_KEY_INVALID","message":"An invalid api_key was supplied."}}"#)
+                }
+                await expectError(.invalidAPIKey, session: session)
+                finish(session)
+            }
+        }
+
+        @Test func rateLimitsServerErrorsBadBodiesAndNetworkFailuresAreUnavailable() async {
+            let responses: [(Int, String)] = [
+                (429, #"{"error":{"code":"OVER_RATE_LIMIT"}}"#),
+                (503, "unavailable"),
+                (200, "not json"),
+                (200, #"{"totalHits":0}"#),
+            ]
+            for (status, body) in responses {
+                let session = makeSession { request in json(request, status, body) }
+                await expectError(.unavailable, session: session)
+                finish(session)
+            }
+            for failure in [URLError(.timedOut), URLError(.notConnectedToInternet)] {
+                let session = makeSession { _ in throw failure }
+                await expectError(.unavailable, session: session)
+                finish(session)
+            }
+        }
+
+        @Test func cancellationRemainsCancellation() async {
+            let session = makeSession { _ in throw URLError(.cancelled) }
+            defer { finish(session) }
+
+            do {
+                _ = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
+                Issue.record("Expected cancellation")
+            } catch is CancellationError {
+            } catch {
+                Issue.record("Expected CancellationError but received \(error)")
+            }
+        }
+
+        @Test func labelNutrientsWinAndHouseholdTextGivesTheServingWeight() async throws {
+            let session = makeSession { request in
+                json(request, 200, #"""
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"GRANOLA BAR","brandOwner":"ACME FOODS",
+                    "servingSize":1,"servingSizeUnit":"PIECE","householdServingFullText":"1 bar (40 g)",
+                    "labelNutrients":{"calories":{"value":190},"protein":{"value":4},"sodium":{"value":95},"fat":{"value":7}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":450},
+                        {"nutrientId":1003,"unitName":"G","value":10},
+                        {"nutrientId":1005,"unitName":"G","value":65},
+                        {"nutrientId":1093,"unitName":"MG","value":300}
+                    ]
+                }]}
+                """#)
+            }
+            defer { finish(session) }
+
+            let found = try await FoodDataCentralService.lookup(barcode: "041303020937", apiKey: Self.key, session: session)
+            let result = try #require(found)
+
+            #expect(result.name == "Acme Foods Granola Bar")
+            #expect(result.servingSizeGrams == 40)
+            #expect(result.calories == 190)
+            #expect(result.protein == 4)
+            #expect(result.fat == 7)
+            #expect(result.sodium == 95)
+            // No label value for carbs, so the per-100 g value is scaled to 40 g.
+            #expect(abs(result.carbs - 26) < 0.0001)
+        }
+
+        @Test func allCapsNamesGetEnglishTitleCaseWhateverTheDeviceLanguage() async throws {
+            // Locale-sensitive casing would give "Cheerıos" and "Mılls" in Turkish and Azerbaijani.
+            #expect(FoodDataCentralService.displayCase("HONEY NUT CHEERIOS") == "Honey Nut Cheerios")
+            #expect(FoodDataCentralService.displayCase("Honey Nut CHEERIOS") == "Honey Nut CHEERIOS")
+
+            let session = makeSession { request in
+                json(request, 200, #"""
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"016000275287","description":"Honey Nut CHEERIOS","brandName":"CHEERIOS",
+                    "servingSize":28,"servingSizeUnit":"g",
+                    "foodNutrients":[{"nutrientId":1008,"unitName":"KCAL","value":393}]
+                }]}
+                """#)
+            }
+            defer { finish(session) }
+
+            let found = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
+
+            // The brand is already in the name, whatever its casing, so it is not repeated.
+            #expect(try #require(found).name == "Honey Nut CHEERIOS")
+        }
+
+        @Test func servingsUnderOneGramKeepTheirWeight() async throws {
+            let session = makeSession { request in
+                json(request, 200, #"""
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"SWEETENER PACKET",
+                    "servingSize":0.5,"servingSizeUnit":"g",
+                    "labelNutrients":{"calories":{"value":2}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":400},
+                        {"nutrientId":1005,"unitName":"G","value":100}
+                    ]
+                }]}
+                """#)
+            }
+            defer { finish(session) }
+
+            let found = try await FoodDataCentralService.lookup(barcode: "041303020937", apiKey: Self.key, session: session)
+            let result = try #require(found)
+
+            #expect(result.servingSizeIsKnown)
+            #expect(result.servingSizeGrams == 0.5)
+            #expect(result.servingUnitOptions == [ServingUnitOption(unit: "serving", gramsPerUnit: 0.5, quantity: 1)])
+            #expect(result.calories == 2)
+            // 100 g of carbs per 100 g, scaled to the 0.5 g serving rather than to 1 g.
+            #expect(abs(result.carbs - 0.5) < 0.0001)
+        }
+
+        @Test func labelValuesWithoutAServingWeightStayOneLoggedServing() async throws {
+            let session = makeSession { request in
+                json(request, 200, #"""
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"GRANOLA BAR","brandOwner":"ACME FOODS",
+                    "servingSize":1,"servingSizeUnit":"PIECE",
+                    "labelNutrients":{"calories":{"value":190},"protein":{"value":4},"carbohydrates":{"value":26},"fat":{"value":7},"sodium":{"value":95}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":450},
+                        {"nutrientId":1003,"unitName":"G","value":10},
+                        {"nutrientId":1005,"unitName":"G","value":65},
+                        {"nutrientId":1004,"unitName":"G","value":17},
+                        {"nutrientId":1079,"unitName":"G","value":5}
+                    ]
+                }]}
+                """#)
+            }
+            defer { finish(session) }
+
+            let found = try await FoodDataCentralService.lookup(barcode: "041303020937", apiKey: Self.key, session: session)
+            let result = try #require(found)
+
+            // The weight is unknown, so the result is one serving, like a Health-restored log.
+            #expect(!result.servingSizeIsKnown)
+            #expect(result.servingSizeGrams == 1)
+            #expect(result.servingUnitOptions == [.loggedServing(quantity: 1)])
+            #expect(result.selectedServingUnit == "serving")
+            #expect(result.selectedServingQuantity == 1)
+            #expect(result.calories == 190)
+            #expect(result.protein == 4)
+            #expect(result.carbs == 26)
+            #expect(result.fat == 7)
+            #expect(result.sodium == 95)
+            // Fiber is only given per 100 g, which cannot be converted to the serving.
+            #expect(result.fiber == nil)
+        }
+
+        @Test func per100GramValuesWithoutAServingWeightAreNeverMixedWithTheLabel() async throws {
+            let session = makeSession { request in
+                json(request, 200, #"""
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"GRANOLA BAR",
+                    "labelNutrients":{"calories":{"value":190},"sodium":{"value":95}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":450},
+                        {"nutrientId":1003,"unitName":"G","value":10},
+                        {"nutrientId":1005,"unitName":"G","value":65},
+                        {"nutrientId":1004,"unitName":"G","value":17},
+                        {"nutrientId":1093,"unitName":"MG","value":300}
+                    ]
+                }]}
+                """#)
+            }
+            defer { finish(session) }
+
+            let found = try await FoodDataCentralService.lookup(barcode: "041303020937", apiKey: Self.key, session: session)
+            let result = try #require(found)
+
+            // The per-100 g values cover more of the macros, so the result is exactly 100 g of them.
+            #expect(result.servingSizeIsKnown)
+            #expect(result.servingSizeGrams == 100)
+            #expect(result.servingUnitOptions.isEmpty)
+            #expect(result.selectedServingUnit == "g")
+            #expect(result.selectedServingQuantity == 100)
+            #expect(result.calories == 450)
+            #expect(result.protein == 10)
+            #expect(result.sodium == 300)
+        }
+
+        @Test func productMetadataKeepsTheSourceAndDecodesOlderAndNewerLogs() throws {
+            let legacy = #"{"barcode":"123","allergens":[],"traces":[],"labels":[],"categories":[]}"#
+            let decoded = try JSONDecoder().decode(FoodProductMetadata.self, from: Data(legacy.utf8))
+            #expect(decoded.dataSource == nil)
+            #expect(decoded.dataSourceName == nil)
+
+            var usda = decoded
+            usda.dataSource = FoodDataCentralService.dataSourceID
+            let roundTrip = try JSONDecoder().decode(FoodProductMetadata.self, from: JSONEncoder().encode(usda))
+            #expect(roundTrip == usda)
+
+            let future = #"{"barcode":"123","allergens":[],"traces":[],"labels":[],"categories":[],"dataSource":"someNewSource"}"#
+            let newer = try JSONDecoder().decode(FoodProductMetadata.self, from: Data(future.utf8))
+            #expect(newer.dataSource == "someNewSource")
+            #expect(newer.dataSourceName == nil)
+        }
+
+        // MARK: - Helpers
+
+        private func expectError(_ expected: FoodDataCentralService.LookupError, session: URLSession) async {
+            do {
+                _ = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
+                Issue.record("Expected \(expected)")
+            } catch let error as FoodDataCentralService.LookupError {
+                #expect(error == expected)
+            } catch {
+                Issue.record("Expected FoodDataCentralService.LookupError but received \(error)")
+            }
         }
     }
 
-    @Test func rateLimitsServerErrorsBadBodiesAndNetworkFailuresAreUnavailable() async {
-        let responses: [(Int, String)] = [
-            (429, #"{"error":{"code":"OVER_RATE_LIMIT"}}"#),
-            (503, "unavailable"),
-            (200, "not json"),
-            (200, #"{"totalHits":0}"#),
-        ]
-        for (status, body) in responses {
-            let session = makeSession { request in json(request, status, body) }
-            await expectError(.unavailable, session: session)
-            finish(session)
+    /// The order Open Food Facts, saved label (#485), then USDA (#533), against stubbed hosts.
+    @Suite("Barcode lookup order")
+    @MainActor
+    struct BarcodeProductLookupTests {
+        private static let key = "fdc-test-key-123"
+        private static let code = "016000275287"
+
+        @Test func openFoodFactsResultIsUsedWithoutAskingUSDA() async throws {
+            var hosts: [String] = []
+            let session = makeSession { request in
+                hosts.append(request.url?.host ?? "")
+                return json(request, 200, Self.openFoodFactsProduct)
+            }
+            defer { finish(session) }
+
+            let outcome = try await lookup(session: session, key: Self.key)
+
+            guard case .product(let result) = outcome else { Issue.record("Expected a product"); return }
+            #expect(result.analysis.name == "Open Food Facts Oats")
+            #expect(result.analysis.productMetadata?.dataSource == nil)
+            #expect(hosts == ["world.openfoodfacts.org"])
         }
-        for failure in [URLError(.timedOut), URLError(.notConnectedToInternet)] {
-            let session = makeSession { _ in throw failure }
-            await expectError(.unavailable, session: session)
-            finish(session)
-        }
-    }
 
-    @Test func cancellationRemainsCancellation() async {
-        let session = makeSession { _ in throw URLError(.cancelled) }
-        defer { finish(session) }
-
-        do {
-            _ = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
-            Issue.record("Expected cancellation")
-        } catch is CancellationError {
-        } catch {
-            Issue.record("Expected CancellationError but received \(error)")
-        }
-    }
-
-    @Test func labelNutrientsWinAndHouseholdTextGivesTheServingWeight() async throws {
-        let session = makeSession { request in
-            json(request, 200, #"""
-            {"foods":[{
-                "dataType":"Branded","gtinUpc":"041303020937","description":"GRANOLA BAR","brandOwner":"ACME FOODS",
-                "servingSize":1,"servingSizeUnit":"PIECE","householdServingFullText":"1 bar (40 g)",
-                "labelNutrients":{"calories":{"value":190},"protein":{"value":4},"sodium":{"value":95},"fat":{"value":7}},
-                "foodNutrients":[
-                    {"nutrientId":1008,"unitName":"KCAL","value":450},
-                    {"nutrientId":1003,"unitName":"G","value":10},
-                    {"nutrientId":1005,"unitName":"G","value":65},
-                    {"nutrientId":1093,"unitName":"MG","value":300}
-                ]
-            }]}
-            """#)
-        }
-        defer { finish(session) }
-
-        let found = try await FoodDataCentralService.lookup(barcode: "041303020937", apiKey: Self.key, session: session)
-        let result = try #require(found)
-
-        #expect(result.name == "Acme Foods Granola Bar")
-        #expect(result.servingSizeGrams == 40)
-        #expect(result.calories == 190)
-        #expect(result.protein == 4)
-        #expect(result.fat == 7)
-        #expect(result.sodium == 95)
-        // No label value for carbs, so the per-100 g value is scaled to 40 g.
-        #expect(abs(result.carbs - 26) < 0.0001)
-    }
-
-    @Test func allCapsNamesGetEnglishTitleCaseWhateverTheDeviceLanguage() async throws {
-        // Locale-sensitive casing would give "Cheerıos" and "Mılls" in Turkish and Azerbaijani.
-        #expect(FoodDataCentralService.displayCase("HONEY NUT CHEERIOS") == "Honey Nut Cheerios")
-        #expect(FoodDataCentralService.displayCase("Honey Nut CHEERIOS") == "Honey Nut CHEERIOS")
-
-        let session = makeSession { request in
-            json(request, 200, #"""
-            {"foods":[{
-                "dataType":"Branded","gtinUpc":"016000275287","description":"Honey Nut CHEERIOS","brandName":"CHEERIOS",
-                "servingSize":28,"servingSizeUnit":"g",
-                "foodNutrients":[{"nutrientId":1008,"unitName":"KCAL","value":393}]
-            }]}
-            """#)
-        }
-        defer { finish(session) }
-
-        let found = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
-
-        // The brand is already in the name, whatever its casing, so it is not repeated.
-        #expect(try #require(found).name == "Honey Nut CHEERIOS")
-    }
-
-    @Test func productMetadataKeepsTheSourceAndDecodesOlderAndNewerLogs() throws {
-        let legacy = #"{"barcode":"123","allergens":[],"traces":[],"labels":[],"categories":[]}"#
-        let decoded = try JSONDecoder().decode(FoodProductMetadata.self, from: Data(legacy.utf8))
-        #expect(decoded.dataSource == nil)
-        #expect(decoded.dataSourceName == nil)
-
-        var usda = decoded
-        usda.dataSource = FoodDataCentralService.dataSourceID
-        let roundTrip = try JSONDecoder().decode(FoodProductMetadata.self, from: JSONEncoder().encode(usda))
-        #expect(roundTrip == usda)
-
-        let future = #"{"barcode":"123","allergens":[],"traces":[],"labels":[],"categories":[],"dataSource":"someNewSource"}"#
-        let newer = try JSONDecoder().decode(FoodProductMetadata.self, from: Data(future.utf8))
-        #expect(newer.dataSource == "someNewSource")
-        #expect(newer.dataSourceName == nil)
-    }
-
-    // MARK: - Helpers
-
-    private func expectError(_ expected: FoodDataCentralService.LookupError, session: URLSession) async {
-        do {
-            _ = try await FoodDataCentralService.lookup(barcode: "016000275287", apiKey: Self.key, session: session)
-            Issue.record("Expected \(expected)")
-        } catch let error as FoodDataCentralService.LookupError {
-            #expect(error == expected)
-        } catch {
-            Issue.record("Expected FoodDataCentralService.LookupError but received \(error)")
-        }
-    }
-}
-
-/// The order Open Food Facts, saved label (#485), then USDA (#533), against stubbed hosts.
-@Suite("Barcode lookup order", .serialized)
-@MainActor
-struct BarcodeProductLookupTests {
-    private static let key = "fdc-test-key-123"
-    private static let code = "016000275287"
-
-    @Test func openFoodFactsResultIsUsedWithoutAskingUSDA() async throws {
-        var hosts: [String] = []
-        let session = makeSession { request in
-            hosts.append(request.url?.host ?? "")
-            return json(request, 200, Self.openFoodFactsProduct)
-        }
-        defer { finish(session) }
-
-        let outcome = try await lookup(session: session, key: Self.key)
-
-        guard case .product(let result) = outcome else { Issue.record("Expected a product"); return }
-        #expect(result.analysis.name == "Open Food Facts Oats")
-        #expect(result.analysis.productMetadata?.dataSource == nil)
-        #expect(hosts == ["world.openfoodfacts.org"])
-    }
-
-    @Test func savedLabelWinsOverUSDA() async throws {
-        var hosts: [String] = []
-        let session = makeSession { request in
-            hosts.append(request.url?.host ?? "")
-            return json(request, 404, #"{"status":0}"#)
-        }
-        defer { finish(session) }
-        let label = FoodEntry(
-            name: "My label",
-            calories: 150,
-            protein: 5,
-            carbs: 20,
-            fat: 4,
-            source: .nutritionLabel,
-            productMetadata: BarcodeLabelMemory.labelMetadata(nil, barcode: "0016000275287")
-        )
-
-        let outcome = try await lookup(session: session, key: Self.key, labels: [label])
-
-        guard case .savedLabel(let entry) = outcome else { Issue.record("Expected the saved label"); return }
-        #expect(entry.name == "My label")
-        #expect(hosts == ["world.openfoodfacts.org"])
-    }
-
-    @Test func withoutAKeyNothingIsSentToUSDA() async {
-        for key in [nil, "", "   "] as [String?] {
+        @Test func savedLabelWinsOverUSDA() async throws {
             var hosts: [String] = []
             let session = makeSession { request in
                 hosts.append(request.url?.host ?? "")
                 return json(request, 404, #"{"status":0}"#)
             }
-            await expectOpenFoodFactsError(.productNotFound, session: session, key: key)
+            defer { finish(session) }
+            let label = FoodEntry(
+                name: "My label",
+                calories: 150,
+                protein: 5,
+                carbs: 20,
+                fat: 4,
+                source: .nutritionLabel,
+                productMetadata: BarcodeLabelMemory.labelMetadata(nil, barcode: "0016000275287")
+            )
+
+            let outcome = try await lookup(session: session, key: Self.key, labels: [label])
+
+            guard case .savedLabel(let entry) = outcome else { Issue.record("Expected the saved label"); return }
+            #expect(entry.name == "My label")
             #expect(hosts == ["world.openfoodfacts.org"])
-            finish(session)
         }
-    }
 
-    @Test func usdaFillsInWhenOpenFoodFactsHasNoNutrition() async throws {
-        var hosts: [String] = []
-        let session = makeSession { request in
-            hosts.append(request.url?.host ?? "")
-            if request.url?.host == "api.nal.usda.gov" {
-                #expect(request.value(forHTTPHeaderField: "X-Api-Key") == Self.key)
-                return json(request, 200, FoodDataCentralFixtures.cheeriosSearch)
+        @Test func withoutAKeyNothingIsSentToUSDA() async {
+            for key in [nil, "", "   "] as [String?] {
+                var hosts: [String] = []
+                let session = makeSession { request in
+                    hosts.append(request.url?.host ?? "")
+                    return json(request, 404, #"{"status":0}"#)
+                }
+                await expectOpenFoodFactsError(.productNotFound, session: session, key: key)
+                #expect(hosts == ["world.openfoodfacts.org"])
+                finish(session)
             }
-            return json(request, 200, #"{"status":1,"product":{"product_name":"No nutrition"}}"#)
         }
-        defer { finish(session) }
 
-        let outcome = try await lookup(session: session, key: Self.key)
+        @Test func usdaFillsInWhenOpenFoodFactsHasNoNutrition() async throws {
+            var hosts: [String] = []
+            let session = makeSession { request in
+                hosts.append(request.url?.host ?? "")
+                if request.url?.host == "api.nal.usda.gov" {
+                    #expect(request.value(forHTTPHeaderField: "X-Api-Key") == Self.key)
+                    return json(request, 200, FoodDataCentralFixtures.cheeriosSearch)
+                }
+                return json(request, 200, #"{"status":1,"product":{"product_name":"No nutrition"}}"#)
+            }
+            defer { finish(session) }
 
-        guard case .product(let result) = outcome else { Issue.record("Expected a product"); return }
-        #expect(result.analysis.name == "Cheerios Cereal")
-        #expect(result.analysis.productMetadata?.dataSourceName == "USDA FoodData Central")
-        #expect(result.productImageData == nil)
-        #expect(hosts == ["world.openfoodfacts.org", "api.nal.usda.gov"])
-    }
+            let outcome = try await lookup(session: session, key: Self.key)
 
-    @Test func usdaMissOrOutageKeepsTheOpenFoodFactsError() async {
-        for (status, body) in [(200, #"{"foods":[]}"#), (503, "unavailable")] {
+            guard case .product(let result) = outcome else { Issue.record("Expected a product"); return }
+            #expect(result.analysis.name == "Cheerios Cereal")
+            #expect(result.analysis.productMetadata?.dataSourceName == "USDA FoodData Central")
+            #expect(result.productImageData == nil)
+            #expect(hosts == ["world.openfoodfacts.org", "api.nal.usda.gov"])
+        }
+
+        @Test func usdaMissOrOutageKeepsTheOpenFoodFactsError() async {
+            for (status, body) in [(200, #"{"foods":[]}"#), (503, "unavailable")] {
+                let session = makeSession { request in
+                    request.url?.host == "api.nal.usda.gov"
+                        ? json(request, status, body)
+                        : json(request, 404, #"{"status":0}"#)
+                }
+                await expectOpenFoodFactsError(.productNotFound, session: session, key: Self.key)
+                finish(session)
+            }
+        }
+
+        @Test func refusedUSDAKeyIsReported() async {
             let session = makeSession { request in
                 request.url?.host == "api.nal.usda.gov"
-                    ? json(request, status, body)
+                    ? json(request, 403, #"{"error":{"code":"API_KEY_INVALID"}}"#)
                     : json(request, 404, #"{"status":0}"#)
             }
-            await expectOpenFoodFactsError(.productNotFound, session: session, key: Self.key)
-            finish(session)
+            defer { finish(session) }
+
+            do {
+                _ = try await lookup(session: session, key: Self.key)
+                Issue.record("Expected the refused key")
+            } catch let error as FoodDataCentralService.LookupError {
+                #expect(error == .invalidAPIKey)
+                #expect(error.localizedDescription.contains("USDA FoodData Central"))
+            } catch {
+                Issue.record("Expected FoodDataCentralService.LookupError but received \(error)")
+            }
         }
-    }
 
-    @Test func refusedUSDAKeyIsReported() async {
-        let session = makeSession { request in
-            request.url?.host == "api.nal.usda.gov"
-                ? json(request, 403, #"{"error":{"code":"API_KEY_INVALID"}}"#)
-                : json(request, 404, #"{"status":0}"#)
+        @Test func otherOpenFoodFactsFailuresDoNotFallBack() async {
+            var hosts: [String] = []
+            let session = makeSession { request in
+                hosts.append(request.url?.host ?? "")
+                return json(request, 429, #"{"status":0}"#)
+            }
+            defer { finish(session) }
+
+            await expectOpenFoodFactsError(.rateLimited, session: session, key: Self.key)
+            #expect(hosts == ["world.openfoodfacts.org"])
         }
-        defer { finish(session) }
 
-        do {
-            _ = try await lookup(session: session, key: Self.key)
-            Issue.record("Expected the refused key")
-        } catch let error as FoodDataCentralService.LookupError {
-            #expect(error == .invalidAPIKey)
-            #expect(error.localizedDescription.contains("USDA FoodData Central"))
-        } catch {
-            Issue.record("Expected FoodDataCentralService.LookupError but received \(error)")
+        @Test func voiceAssistantScanUsesTheSavedLabelBeforeUSDA() async throws {
+            var hosts: [String] = []
+            let session = makeSession { request in
+                hosts.append(request.url?.host ?? "")
+                return json(request, 404, #"{"status":0}"#)
+            }
+            defer { finish(session) }
+            let label = FoodEntry(
+                name: "My label",
+                calories: 150,
+                protein: 5,
+                carbs: 20,
+                fat: 4,
+                source: .nutritionLabel,
+                servingSizeGrams: 40,
+                productMetadata: BarcodeLabelMemory.labelMetadata(nil, barcode: "0016000275287")
+            )
+
+            let lookup = try await VoiceAssistantAnalyzer(session: session)
+                .lookUpBarcode(Self.code, savedLabelEntries: [label])
+
+            #expect(lookup.analysis.name == "My label")
+            #expect(lookup.analysis.calories == 150)
+            #expect(lookup.analysis.productMetadata?.barcode == "0016000275287")
+            #expect(lookup.source == .nutritionLabel)
+            #expect(lookup.image == nil)
+            #expect(hosts == ["world.openfoodfacts.org"])
         }
-    }
 
-    @Test func otherOpenFoodFactsFailuresDoNotFallBack() async {
-        var hosts: [String] = []
-        let session = makeSession { request in
-            hosts.append(request.url?.host ?? "")
-            return json(request, 429, #"{"status":0}"#)
+        // MARK: - Helpers
+
+        private static let openFoodFactsProduct = #"""
+        {"status":1,"product":{"product_name":"Open Food Facts Oats","serving_quantity":40,
+        "nutriments":{"energy-kcal_100g":380,"proteins_100g":13,"carbohydrates_100g":60,"fat_100g":7}}}
+        """#
+
+        private func lookup(
+            session: URLSession,
+            key: String?,
+            labels: [FoodEntry] = []
+        ) async throws -> BarcodeProductLookup.Outcome {
+            try await BarcodeProductLookup.lookup(
+                barcode: Self.code,
+                savedLabelEntries: labels,
+                usdaAPIKey: key,
+                includesProductImage: false,
+                session: session
+            )
         }
-        defer { finish(session) }
 
-        await expectOpenFoodFactsError(.rateLimited, session: session, key: Self.key)
-        #expect(hosts == ["world.openfoodfacts.org"])
-    }
-
-    @Test func voiceAssistantScanUsesTheSavedLabelBeforeUSDA() async throws {
-        var hosts: [String] = []
-        let session = makeSession { request in
-            hosts.append(request.url?.host ?? "")
-            return json(request, 404, #"{"status":0}"#)
-        }
-        defer { finish(session) }
-        let label = FoodEntry(
-            name: "My label",
-            calories: 150,
-            protein: 5,
-            carbs: 20,
-            fat: 4,
-            source: .nutritionLabel,
-            servingSizeGrams: 40,
-            productMetadata: BarcodeLabelMemory.labelMetadata(nil, barcode: "0016000275287")
-        )
-
-        let lookup = try await VoiceAssistantAnalyzer(session: session)
-            .lookUpBarcode(Self.code, savedLabelEntries: [label])
-
-        #expect(lookup.analysis.name == "My label")
-        #expect(lookup.analysis.calories == 150)
-        #expect(lookup.analysis.productMetadata?.barcode == "0016000275287")
-        #expect(lookup.source == .nutritionLabel)
-        #expect(lookup.image == nil)
-        #expect(hosts == ["world.openfoodfacts.org"])
-    }
-
-    // MARK: - Helpers
-
-    private static let openFoodFactsProduct = #"""
-    {"status":1,"product":{"product_name":"Open Food Facts Oats","serving_quantity":40,
-    "nutriments":{"energy-kcal_100g":380,"proteins_100g":13,"carbohydrates_100g":60,"fat_100g":7}}}
-    """#
-
-    private func lookup(
-        session: URLSession,
-        key: String?,
-        labels: [FoodEntry] = []
-    ) async throws -> BarcodeProductLookup.Outcome {
-        try await BarcodeProductLookup.lookup(
-            barcode: Self.code,
-            savedLabelEntries: labels,
-            usdaAPIKey: key,
-            includesProductImage: false,
-            session: session
-        )
-    }
-
-    private func expectOpenFoodFactsError(
-        _ expected: OpenFoodFactsService.LookupError,
-        session: URLSession,
-        key: String?
-    ) async {
-        do {
-            _ = try await lookup(session: session, key: key)
-            Issue.record("Expected \(expected)")
-        } catch let error as OpenFoodFactsService.LookupError {
-            #expect(error.localizedDescription == expected.localizedDescription)
-        } catch {
-            Issue.record("Expected OpenFoodFactsService.LookupError but received \(error)")
+        private func expectOpenFoodFactsError(
+            _ expected: OpenFoodFactsService.LookupError,
+            session: URLSession,
+            key: String?
+        ) async {
+            do {
+                _ = try await lookup(session: session, key: key)
+                Issue.record("Expected \(expected)")
+            } catch let error as OpenFoodFactsService.LookupError {
+                #expect(error.localizedDescription == expected.localizedDescription)
+            } catch {
+                Issue.record("Expected OpenFoodFactsService.LookupError but received \(error)")
+            }
         }
     }
 }

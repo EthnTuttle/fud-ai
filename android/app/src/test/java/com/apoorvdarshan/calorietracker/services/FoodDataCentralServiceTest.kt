@@ -248,6 +248,108 @@ class FoodDataCentralServiceTest {
     }
 
     @Test
+    fun servingsUnderOneGramKeepTheirWeight() = runBlocking {
+        server.enqueue(
+            json(
+                200,
+                """
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"SWEETENER PACKET",
+                    "servingSize":0.5,"servingSizeUnit":"g",
+                    "labelNutrients":{"calories":{"value":2}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":400},
+                        {"nutrientId":1005,"unitName":"G","value":100}
+                    ]
+                }]}
+                """.trimIndent()
+            )
+        )
+
+        val result = lookup("041303020937")!!
+
+        assertTrue(result.servingSizeIsKnown)
+        assertEquals(0.5, result.servingSizeGrams, 0.0)
+        assertEquals(listOf(ServingUnitOption(unit = "serving", gramsPerUnit = 0.5, quantity = 1.0)), result.servingUnitOptions)
+        assertEquals(2, result.calories)
+        // 100 g of carbs per 100 g, scaled to the 0.5 g serving rather than to 1 g.
+        assertEquals(0.5, result.carbs, 0.0001)
+    }
+
+    @Test
+    fun labelValuesWithoutAServingWeightStayOneLoggedServing() = runBlocking {
+        server.enqueue(
+            json(
+                200,
+                """
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"GRANOLA BAR","brandOwner":"ACME FOODS",
+                    "servingSize":1,"servingSizeUnit":"PIECE",
+                    "labelNutrients":{"calories":{"value":190},"protein":{"value":4},"carbohydrates":{"value":26},"fat":{"value":7},"sodium":{"value":95}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":450},
+                        {"nutrientId":1003,"unitName":"G","value":10},
+                        {"nutrientId":1005,"unitName":"G","value":65},
+                        {"nutrientId":1004,"unitName":"G","value":17},
+                        {"nutrientId":1079,"unitName":"G","value":5}
+                    ]
+                }]}
+                """.trimIndent()
+            )
+        )
+
+        val result = lookup("041303020937")!!
+
+        // The weight is unknown, so the result is one serving, like a Health Connect restore.
+        assertFalse(result.servingSizeIsKnown)
+        assertEquals(1.0, result.servingSizeGrams, 0.0)
+        assertEquals(listOf(ServingUnitOption.loggedServing(1.0)), result.servingUnitOptions)
+        assertEquals("serving", result.selectedServingUnit)
+        assertEquals(1.0, result.selectedServingQuantity!!, 0.0)
+        assertEquals(190, result.calories)
+        assertEquals(4.0, result.protein, 0.0)
+        assertEquals(26.0, result.carbs, 0.0)
+        assertEquals(7.0, result.fat, 0.0)
+        assertEquals(95.0, result.sodium!!, 0.0)
+        // Fiber is only given per 100 g, which cannot be converted to the serving.
+        assertNull(result.fiber)
+    }
+
+    @Test
+    fun per100GramValuesWithoutAServingWeightAreNeverMixedWithTheLabel() = runBlocking {
+        server.enqueue(
+            json(
+                200,
+                """
+                {"foods":[{
+                    "dataType":"Branded","gtinUpc":"041303020937","description":"GRANOLA BAR",
+                    "labelNutrients":{"calories":{"value":190},"sodium":{"value":95}},
+                    "foodNutrients":[
+                        {"nutrientId":1008,"unitName":"KCAL","value":450},
+                        {"nutrientId":1003,"unitName":"G","value":10},
+                        {"nutrientId":1005,"unitName":"G","value":65},
+                        {"nutrientId":1004,"unitName":"G","value":17},
+                        {"nutrientId":1093,"unitName":"MG","value":300}
+                    ]
+                }]}
+                """.trimIndent()
+            )
+        )
+
+        val result = lookup("041303020937")!!
+
+        // The per-100 g values cover more of the macros, so the result is exactly 100 g of them.
+        assertTrue(result.servingSizeIsKnown)
+        assertEquals(100.0, result.servingSizeGrams, 0.0)
+        assertTrue(result.servingUnitOptions.isEmpty())
+        assertEquals("g", result.selectedServingUnit)
+        assertEquals(100.0, result.selectedServingQuantity!!, 0.0)
+        assertEquals(450, result.calories)
+        assertEquals(10.0, result.protein, 0.0)
+        assertEquals(300.0, result.sodium!!, 0.0)
+    }
+
+    @Test
     fun productMetadataKeepsTheSourceAndDecodesOlderAndNewerLogs() {
         val json = Json { ignoreUnknownKeys = true }
         val legacy = json.decodeFromString(FoodProductMetadata.serializer(), """{"barcode":"123"}""")

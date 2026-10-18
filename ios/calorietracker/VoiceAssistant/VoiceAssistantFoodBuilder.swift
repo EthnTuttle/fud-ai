@@ -34,6 +34,12 @@ enum VoiceAssistantFoodBuilder {
             if let selected = base.selectedServingQuantity, selected > 0, !option.isGramUnit { return selected }
             return option.gramsPerUnit > 0 ? grams / option.gramsPerUnit : grams
         }()
+        // Without a known mass the analysis amount is a count of logged servings (a saved
+        // label can hold two), so `servings` multiplies that count instead of replacing it.
+        let loggedServings: Double = {
+            if let selected = base.selectedServingQuantity, selected.isFinite, selected > 0 { return selected }
+            return 1
+        }()
 
         return FoodEntry(
             name: base.name,
@@ -74,7 +80,7 @@ enum VoiceAssistantFoodBuilder {
             servingSizeGrams: known ? grams * factor : nil,
             servingUnitOptions: known ? options : [],
             selectedServingUnit: known ? (options.isEmpty ? nil : option.unit) : "serving",
-            selectedServingQuantity: known ? (options.isEmpty ? nil : quantity * factor) : factor,
+            selectedServingQuantity: known ? (options.isEmpty ? nil : quantity * factor) : loggedServings * factor,
             progressiveMeal: base.progressiveMeal,
             ingredients: base.ingredients.map { $0.scaled(by: factor) },
             productMetadata: base.productMetadata

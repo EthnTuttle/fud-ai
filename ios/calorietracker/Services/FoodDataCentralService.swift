@@ -153,13 +153,38 @@ enum FoodDataCentralService {
 
     // MARK: - Mapping
 
+    /// The amount a mapped result describes.
+    private enum Amount {
+        /// One label serving of a known weight; label and per-100 g values both convert to it.
+        case serving(grams: Double)
+        /// One label serving whose weight FDC does not give: label values only, kept as one
+        /// logged serving like a Health-restored log, never as a made-up weight.
+        case unknownServing
+        /// 100 g: only the per-100 g Branded values, when there is no serving weight.
+        case hundredGrams
+    }
+
     private static func analysis(from food: [String: Any], barcode: String) -> GeminiService.FoodAnalysis? {
-        let servingGrams = max(servingGrams(of: food) ?? 100, 1)
-        let nutrients = Nutrients(
-            food["foodNutrients"] as? [[String: Any]] ?? [],
-            label: food["labelNutrients"] as? [String: Any] ?? [:],
-            scale: servingGrams / 100
-        )
+        let entries = food["foodNutrients"] as? [[String: Any]] ?? []
+        let label = food["labelNutrients"] as? [String: Any] ?? [:]
+        let amount: Amount
+        let nutrients: Nutrients
+        if let grams = servingGrams(of: food) {
+            amount = .serving(grams: grams)
+            nutrients = Nutrients(entries, label: label, scale: grams / 100)
+        } else {
+            // Label values are per serving and Branded values per 100 g; without the serving
+            // weight neither converts to the other, so only one set is used.
+            let perServing = Nutrients([], label: label, scale: 0)
+            let per100g = Nutrients(entries, label: [:], scale: 1)
+            if perServing.coreValueCount > 0, perServing.coreValueCount >= per100g.coreValueCount {
+                amount = .unknownServing
+                nutrients = perServing
+            } else {
+                amount = .hundredGrams
+                nutrients = per100g
+            }
+        }
 
         let calories = nutrients.calories
         let protein = nutrients.grams([1003], label: "protein")
@@ -167,7 +192,32 @@ enum FoodDataCentralService {
         let fat = nutrients.grams([1004], label: "fat")
         guard calories != nil || protein != nil || carbs != nil || fat != nil else { return nil }
 
-        let servingOption = ServingUnitOption(unit: "serving", gramsPerUnit: servingGrams, quantity: 1)
+        let servingSizeGrams: Double
+        let servingUnitOptions: [ServingUnitOption]
+        let selectedServingUnit: String
+        let selectedServingQuantity: Double
+        let servingSizeIsKnown: Bool
+        switch amount {
+        case .serving(let grams):
+            servingSizeGrams = grams
+            servingUnitOptions = [ServingUnitOption(unit: "serving", gramsPerUnit: grams, quantity: 1)]
+            selectedServingUnit = "serving"
+            selectedServingQuantity = 1
+            servingSizeIsKnown = true
+        case .unknownServing:
+            // Like FoodEntry.reviewAnalysis for an unknown mass: the basis is a serving count.
+            servingSizeGrams = 1
+            servingUnitOptions = [.loggedServing(quantity: 1)]
+            selectedServingUnit = "serving"
+            selectedServingQuantity = 1
+            servingSizeIsKnown = false
+        case .hundredGrams:
+            servingSizeGrams = 100
+            servingUnitOptions = []
+            selectedServingUnit = ServingUnitOption.grams.unit
+            selectedServingQuantity = 100
+            servingSizeIsKnown = true
+        }
         let category = text(food["foodCategory"])
         let metadata = FoodProductMetadata(
             barcode: barcode,
@@ -190,7 +240,7 @@ enum FoodDataCentralService {
             protein: protein ?? 0,
             carbs: carbs ?? 0,
             fat: fat ?? 0,
-            servingSizeGrams: servingGrams,
+            servingSizeGrams: servingSizeGrams,
             emoji: "🏷️",
             sugar: rounded(nutrients.grams([2000, 1063], label: "sugars")),
             addedSugar: rounded(nutrients.grams([1235], label: "addedSugar")),
@@ -214,15 +264,16 @@ enum FoodDataCentralService {
             vitaminE: milligrams(nutrients.grams([1109])),
             vitaminK: micrograms(nutrients.grams([1185])),
             folate: micrograms(nutrients.grams([1190, 1177])),
-            servingUnitOptions: [servingOption],
-            selectedServingUnit: servingOption.unit,
-            selectedServingQuantity: 1,
+            servingUnitOptions: servingUnitOptions,
+            selectedServingUnit: selectedServingUnit,
+            selectedServingQuantity: selectedServingQuantity,
+            servingSizeIsKnown: servingSizeIsKnown,
             productMetadata: metadata
         )
     }
 
-    /// Nutrient amounts for one serving. Label values (already per serving) win;
-    /// otherwise the per-100 g Branded values are scaled to the serving. Only the
+    /// Nutrient amounts for the mapped amount. Label values (already per serving) win;
+    /// otherwise the per-100 g Branded values are multiplied by `scale`. Only the
     /// first entry for a nutrient counts, since FDC can list older panels after it.
     private struct Nutrients {
         private var amounts: [Int: (value: Double, unit: String)] = [:]
@@ -253,6 +304,13 @@ enum FoodDataCentralService {
             return nil
         }
 
+        /// How many of calories, protein, carbs and fat this set has.
+        var coreValueCount: Int {
+            [calories, grams([1003], label: "protein"), grams([1005, 1050], label: "carbohydrates"), grams([1004], label: "fat")]
+                .compactMap { $0 }
+                .count
+        }
+
         /// Vitamin D given only in International Units (1 IU = 0.025 µg).
         var vitaminDFromIU: Double? {
             guard let amount = amounts[1110], amount.unit == "IU" else { return nil }
@@ -281,7 +339,13 @@ enum FoodDataCentralService {
         }
     }
 
+    /// The serving weight in grams (millilitres count as grams), or nil when FDC does not give
+    /// one. Any positive weight is kept as given, even below 1 g.
     private static func servingGrams(of food: [String: Any]) -> Double? {
+        weight(of: food).flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
+    }
+
+    private static func weight(of food: [String: Any]) -> Double? {
         if let size = number(food["servingSize"]), size > 0,
            let unit = text(food["servingSizeUnit"])?.lowercased() {
             switch unit {

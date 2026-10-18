@@ -587,6 +587,39 @@ struct VoiceAssistantToolTests {
         #expect(logged.productMetadata?.barcode == "016000275287")
     }
 
+    @Test func savedLabelOfUnknownWeightKeepsItsServingCountWhenLogged() async throws {
+        let harness = VoiceAssistantHarness(confirmSaves: false)
+        // 380 kcal for two servings of a label whose weight was never known.
+        let label = FoodEntry(
+            name: "Two cookies",
+            calories: 380,
+            protein: 4,
+            carbs: 52,
+            fat: 18,
+            source: .nutritionLabel,
+            selectedServingUnit: "serving",
+            selectedServingQuantity: 2,
+            productMetadata: BarcodeLabelMemory.labelMetadata(nil, barcode: "016000275287")
+        )
+        #expect(harness.food.addEntry(label))
+        harness.analyzer.analysis = label.reviewAnalysis
+        harness.analyzer.barcodeSource = .nutritionLabel
+
+        for (servings, calories, count) in [(1.0, 380, 2.0), (2.0, 760, 4.0)] {
+            harness.host.scanResult = .value("016000275287")
+            let scanned = await harness.executor.execute(name: "scan_barcode", arguments: [:])
+            let draftID = try #require(scanned["draft_id"] as? String)
+            let logged = await harness.executor.execute(name: "log_food", arguments: ["draft_id": draftID, "servings": servings])
+            let id = try #require((logged["entry_ids"] as? [String])?.first)
+            let entry = try #require(harness.food.entries.first { $0.id.uuidString == id })
+            #expect(entry.calories == calories)
+            #expect(entry.servingSizeGrams == nil)
+            #expect(entry.selectedServingUnit == "serving")
+            #expect(entry.selectedServingQuantity == count)
+            #expect(entry.reviewServingUnitOptions == [.loggedServing(quantity: count)])
+        }
+    }
+
     @Test func capturePhotoOpensTheCameraFirst() async throws {
         let harness = VoiceAssistantHarness(confirmSaves: false)
         #expect(harness.host.cameraMode == nil)

@@ -1430,7 +1430,9 @@ class VoiceToolExecutor(
                 selectedServingQuantity = if (analysis.servingSizeIsKnown) {
                     analysis.selectedServingQuantity?.takeIf { analysis.servingUnitOptions.isNotEmpty() }?.times(servings)
                 } else {
-                    servings
+                    // Without a known mass the analysis amount is a count of logged servings (a
+                    // saved label can hold two), so [servings] multiplies it instead of replacing it.
+                    (analysis.selectedServingQuantity?.takeIf { it.isFinite() && it > 0.0 } ?: 1.0) * servings
                 },
                 customNote = analysis.customNote,
                 progressiveMeal = analysis.progressiveMeal,
